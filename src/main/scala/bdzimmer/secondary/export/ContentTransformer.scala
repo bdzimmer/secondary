@@ -5,8 +5,7 @@
 
 package bdzimmer.secondary.export
 
-import bdzimmer.gdrivescala.GoogleDriveKeys
-import bdzimmer.gdrivescala.DriveUtils
+import bdzimmer.gdrivescala.{DriveUtils, GoogleDriveKeys}
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}

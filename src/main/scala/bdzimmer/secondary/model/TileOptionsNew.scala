@@ -12,10 +12,9 @@ package bdzimmer.secondary.model
 import bdzimmer.secondary.view.Main
 
 
-import java.awt.GridLayout
-import java.awt.event.ActionListener
-import java.awt.event.ActionEvent
-import java.awt.Dialog
+import java.awt.{Dialog, GridLayout}
+import java.awt.event.{ActionListener, ActionEvent}
+
 
 import javax.swing._
 

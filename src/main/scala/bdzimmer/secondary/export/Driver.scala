@@ -15,8 +15,7 @@ import scala.collection.JavaConverters._
 
 import org.apache.commons.io.FileUtils
 
-import bdzimmer.gdrivescala.DriveUtils
-import bdzimmer.gdrivescala.DriveBuilder
+import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder}
 
 import com.google.api.client.util.DateTime
 

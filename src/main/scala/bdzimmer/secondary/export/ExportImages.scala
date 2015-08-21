@@ -36,11 +36,7 @@ import java.io.File
 
 import org.apache.commons.io.FileUtils
 
-import bdzimmer.secondary.model.DosGraphics
-import bdzimmer.secondary.model.Map
-import bdzimmer.secondary.model.TileAttributes
-import bdzimmer.secondary.model.TileOptionsNew
-import bdzimmer.secondary.model.Tiles
+import bdzimmer.secondary.model.{DosGraphics, Map, TileAttributes, TileOptionsNew, Tiles}
 
 import javax.imageio.ImageIO
 

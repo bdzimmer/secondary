@@ -14,10 +14,7 @@ import java.awt.event.{ActionEvent, ActionListener}
 import java.io.File
 import java.util.ArrayList
 
-import bdzimmer.secondary.model.DosGraphics
-import bdzimmer.secondary.model.TileAttributes
-import bdzimmer.secondary.model.TileOptionsNew
-import bdzimmer.secondary.model.Tiles
+import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptionsNew, Tiles}
 
 import javax.swing.{ImageIcon, JButton}
 
