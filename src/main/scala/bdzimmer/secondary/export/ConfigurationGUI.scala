@@ -56,8 +56,8 @@ object ConfigurationGUI extends SimpleSwingApplication {
       contents ++= List(saveStatus, new Label(), save)
     }
 
-    def configField(key: String) = new TextField {
-      text = prop(key).getOrElse("")
+    def configField(key: String, default: String) = new TextField {
+      text = prop(key).getOrElse(default)
       columns = 75                         // scalastyle:ignore magic.number
       font = new Font("monospaced", Font.PLAIN, 12)
       reactions += {
@@ -69,7 +69,7 @@ object ConfigurationGUI extends SimpleSwingApplication {
     }
 
 
-    val columnPairs = DriverConfig.requiredProperties.map({case (x, y) => (configField(x), y + ":")}) :+
+    val columnPairs = DriverConfig.requiredProperties.map(x => (configField(x.key, x.default), x.description + ":")) :+
       (savePanel, "")
 
 

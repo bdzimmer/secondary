@@ -32,13 +32,15 @@ object WorldLoader {
       case x: CollectionItemBean => {
         println(srcyml)
         x.srcyml = srcyml
-        x.remoteid = fileStatus.get(srcyml).get._1
+        // x.remoteid = fileStatus.get(srcyml).get._1
+        x.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
         x.children.asScala.toList.map(y => assignSrcYml(y, srcyml))
       }
       case _ => {
         println(srcyml)
         wi.srcyml = srcyml
-        wi.remoteid = fileStatus.get(srcyml).get._1
+        // wi.remoteid = fileStatus.get(srcyml).get._1
+        wi.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
 
       }
 

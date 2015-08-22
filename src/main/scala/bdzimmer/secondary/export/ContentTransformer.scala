@@ -42,12 +42,16 @@ class ContentTransformer(
   val localExportPathFile = new java.io.File(localExportPath)
 
   val driveRootFile = DriveUtils.getRoot(drive)
+
+  // val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, driveInputPath).get
+
   val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, driveInputPath).get
   val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, driveOutputPath).get
 
 
-  // create local download directory if it doesn't exist
-  localDownloadPathFile.mkdir
+  // create local directories if they don't exist
+  localDownloadPathFile.mkdirs
+  localExportPathFile.mkdirs
 
 
 
@@ -159,9 +163,6 @@ class ContentTransformer(
   def export(metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
              masterCollection: CollectionItem, images: Boolean = false): (List[String], FileOutputsMap) = {
 
-    if (!localExportPathFile.exists()) {
-      localExportPathFile.mkdir
-    }
 
     // get only the world items that are described in the subset of the
     // meta we just downloaded

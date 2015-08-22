@@ -169,7 +169,19 @@ object ExportImages {
 
     val image: BufferedImage = worldItem match {
       case x: MapItem => getMapImage(inputDir + "/" + inputName, inputDir + "/tile/")
-      case x: TileMetaItem => getTilesetImage(inputDir + "/" + inputName, TileOptionsNew.types.get(x.tiletype).get)
+      case x: TileMetaItem => {
+
+        TileOptionsNew.types.get(x.tiletype) match {
+          case Some(tiletype) => getTilesetImage(inputDir + "/" + inputName, tiletype)
+          case None => {
+            val result = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB)
+            result.getGraphics.drawString("Invalid tile type.", 0, 20)
+            result
+          }
+        }
+
+
+      }
     }
 
     // various scales to output
@@ -257,7 +269,8 @@ object ExportImages {
     dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
 
     // TODO: Better logic for determining spritesheet image attributes
-    val image = tiles.getTilesImage(tileAttributes.tilesPerRow,
+    val image = tiles.getTilesImage(
+        tileAttributes.tilesPerRow,
         math.ceil(tileAttributes.count.toFloat / tileAttributes.tilesPerRow).toInt, dg.getPalette())
 
     image

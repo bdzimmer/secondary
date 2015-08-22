@@ -10,6 +10,8 @@
 // 2015-07-20: Adding element to WorldItem that refers back to YML file.
 // 2015-08-16: Added immutable versions for processing. Mutable versions are loaded then
 //             converted to immutable.
+// 2015-08-22: Changed null fields to default to empty string. Need to implement validation
+//             on loaded world to make sure required fields are provided.
 
 package bdzimmer.secondary.export
 
@@ -24,9 +26,11 @@ import org.yaml.snakeyaml.nodes.Tag
 
 // bean version of world items -- for loading from
 
+
+
 trait WorldItemBean {
-  @BeanProperty var id: String = null
-  @BeanProperty var name: String = null
+  @BeanProperty var id: String = ""             // TODO: enforce provided
+  @BeanProperty var name: String = ""           // TODO: enforce provided
   @BeanProperty var description: String = ""
   @BeanProperty var notes: String = ""
   @BeanProperty var srcyml: String = ""
@@ -39,12 +43,12 @@ trait WorldItemBean {
 // represents metadata for a piece of content
 // that exists in its own file.
 trait MetaItemBean extends WorldItemBean {
-  @BeanProperty var filename: String = null
+  @BeanProperty var filename: String = ""    // TODO: enforce provided
 }
 
 // a piece of content that is a tileset with attributes
 trait TileMetaItemBean extends MetaItemBean {
-  @BeanProperty var tiletype: String = null
+  @BeanProperty var tiletype: String = ""    // TODO: enforce provided
 }
 
 
@@ -81,8 +85,8 @@ class MapItemBean extends MetaItemBean {
 
 class CharacterItemBean extends WorldItemBean {
 
-  @BeanProperty var spritesheet: String = null
-  @BeanProperty var sheetrow: String = null
+  @BeanProperty var spritesheet: String = ""    // TODO: enforce provided
+  @BeanProperty var sheetrow: String = ""       // TODO: enforce provided
 
   def getVal(): CharacterItem = CharacterItem(
       id, name, description, notes, srcyml, remoteid,
