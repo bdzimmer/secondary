@@ -71,7 +71,7 @@ object PageTemplates {
   """
 
 
-  def createPage(outputFile: String, title: String, styles: String, body: String) {
+  def createPage(outputFile: String, title: String, styles: String, body: String): Unit = {
 
     val pageText = pageTemplate.format(title, styles, body)
 
@@ -85,7 +85,7 @@ object PageTemplates {
 
   def createArticlePage(outputFile: String,
                         title: String, description: String, toolbar: Option[String],
-                        body: String, license: String) {
+                        body: String, license: String): Unit = {
 
     createPage(
       outputFile,
