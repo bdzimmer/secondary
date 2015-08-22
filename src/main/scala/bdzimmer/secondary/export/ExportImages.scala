@@ -43,7 +43,7 @@ import javax.imageio.ImageIO
 
 class ExportImages(val location: String, license: String) {
 
-  val imagesLocation = location + "/" + ExportImages.IMAGES_DIR + "/"
+  val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
   new File(imagesLocation).mkdir
 
 
@@ -100,11 +100,11 @@ class ExportImages(val location: String, license: String) {
         val spritesheetType = TileOptionsNew.get(cs.tiletype)
 
         // TODO: clean this up
-        ExportImages.OUTPUT_SCALES map (scale => {
+        ExportImages.outputScales map (scale => {
           val offset = 3
           val inputFile = imagesLocation + "/" + ci.spritesheet + "_tiles/" + (ci.sheetrow.toInt * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"
 
-          val relativeName = ExportImages.IMAGES_DIR + "/" + ci.id + ExportImages.scalePostfix(scale) + ".png"
+          val relativeName = ExportImages.imagesDir + "/" + ci.id + ExportImages.scalePostfix(scale) + ".png"
           val absoluteName = location + "/" + relativeName
           FileUtils.copyFile(new File(inputFile), new File(absoluteName))
 
@@ -142,12 +142,12 @@ class ExportImages(val location: String, license: String) {
 object ExportImages {
 
 
-  val IMAGES_DIR = "images"
+  val imagesDir = "images"
 
-  // val TRANSPARENT_COLOR: (Int, Int, Int) = (51, 153, 102)
-  val TRANSPARENT_COLOR: (Int, Int, Int) = (255, 255, 255)
+  val transparentColor: (Int, Int, Int) = (255, 255, 255)
+  // val transparentColor: (Int, Int, Int) = (51, 153, 102)
 
-  val OUTPUT_SCALES = List(1, 4, 12)    // scalastyle:ignore magic.number
+  val outputScales = List(1, 4, 12)    // scalastyle:ignore magic.number
 
   def scalePostfix(scale: Int, ignore: Int = 1): String =  scale match {
     case `ignore` => ""
@@ -185,8 +185,8 @@ object ExportImages {
     }
 
     // various scales to output
-    OUTPUT_SCALES map (scaleFactor => {
-       val relativeName = ExportImages.IMAGES_DIR + "/" + worldItem.id + scalePostfix(scaleFactor) + ".png"
+    outputScales map (scaleFactor => {
+       val relativeName = ExportImages.imagesDir + "/" + worldItem.id + scalePostfix(scaleFactor) + ".png"
        val absoluteName = outputDir + "/" + relativeName
        ImageIO.write(rescaleImage(image, scaleFactor), "png", new File(absoluteName))
        relativeName
@@ -208,7 +208,7 @@ object ExportImages {
     val inputName = tilesetItem.filename
     val tileType = TileOptionsNew.types.get(tilesetItem.tiletype).get
 
-    val outputDirRelative = ExportImages.IMAGES_DIR + "/" + tilesetItem.id + "_tiles"
+    val outputDirRelative = ExportImages.imagesDir + "/" + tilesetItem.id + "_tiles"
     new File(outputDir + "/" + outputDirRelative).mkdir
 
     val image = getTilesetImage(inputDir + "/" + inputName, tileType)
@@ -226,7 +226,7 @@ object ExportImages {
       // ImageIO.write(curTileImage, "png", new File(outputName))
 
       // various scales to output
-      OUTPUT_SCALES map (scaleFactor => {
+      outputScales map (scaleFactor => {
         val relativeName = outputDirRelative + "/" + curTile + scalePostfix(scaleFactor) + ".png"
         val absoluteName = outputDir + "/" + relativeName
         ImageIO.write(rescaleImage(curTileImage, scaleFactor), "png", new File(absoluteName))
@@ -251,7 +251,7 @@ object ExportImages {
    */
   def getTilesetImage(inputFile: String,
                       tileAttributes: TileAttributes,
-                      transparentColor: (Int, Int, Int) = ExportImages.TRANSPARENT_COLOR): BufferedImage = {
+                      transparentColor: (Int, Int, Int) = ExportImages.transparentColor): BufferedImage = {
 
     val dg = new DosGraphics()
 

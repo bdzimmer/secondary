@@ -26,7 +26,8 @@ class ContentTransformer(
     driveInputPath: List[String],
     driveOutputPath: List[String],
     masterCollectionName: String,
-    mainCollectionNames: List[String]) {
+    mainCollectionNames: List[String],
+    license: String) {
 
 
 
@@ -189,8 +190,6 @@ class ContentTransformer(
     val charsToExport = WorldItem.filterList[CharacterItem](metaToExport)
 
     filesToExport foreach(x => println("file to export: " + x.id))
-
-    val license = "Copyright (c) 2015 Ben Zimmer. All rights reserved."
 
     val exportImages = new ExportImages(localExportPath, license)
 

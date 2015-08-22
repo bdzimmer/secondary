@@ -22,7 +22,7 @@ class ExportPages(val location: String, license: String) {
   val GLOSSARY_PAGE_FILE = "glossary.html"
   val TASKS_PAGE_FILE = "tasks.html"
 
-  val imagesLocation = location + "/" + ExportImages.IMAGES_DIR + "/"
+  val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
   new File(imagesLocation).mkdir
 
   val COLUMN_3 = 3
@@ -219,7 +219,7 @@ class ExportPages(val location: String, license: String) {
         Some(ExportPages.getToolbar(character)),
 
         Tags.column(COLUMN_8, pp.markdownToHtml(character.notes)) +
-        Tags.column(COLUMN_4, """<img src="%s" />""".format(ExportImages.IMAGES_DIR + "/" + character.id + "_12x.png")),
+        Tags.column(COLUMN_4, """<img src="%s" />""".format(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
 
         license)
 
@@ -324,14 +324,14 @@ object ExportPages {
 
   // generate HTML for an item's 1x image, with a link to the 4x version
   def imageLinkUpscale(item: WorldItem): String = {
-    Tags.link(Tags.image(ExportImages.IMAGES_DIR + "/" + item.id + ".png"), ExportImages.IMAGES_DIR + "/" + item.id + "_4x.png")
+    Tags.link(Tags.image(ExportImages.imagesDir + "/" + item.id + ".png"), ExportImages.imagesDir + "/" + item.id + "_4x.png")
   }
 
 
   // generate HTML for a smaller image, with a link to the page
   def imageLinkPage(item: WorldItem): String = {
 
-    val imageFile = ExportImages.IMAGES_DIR + "/" + item.id + "%s" + ".png"
+    val imageFile = ExportImages.imagesDir + "/" + item.id + "%s" + ".png"
 
     val imageTag = item match {
       case x: MapItem => Tags.imageSprite(imageFile.format(ExportImages.scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number
