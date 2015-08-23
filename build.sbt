@@ -10,14 +10,16 @@ lazy val root = (project in file("."))
     javacOptions ++= Seq("-source", "1.7", "-target", "1.7"),
     
     libraryDependencies ++= Seq(
-      "commons-io" % "commons-io" %  "2.4",
+      "commons-io" % "commons-io" % "2.4",
       "org.pegdown" % "pegdown" % "1.4.2",
       "org.yaml" % "snakeyaml" % "1.14",
       "com.google.apis" % "google-api-services-drive" % "v2-rev167-1.20.0",
       "org.scala-lang.modules" %% "scala-pickling" % "0.10.1",
-      "org.scala-lang" % "scala-swing" % "2.10+"
+      "org.scala-lang" % "scala-swing" % "2.10+",
+      "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+      "net.liftweb" %% "lift-json" % "2.6"
     ))
-
+    
   .dependsOn(gdrivescala)
   
     
