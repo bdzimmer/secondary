@@ -19,17 +19,17 @@ import com.google.api.client.util.DateTime
 
 class ExportPages(val location: String, license: String) {
 
-  val GLOSSARY_PAGE_FILE = "glossary.html"
-  val TASKS_PAGE_FILE = "tasks.html"
+  val glossaryPageFile = "glossary.html"
+  val tasksPageFile = "tasks.html"
 
   val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
   new File(imagesLocation).mkdir
 
-  val COLUMN_3 = 3
-  val COLUMN_4 = 4
-  val COLUMN_6 = 6
-  val COLUMN_8 = 8
-  val COLUMN_12 = 12
+  val column3 = 3
+  val column4 = 4
+  val column6 = 6
+  val column8 = 8
+  val column12 = 12
 
   // TODO: getPegDown should maybe be moved the companion object
   // I think it might be handy to have the export hold
@@ -72,7 +72,7 @@ class ExportPages(val location: String, license: String) {
 
           Tags.jumboTron("<h1>%s</h1><h3>%s</h3>".format(masterCollection.name, masterCollection.description)) +
 
-          Tags.column(COLUMN_12,
+          Tags.column(column12,
             pp.markdownToHtml(masterCollection.notes) +
 
             Tags.hr +
@@ -80,8 +80,8 @@ class ExportPages(val location: String, license: String) {
               // (masterCollection.children.asScala.toList.map(x => {
               //  Export.textLinkPage(x)
               // }) ++
-              List(Tags.link("Glossary", GLOSSARY_PAGE_FILE),
-                   Tags.link("Tasks", TASKS_PAGE_FILE),
+              List(Tags.link("Glossary", glossaryPageFile),
+                   Tags.link("Tasks", tasksPageFile),
                    Tags.link("Edit", ExportPages.notepadURL(masterCollection)))).mkString("&nbsp;&middot;") +
             Tags.hr
 
@@ -91,7 +91,7 @@ class ExportPages(val location: String, license: String) {
 
             val curCollection = x.asInstanceOf[CollectionItem]
 
-            Tags.column(COLUMN_6,
+            Tags.column(column6,
               "<h3>" + curCollection.name + "</h3>\n" +
               Tags.listGroup(curCollection.children
                   map(x => ExportPages.getCollectionLinksWithDescription(x))))
@@ -110,7 +110,7 @@ class ExportPages(val location: String, license: String) {
 
   def createTasksPage(masterCollectionList: List[WorldItem]): String = {
 
-    val relFilePath = TASKS_PAGE_FILE
+    val relFilePath = tasksPageFile
 
     def taskList(todoFunc: WorldItem => List[String]): String = {
       Tags.listGroup(masterCollectionList
@@ -134,29 +134,22 @@ class ExportPages(val location: String, license: String) {
 
         None,
 
-         // Todos and thoughts
+       // Todos and thoughts
+       Tags.column(column6, "<h3>To-dos</h3>\n" + taskList(getTask(_)("TODO: "))) +
 
-         Tags.column(COLUMN_6,
-           "<h3>To-dos</h3>\n" + taskList(getTask(_)("TODO: "))
-         ) +
-
-
-         // Thoughts
-
-         Tags.column(COLUMN_6,
-           "<h3>Thoughts</h3>\n" + taskList(getTask(_)("THOUGHT: "))
-         ) +
+       // Thoughts
+       Tags.column(column6, "<h3>Thoughts</h3>\n" + taskList(getTask(_)("THOUGHT: "))) +
 
 
-         // Empty notes
-         Tags.column(COLUMN_6,
-           "<h3>Empty Notes</h3>\n" +
-           Tags.listGroup(masterCollectionList
-             filter(_.notes.equals(""))
-             map(x => Tags.listItem(ExportPages.notepadLink(x) + ExportPages.textLinkPage(x))))
-         ),
+       // Empty notes
+       Tags.column(column6,
+         "<h3>Empty Notes</h3>\n" +
+         Tags.listGroup(masterCollectionList
+           filter(_.notes.equals(""))
+           map(x => Tags.listItem(ExportPages.notepadLink(x) + ExportPages.textLinkPage(x))))
+       ),
 
-         license)
+       license)
 
 
     relFilePath
@@ -166,7 +159,7 @@ class ExportPages(val location: String, license: String) {
 
   def createGlossaryPage(masterCollectionList: List[WorldItem]): String = {
 
-    val relFilePath = GLOSSARY_PAGE_FILE
+    val relFilePath = glossaryPageFile
 
     PageTemplates.createArticlePage(
 
@@ -177,7 +170,7 @@ class ExportPages(val location: String, license: String) {
 
         // Testing...glossary
 
-        Tags.column(COLUMN_6,
+        Tags.column(column6,
           "<h3>Glossary</h3>\n" +
 
           {
@@ -218,8 +211,8 @@ class ExportPages(val location: String, license: String) {
 
         Some(ExportPages.getToolbar(character)),
 
-        Tags.column(COLUMN_8, pp.markdownToHtml(character.notes)) +
-        Tags.column(COLUMN_4, """<img src="%s" />""".format(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
+        Tags.column(column8, pp.markdownToHtml(character.notes)) +
+        Tags.column(column4, """<img src="%s" />""".format(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
 
         license)
 
@@ -243,8 +236,8 @@ class ExportPages(val location: String, license: String) {
 
         Some(ExportPages.getToolbar(map)),
 
-        Tags.column(COLUMN_12, pp.markdownToHtml(map.notes)) +
-        Tags.column(COLUMN_12, ExportPages.imageLinkUpscale(map)),
+        Tags.column(column12, pp.markdownToHtml(map.notes)) +
+        Tags.column(column12, ExportPages.imageLinkUpscale(map)),
 
         license)
         // Export.IMAGES_DIR + "/" + map.id + "_4x.png")
@@ -268,13 +261,13 @@ class ExportPages(val location: String, license: String) {
         collection.name, collection.description,
         Some(ExportPages.getToolbar(collection)),
 
-        Tags.column(COLUMN_12, pp.markdownToHtml(collection.notes)) +
+        Tags.column(column12, pp.markdownToHtml(collection.notes)) +
 
         Tags.hr +
 
         // links to child pages with images
         collection.children.map(x => {
-          Tags.column(COLUMN_3, ExportPages.imageLinkPage(x))
+          Tags.column(column3, ExportPages.imageLinkPage(x))
         }).mkString("\n"),
 
         license)
@@ -295,7 +288,7 @@ class ExportPages(val location: String, license: String) {
         location + "/" + relFilePath,
         item.name, item.description,
         Some(ExportPages.getToolbar(item)),
-        Tags.column(COLUMN_12, pp.markdownToHtml(item.notes)),
+        Tags.column(column12, pp.markdownToHtml(item.notes)),
         license )
 
     relFilePath
