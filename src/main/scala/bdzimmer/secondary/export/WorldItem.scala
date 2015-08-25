@@ -23,10 +23,7 @@ import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
 
 
-
 // bean version of world items -- for loading from
-
-
 
 trait WorldItemBean {
   @BeanProperty var id: String = ""             // TODO: enforce provided
@@ -64,6 +61,12 @@ class CollectionItemBean extends WorldItemBean {
        children.asScala.map(_.getVal).toList)
 }
 
+class ImageItemBean extends MetaItemBean {
+  def getVal(): ImageItem = ImageItem(
+      id, name, description, notes, srcyml, remoteid,
+      filename)
+}
+
 class TilesetItemBean extends TileMetaItemBean {
   def getVal(): TilesetItem = TilesetItem(
       id, name, description, notes, srcyml, remoteid,
@@ -75,7 +78,6 @@ class SpritesheetItemBean extends TileMetaItemBean {
       id, name, description, notes, srcyml, remoteid,
       filename, tiletype)
 }
-
 
 class MapItemBean extends MetaItemBean {
   def getVal(): MapItem = MapItem(
@@ -128,6 +130,10 @@ case class CollectionItem(
     srcyml: String, remoteid: String,
     children: List[WorldItem]) extends WorldItem
 
+case class ImageItem(
+    id: String, name: String, description: String, notes: String,
+    srcyml: String, remoteid: String,
+    filename: String) extends MetaItem
 
 case class TilesetItem(
     id: String, name: String, description: String, notes: String,
@@ -154,7 +160,6 @@ case class CharacterItem(
 
 
 
-
 // 2015-07-26 - WorldItem companion object
 
 object WorldItem {
@@ -165,6 +170,7 @@ object WorldItem {
   val constructor = new Constructor(classOf[CollectionItemBean])
   constructor.addTypeDescription(new TypeDescription(classOf[BareWorldItemBean], new Tag("!item")))
   constructor.addTypeDescription(new TypeDescription(classOf[CollectionItemBean], new Tag("!collection")))
+  constructor.addTypeDescription(new TypeDescription(classOf[ImageItemBean], new Tag("!image")))
   constructor.addTypeDescription(new TypeDescription(classOf[TilesetItemBean], new Tag("!tileset")))
   constructor.addTypeDescription(new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")))
   constructor.addTypeDescription(new TypeDescription(classOf[MapItemBean], new Tag("!map")))

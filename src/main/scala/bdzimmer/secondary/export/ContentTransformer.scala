@@ -99,7 +99,11 @@ class ContentTransformer(
     // find a unique list of the files pointed to by meta items.
     val uniqueFiles = WorldItem.filterTree[MetaItem](masterCollection).map(_.filename).distinct
 
-    downloadFilesIntelligent(uniqueFiles, fileStatus)
+    // some of these files are not actual files, but links to remote data.
+    // so filter those out
+    val filteredFiles = uniqueFiles.filter(x => !x.startsWith("wikimedia:"))
+
+    downloadFilesIntelligent(filteredFiles, fileStatus)
 
   }
 
