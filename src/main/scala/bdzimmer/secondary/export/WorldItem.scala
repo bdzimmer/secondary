@@ -12,6 +12,7 @@
 //             converted to immutable.
 // 2015-08-22: Changed null fields to default to empty string. Need to implement validation
 //             on loaded world to make sure required fields are provided.
+// 2015-08-24: Added ImageItemBean / ImageItem classes.
 
 package bdzimmer.secondary.export
 
