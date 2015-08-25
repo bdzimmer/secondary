@@ -4,13 +4,13 @@
 
 // 2015-08-22: Created.
 // 2015-08-23: Metadata retrieval and image downloads.
+// 2015-08-24: Extension awareness in image downloader. JSON parsing fixes.
 
 package bdzimmer.secondary.export
 
 import java.net.URL
 
-import org.apache.commons.io.IOUtils
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 import scala.util.Try
 
 import net.liftweb.json.JsonParser
@@ -41,8 +41,9 @@ object ImageDownloader {
   // get a JSON string - none if the query fails
   def getWikimediaJson(filename: String): Option[String] = {
 
-    val queryString = wikipediaURL + metaDataQuery + filename
-    println(queryString)
+    // I think we can always assume a "File:" prefix
+    val queryString = wikipediaURL + metaDataQuery + "File:" + filename
+    // println(queryString)
     val is = new URL(queryString).openStream
     val result = Try(IOUtils.toString(is))
     IOUtils.closeQuietly(is)
@@ -56,19 +57,14 @@ object ImageDownloader {
 
     val root = JsonParser.parse(json)
 
-    // there's probably a better way to do this
-    def extractStr(jval: JValue, default: String = ""): String = {
-      Try({
-        val JString(str) = jval
-        str
-      }).toOption.getOrElse(default)
+    def extractStr(jval: JValue, default: String = ""): String = jval match {
+      case JString(x) => x
+      case _ => default
     }
 
-    def extractInt(jval: JValue, default: Int = 0): Int = {
-      Try({
-        val JInt(num) = jval
-        num.toInt
-      }).toOption.getOrElse(default)
+    def extractInt(jval: JValue, default: Int = 0): Int = jval match {
+      case JInt(x) => x.toInt
+      case _ => default
     }
 
     val main = root \ "query" \ "pages" \ "-1"
@@ -95,11 +91,10 @@ object ImageDownloader {
   }
 
 
-  def downloadImage(wm: WikimediaMeta, outputFilename: String): String = {
-
-    // TODO: outputFilename should be a base name without extension
-    // the resulting file should use the extension from the meta
-
+  // download the image referenced by a metadata object
+  def downloadImage(wm: WikimediaMeta, outputName: String): String = {
+    val outputExtension = FilenameUtils.getExtension(wm.url)
+    val outputFilename = outputName + "." + outputExtension
     val outputFile = new java.io.File(outputFilename)
     FileUtils.copyURLToFile(new java.net.URL(wm.url), outputFile)
     outputFilename
