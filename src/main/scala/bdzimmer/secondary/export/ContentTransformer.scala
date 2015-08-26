@@ -189,9 +189,12 @@ class ContentTransformer(
     // the file items to export are:
     // 1) the metaitems in the whole collection whose files were refreshed
     // 2) the characteritems in refreshed metadata (need to get new images in case their images changed)
+    // 3) the imageitems in refreshed metadata that reference wikimedia instead of local files
 
+    // TODO: better names here
     val filesToExport = WorldItem.filterList[MetaItem](masterCollectionList).filter(x => fileStatus.keySet.contains(x.filename))
     val charsToExport = WorldItem.filterList[CharacterItem](metaToExport)
+    val imagesToExport = WorldItem.filterList[ImageItem](metaToExport).filter(x => x.filename.startsWith("wikimedia:"))
 
     filesToExport foreach(x => println("file to export: " + x.id))
 
@@ -211,7 +214,7 @@ class ContentTransformer(
     val allImageOutputs = if (images) {
       println("--exporting images")
 
-      val imageOutputs = exportImages.exportAllImages(filesToExport, localDownloadPath)
+      val imageOutputs = exportImages.exportAllImages(filesToExport ++ imagesToExport, localDownloadPath)
       val characterOutputs = if (charsToExport.length > 0) {
          exportImages.prepareCharacterImages(charsToExport, WorldItem.filterList[SpritesheetItem](masterCollectionList), localDownloadPath)
       } else {

@@ -27,6 +27,7 @@
 // 2015-07-26: Refactoring. Improved item image links (shows up in collection pages).
 // 2015-08-08: Generic WorldItem page creation. Simple image link implementation for WorldItems.
 //             Todo list improvements, including "thoughts".
+// 2015-08-26: Start of Wikimedia image exporting.
 
 package bdzimmer.secondary.export
 
@@ -35,6 +36,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FilenameUtils
 
 import bdzimmer.secondary.model.{DosGraphics, Map, TileAttributes, TileOptionsNew, Tiles}
 
@@ -52,33 +54,85 @@ class ExportImages(val location: String, license: String) {
 
     // export tileset / spritesheet and map images
 
+    // for maps, tilesets, and spritesheets, filename is a datafile that gets converted
+    // to images of various scales which are saved as standard image files. These
+    // scaled standard image files become the outputs.
+
+    // TODO: merge these maps.
     val mapImageOutputs = (WorldItem.filterList[MapItem](items)
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
-
 
     val tileImageOutputs = (WorldItem.filterList[TileMetaItem](items)
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 
-
-    // export individual tile images
+    // // export individual tile images
     // (filterList[TileMetaItem](items)
     //    map(x => Export.exportIndividualTileImages(x, contentDir, location)))
 
     // only export individual tile images for sprite sheets
     val spritesheetImageOutputs = (WorldItem.filterList[SpritesheetItem](items)
-        map(x =>(x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
+        map(x => (x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
 
 
-    // get list of spritesheets
-    val spritesheets = WorldItem.filterList[SpritesheetItem](items)
+
+    // In the case of ImageItems, the filename is already an image. It either exists
+    // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
+    // prefix.
+    val imageOutputs = (WorldItem.filterList[ImageItem](items)
+        map(x => prepareImageItemOutputs(x)))
 
     // skip adding spritesheet outputs to list, since we don't want to upload them
-    val allImageOutputsList = List(mapImageOutputs.toMap, tileImageOutputs.toMap)
+    val allImageOutputsList = List(
+        mapImageOutputs.toMap,
+        tileImageOutputs.toMap,
+        imageOutputs.toMap)
 
     val allImageOutputs = allImageOutputsList.reduce(ExportPages.mergeFileOutputsMaps(_, _))
 
     allImageOutputs
 
+  }
+
+
+
+  def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
+
+     // TODO: put this in its own function
+    val relativeName = ExportImages.imagesDir + "/" + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
+    val absoluteName = location + "/" + relativeName
+
+    val result = imageItem.filename.startsWith("wikimedia:") match {
+
+      case false => {
+        // local file - copy to images folder
+        // source is original local file
+
+        val srcFilename = imageItem.filename
+
+        FileUtils.copyFile(
+            new java.io.File(srcFilename),
+            new java.io.File(absoluteName))
+
+        (srcFilename, List(relativeName))
+
+      }
+
+      case true => {
+        // wikimedia file - download to images folder
+        // source is scrcyml!
+
+        val srcFilename = imageItem.srcyml
+
+        val json = ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
+        val wm = ImageDownloader.parseWikimediaJson(json.get)
+        val junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
+
+        (srcFilename, List(relativeName))
+
+      }
+    }
+
+    result
   }
 
 

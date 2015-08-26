@@ -97,7 +97,6 @@ class CharacterItemBean extends WorldItemBean {
 
 }
 
-
 // immutable versions ///////////////////////////////////////////////////////////////////
 
 
