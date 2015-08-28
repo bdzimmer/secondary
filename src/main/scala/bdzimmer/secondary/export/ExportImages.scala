@@ -36,7 +36,6 @@ import java.awt.image.BufferedImage
 import java.io.File
 
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.FilenameUtils
 
 import bdzimmer.secondary.model.{DosGraphics, Map, TileAttributes, TileOptionsNew, Tiles}
 
@@ -74,12 +73,10 @@ class ExportImages(val location: String, license: String) {
         map(x => (x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
 
 
-
     // In the case of ImageItems, the filename is already an image. It either exists
     // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
     // prefix.
-    val imageOutputs = (WorldItem.filterList[ImageItem](items)
-        map(x => prepareImageItemOutputs(x)))
+    val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x))).flatten
 
     // skip adding spritesheet outputs to list, since we don't want to upload them
     val allImageOutputsList = List(
@@ -95,44 +92,43 @@ class ExportImages(val location: String, license: String) {
 
 
 
-  def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
+  def prepareImageItemOutputs(imageItem: ImageItem): Option[(String, List[String])] = {
 
      // TODO: put this in its own function
-    val relativeName = ExportImages.imagesDir + "/" + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
+    val relativeName = ExportPages.imageItemPath(imageItem)
     val absoluteName = location + "/" + relativeName
 
-    val result = imageItem.filename.startsWith("wikimedia:") match {
+    imageItem.filename.startsWith("wikimedia:") match {
 
       case false => {
         // local file - copy to images folder
         // source is original local file
 
         val srcFilename = imageItem.filename
+        val srcFile = new java.io.File(srcFilename)
 
-        FileUtils.copyFile(
-            new java.io.File(srcFilename),
-            new java.io.File(absoluteName))
-
-        (srcFilename, List(relativeName))
-
+        if (srcFile.exists) {
+          FileUtils.copyFile(srcFile, new java.io.File(absoluteName))
+          Some((srcFilename, List(relativeName)))
+        } else {
+          None
+        }
       }
 
       case true => {
         // wikimedia file - download to images folder
         // source is scrcyml!
-
         val srcFilename = imageItem.srcyml
 
-        val json = ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
-        val wm = ImageDownloader.parseWikimediaJson(json.get)
-        val junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
-
-        (srcFilename, List(relativeName))
+        for {
+          json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
+          wm = ImageDownloader.parseWikimediaJson(json)
+          junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
+        } yield (srcFilename, List(relativeName))
 
       }
     }
 
-    result
   }
 
 
@@ -182,9 +178,6 @@ class ExportImages(val location: String, license: String) {
     characterImageOutputs
 
   }
-
-
-
 
 }
 

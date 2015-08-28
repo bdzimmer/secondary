@@ -5,6 +5,7 @@
 // Ben Zimmer
 
 // 2015-08-09: Created.
+// 2015-08-27: Image page creation.
 
 package bdzimmer.secondary.export
 
@@ -12,9 +13,9 @@ import java.io.File
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
-import org.pegdown.PegDownProcessor
-
 import com.google.api.client.util.DateTime
+import org.apache.commons.io.FilenameUtils
+import org.pegdown.PegDownProcessor
 
 
 class ExportPages(val location: String, license: String) {
@@ -50,6 +51,7 @@ class ExportPages(val location: String, license: String) {
       case x: CharacterItem => createCharacterPage(x)
       case x: MapItem => createMapPage(x)
       case x: CollectionItem => createCollectionPage(x)
+      case x: ImageItem => createImagePage(x)
       case x: WorldItem => createItemPage(x)
     }) filter (!_.equals(""))
 
@@ -212,7 +214,7 @@ class ExportPages(val location: String, license: String) {
         Some(ExportPages.getToolbar(character)),
 
         Tags.column(column8, pp.markdownToHtml(character.notes)) +
-        Tags.column(column4, """<img src="%s" />""".format(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
+        Tags.column(column4, Tags.image(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
 
         license)
 
@@ -250,11 +252,7 @@ class ExportPages(val location: String, license: String) {
   def createCollectionPage(collection: CollectionItem): String = {
 
     val relFilePath = collection.id + ".html"
-
-    // println(collection.id)
-
     val pp = getPegDown
-
 
     PageTemplates.createArticlePage(
         location + "/" + relFilePath,
@@ -270,6 +268,47 @@ class ExportPages(val location: String, license: String) {
           Tags.column(column3, ExportPages.imageLinkPage(x))
         }).mkString("\n"),
 
+        license)
+
+    relFilePath
+  }
+
+
+
+  def createImagePage(imageItem: ImageItem): String = {
+
+    val relFilePath = imageItem.id + ".html"
+    val pp = getPegDown
+
+    // TODO: move this into an attribute of the case class or something
+    // TODO: think about doing image download here
+
+    val wikiNameOption = (imageItem.filename.startsWith("wikimedia:") match {
+      case true => Some(imageItem.filename.split(":")(1))
+      case false => None
+    })
+
+    val licenseDescription = (for {
+      wikiName <- wikiNameOption
+      json <- ImageDownloader.getWikimediaJson(wikiName)
+      wm = ImageDownloader.parseWikimediaJson(json)
+      description =
+        "Artist: " + wm.artist + Tags.br +
+        "License: " + wm.license + Tags.br +
+        (if (wm.attribution) "Attribution required." + Tags.br else "") +
+        Tags.link("Source", wm.descriptionurl) + Tags.hr
+    } yield description).getOrElse("")
+
+    PageTemplates.createArticlePage(
+        location + "/" + relFilePath,
+        imageItem.name, imageItem.description,
+        Some(ExportPages.getToolbar(imageItem)),
+
+        Tags.column(column12,
+            Tags.image(ExportPages.imageItemPath(imageItem), responsive = true) +
+            Tags.hr +
+            licenseDescription +
+            pp.markdownToHtml(imageItem.notes)),
         license)
 
     relFilePath
@@ -318,6 +357,11 @@ object ExportPages {
   // generate HTML for an item's 1x image, with a link to the 4x version
   def imageLinkUpscale(item: WorldItem): String = {
     Tags.link(Tags.image(ExportImages.imagesDir + "/" + item.id + ".png"), ExportImages.imagesDir + "/" + item.id + "_4x.png")
+  }
+
+
+  def imageItemPath(imageItem: ImageItem): String = {
+    ExportImages.imagesDir + "/" + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
   }
 
 

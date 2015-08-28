@@ -64,9 +64,13 @@ object Tags {
     """  <a href="%s">%s</a>""".format(link, text)
   }
 
-  def image(file: String): String = {
-    """<img src="%s" />""".format(file)
+  def image(file: String, responsive: Boolean = false): String = {
+    (responsive match {
+      case false => """<img src="%s" />"""
+      case true => """<img src="%s" class="img-responsive" />"""
+    }).format(file)
   }
+
 
   def imageSprite(file: String, x: Int, y: Int, width: Int, height: Int): String = {
     """<div style= "background-image:url('%s');background-repeat:no-repeat;background-position: %d %d;width:%dpx;height:%dpx;"></div>""".format(file, x, y, width, height)
@@ -79,6 +83,10 @@ object Tags {
 
 
   def hr(): String = {
-      """<hr />"""
+    """<hr />"""
+  }
+
+  def br(): String = {
+    """<br />"""
   }
 }

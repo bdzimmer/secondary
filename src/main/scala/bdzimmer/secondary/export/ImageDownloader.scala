@@ -75,6 +75,7 @@ object ImageDownloader {
       extmeta \ key \ "value"
     }
 
+    // TODO: get description (title is kind of useless)
     WikimediaMeta(
       title = extractStr(main \ "title"),
       width = extractInt(imageinfo \ "width").toInt,
