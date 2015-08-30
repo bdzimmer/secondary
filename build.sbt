@@ -1,4 +1,5 @@
-// PixelWorldEditor project sbt file
+// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Secondary project sbt file
 
 lazy val root = (project in file("."))
   .settings(
