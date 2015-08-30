@@ -15,7 +15,6 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 
 import com.google.api.client.util.DateTime
 import org.apache.commons.io.FilenameUtils
-import org.pegdown.PegDownProcessor
 
 
 class ExportPages(val location: String, license: String) {
@@ -31,18 +30,6 @@ class ExportPages(val location: String, license: String) {
   val column6 = 6
   val column8 = 8
   val column12 = 12
-
-  // TODO: getPegDown should maybe be moved the companion object
-  // I think it might be handy to have the export hold
-  // config info for pegdown.
-
-
-  // get a new pegdown processor
-  def getPegDown(): PegDownProcessor = {
-    // new PegDownProcessor(Extensions.HARDWRAPS)
-    new PegDownProcessor
-  }
-
 
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
@@ -63,8 +50,6 @@ class ExportPages(val location: String, license: String) {
 
     val relFilePath = "index.html"
 
-    val pp = getPegDown
-
     PageTemplates.createPage(
         location + "/" + relFilePath,
         masterCollection.name,
@@ -75,7 +60,7 @@ class ExportPages(val location: String, license: String) {
           Tags.jumboTron("<h1>%s</h1><h3>%s</h3>".format(masterCollection.name, masterCollection.description)) +
 
           Tags.column(column12,
-            pp.markdownToHtml(masterCollection.notes) +
+            NotesParser.transform(masterCollection.notes) +
 
             Tags.hr +
             (
@@ -205,15 +190,13 @@ class ExportPages(val location: String, license: String) {
 
     // println(character.id)
 
-    val pp = getPegDown
-
     PageTemplates.createArticlePage(
         location + "/" + relFilePath,
         character.name, character.description,
 
         Some(ExportPages.getToolbar(character)),
 
-        Tags.column(column8, pp.markdownToHtml(character.notes)) +
+        Tags.column(column8, NotesParser.transform(character.notes)) +
         Tags.column(column4, Tags.image(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
 
         license)
@@ -230,15 +213,13 @@ class ExportPages(val location: String, license: String) {
 
     // println(map.id)
 
-    val pp = getPegDown
-
     PageTemplates.createArticlePage(
         location + "/" + relFilePath,
         map.name, map.description,
 
         Some(ExportPages.getToolbar(map)),
 
-        Tags.column(column12, pp.markdownToHtml(map.notes)) +
+        Tags.column(column12, NotesParser.transform(map.notes)) +
         Tags.column(column12, ExportPages.imageLinkUpscale(map)),
 
         license)
@@ -252,14 +233,13 @@ class ExportPages(val location: String, license: String) {
   def createCollectionPage(collection: CollectionItem): String = {
 
     val relFilePath = collection.id + ".html"
-    val pp = getPegDown
 
     PageTemplates.createArticlePage(
         location + "/" + relFilePath,
         collection.name, collection.description,
         Some(ExportPages.getToolbar(collection)),
 
-        Tags.column(column12, pp.markdownToHtml(collection.notes)) +
+        Tags.column(column12, NotesParser.transform(collection.notes)) +
 
         Tags.hr +
 
@@ -278,7 +258,6 @@ class ExportPages(val location: String, license: String) {
   def createImagePage(imageItem: ImageItem): String = {
 
     val relFilePath = imageItem.id + ".html"
-    val pp = getPegDown
 
     // TODO: move this into an attribute of the case class or something
     // TODO: think about doing image download here
@@ -304,11 +283,12 @@ class ExportPages(val location: String, license: String) {
         imageItem.name, imageItem.description,
         Some(ExportPages.getToolbar(imageItem)),
 
+        Tags.column(column8, Tags.image(ExportPages.imageItemPath(imageItem), responsive = true)) +
+        Tags.column(column4, "") +
         Tags.column(column12,
-            Tags.image(ExportPages.imageItemPath(imageItem), responsive = true) +
             Tags.hr +
             licenseDescription +
-            pp.markdownToHtml(imageItem.notes)),
+            NotesParser.transform(imageItem.notes)),
         license)
 
     relFilePath
@@ -321,13 +301,12 @@ class ExportPages(val location: String, license: String) {
 
     // println(collection.id)
 
-    val pp = getPegDown
-
     PageTemplates.createArticlePage(
         location + "/" + relFilePath,
         item.name, item.description,
         Some(ExportPages.getToolbar(item)),
-        Tags.column(column12, pp.markdownToHtml(item.notes)),
+        Tags.column(column12,
+            NotesParser.transform(item.notes)),
         license )
 
     relFilePath

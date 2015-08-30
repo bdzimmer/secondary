@@ -39,7 +39,6 @@ object Driver {
       token = DriveBuilder.getAccessTokenFromJsonFile(
           new java.io.File(driverConfig.driveAccessTokenFile)))
 
-
     val drive = DriveBuilder.getDrive(keys, "DriveTesting")
 
     // content folder on Drive (path below root)
