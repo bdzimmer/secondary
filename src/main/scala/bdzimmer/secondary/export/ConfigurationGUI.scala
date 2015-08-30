@@ -12,9 +12,6 @@ import BorderPanel.Position._
 
 import scala.collection.JavaConverters
 
-import java.io.FileInputStream
-import java.util.Properties
-
 import java.awt.Font                    // scalastyle:ignore illegal.imports
 import javax.swing.border.EmptyBorder
 import javax.swing.SwingConstants
@@ -102,18 +99,3 @@ object ConfigurationGUI extends SimpleSwingApplication {
 
 }
 
-
-
-class PropertiesWrapper(filename: String) {
-
-    val file = new java.io.File(filename)
-    val prop = new Properties()
-
-    if (file.exists) {
-      prop.load(new FileInputStream(file))
-    }
-
-    def apply(key: String): Option[String] = Option(prop.getProperty(key))
-    def set(k: String, v: String): Unit = prop.setProperty(k, v)
-
-}

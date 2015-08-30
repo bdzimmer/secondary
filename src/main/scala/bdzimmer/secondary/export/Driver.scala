@@ -3,8 +3,8 @@
 // Entry point for world builder export process.
 
 // 2015-08-14: Configuration loaded from properties in user's home directory.
-
 // 2015-08-22: Reworked DriverConfig. Style fixes.
+// 2015-08-30: Further configuration updates.
 
 package bdzimmer.secondary.export
 
@@ -15,11 +15,11 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 
+import com.google.api.client.util.DateTime
 import org.apache.commons.io.FileUtils
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder}
-
-import com.google.api.client.util.DateTime
+import bdzimmer.gdrivescala.GoogleDriveKeys
 
 
 object Driver {
@@ -31,12 +31,15 @@ object Driver {
 
     println("driver configuration loaded")
 
-    // System.exit(0)
-
-
     new java.io.File(driverConfig.localScratchPath).mkdirs
 
-    val keys = DriveBuilder.getKeysFromProperties(driverConfig.drivePropertiesFile)
+    val keys = GoogleDriveKeys(
+      id = DriveBuilder.getClientIdFromJsonFile(
+          new java.io.File(driverConfig.driveClientIdFile)),
+      token = DriveBuilder.getAccessTokenFromJsonFile(
+          new java.io.File(driverConfig.driveAccessTokenFile)))
+
+
     val drive = DriveBuilder.getDrive(keys, "DriveTesting")
 
     // content folder on Drive (path below root)
@@ -100,59 +103,3 @@ object Driver {
 
 }
 
-
-
-class DriverConfig() {
-
-  val prop = new PropertiesWrapper(DriverConfig.propFilename)
-
-  val missing = DriverConfig.requiredProperties.filter(x => {
-    !prop.prop.keySet().contains(x.key)
-  })
-
-  missing foreach(x => {
-    System.err.println(
-        "property " + x.key + " missing from driver configuration\n" +
-        "\tusing default value " + x.default)
-  })
-
-
-  def getProp(cf: ConfigField): String = {
-    prop(cf.key).getOrElse(cf.default)
-  }
-
-  val localScratchPath = getProp(DriverConfig.localScratchPath)
-  val drivePropertiesFile = getProp(DriverConfig.drivePropertiesFile)
-  val driveInputPath = getProp(DriverConfig.driveInputPath)
-  val driveOutputPath = getProp(DriverConfig.driveOutputPath)
-  val mainCollectionNames = getProp(DriverConfig.mainCollectionNames)
-  val license = getProp(DriverConfig.license)
-  val localContentPath = getProp(DriverConfig.localContentPath)
-
-}
-
-
-case class ConfigField(key: String, default: String, description: String)
-
-object DriverConfig {
-
-  val homeDir = System.getProperty("user.home")
-  val propFilename = homeDir + "/" + "worldbuilder.properties"
-
-  val localScratchPath = ConfigField("localScratchPath", "tmp", "Local scratch path")
-  val drivePropertiesFile = ConfigField("drivePropertiesFile", "googledrive.properties", "Drive properties file")
-  val driveInputPath = ConfigField("driveInputPath", "secondary/content", "Drive input path")
-  val driveOutputPath = ConfigField("driveOutputPath", "secondary/web", "Drive output path")
-  val mainCollectionNames = ConfigField("mainCollectionNames", "characters,locations,lore,tilesets,sprites", "Main collection names")
-  val license = ConfigField("license", "", "License text")
-  val localContentPath = ConfigField("localContentPath", "", "Local content path")
-
-  val requiredProperties =  List(
-      localScratchPath,
-      drivePropertiesFile,
-      driveInputPath,
-      driveOutputPath,
-      mainCollectionNames,
-      license,
-      localContentPath)
-}
