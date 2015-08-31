@@ -17,7 +17,9 @@ import com.google.api.client.util.DateTime
 import org.apache.commons.io.FilenameUtils
 
 
-class ExportPages(val location: String, license: String) {
+class ExportPages(world: List[WorldItem], val location: String, license: String) {
+
+  val np = new NotesParser(world)
 
   val glossaryPageFile = "glossary.html"
   val tasksPageFile = "tasks.html"
@@ -60,7 +62,7 @@ class ExportPages(val location: String, license: String) {
           Tags.jumboTron("<h1>%s</h1><h3>%s</h3>".format(masterCollection.name, masterCollection.description)) +
 
           Tags.column(column12,
-            NotesParser.transform(masterCollection.notes) +
+            np.transform(masterCollection.notes) +
 
             Tags.hr +
             (
@@ -95,12 +97,12 @@ class ExportPages(val location: String, license: String) {
 
 
 
-  def createTasksPage(masterCollectionList: List[WorldItem]): String = {
+  def createTasksPage(): String = {
 
     val relFilePath = tasksPageFile
 
     def taskList(todoFunc: WorldItem => List[String]): String = {
-      Tags.listGroup(masterCollectionList
+      Tags.listGroup(world
               map(x => (x, todoFunc(x)))
               filter(_._2.length > 0)
               map(x => Tags.listItem(ExportPages.notepadLink(x._1) + ExportPages.textLinkPage(x._1) +
@@ -131,7 +133,7 @@ class ExportPages(val location: String, license: String) {
        // Empty notes
        Tags.column(column6,
          "<h3>Empty Notes</h3>\n" +
-         Tags.listGroup(masterCollectionList
+         Tags.listGroup(world
            filter(_.notes.equals(""))
            map(x => Tags.listItem(ExportPages.notepadLink(x) + ExportPages.textLinkPage(x))))
        ),
@@ -144,7 +146,7 @@ class ExportPages(val location: String, license: String) {
 
 
 
-  def createGlossaryPage(masterCollectionList: List[WorldItem]): String = {
+  def createGlossaryPage(): String = {
 
     val relFilePath = glossaryPageFile
 
@@ -161,7 +163,7 @@ class ExportPages(val location: String, license: String) {
           "<h3>Glossary</h3>\n" +
 
           {
-            val groupedItems = (masterCollectionList
+            val groupedItems = (world
               drop(1)  // get rid of master collection - assumes master is first in list
               // filter(!_.isInstanceOf[CollectionItem])
               filter(!_.isInstanceOf[MetaItem])
@@ -196,7 +198,7 @@ class ExportPages(val location: String, license: String) {
 
         Some(ExportPages.getToolbar(character)),
 
-        Tags.column(column8, NotesParser.transform(character.notes)) +
+        Tags.column(column8, np.transform(character.notes)) +
         Tags.column(column4, Tags.image(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
 
         license)
@@ -219,7 +221,7 @@ class ExportPages(val location: String, license: String) {
 
         Some(ExportPages.getToolbar(map)),
 
-        Tags.column(column12, NotesParser.transform(map.notes)) +
+        Tags.column(column12, np.transform(map.notes)) +
         Tags.column(column12, ExportPages.imageLinkUpscale(map)),
 
         license)
@@ -239,7 +241,7 @@ class ExportPages(val location: String, license: String) {
         collection.name, collection.description,
         Some(ExportPages.getToolbar(collection)),
 
-        Tags.column(column12, NotesParser.transform(collection.notes)) +
+        Tags.column(column12, np.transform(collection.notes)) +
 
         Tags.hr +
 
@@ -288,7 +290,7 @@ class ExportPages(val location: String, license: String) {
         Tags.column(column12,
             Tags.hr +
             licenseDescription +
-            NotesParser.transform(imageItem.notes)),
+            np.transform(imageItem.notes)),
         license)
 
     relFilePath
@@ -306,7 +308,7 @@ class ExportPages(val location: String, license: String) {
         item.name, item.description,
         Some(ExportPages.getToolbar(item)),
         Tags.column(column12,
-            NotesParser.transform(item.notes)),
+            np.transform(item.notes)),
         license )
 
     relFilePath
@@ -356,17 +358,6 @@ object ExportPages {
     }
     Tags.link(imageTag + "<br />" + item.name, item.id + ".html")
   }
-
-  /*
-  // generate HTML for a smaller image, with a link to the page
-  def imageLinkPage(item: WorldItem): String = {
-    val scale = item match {
-      case x: MapItem => 1
-      case _ => 4
-    }
-    Tags.link(Tags.image(IMAGES_DIR + "/" + item.id + scalePostfix(scale) + ".png") + item.name, item.id + ".html")
-  }
-  */
 
   // generate HTML for a text link to an item's page
   def textLinkPage(item: WorldItem): String = {

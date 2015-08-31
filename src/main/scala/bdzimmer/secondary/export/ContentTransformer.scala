@@ -180,10 +180,10 @@ class ContentTransformer(
     }
 
 
-    val masterCollectionList = collectionToList(masterCollection)
-    masterCollectionList foreach(x => println("world item: " + x.srcyml + " -- " + x.id))
+    val world = collectionToList(masterCollection)
+    world foreach(x => println("world item: " + x.srcyml + " -- " + x.id))
 
-    val metaToExport = masterCollectionList.filter(x => metaStatus.keySet.contains(x.srcyml))
+    val metaToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))
     metaToExport foreach(x => println("meta to export: " + x.id))
 
     // the file items to export are:
@@ -192,7 +192,7 @@ class ContentTransformer(
     // 3) the imageitems in refreshed metadata that reference wikimedia instead of local files
 
     // TODO: better names here
-    val filesToExport = WorldItem.filterList[MetaItem](masterCollectionList).filter(x => fileStatus.keySet.contains(x.filename))
+    val filesToExport = WorldItem.filterList[MetaItem](world).filter(x => fileStatus.keySet.contains(x.filename))
     val charsToExport = WorldItem.filterList[CharacterItem](metaToExport)
     val imagesToExport = WorldItem.filterList[ImageItem](metaToExport).filter(x => x.filename.startsWith("wikimedia:"))
 
@@ -200,14 +200,14 @@ class ContentTransformer(
 
     val exportImages = new ExportImages(localExportPath, license)
 
-    val exportPages = new ExportPages(localExportPath, license)
+    val exportPages = new ExportPages(world, localExportPath, license)
 
     val localContentDir = localDownloadPath
 
     println("--exporting pages")
     val allPageOutputs = List(exportPages.createMasterPage(masterCollection),
-                              exportPages.createTasksPage(masterCollectionList),
-                              exportPages.createGlossaryPage(masterCollectionList)) ++
+                              exportPages.createTasksPage,
+                              exportPages.createGlossaryPage) ++
                          exportPages.exportPagesList(metaToExport)
 
 
@@ -216,7 +216,10 @@ class ContentTransformer(
 
       val imageOutputs = exportImages.exportAllImages(filesToExport ++ imagesToExport, localDownloadPath)
       val characterOutputs = if (charsToExport.length > 0) {
-         exportImages.prepareCharacterImages(charsToExport, WorldItem.filterList[SpritesheetItem](masterCollectionList), localDownloadPath)
+         exportImages.prepareCharacterImages(
+             charsToExport,
+             WorldItem.filterList[SpritesheetItem](world),
+             localDownloadPath)
       } else {
         ExportPages.getEmptyFileOutputsMap()
       }
