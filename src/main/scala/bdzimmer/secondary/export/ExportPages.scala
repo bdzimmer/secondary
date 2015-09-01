@@ -6,12 +6,14 @@
 
 // 2015-08-09: Created.
 // 2015-08-27: Image page creation.
+// 2015-08-31: Enhanced character image functionality.
 
 package bdzimmer.secondary.export
 
 import java.io.File
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.util.Try
 
 import com.google.api.client.util.DateTime
 import org.apache.commons.io.FilenameUtils
@@ -26,6 +28,9 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
   val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
   new File(imagesLocation).mkdir
+
+  // TODO: maybe this should be a parameter to methods instead.
+  val metaItems = WorldItem.filterList[MetaItem](world)
 
   val column3 = 3
   val column4 = 4
@@ -199,7 +204,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
         Some(ExportPages.getToolbar(character)),
 
         Tags.column(column8, np.transform(character.notes)) +
-        Tags.column(column4, Tags.image(ExportImages.imagesDir + "/" + character.id + "_12x.png")),
+        Tags.column(column4, ExportPages.characterImage(character, metaItems)),
 
         license)
 
@@ -335,6 +340,37 @@ object ExportPages {
   }
 
 
+  def getCharacterImageInfo(ci: CharacterItem, metaItems: List[MetaItem]): (Option[MetaItem], Int) = {
+
+    // split spritesheet attribute by comma
+    // first part is item id, second part spritesheet row (if exists)
+    val spriteSplit = ci.spritesheet.split(",\\s+")
+    val (metaId, sheetRow) = spriteSplit.toList match {
+      case x :: xs => {
+        (x, xs.headOption.flatMap(s => Try(s.toInt).toOption).getOrElse(0))
+      }
+    }
+
+    // there may not be a matching MetaItem in the collection
+    // if it doesn't exist yet
+    val metaOption = metaItems.filter(_.id.equals(metaId)).headOption
+    (metaOption, sheetRow)
+
+  }
+
+
+  def characterImage(ci: CharacterItem, metaItems: List[MetaItem]): String = {
+
+    val (metaOption, sheetRow) = getCharacterImageInfo(ci, metaItems)
+
+    metaOption.map(meta => meta match {
+      case ss: SpritesheetItem => Tags.image(ExportImages.imagesDir + "/" + ci.id + "_12x.png")
+      case im: ImageItem => Tags.image(imageItemPath(im), true)
+      case _ => ""
+    }).getOrElse("")
+
+  }
+
   // generate HTML for an item's 1x image, with a link to the 4x version
   def imageLinkUpscale(item: WorldItem): String = {
     Tags.link(Tags.image(ExportImages.imagesDir + "/" + item.id + ".png"), ExportImages.imagesDir + "/" + item.id + "_4x.png")
@@ -345,7 +381,6 @@ object ExportPages {
     ExportImages.imagesDir + "/" + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
   }
 
-
   // generate HTML for a smaller image, with a link to the page
   def imageLinkPage(item: WorldItem): String = {
 
@@ -353,6 +388,8 @@ object ExportPages {
 
     val imageTag = item match {
       case x: MapItem => Tags.imageSprite(imageFile.format(ExportImages.scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number
+
+      // TODO: correct character item image here (see character page export)
       case x: CharacterItem => Tags.image(imageFile.format(ExportImages.scalePostfix(4))) // scalastyle:ignore magic.number
       case x: WorldItem => ""
     }

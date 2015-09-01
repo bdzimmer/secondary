@@ -198,7 +198,7 @@ class ContentTransformer(
 
     filesToExport foreach(x => println("file to export: " + x.id))
 
-    val exportImages = new ExportImages(localExportPath, license)
+    val exportImages = new ExportImages(world, localExportPath, license)
 
     val exportPages = new ExportPages(world, localExportPath, license)
 
@@ -215,10 +215,10 @@ class ContentTransformer(
       println("--exporting images")
 
       val imageOutputs = exportImages.exportAllImages(filesToExport ++ imagesToExport, localDownloadPath)
+
       val characterOutputs = if (charsToExport.length > 0) {
          exportImages.prepareCharacterImages(
              charsToExport,
-             WorldItem.filterList[SpritesheetItem](world),
              localDownloadPath)
       } else {
         ExportPages.getEmptyFileOutputsMap()

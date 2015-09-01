@@ -27,7 +27,8 @@
 // 2015-07-26: Refactoring. Improved item image links (shows up in collection pages).
 // 2015-08-08: Generic WorldItem page creation. Simple image link implementation for WorldItems.
 //             Todo list improvements, including "thoughts".
-// 2015-08-26: Start of Wikimedia image exporting.
+// 2015-08-26: Wikimedia image exporting.
+// 2015-08-31: Enhanced character image functionality.
 
 package bdzimmer.secondary.export
 
@@ -35,18 +36,20 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.File
 
+import javax.imageio.ImageIO
+
 import org.apache.commons.io.FileUtils
 
 import bdzimmer.secondary.model.{DosGraphics, Map, TileAttributes, TileOptionsNew, Tiles}
 
-import javax.imageio.ImageIO
 
-
-class ExportImages(val location: String, license: String) {
+class ExportImages(world: List[WorldItem], val location: String, license: String) {
 
   val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
   new File(imagesLocation).mkdir
 
+  // TODO: maybe this should be a parameter to methods instead.
+  val metaItems = WorldItem.filterList[MetaItem](world)
 
 
   def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
@@ -133,45 +136,43 @@ class ExportImages(val location: String, license: String) {
 
 
 
-  def prepareCharacterImages(characterItems: List[CharacterItem], spritesheets: List[SpritesheetItem], contentDir: String): FileOutputsMap = {
+  def prepareCharacterImages(characterItems: List[CharacterItem], contentDir: String): FileOutputsMap = {
 
     // prepare character images
 
     val characterImageOutputs = characterItems.map(ci => {
 
-      // there may not be a matching spritesheet in the collection
-      // if it doesn't exist yet.
+      val (curMetaItem, sheetRow) = ExportPages.getCharacterImageInfo(ci, metaItems)
 
-      val curSpritesheet = spritesheets.filter(_.id.equals(ci.spritesheet)).take(1)
+      val outputPair = curMetaItem.toList.map(cm => cm match {
 
-      val outputImageFiles = curSpritesheet flatMap (cs => {
-      // for (cs <- curSpritesheet) {
+        case ss: SpritesheetItem => {
 
-        val spritesheetType = TileOptionsNew.get(cs.tiletype)
+          val spritesheetType = TileOptionsNew.get(ss.tiletype)
 
-        // TODO: clean this up
-        ExportImages.outputScales map (scale => {
-          val offset = 3
-          val inputFile = imagesLocation + "/" + ci.spritesheet + "_tiles/" + (ci.sheetrow.toInt * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"
+          val outputImageFiles = ExportImages.outputScales map (scale => {
+            val offset = 3
+            val inputFile = imagesLocation + "/" + cm.id + "_tiles/" + (sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"
 
-          val relativeName = ExportImages.imagesDir + "/" + ci.id + ExportImages.scalePostfix(scale) + ".png"
-          val absoluteName = location + "/" + relativeName
-          FileUtils.copyFile(new File(inputFile), new File(absoluteName))
+            val relativeName = ExportImages.imagesDir + "/" + ci.id + ExportImages.scalePostfix(scale) + ".png"
+            val absoluteName = location + "/" + relativeName
+            FileUtils.copyFile(new File(inputFile), new File(absoluteName))
 
-          relativeName
+            relativeName
 
-        })
+          })
+
+          (ss.filename, outputImageFiles)
+
+        }
+
+        case _ => ("", List())
 
       })
 
-      val spritesheetFile = curSpritesheet.headOption match {
-        case Some(x) => x.filename
-        case None => ""
-      }
+      // println("prepared images: " + outputPair._1 + " " + outputPair._2.mkString(", "))
 
-      println("prepared images: " + spritesheetFile + " " + outputImageFiles.mkString(", "))
-
-      List((spritesheetFile, outputImageFiles)).toMap
+      outputPair.toMap
 
     }).reduce(ExportPages.mergeFileOutputsMaps(_, _))
 
