@@ -2,7 +2,8 @@
 
 // Functionality for parsing markdown and special Secondary tags.
 
-// 2015-08-30: Created.
+// 2015-08-30: Created. Link and general tags.
+// 2015-09-01: Image tags.
 
 package bdzimmer.secondary.export
 
@@ -15,6 +16,9 @@ case class SecTag(kind: String, id: String)
 
 
 class NotesParser(world: List[WorldItem]) {
+
+  val metaItems = WorldItem.filterList[MetaItem](world)
+
 
   def getPegDown(): PegDownProcessor = {
     // new PegDownProcessor(Extensions.HARDWRAPS)
@@ -78,8 +82,10 @@ class NotesParser(world: List[WorldItem]) {
   def processItemTag(tag: SecTag, item: WorldItem): String = tag.kind match {
 
     case NotesParser.LinkKind => ExportPages.textLinkPage(item)
+    case NotesParser.ImageKind => panel(ExportPages.imageLinkPage(item, metaItems, false, 320), true)
+    case NotesParser.ImageResponsiveKind => panel(ExportPages.imageLinkPage(item, metaItems, true), false)
 
-    // for now
+    // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${tag.kind.capitalize}: </b>"""
       + ExportPages.textLinkPage(item)
       + Tags.br)
@@ -95,6 +101,21 @@ class NotesParser(world: List[WorldItem]) {
     }
 
     case _ => ""
+  }
+
+  // helper methods
+  // TODO: put these helper methods in the companion object?
+
+  def panel(contents: String, pullRight: Boolean = false): String = {
+
+    val pullClass = pullRight match {
+      case true => "pull-right"
+      case false => ""
+    }
+
+    (s"""<div class="panel panel-default ${pullClass}"><div class="panel-body">${contents}""" +
+    """</div></div>""")
+
   }
 
 
@@ -113,9 +134,11 @@ object NotesParser {
   // upper camelcase looks wierd, but I guess it's convention
   // http://docs.scala-lang.org/style/naming-conventions.html
   val LinkKind = "link"
+  val ImageKind = "image"
+  val ImageResponsiveKind = "image-responsive"
   val EmbedPreKind = "embed-pre"
 
-  val itemTagKinds = List(LinkKind)
+  val itemTagKinds = List(LinkKind, ImageKind)
   val otherTagKinds = List(EmbedPreKind)
 
 

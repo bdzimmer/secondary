@@ -64,11 +64,13 @@ object Tags {
     """  <a href="%s">%s</a>""".format(link, text)
   }
 
-  def image(file: String, responsive: Boolean = false): String = {
-    (responsive match {
-      case false => """<img src="%s" />"""
-      case true => """<img src="%s" class="img-responsive" />"""
-    }).format(file)
+  def image(file: String, responsive: Boolean = false, maxWidth: Int = 480): String = {
+    responsive match {
+      // case false => s"""<img src="$file" style="max-width:$maxWidth;height:auto"/>"""
+      // TODO: not sure if setting both max-with and max-height is doing what I think.
+      case false => s"""<img src="$file" style="max-width:${maxWidth}px;max-height:${maxWidth}px;height:auto"/>"""
+      case true => s"""<img src="$file" class="img-responsive" />"""
+    }
   }
 
 

@@ -97,6 +97,7 @@ object ImageDownloader {
     val outputExtension = FilenameUtils.getExtension(wm.url)
     val outputFilename = outputName + "." + outputExtension
     val outputFile = new java.io.File(outputFilename)
+    println(wm.url)
     FileUtils.copyURLToFile(new java.net.URL(wm.url), outputFile)
     outputFilename
   }

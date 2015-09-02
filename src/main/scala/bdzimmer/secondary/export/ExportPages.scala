@@ -7,6 +7,7 @@
 // 2015-08-09: Created.
 // 2015-08-27: Image page creation.
 // 2015-08-31: Enhanced character image functionality.
+// 2015-09-01: More on above.
 
 package bdzimmer.secondary.export
 
@@ -252,7 +253,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
         // links to child pages with images
         collection.children.map(x => {
-          Tags.column(column3, ExportPages.imageLinkPage(x))
+          Tags.column(column3, ExportPages.imageLinkPage(x, metaItems, responsive = true))
         }).mkString("\n"),
 
         license)
@@ -359,17 +360,25 @@ object ExportPages {
   }
 
 
-  def characterImage(ci: CharacterItem, metaItems: List[MetaItem]): String = {
+  def characterImage(
+      ci: CharacterItem, metaItems: List[MetaItem],
+      scale: Int = 4,
+      responsive: Boolean = true,
+      maxWidth: Int = 480): String = {
 
     val (metaOption, sheetRow) = getCharacterImageInfo(ci, metaItems)
 
     metaOption.map(meta => meta match {
-      case ss: SpritesheetItem => Tags.image(ExportImages.imagesDir + "/" + ci.id + "_12x.png")
-      case im: ImageItem => Tags.image(imageItemPath(im), true)
+      case ss: SpritesheetItem => {
+        val imageFile = ExportImages.imagesDir + "/" + ci.id + "%s.png"
+        Tags.image(imageFile.format(ExportImages.scalePostfix(scale)))
+      }
+      case im: ImageItem => Tags.image(imageItemPath(im), responsive, maxWidth)
       case _ => ""
     }).getOrElse("")
 
   }
+
 
   // generate HTML for an item's 1x image, with a link to the 4x version
   def imageLinkUpscale(item: WorldItem): String = {
@@ -381,16 +390,23 @@ object ExportPages {
     ExportImages.imagesDir + "/" + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
   }
 
-  // generate HTML for a smaller image, with a link to the page
-  def imageLinkPage(item: WorldItem): String = {
 
-    val imageFile = ExportImages.imagesDir + "/" + item.id + "%s" + ".png"
+  // generate HTML for a smaller image, with a link to the page
+  // the attributes are kind of piling up on this function because of the many
+  // different kinds of images and contexts where this is used.
+  def imageLinkPage(
+      item: WorldItem,
+      metaItems: List[MetaItem],
+      responsive: Boolean = true,
+      maxWidth: Int = 480): String = {
 
     val imageTag = item match {
-      case x: MapItem => Tags.imageSprite(imageFile.format(ExportImages.scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number
-
-      // TODO: correct character item image here (see character page export)
-      case x: CharacterItem => Tags.image(imageFile.format(ExportImages.scalePostfix(4))) // scalastyle:ignore magic.number
+      case x: MapItem => {
+        val imageFile = ExportImages.imagesDir + "/" + item.id + "%s" + ".png"
+        Tags.imageSprite(imageFile.format(ExportImages.scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number}
+      }
+      case x: CharacterItem => ExportPages.characterImage(x, metaItems, 4, responsive, maxWidth) // scalastyle:ignore magic.number
+      case x: ImageItem => Tags.image(imageItemPath(x), responsive, maxWidth)
       case x: WorldItem => ""
     }
     Tags.link(imageTag + "<br />" + item.name, item.id + ".html")
@@ -458,7 +474,7 @@ object ExportPages {
 
 
 
-    // combine two dictionaries of (String -> List[String], merging the values of
+  // combine two dictionaries of (String -> List[String], merging the values of
   // corresponding keys
   def mergeFileOutputsMaps(map1: FileOutputsMap, map2: FileOutputsMap): FileOutputsMap = {
     // TODO: add a distinct here?
