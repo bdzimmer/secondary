@@ -29,6 +29,7 @@
 //             Todo list improvements, including "thoughts".
 // 2015-08-26: Wikimedia image exporting.
 // 2015-08-31: Enhanced character image functionality.
+// 2015-09-03: Only download wikimedia images if they don't already exist in scratch directory.
 
 package bdzimmer.secondary.export
 
@@ -97,8 +98,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
   def prepareImageItemOutputs(imageItem: ImageItem): Option[(String, List[String])] = {
 
-     // TODO: put this in its own function
-    val relativeName = ExportPages.imageItemPath(imageItem)
+    val relativeName = ExportPages.imageItemImagePath(imageItem)
     val absoluteName = location + "/" + relativeName
 
     imageItem.filename.startsWith("wikimedia:") match {
@@ -106,6 +106,8 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
       case false => {
         // local file - copy to images folder
         // source is original local file
+
+        // TODO: test non-wikimedia images!
 
         val srcFilename = imageItem.filename
         val srcFile = new java.io.File(srcFilename)
@@ -123,11 +125,19 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
         // source is scrcyml!
         val srcFilename = imageItem.srcyml
 
-        for {
-          json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
-          wm <- ImageDownloader.parseWikimediaJson(json)
-          junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
-        } yield (srcFilename, List(relativeName))
+        // only download if it doesn't already exist in the scratch location
+        if (new java.io.File(absoluteName).exists) {
+          None
+        } else {
+
+          println("\t\t\tdownloading " + relativeName)
+
+          for {
+            json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
+            wm <- ImageDownloader.parseWikimediaJson(json)
+            junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
+          } yield (srcFilename, List(relativeName))
+        }
 
       }
     }

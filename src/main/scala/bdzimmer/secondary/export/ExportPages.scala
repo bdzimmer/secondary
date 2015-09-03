@@ -2,12 +2,12 @@
 
 // Class for page exports. Refactored from Export.
 
-// Ben Zimmer
-
 // 2015-08-09: Created.
 // 2015-08-27: Image page creation.
 // 2015-08-31: Enhanced character image functionality.
 // 2015-09-01: More on above.
+// 2015-09-02: More image functions for jumbotron functionality (needs cleaning up).
+//             Master page and article pages all use the same template.
 
 package bdzimmer.secondary.export
 
@@ -24,7 +24,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
   val np = new NotesParser(world)
 
-  val glossaryPageFile = "glossary.html"
+  val indexPageFile = "indexpage.html"
   val tasksPageFile = "tasks.html"
 
   val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
@@ -58,31 +58,21 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
     val relFilePath = "index.html"
 
-    PageTemplates.createPage(
+    val toolbar = Some(List(
+            Tags.link("Index", indexPageFile),
+            Tags.link("Tasks", tasksPageFile),
+            Tags.link("Edit", ExportPages.notepadURL(masterCollection))).mkString("&nbsp;&middot;") +
+            Tags.hr)
+
+    PageTemplates.createArticlePage(
         location + "/" + relFilePath,
         masterCollection.name,
-        "",
+        masterCollection.description,
 
-        Tags.container(
+        toolbar,
 
-          Tags.jumboTron("<h1>%s</h1><h3>%s</h3>".format(masterCollection.name, masterCollection.description)) +
-
-          Tags.column(column12,
-            np.transform(masterCollection.notes) +
-
-            Tags.hr +
-            (
-              // (masterCollection.children.asScala.toList.map(x => {
-              //  Export.textLinkPage(x)
-              // }) ++
-              List(Tags.link("Glossary", glossaryPageFile),
-                   Tags.link("Tasks", tasksPageFile),
-                   Tags.link("Edit", ExportPages.notepadURL(masterCollection)))).mkString("&nbsp;&middot;") +
-            Tags.hr
-
-          ) +
-
-          masterCollection.children.map(x => {
+        Tags.column(column12, np.transform(masterCollection.notes) + Tags.hr +
+        masterCollection.children.map(x => {
 
             val curCollection = x.asInstanceOf[CollectionItem]
 
@@ -91,11 +81,11 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
               Tags.listGroup(curCollection.children
                   map(x => ExportPages.getCollectionLinksWithDescription(x))))
 
-          }).grouped(2).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n")
+          }).grouped(2).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n")),
 
-        ) +
+        license)
 
-        Tags.container(Tags.hr + Tags.centered(license)))
+
 
     relFilePath
 
@@ -152,21 +142,21 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
 
 
-  def createGlossaryPage(): String = {
+  def createIndexPage(): String = {
 
-    val relFilePath = glossaryPageFile
+    val relFilePath = indexPageFile
 
     PageTemplates.createArticlePage(
 
         location + "/" + relFilePath,
-        "Glossary", "",
+        "Index", "",
 
         None,
 
         // Testing...glossary
 
         Tags.column(column6,
-          "<h3>Glossary</h3>\n" +
+          "<h3>Index</h3>\n" +
 
           {
             val groupedItems = (world
@@ -205,7 +195,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
         Some(ExportPages.getToolbar(character)),
 
         Tags.column(column8, np.transform(character.notes)) +
-        Tags.column(column4, ExportPages.characterImage(character, metaItems)),
+        Tags.column(column4, ExportPages.characterImage(character, metaItems, 12)),
 
         license)
 
@@ -291,7 +281,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
         imageItem.name, imageItem.description,
         Some(ExportPages.getToolbar(imageItem)),
 
-        Tags.column(column8, Tags.image(ExportPages.imageItemPath(imageItem), responsive = true)) +
+        Tags.column(column8, Tags.image(ExportPages.imageItemImagePath(imageItem), responsive = true)) +
         Tags.column(column4, "") +
         Tags.column(column12,
             Tags.hr +
@@ -366,14 +356,31 @@ object ExportPages {
       responsive: Boolean = true,
       maxWidth: Int = 480): String = {
 
+    val metaOption = getCharacterImageInfo(ci, metaItems)._1
+    val path = characterItemImagePath(ci, metaItems, scale)
+
+    metaOption.map(meta => meta match {
+      case ss: SpritesheetItem => Tags.image(path)
+      case im: ImageItem => Tags.image(path, responsive, maxWidth)
+      case _ => ""
+    }).getOrElse("")
+
+  }
+
+
+  def characterItemImagePath(
+      ci: CharacterItem,
+      metaItems: List[MetaItem],
+      scale: Int = 4): String = {
+
     val (metaOption, sheetRow) = getCharacterImageInfo(ci, metaItems)
 
     metaOption.map(meta => meta match {
       case ss: SpritesheetItem => {
         val imageFile = ExportImages.imagesDir + "/" + ci.id + "%s.png"
-        Tags.image(imageFile.format(ExportImages.scalePostfix(scale)))
+        imageFile.format(ExportImages.scalePostfix(scale))
       }
-      case im: ImageItem => Tags.image(imageItemPath(im), responsive, maxWidth)
+      case im: ImageItem => imageItemImagePath(im)
       case _ => ""
     }).getOrElse("")
 
@@ -386,7 +393,7 @@ object ExportPages {
   }
 
 
-  def imageItemPath(imageItem: ImageItem): String = {
+  def imageItemImagePath(imageItem: ImageItem): String = {
     ExportImages.imagesDir + "/" + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
   }
 
@@ -406,11 +413,24 @@ object ExportPages {
         Tags.imageSprite(imageFile.format(ExportImages.scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number}
       }
       case x: CharacterItem => ExportPages.characterImage(x, metaItems, 4, responsive, maxWidth) // scalastyle:ignore magic.number
-      case x: ImageItem => Tags.image(imageItemPath(x), responsive, maxWidth)
+      case x: ImageItem => Tags.image(imageItemImagePath(x), responsive, maxWidth)
       case x: WorldItem => ""
     }
     Tags.link(imageTag + "<br />" + item.name, item.id + ".html")
   }
+
+
+  // can this be combined with the above somehow?
+  def itemImagePath(
+      item: WorldItem,
+      metaItems: List[MetaItem]): String = item match {
+
+    case x: MapItem => ExportImages.imagesDir + "/" + item.id + "_4x" + ".png"
+    case x: CharacterItem => characterItemImagePath(x, metaItems)
+    case x: ImageItem => imageItemImagePath(x)
+    case x: WorldItem => ""
+  }
+
 
   // generate HTML for a text link to an item's page
   def textLinkPage(item: WorldItem): String = {
@@ -421,7 +441,8 @@ object ExportPages {
   // get a toolbar for an article page for a world item
   def getToolbar(item: WorldItem): String = {
     List(// Tags.link("Edit Local", localURL(item, localDriveMapDir)),
-         Tags.link("Edit", notepadURL(item))).mkString("&nbsp;&middot;")
+         Tags.link("Home", "index.html"),
+         Tags.link("Edit", notepadURL(item))).mkString("&nbsp;&middot;") + Tags.hr
   }
 
   def notepadLink(item: WorldItem): String = {

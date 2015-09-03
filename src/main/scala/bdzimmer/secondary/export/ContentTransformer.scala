@@ -207,7 +207,7 @@ class ContentTransformer(
     println("--exporting pages")
     val allPageOutputs = List(exportPages.createMasterPage(masterCollection),
                               exportPages.createTasksPage,
-                              exportPages.createGlossaryPage) ++
+                              exportPages.createIndexPage) ++
                          exportPages.exportPagesList(metaToExport)
 
 

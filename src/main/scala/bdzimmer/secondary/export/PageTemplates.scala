@@ -4,6 +4,7 @@
 // Ben Zimmer
 
 // 2015-08-10: Created in refactor.
+// 2015-09-02: All pages use jumbotron.
 
 package bdzimmer.secondary.export
 
@@ -83,9 +84,40 @@ object PageTemplates {
 
 
 
-  def createArticlePage(outputFile: String,
-                        title: String, description: String, toolbar: Option[String],
-                        body: String, license: String): Unit = {
+  def createArticlePage(
+      outputFile: String,
+      title: String, description: String, toolbar: Option[String],
+      body: String, license: String): Unit = {
+
+    createPage(
+      outputFile,
+      title,
+
+      "",
+
+      jumboTron(
+          container(
+              column(COLUMN_12,
+                  "<h1>%s</h1><h3>%s</h3>".format(title, description)))) +
+
+      container(
+        column(COLUMN_12,
+          toolbar.getOrElse("")
+        ) +
+        body
+      ) +
+      container(hr + centered(license))
+    )
+
+  }
+
+
+
+
+  def createArticlePageOld(
+      outputFile: String,
+      title: String, description: String, toolbar: Option[String],
+      body: String, license: String): Unit = {
 
     createPage(
       outputFile,

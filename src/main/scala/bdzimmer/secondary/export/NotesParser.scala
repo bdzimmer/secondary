@@ -4,6 +4,7 @@
 
 // 2015-08-30: Created. Link and general tags.
 // 2015-09-01: Image tags.
+// 2015-09-02: Tags for jumbotron background image and text color.
 
 package bdzimmer.secondary.export
 
@@ -11,7 +12,7 @@ import org.pegdown.PegDownProcessor
 import scala.util.matching.Regex
 import org.apache.commons.io.FileUtils
 
-
+// TODO: change id to value
 case class SecTag(kind: String, id: String)
 
 
@@ -42,6 +43,8 @@ class NotesParser(world: List[WorldItem]) {
 
   // generate a tag from text
   def getTag(tagText: String): SecTag = {
+
+    println("\tgetTag")
 
     // TODO: find a way to return error messages
     println(s"\t\t$tagText")
@@ -84,6 +87,7 @@ class NotesParser(world: List[WorldItem]) {
     case NotesParser.LinkKind => ExportPages.textLinkPage(item)
     case NotesParser.ImageKind => panel(ExportPages.imageLinkPage(item, metaItems, false, 320), true)
     case NotesParser.ImageResponsiveKind => panel(ExportPages.imageLinkPage(item, metaItems, true), false)
+    case NotesParser.JumbotronBackgroundKind => jumbotronBackground(item, metaItems)
 
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${tag.kind.capitalize}: </b>"""
@@ -94,6 +98,8 @@ class NotesParser(world: List[WorldItem]) {
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {
+
+    case NotesParser.JumbotronForegrounKind => jumbotronForeground(tag.id)
 
     case NotesParser.EmbedPreKind => {
       // TODO: implement this!
@@ -109,12 +115,43 @@ class NotesParser(world: List[WorldItem]) {
   def panel(contents: String, pullRight: Boolean = false): String = {
 
     val pullClass = pullRight match {
-      case true => "pull-right"
+      case true => " pull-right"
       case false => ""
     }
 
-    (s"""<div class="panel panel-default ${pullClass}"><div class="panel-body">${contents}""" +
+    val leftMargin = pullRight match {
+      case true => """ style="margin-left:32px""""
+      case false => ""
+    }
+
+    (s"""<div class="panel panel-default${pullClass}"${leftMargin}><div class="panel-body">${contents}""" +
     """</div></div>""")
+
+  }
+
+
+  def jumbotronBackground(item: WorldItem, metaItems: List[MetaItem]): String = {
+
+    val imagePath = ExportPages.itemImagePath(item, metaItems)
+
+    s"""<style>
+  .jumbotron {
+    background-image: url("${imagePath}");
+    background-size: cover;
+    background-position: 0% 50%;
+  }
+</style>"""
+
+  }
+
+
+  def jumbotronForeground(color: String): String = {
+
+    s"""<style>
+  .jumbotron {
+    color: ${color};
+  }
+</style>"""
 
   }
 
@@ -122,6 +159,7 @@ class NotesParser(world: List[WorldItem]) {
   def tagString(tag: SecTag): String = {
     "{{" + tag.kind + ":" + tag.id + "}}"
   }
+
 
 }
 
@@ -137,9 +175,12 @@ object NotesParser {
   val ImageKind = "image"
   val ImageResponsiveKind = "image-responsive"
   val EmbedPreKind = "embed-pre"
+  val JumbotronBackgroundKind = "jumbotron-bg"
+  val JumbotronForegrounKind = "jumbotron-fg"
 
-  val itemTagKinds = List(LinkKind, ImageKind)
-  val otherTagKinds = List(EmbedPreKind)
+  val itemTagKinds = List(LinkKind, ImageKind, ImageResponsiveKind,
+      JumbotronBackgroundKind)
+  val otherTagKinds = List(EmbedPreKind, JumbotronForegrounKind)
 
 
 }
