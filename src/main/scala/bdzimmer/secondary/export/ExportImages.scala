@@ -125,7 +125,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
         for {
           json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
-          wm = ImageDownloader.parseWikimediaJson(json)
+          wm <- ImageDownloader.parseWikimediaJson(json)
           junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
         } yield (srcFilename, List(relativeName))
 

@@ -5,6 +5,7 @@
 // 2015-08-22: Created.
 // 2015-08-23: Metadata retrieval and image downloads.
 // 2015-08-24: Extension awareness in image downloader. JSON parsing fixes.
+// 2015-09-02: JSON parsing fixes.
 
 package bdzimmer.secondary.export
 
@@ -38,7 +39,8 @@ object ImageDownloader {
   val wikipediaURL = "https://en.wikipedia.org"
   val metaDataQuery = "/w/api.php?action=query&prop=imageinfo&format=json&iiprop=url%7Cdimensions%7Cmime%7Cextmetadata&titles="
 
-  // get a JSON string - none if the query fails
+
+  // get a JSON string - None if the query fails
   def getWikimediaJson(filename: String): Option[String] = {
 
     // I think we can always assume a "File:" prefix
@@ -53,9 +55,35 @@ object ImageDownloader {
 
 
   // transform JSON into a metadata object
-  def parseWikimediaJson(json: String): WikimediaMeta = {
+  // return None if it doesn't make sense to parse the JSON
+  // into metadata
+  def parseWikimediaJson(json: String): Option[WikimediaMeta] = {
 
     val root = JsonParser.parse(json)
+
+    for { // Option monad
+
+      // get first page
+      page <- (for {
+        JField("pages", JObject(pages)) <- root
+        page <- pages
+      } yield page).headOption
+
+
+      // if page is present with imageinfo and a url, then
+      // attempt tp parse
+      result <- (page \ "imageinfo" \ "url") match {
+        case x: JString => Some(parsePage(page))
+        case _ => None
+      }
+
+    } yield result
+
+  }
+
+
+  // helper function - parse a page
+  private def parsePage(page: JField): WikimediaMeta = {
 
     def extractStr(jval: JValue, default: String = ""): String = jval match {
       case JString(x) => x
@@ -67,17 +95,15 @@ object ImageDownloader {
       case _ => default
     }
 
-    val main = root \ "query" \ "pages" \ "-1"
-    val imageinfo = main \ "imageinfo"
+    val imageinfo = page \ "imageinfo"
     val extmeta = imageinfo \ "extmetadata"
-
     def metaValue(key: String): JValue = {
       extmeta \ key \ "value"
     }
 
-    // TODO: get description (title is kind of useless)
+    // TODO: get description? (title is kind of useless)
     WikimediaMeta(
-      title = extractStr(main \ "title"),
+      title = extractStr(page \ "title"),
       width = extractInt(imageinfo \ "width").toInt,
       height = extractInt(imageinfo \ "height").toInt,
       url = extractStr(imageinfo \ "url"),

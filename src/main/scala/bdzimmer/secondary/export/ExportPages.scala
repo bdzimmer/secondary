@@ -278,7 +278,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
     val licenseDescription = (for {
       wikiName <- wikiNameOption
       json <- ImageDownloader.getWikimediaJson(wikiName)
-      wm = ImageDownloader.parseWikimediaJson(json)
+      wm <- ImageDownloader.parseWikimediaJson(json)
       description =
         "Artist: " + wm.artist + Tags.br +
         "License: " + wm.license + Tags.br +
