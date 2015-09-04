@@ -168,19 +168,9 @@ class ContentTransformer(
   def export(metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
              masterCollection: CollectionItem, images: Boolean = false): (List[String], FileOutputsMap) = {
 
-
     // get only the world items that are described in the subset of the
     // meta we just downloaded
-
-    // TODO: this should happen when the world is first loaded,
-    // and a list of world items should be passed around rather than the head
-    def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
-      case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
-      case _ => List(worldItem)
-    }
-
-
-    val world = collectionToList(masterCollection)
+    val world = WorldLoader.collectionToList(masterCollection)
     world foreach(x => println("world item: " + x.srcyml + " -- " + x.id))
 
     val metaToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))

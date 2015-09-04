@@ -4,6 +4,7 @@
 
 // 2015-07-26: Refactored from WorldItem file.
 // 2015-08-16: Reads beans, converts to immutable case classes.
+// 2015-09-04: Switched to FileUtils instead of Source.
 
 package bdzimmer.secondary.export
 
@@ -16,15 +17,18 @@ import scala.reflect.ClassTag
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
+import org.apache.commons.io.FileUtils
+
 
 object WorldLoader {
 
 
   // new loadMasterCollection function
 
-  def loadMasterCollection(inputDir: String,
-                           masterName: String, mainCollectionNames: List[String],
-                           fileStatus: FileModifiedMap): CollectionItem = {
+  def loadMasterCollection(
+      inputDir: String,
+      masterName: String, mainCollectionNames: List[String],
+      fileStatus: FileModifiedMap): CollectionItem = {
 
 
     // fix the srcyml / remote id for a collection
@@ -49,7 +53,13 @@ object WorldLoader {
 
 
     def loadFile(filename: String): CollectionItemBean = {
-      val yamlString = scala.io.Source.fromFile(inputDir + "/" + filename).getLines.mkString("\n")
+
+      // val yamlString = scala.io.Source.fromFile(inputDir + "/" + filename).getLines.mkString("\n")
+
+      val yamlString = FileUtils.readFileToString(
+          new java.io.File(inputDir + "/" + filename),
+          java.nio.charset.StandardCharsets.UTF_8)
+
       val collectionBean = loadCollection(yamlString)
       assignSrcYml(collectionBean, filename)
       collectionBean
@@ -112,6 +122,14 @@ object WorldLoader {
     // println(yaml.dump(e))
 
     collectionBean
+  }
+
+
+  // TODO: this should happen when the world is first loaded,
+  // and a list of world items should be passed around rather than the head
+  def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
+    case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
+    case _ => List(worldItem)
   }
 
 
