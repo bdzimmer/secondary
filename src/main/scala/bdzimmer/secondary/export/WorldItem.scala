@@ -88,12 +88,12 @@ class MapItemBean extends MetaItemBean {
 
 class CharacterItemBean extends WorldItemBean {
 
-  @BeanProperty var spritesheet: String = ""    // TODO: enforce provided
-  @BeanProperty var sheetrow: String = ""       // TODO: enforce provided
+  @BeanProperty var image: String = ""    // TODO: enforce provided
+  // @BeanProperty var sheetrow: String = ""       // TODO: enforce provided
 
   def getVal(): CharacterItem = CharacterItem(
       id, name, description, notes, srcyml, remoteid,
-      spritesheet, sheetrow)
+      image) // sheetrow
 
 }
 
@@ -153,7 +153,7 @@ case class MapItem(
 case class CharacterItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String,
-    spritesheet: String, sheetrow: String) extends WorldItem
+    image: String) extends WorldItem
 
 
 ////////////////////////////////////////////////////////////////////////////////////

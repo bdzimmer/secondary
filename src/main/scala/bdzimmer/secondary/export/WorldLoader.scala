@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Class for loading WorldItem heirarchies from YAML files.
+// Class for loading WorldItem hierarchies from YAML files.
 
 // 2015-07-26: Refactored from WorldItem file.
 // 2015-08-16: Reads beans, converts to immutable case classes.
@@ -31,71 +31,23 @@ object WorldLoader {
       fileStatus: FileModifiedMap): CollectionItem = {
 
 
-    // fix the srcyml / remote id for a collection
-    def assignSrcYml(wi: WorldItemBean, srcyml: String): Unit =  wi match {
-      case x: CollectionItemBean => {
-        println(srcyml)
-        x.srcyml = srcyml
-        // x.remoteid = fileStatus.get(srcyml).get._1
-        x.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
-        x.children.asScala.toList.map(y => assignSrcYml(y, srcyml))
-      }
-      case _ => {
-        println(srcyml)
-        wi.srcyml = srcyml
-        // wi.remoteid = fileStatus.get(srcyml).get._1
-        wi.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
-
-      }
-
-    }
-
-
-
-    def loadFile(filename: String): CollectionItemBean = {
-
-      // val yamlString = scala.io.Source.fromFile(inputDir + "/" + filename).getLines.mkString("\n")
-
-      val yamlString = FileUtils.readFileToString(
-          new java.io.File(inputDir + "/" + filename),
-          java.nio.charset.StandardCharsets.UTF_8)
-
-      val collectionBean = loadCollection(yamlString)
-      assignSrcYml(collectionBean, filename)
-      collectionBean
-    }
-
-
-
     val masterYamlName = masterName + ".yml"
-    val masterCollection = loadFile(masterYamlName)
-
-    // val mainCollections = mainCollectionNames.map(loadCollection(loadFile(_)))
-
-    // 2015-07-11
-    // making the main collection loading more dynamic
-    // for each file listed in main collection names:
-    // --load that file into a collection
-    // --then load any files that have that prefix and add those to the
-    //   collection
+    val masterCollection = loadFile(masterYamlName, inputDir, fileStatus)
 
     val mainCollections = mainCollectionNames.map(collectionName => {
 
       println(collectionName)
 
       val fileName = collectionName + ".yml"
-
-      val collection = loadFile(fileName)
+      val collection = loadFile(fileName, inputDir, fileStatus)
 
       val prefix = collectionName + "_"
       val matchingFiles = new File(inputDir).listFiles.map(_.getName).filter(_.startsWith(prefix))
 
       println("matching: " + matchingFiles.mkString(","))
 
-      val childCollections = matchingFiles.map(loadFile(_))
-
+      val childCollections = matchingFiles.map(loadFile(_, inputDir, fileStatus))
       val childCollectionsJava = childCollections.toList.asJava
-
       collection.children.addAll(childCollectionsJava)
 
       collection
@@ -110,11 +62,29 @@ object WorldLoader {
 
 
 
-  /**
-   * Load a collection of WorldItems from a YAML document.
-   *
-   * @param yamlString  string containing YAML document
-   */
+
+  // TODO: this should happen when the world is first loaded,
+  // and a list of world items should be passed around rather than the head
+  def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
+    case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
+    case _ => List(worldItem)
+  }
+
+
+  def loadFile(filename: String, inputDir: String, fileStatus: FileModifiedMap): CollectionItemBean = {
+
+    val yamlString = FileUtils.readFileToString(
+        new java.io.File(inputDir + "/" + filename),
+        java.nio.charset.StandardCharsets.UTF_8)
+
+    val collectionBean = loadCollection(yamlString)
+
+    assignSrcYml(collectionBean, filename, fileStatus)
+    collectionBean
+  }
+
+
+  // Load a collection of WorldItems from a YAML document.
   def loadCollection(yamlString: String): CollectionItemBean = {
 
     val yaml = new Yaml(WorldItem.constructor)
@@ -125,14 +95,23 @@ object WorldLoader {
   }
 
 
-  // TODO: this should happen when the world is first loaded,
-  // and a list of world items should be passed around rather than the head
-  def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
-    case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
-    case _ => List(worldItem)
-  }
+  // fix the srcyml / remote id for a collection
+  def assignSrcYml(wi: WorldItemBean, srcyml: String, fileStatus: FileModifiedMap): Unit =  wi match {
+    case x: CollectionItemBean => {
+      // println(srcyml)
+      x.srcyml = srcyml
+      // x.remoteid = fileStatus.get(srcyml).get._1
+      x.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
+      x.children.asScala.toList.map(y => assignSrcYml(y, srcyml, fileStatus))
+    }
+    case _ => {
+     //  println(srcyml)
+      wi.srcyml = srcyml
+      // wi.remoteid = fileStatus.get(srcyml).get._1
+      wi.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
 
-
+    }
+   }
 
 
 }

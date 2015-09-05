@@ -335,7 +335,7 @@ object ExportPages {
 
     // split spritesheet attribute by comma
     // first part is item id, second part spritesheet row (if exists)
-    val spriteSplit = ci.spritesheet.split(",\\s+")
+    val spriteSplit = ci.image.split(",\\s+")
     val (metaId, sheetRow) = spriteSplit.toList match {
       case x :: xs => {
         (x, xs.headOption.flatMap(s => Try(s.toInt).toOption).getOrElse(0))
