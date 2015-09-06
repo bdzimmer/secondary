@@ -1,0 +1,30 @@
+# Copyright (c) 2015 Ben Zimmer. All rights reserved.
+
+# Documentation for Secondary
+# 2015-09-05: Created.
+
+!collection
+id: master
+name: Secondary
+description: create worlds from text
+notes: |-
+  Secondary is a tool for world building. Use it to plan a novel, create game design documents, and more.
+  
+  ### Edit
+  Describe your world in text files with a combination of YAML and Markdown. Use your favorite text editor; there's no user interface to learn.<br />
+  
+  ### Organize
+  Group characters, places, and ideas into collections and hierarchies however you see fit. Add links and track relationships between things in your world.<br />
+  
+  ### Plan
+  Track writing that needs to completed and ideas that need to be fleshed out at every level.<br />
+  
+  ### Export
+  Export your world to a website, integrating your own image content or public domain images from Wikimedia. Reread, review tasks, and edit!<br />
+ 
+  ### Google Drive Integration
+  Store your world files on Google Drive and edit them from anywhere. Export the website for hosting on Google Drive.<br />  
+
+  {{jumbotron-bg: image_alice}}
+
+  
