@@ -8,10 +8,9 @@
 
 package bdzimmer.secondary.export
 
-import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
-import org.apache.commons.compress.archivers.zip.ZipFile
 import org.scalatest.FunSuite
 
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 import java.awt.Desktop
 import java.io.{File, FileOutputStream}
 import java.net.URI
@@ -32,7 +31,7 @@ class ExportLocalTest extends FunSuite {
 
   test("local export 'integration' test") {
 
-    val outputDirFile = new java.io.File(outputDir)
+    val outputDirFile = new File(outputDir)
     FileUtils.deleteDirectory(outputDirFile)
     outputDirFile.mkdirs
 
@@ -60,21 +59,23 @@ class ExportLocalTest extends FunSuite {
     }
 
     // if Boostrap doesn't exist in the doc folder, download and extract it
-    val extractedBootstrapName = FilenameUtils.removeExtension(PrepareBootstrap.BootstrapFilename)
+    val extractedBootstrapName = FilenameUtils.removeExtension(Styles.BootstrapFilename)
     val extractedBootstrap = new File(inputDir, extractedBootstrapName)
     if (!extractedBootstrap.exists) {
-      PrepareBootstrap.getBootstrap(inputDir)
+      Styles.getBootstrap(inputDir)
     }
 
-    // copy bootstrap into export directory and rename
-    FileUtils.copyDirectoryToDirectory(extractedBootstrap, outputDirFile)
+    // copy bootstrap into styles directory in export directory and rename
+    val stylesDir = new File(outputDirFile, "styles")
+    stylesDir.mkdir
+    FileUtils.copyDirectoryToDirectory(extractedBootstrap, stylesDir)
     FileUtils.moveDirectory(
-        new File(outputDirFile, extractedBootstrapName),
-        new File(outputDirFile, "bootstrap"))
+        new File(stylesDir, extractedBootstrapName),
+        new File(stylesDir, "bootstrap"))
 
-    // TODO: generate secondary.css
-    // copy secondary.css into export directory
-    FileUtils.copyFileToDirectory(new File(inputDir, "secondary.css"), outputDirFile)
+
+    // generate secondary.css in styles directory
+    Styles.createStyleSheet(outputDir + "/styles/" + "secondary.css")
 
     val curDir = System.getProperty("user.dir").replace('\\', '/')
     Desktop.getDesktop.browse(new URI(s"${curDir}/${outputDir}/index.html"))
@@ -83,55 +84,3 @@ class ExportLocalTest extends FunSuite {
 
 }
 
-
-
-object PrepareBootstrap {
-
-  val BootstrapFilename = "bootstrap-3.3.5-dist.zip"
-  val BootstrapUrl = "https://github.com/twbs/bootstrap/releases/download/v3.3.5/" + BootstrapFilename
-
-  // download boostrap archive, extract, and delete
-  def getBootstrap(downloadDir: String): Unit = {
-
-    val outputFilename = downloadDir + "/" + BootstrapFilename
-    val outputFile = new java.io.File(outputFilename)
-
-    FileUtils.copyURLToFile(new java.net.URL(BootstrapUrl), outputFile)
-    extractArchive(outputFile, downloadDir)
-    outputFile.delete
-
-  }
-
-
-  // extract a zip archive
-  // http://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files
-  def extractArchive(archive: File, outputDirname: String) {
-
-    // TODO: idiomatic exception handling
-    val zipFile = new ZipFile(archive)
-    try {
-      val entries = zipFile.getEntries
-      val entriesIterator = Iterator.continually((entries, entries.nextElement)).takeWhile(_._1.hasMoreElements).map(_._2)
-
-      entriesIterator.foreach(entry => {
-        val extractedEntry = new File(outputDirname, entry.getName)
-
-        if (entry.isDirectory) {
-          extractedEntry.mkdirs
-        } else {
-          extractedEntry.getParentFile.mkdirs
-          val in = zipFile.getInputStream(entry)
-          val out = new FileOutputStream(extractedEntry)
-          IOUtils.copy(in, out)
-          IOUtils.closeQuietly(in)
-          out.close
-        }
-      })
-
-    } finally {
-      zipFile.close
-    }
-  }
-
-
-}
