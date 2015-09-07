@@ -17,7 +17,7 @@ object Styles {
   // val FontFace = "Lora"
   val FontFace = "Libre Baskerville"
   val FontFallback = "serif"
-  val HeadingSizes = (1 to 6) zip List(14, 18, 24, 30, 36, 42)
+  val HeadingSizes = (1 to 6) zip List(42, 36, 30, 24, 18, 14)
   val H1JumbotronSize = 72
   val BodyFontSize = 16
   val BodyLineHeight = 1.6
