@@ -27,7 +27,7 @@ class ExportLocalTest extends FunSuite {
 
   val masterCollectionName = "master"
   val mainCollectionNames = List("doc", "images")
-  val license = "Copyright (c) 2015 Ben Zimmer. All rights reserved."
+  val license = "Copyright &copy; 2015 Ben Zimmer. All rights reserved."
 
 
   test("local export 'integration' test") {
@@ -68,7 +68,13 @@ class ExportLocalTest extends FunSuite {
 
     // copy bootstrap into export directory and rename
     FileUtils.copyDirectoryToDirectory(extractedBootstrap, outputDirFile)
-    new File(outputDirFile, extractedBootstrapName).renameTo(new File(outputDirFile, "bootstrap"))
+    FileUtils.moveDirectory(
+        new File(outputDirFile, extractedBootstrapName),
+        new File(outputDirFile, "bootstrap"))
+
+    // TODO: generate secondary.css
+    // copy secondary.css into export directory
+    FileUtils.copyFileToDirectory(new File(inputDir, "secondary.css"), outputDirFile)
 
     val curDir = System.getProperty("user.dir").replace('\\', '/')
     Desktop.getDesktop.browse(new URI(s"${curDir}/${outputDir}/index.html"))

@@ -5,6 +5,7 @@
 
 // 2015-08-10: Created in refactor.
 // 2015-09-02: All pages use jumbotron.
+// 2015-09-06: Google Fonts and link to custom stylesheet in main page template.
 
 package bdzimmer.secondary.export
 
@@ -19,9 +20,15 @@ import bdzimmer.secondary.export.Tags._
 
 object PageTemplates {
 
-  val COLUMN_12 = 12
+  val Column12 = 12
 
-  val pageTemplate= """
+  // val FontFace = "Lora"
+  val FontFace = "Libre+Baskerville"
+  val FontFallback = "serif"
+
+  // TODO: generate and track secondary.css
+
+  val pageTemplate= s"""
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -34,15 +41,14 @@ object PageTemplates {
 
     <title>%s</title>
 
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=${FontFace}:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
+
     <!-- Bootstrap core CSS -->
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom styles for this template -->
-    <!-- <link href="starter-template.css" rel="stylesheet"> -->
-
-    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
-    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-    <script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+    <!-- Custom styles for Secondary -->
+    <link href="secondary.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -97,11 +103,11 @@ object PageTemplates {
 
       jumboTron(
           container(
-              column(COLUMN_12,
+              column(Column12,
                   "<h1>%s</h1><h3>%s</h3>".format(title, description)))) +
 
       container(
-        column(COLUMN_12,
+        column(Column12,
           toolbar.getOrElse("")
         ) +
         body
@@ -113,8 +119,8 @@ object PageTemplates {
 
 
 
-
-  def createArticlePageOld(
+  /*
+  def createArticlePage(
       outputFile: String,
       title: String, description: String, toolbar: Option[String],
       body: String, license: String): Unit = {
@@ -126,7 +132,7 @@ object PageTemplates {
       "",
 
       container(
-        column(COLUMN_12,
+        column(Column12,
           ("<h1>%s</h1><h3>%s</h3>".format(title, description)) +
           toolbar.getOrElse("") +
           hr
@@ -137,7 +143,7 @@ object PageTemplates {
     )
 
   }
-
+  */
 
 
 
