@@ -85,8 +85,8 @@ class NotesParser(world: List[WorldItem]) {
   def processItemTag(tag: SecTag, item: WorldItem): String = tag.kind match {
 
     case NotesParser.LinkKind => ExportPages.textLinkPage(item)
-    case NotesParser.ImageKind => panel(ExportPages.imageLinkPage(item, metaItems, false, 320), true)
-    case NotesParser.ImageResponsiveKind => panel(ExportPages.imageLinkPage(item, metaItems, true), false)
+    case NotesParser.ImageKind => ExportPages.panel(ExportPages.imageLinkPage(item, metaItems, false, 320), true)
+    case NotesParser.ImageResponsiveKind => ExportPages.panel(ExportPages.imageLinkPage(item, metaItems, true), false)
     case NotesParser.JumbotronBackgroundKind => jumbotronBackground(item, metaItems)
 
     // tags that aren't recognized are displayed along with links
@@ -111,23 +111,6 @@ class NotesParser(world: List[WorldItem]) {
 
   // helper methods
   // TODO: put these helper methods in the companion object?
-
-  def panel(contents: String, pullRight: Boolean = false): String = {
-
-    val pullClass = pullRight match {
-      case true => " pull-right"
-      case false => ""
-    }
-
-    val leftMargin = pullRight match {
-      case true => """ style="margin-left:32px""""
-      case false => ""
-    }
-
-    (s"""<div class="panel panel-default${pullClass}"${leftMargin}><div class="panel-body">${contents}""" +
-    """</div></div>""")
-
-  }
 
 
   def jumbotronBackground(item: WorldItem, metaItems: List[MetaItem]): String = {

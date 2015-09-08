@@ -194,8 +194,13 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
         Some(ExportPages.getToolbar(character)),
 
-        Tags.column(column8, np.transform(character.notes)) +
-        Tags.column(column4, ExportPages.characterImage(character, metaItems, 12)),
+        // Tags.column(column8, np.transform(character.notes)) +
+        // Tags.column(column4, ExportPages.characterImage(character, metaItems, 12)),
+
+        Tags.column(column12,
+            ExportPages.panel(
+                ExportPages.imageLinkPage(character, metaItems, false, 320, false, 12), true, false) +
+            np.transform(character.notes)),
 
         license)
 
@@ -237,9 +242,8 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
         collection.name, collection.description,
         Some(ExportPages.getToolbar(collection)),
 
-        Tags.column(column12, np.transform(collection.notes)) +
+        Tags.column(column12, np.transform(collection.notes) + Tags.hr) +
 
-        Tags.hr +
 
         // links to child pages with images
         collection.children.map(x => {
@@ -331,6 +335,29 @@ object ExportPages {
   }
 
 
+  // panel that can be pulled right
+  def panel(contents: String, pullRight: Boolean = false, border: Boolean = true): String = {
+
+    val pullClass = pullRight match {
+      case true => " pull-right"
+      case false => ""
+    }
+
+    val leftMargin = pullRight match {
+      case true => "margin-left:32px;"
+      case false => ""
+    }
+
+    val borderStyle = border match {
+      case true => ""
+      case false => "border: 0; box-shadow: 0 0 0; border-radius: 0;"
+    }
+
+    (s"""<div class="panel panel-default${pullClass}" style="${leftMargin} ${borderStyle}"><div class="panel-body">${contents}""" +
+    """</div></div>""")
+
+  }
+
   def getCharacterImageInfo(ci: CharacterItem, metaItems: List[MetaItem]): (Option[MetaItem], Int) = {
 
     // split spritesheet attribute by comma
@@ -348,6 +375,7 @@ object ExportPages {
     (metaOption, sheetRow)
 
   }
+
 
 
   def characterImage(
@@ -405,18 +433,27 @@ object ExportPages {
       item: WorldItem,
       metaItems: List[MetaItem],
       responsive: Boolean = true,
-      maxWidth: Int = 480): String = {
+      maxWidth: Int = 480,
+      showName: Boolean = true,
+      scale: Int = 4): String = {
 
     val imageTag = item match {
       case x: MapItem => {
         val imageFile = ExportImages.imagesDir + "/" + item.id + "%s" + ".png"
         Tags.imageSprite(imageFile.format(ExportImages.scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number}
       }
-      case x: CharacterItem => ExportPages.characterImage(x, metaItems, 4, responsive, maxWidth) // scalastyle:ignore magic.number
+      case x: CharacterItem => ExportPages.characterImage(x, metaItems, scale, responsive, maxWidth) // scalastyle:ignore magic.number
       case x: ImageItem => Tags.image(imageItemImagePath(x), responsive, maxWidth)
       case x: WorldItem => ""
     }
-    Tags.link(imageTag + "<br />" + item.name, item.id + ".html")
+
+
+    val imageName = showName match {
+      case true => "<br />" + item.name
+      case false => ""
+    }
+
+    Tags.link(imageTag + imageName, item.id + ".html")
   }
 
 

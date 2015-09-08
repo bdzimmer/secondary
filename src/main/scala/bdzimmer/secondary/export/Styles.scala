@@ -20,7 +20,8 @@ object Styles {
   val HeadingSizes = (1 to 6) zip List(42, 36, 30, 24, 18, 14)
   val H1JumbotronSize = 72
   val BodyFontSize = 16
-  val BodyLineHeight = 1.6
+  val BodyLineHeight = 2
+  val BodyMarginBottom = 20
 
 
   val BootstrapFilename = "bootstrap-3.3.5-dist.zip"
@@ -51,6 +52,10 @@ ${headingSizeStyle}
 p, div {
   font-family: '${FontFace}', ${FontFallback};
   font-size: ${BodyFontSize}px;
+}
+
+p {
+  margin: 0 0 ${BodyMarginBottom}px;
 }
 
 body {
