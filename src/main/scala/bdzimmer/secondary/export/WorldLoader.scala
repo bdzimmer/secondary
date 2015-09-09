@@ -25,10 +25,10 @@ object WorldLoader {
 
   // new loadMasterCollection function
 
-  def loadMasterCollection(
+  def loadWorld(
       inputDir: String,
       masterName: String, mainCollectionNames: List[String],
-      fileStatus: FileModifiedMap): CollectionItem = {
+      fileStatus: FileModifiedMap): List[WorldItem] = {
 
 
     val masterYamlName = masterName + ".yml"
@@ -56,7 +56,13 @@ object WorldLoader {
 
 
     masterCollection.children = mainCollections.asJava.asInstanceOf[java.util.List[WorldItemBean]]
-    masterCollection.getVal
+
+    // this was the original return
+    // masterCollection.getVal
+
+    val world = collectionToList(masterCollection.getVal)
+
+    world
 
   }
 

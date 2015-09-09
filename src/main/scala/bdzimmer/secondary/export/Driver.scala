@@ -18,8 +18,7 @@ import scala.collection.JavaConverters._
 import com.google.api.client.util.DateTime
 import org.apache.commons.io.FileUtils
 
-import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder}
-import bdzimmer.gdrivescala.GoogleDriveKeys
+import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 
 
 object Driver {

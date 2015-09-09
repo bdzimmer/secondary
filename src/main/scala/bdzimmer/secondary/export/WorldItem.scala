@@ -13,6 +13,7 @@
 // 2015-08-22: Changed null fields to default to empty string. Need to implement validation
 //             on loaded world to make sure required fields are provided.
 // 2015-08-24: Added ImageItemBean / ImageItem classes.
+// 2015-09-08: Added tag list field to item classes.
 
 package bdzimmer.secondary.export
 
@@ -22,6 +23,8 @@ import scala.reflect.ClassTag
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
+
+import bdzimmer.secondary.export.{NotesParser => np}
 
 
 // bean version of world items -- for loading from
@@ -51,7 +54,7 @@ trait TileMetaItemBean extends MetaItemBean {
 
 
 class BareWorldItemBean extends WorldItemBean {
-  def getVal(): BareWorldItem = BareWorldItem(id, name, description, notes, srcyml, remoteid)
+  def getVal(): BareWorldItem = BareWorldItem(id, name, description, notes, srcyml, remoteid, np.getAllTags(notes))
 }
 
 class CollectionItemBean extends WorldItemBean {
@@ -59,30 +62,35 @@ class CollectionItemBean extends WorldItemBean {
 
    def getVal(): CollectionItem = CollectionItem (
        id, name, description, notes, srcyml, remoteid,
+       np.getAllTags(notes),
        children.asScala.map(_.getVal).toList)
 }
 
 class ImageItemBean extends MetaItemBean {
   def getVal(): ImageItem = ImageItem(
       id, name, description, notes, srcyml, remoteid,
+      np.getAllTags(notes),
       filename)
 }
 
 class TilesetItemBean extends TileMetaItemBean {
   def getVal(): TilesetItem = TilesetItem(
       id, name, description, notes, srcyml, remoteid,
+      np.getAllTags(notes),
       filename, tiletype)
 }
 
 class SpritesheetItemBean extends TileMetaItemBean {
   def getVal(): SpritesheetItem = SpritesheetItem(
       id, name, description, notes, srcyml, remoteid,
+      np.getAllTags(notes),
       filename, tiletype)
 }
 
 class MapItemBean extends MetaItemBean {
   def getVal(): MapItem = MapItem(
       id, name, description, notes, srcyml, remoteid,
+      np.getAllTags(notes),
       filename)
 }
 
@@ -93,6 +101,7 @@ class CharacterItemBean extends WorldItemBean {
 
   def getVal(): CharacterItem = CharacterItem(
       id, name, description, notes, srcyml, remoteid,
+      np.getAllTags(notes),
       image) // sheetrow
 
 }
@@ -109,6 +118,7 @@ trait WorldItem {
     val notes: String
     val srcyml: String
     val remoteid: String
+    val tags: List[SecTag]
 }
 
 
@@ -123,36 +133,36 @@ trait TileMetaItem extends MetaItem {
 
 case class BareWorldItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String) extends WorldItem
+    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
 case class CollectionItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String,
+    srcyml: String, remoteid: String, tags: List[SecTag],
     children: List[WorldItem]) extends WorldItem
 
 case class ImageItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String,
+    srcyml: String, remoteid: String, tags: List[SecTag],
     filename: String) extends MetaItem
 
 case class TilesetItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String,
+    srcyml: String, remoteid: String, tags: List[SecTag],
     filename: String, tiletype: String) extends TileMetaItem
 
 case class SpritesheetItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String,
+    srcyml: String, remoteid: String, tags: List[SecTag],
     filename: String, tiletype: String) extends TileMetaItem
 
 case class MapItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String,
+    srcyml: String, remoteid: String, tags: List[SecTag],
     filename: String) extends MetaItem
 
 case class CharacterItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String,
+    srcyml: String, remoteid: String, tags: List[SecTag],
     image: String) extends WorldItem
 
 

@@ -8,6 +8,7 @@
 // 2015-09-01: More on above.
 // 2015-09-02: More image functions for jumbotron functionality (needs cleaning up).
 //             Master page and article pages all use the same template.
+// 2015-09-08: Tasks page uses tags.
 
 package bdzimmer.secondary.export
 
@@ -54,25 +55,28 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
 
 
-  def createMasterPage(masterCollection: CollectionItem): String = {
+  def createMasterPage(): String = {
+
+    // TODO: better way to do this
+    val master = world.head.asInstanceOf[CollectionItem]
 
     val relFilePath = "index.html"
 
     val toolbar = Some(List(
             Tags.link("Index", indexPageFile),
             Tags.link("Tasks", tasksPageFile),
-            Tags.link("Edit", ExportPages.notepadURL(masterCollection))).mkString("&nbsp;&middot;") +
+            Tags.link("Edit", ExportPages.notepadURL(master))).mkString("&nbsp;&middot;") +
             Tags.hr)
 
     PageTemplates.createArticlePage(
         location + "/" + relFilePath,
-        masterCollection.name,
-        masterCollection.description,
+        master.name,
+        master.description,
 
         toolbar,
 
-        Tags.column(column12, np.transform(masterCollection.notes) + Tags.hr +
-        masterCollection.children.map(x => {
+        Tags.column(column12, np.transform(master.notes) + Tags.hr +
+        master.children.map(x => {
 
             val curCollection = x.asInstanceOf[CollectionItem]
 
@@ -97,19 +101,35 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
     val relFilePath = tasksPageFile
 
+    val pp = NotesParser.getPegDown
+
+    // remove paragraph tags from pegdown output
+    def processText(text: String): String = {
+      val html = pp.markdownToHtml(text)
+      html.stripPrefix("<p>").stripSuffix("</p>")
+    }
+
+
     def taskList(todoFunc: WorldItem => List[String]): String = {
       Tags.listGroup(world
               map(x => (x, todoFunc(x)))
               filter(_._2.length > 0)
               map(x => Tags.listItem(ExportPages.notepadLink(x._1) + ExportPages.textLinkPage(x._1) +
-                  Tags.listGroup(x._2.map(Tags.listItem(_))))))
+                  Tags.listGroup(x._2.map(text => Tags.listItem(processText(text)))))))
     }
+
 
     // get task strings from a WorldItem's notes
-    def getTask(item: WorldItem)(prefix: String): List[String] = {
-      item.notes.split("\n").filter(_.startsWith(prefix)).map(_.substring(prefix.length)).toList
-    }
+    // original prefix needed colon and space, ie "THOUGHT: "
+    // def getTask(item: WorldItem)(prefix: String): List[String] = {
+    //   item.notes.split("\n").filter(_.startsWith(prefix)).map(_.substring(prefix.length)).toList
+    // }
 
+    // get task strings
+    def getTask(item: WorldItem)(prefix: String): List[String] = {
+      item.tags.filter(_.kind.equals(prefix)).map(_.value)
+      // item.notes.split("\n").filter(_.startsWith(prefix)).map(_.substring(prefix.length)).toList
+    }
 
     PageTemplates.createArticlePage(
 
@@ -120,10 +140,10 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
         None,
 
        // Todos and thoughts
-       Tags.column(column6, "<h3>To-dos</h3>\n" + taskList(getTask(_)("TODO: "))) +
+       Tags.column(column6, "<h3>To-dos</h3>\n" + taskList(getTask(_)("todo"))) +
 
        // Thoughts
-       Tags.column(column6, "<h3>Thoughts</h3>\n" + taskList(getTask(_)("THOUGHT: "))) +
+       Tags.column(column6, "<h3>Thoughts</h3>\n" + taskList(getTask(_)("thought"))) +
 
 
        // Empty notes
@@ -153,10 +173,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
         None,
 
-        // Testing...glossary
-
         Tags.column(column6,
-          "<h3>Index</h3>\n" +
 
           {
             val groupedItems = (world

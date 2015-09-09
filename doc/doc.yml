@@ -13,14 +13,14 @@ children:
   id: layout
   name: Project Layout
   notes: |-
-    TODO: project layout content
+    {{TODO: project layout content}}
 
 
 - !item
   id: objects
   name: Objects
   notes: |-
-    TODO: objects content
+    {{TODO: objects content}}
  
 - !item
   id: tags
@@ -32,11 +32,11 @@ children:
   id: drive
   name: Google Drive Integration
   notes: |-
-    TODO: drive integration content
+    {{TODO: drive integration content}}
 
 - !item
   id: faq
   name: Frequently Asked Questions
   notes: |-
-    TODO: faq content  
+    {{TODO: faq content}}  
  

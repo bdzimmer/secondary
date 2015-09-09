@@ -6,7 +6,7 @@
 !collection
 id: master
 name: Secondary
-description: create worlds from text
+description: create worlds with text
 notes: |-
   Secondary is a tool for world building. Use Secondary for planning novels, creating game design documents, and more.
   <br /><br />
@@ -15,17 +15,17 @@ notes: |-
   Describe your world in text files with a combination of YAML and Markdown. Use your favorite text editor; there's no user interface to learn.<br /><br />
   
   ### Organize
-  Group characters, places, and ideas into collections and hierarchies however you see fit. Add links and track relationships between things in your world.<br /><br />
+  Group characters, places, and ideas into collections and hierarchies however you see fit. Add links and relationships between things in your world.<br /><br />
   
   ### Plan
-  Track writing that needs to completed and ideas that need to be fleshed out at every level.<br /><br />
+  Track writing that needs to completed and ideas that need to be developed.<br /><br />
   
   ### Export
-  Export your world to a website, integrating your own image content or public domain images from Wikimedia. Reread, review tasks, and edit!<br /><br />
+  Compile your world to a website, integrating your own image content or public domain images from Wikimedia. Browse to review tasks and get ideas, then edit the source files and recompile.<br /><br />
  
   ### Google Drive Integration
-  Store your world files on Google Drive and edit them from anywhere. Export the website for hosting on Google Drive.<br /><br />  
-
+  Store your world's source files on Google Drive and edit them from anywhere. Export the website for hosting on Google Drive.<br /><br />
+  
   {{jumbotron-bg: image_alice}}
 
   

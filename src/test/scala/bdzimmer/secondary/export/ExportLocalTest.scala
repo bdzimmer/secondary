@@ -35,15 +35,15 @@ class ExportLocalTest extends FunSuite {
     FileUtils.deleteDirectory(outputDirFile)
     outputDirFile.mkdirs
 
-    val masterCollection = WorldLoader.loadMasterCollection(
+    val world = WorldLoader.loadWorld(
         inputDir,
         masterCollectionName, mainCollectionNames,
         ExportPages.getEmptyFileModifiedMap)
 
-    val world = WorldLoader.collectionToList(masterCollection)
+    // val world = WorldLoader.collectionToList(masterCollection)
 
     val exportPages = new ExportPages(world, outputDir, license)
-    val allPageOutputs = List(exportPages.createMasterPage(masterCollection),
+    val allPageOutputs = List(exportPages.createMasterPage,
                               exportPages.createTasksPage,
                               exportPages.createIndexPage) ++
                          exportPages.exportPagesList(world)

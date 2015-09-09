@@ -56,7 +56,7 @@ class ContentTransformer(
 
 
 
-  def downloadMetadata(fileStatus: FileModifiedMap): (CollectionItem,  FileModifiedMap) = {
+  def downloadMetadata(fileStatus: FileModifiedMap): (List[WorldItem],  FileModifiedMap) = {
 
 
     // find the yaml files in drive
@@ -78,9 +78,10 @@ class ContentTransformer(
     println("--downloaded YAML metadata")
 
     // build the collection
-    val masterCollection = WorldLoader.loadMasterCollection(
+    val masterCollection = WorldLoader.loadWorld(
         localDownloadPath,
-        masterCollectionName, mainCollectionNames,
+        masterCollectionName,
+        mainCollectionNames,
         updatedFileStatus)
 
     println("--created collection")
@@ -94,10 +95,11 @@ class ContentTransformer(
 
 
 
-  def downloadImages(masterCollection: CollectionItem, fileStatus:  FileModifiedMap): FileModifiedMap = {
+  def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
 
     // find a unique list of the files pointed to by meta items.
-    val uniqueFiles = WorldItem.filterTree[MetaItem](masterCollection).map(_.filename).distinct
+    // val uniqueFiles = WorldItem.filterTree[MetaItem](masterCollection).map(_.filename).distinct
+    val uniqueFiles = WorldItem.filterList[MetaItem](masterCollection).map(_.filename).distinct
 
     // some of these files are not actual files, but links to remote data.
     // so filter those out
@@ -166,11 +168,12 @@ class ContentTransformer(
   // export content from download location to export location
   // using master collection
   def export(metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
-             masterCollection: CollectionItem, images: Boolean = false): (List[String], FileOutputsMap) = {
+             world: List[WorldItem], images: Boolean = false): (List[String], FileOutputsMap) = {
 
     // get only the world items that are described in the subset of the
     // meta we just downloaded
-    val world = WorldLoader.collectionToList(masterCollection)
+    // val world = WorldLoader.collectionToList(masterCollection)
+
     world foreach(x => println("world item: " + x.srcyml + " -- " + x.id))
 
     val metaToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))
@@ -195,7 +198,7 @@ class ContentTransformer(
     val localContentDir = localDownloadPath
 
     println("--exporting pages")
-    val allPageOutputs = List(exportPages.createMasterPage(masterCollection),
+    val allPageOutputs = List(exportPages.createMasterPage,
                               exportPages.createTasksPage,
                               exportPages.createIndexPage) ++
                          exportPages.exportPagesList(metaToExport)
