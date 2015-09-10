@@ -101,21 +101,12 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
     val relFilePath = tasksPageFile
 
-    val pp = NotesParser.getPegDown
-
-    // remove paragraph tags from pegdown output
-    def processText(text: String): String = {
-      val html = pp.markdownToHtml(text)
-      html.stripPrefix("<p>").stripSuffix("</p>")
-    }
-
-
     def taskList(todoFunc: WorldItem => List[String]): String = {
       Tags.listGroup(world
               map(x => (x, todoFunc(x)))
               filter(_._2.length > 0)
               map(x => Tags.listItem(ExportPages.notepadLink(x._1) + ExportPages.textLinkPage(x._1) +
-                  Tags.listGroup(x._2.map(text => Tags.listItem(processText(text)))))))
+                  Tags.listGroup(x._2.map(text => Tags.listItem(NotesParser.processLine(text)))))))
     }
 
 

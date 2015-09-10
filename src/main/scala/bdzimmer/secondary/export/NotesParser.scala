@@ -34,10 +34,6 @@ class NotesParser(world: List[WorldItem]) {
     pp.markdownToHtml(updatedText)
   }
 
-
-
-
-
   // validate that a tag can be processed
   def processTag(tag: SecTag): String = {
 
@@ -160,11 +156,22 @@ object NotesParser {
         val tagParts = tagText.split(":\\s+")
         SecTag(tagParts(0).toLowerCase, tagParts(1))
       }
-
       case false => SecTag("link", tagText)
     }
 
   }
+
+
+  // process a line of text (like a description or title) with PegDown
+  // eliminating beginning and ending paragraph tags
+  def processLine(line: String): String = {
+    // TODO: not sure if creating the pegdown processor every time here
+    // will be performant or not.
+    val pp = getPegDown
+    val html = pp.markdownToHtml(line)
+    html.stripPrefix("<p>").stripSuffix("</p>")
+  }
+
 
   def getPegDown(): PegDownProcessor = {
     // new PegDownProcessor(Extensions.HARDWRAPS)
