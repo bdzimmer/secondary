@@ -1,5 +1,16 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
-// Secondary project sbt file
+
+// Secondary project build.sbt file
+
+val whichJvmSettings = sys.props.getOrElse("jvm", default = "7")
+val jvmSettings = whichJvmSettings match {
+  case "6" => JvmSettings("1.6", "1.6", "1.6")
+  case "7" => JvmSettings("1.7", "1.7", "1.7")
+}
+
+// JVM settings can be verified using the following command:
+// javap -verbose -cp secondary.jar bdzimmer.secondary.export.Driver
+// major version will be 50 for Java 1.6 and 51 for Java 1.7. 
 
 lazy val root = (project in file("."))
   .settings(
@@ -8,7 +19,8 @@ lazy val root = (project in file("."))
     organization := "bdzimmer",
     scalaVersion := "2.10.5",
     
-    javacOptions ++= Seq("-source", "1.7", "-target", "1.7"),
+    javacOptions ++= Seq("-source", jvmSettings.javacSource, "-target", jvmSettings.javacTarget),
+    scalacOptions ++= Seq(s"-target:jvm-${jvmSettings.scalacTarget}"),
     
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
