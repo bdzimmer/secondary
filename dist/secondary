@@ -2,4 +2,10 @@
 # Shell script for running Secondary on Linux / OSX.
 
 #!/bin/bash
-java -cp secondary.jar bdzimmer.secondary.export.Driver
+secondary_dir=`dirname $0`
+secondary_dir=`cd $secondary_dir; pwd`
+
+# uncomment the next line if running on Cygwin
+# secondary_dir=`cygpath -wp $secondary_dir`
+
+java -cp $secondary_dir/secondary.jar bdzimmer.secondary.export.Driver $@
