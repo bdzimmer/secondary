@@ -25,7 +25,6 @@ class NotesParser(world: List[WorldItem]) {
 
     // process special tags
     val updatedText = NotesParser.matcher.replaceAllIn(text, m => {
-      println("match")
       val tag = NotesParser.getTag(m.group(1))
       processTag(tag)
     })
@@ -146,10 +145,9 @@ object NotesParser {
   // generate a tag from text
   def getTag(tagText: String): SecTag = {
 
-    println("\tgetTag")
-
+    // println("\tgetTag")
     // TODO: find a way to return error messages
-    println(s"\t\t$tagText")
+    // println(s"\t\t$tagText")
 
     tagText.contains(":") match {
       case true => {

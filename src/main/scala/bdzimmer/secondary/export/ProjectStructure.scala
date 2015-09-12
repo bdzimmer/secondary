@@ -15,4 +15,11 @@ object ProjectStructure {
   val CacheDir = "cache"
   val WebDir = "web"
 
+  // configuration file
+  val ConfigurationFile = "secondary.properties"
+
+  // timestamp files
+  val MetaStatusFile = "meta_status.txt"
+  val FileStatusFile = "file_status.txt"
+
 }

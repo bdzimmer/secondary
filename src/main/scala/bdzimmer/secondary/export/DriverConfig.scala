@@ -9,7 +9,8 @@
 
 package bdzimmer.secondary.export
 
-import java.io.FileInputStream
+
+import java.io.{File, FileInputStream}
 import java.util.Properties
 
 
@@ -35,7 +36,7 @@ class PropertiesWrapper(filename: String) {
 class DriverConfig(val projectDir: String) {
 
   // val projectDir = System.getProperty("user.home")
-  val propFilename = projectDir + "/" + "secondary.properties"
+  val propFilename = projectDir + File.separator + ProjectStructure.ConfigurationFile
 
   val prop = new PropertiesWrapper(propFilename)
 
@@ -54,27 +55,34 @@ class DriverConfig(val projectDir: String) {
     prop(cf.key).getOrElse(cf.default)
   }
 
-  // val localScratchPath = getProp(DriverConfig.localScratchPath)
+  // attributes described in the companion object
   val driveClientIdFile = getProp(DriverConfig.driveClientIdFile)
   val driveAccessTokenFile = getProp(DriverConfig.driveAccessTokenFile)
   val driveInputPath = getProp(DriverConfig.driveInputPath)
   val driveOutputPath = getProp(DriverConfig.driveOutputPath)
+  val masterName = getProp(DriverConfig.masterName)
   val mainCollectionNames = getProp(DriverConfig.mainCollectionNames)
   val license = getProp(DriverConfig.license)
   val localContentPath = getProp(DriverConfig.localContentPath)
+
+
+  // attributes derived from the above
+  val mainCollections = mainCollectionNames.split(",").toList.map(_.trim)
+  val driveInputPathList = driveInputPath.split("/").toList
+  val driveOutputPathList = driveOutputPath.split("/").toList
+
 
 }
 
 
 object DriverConfig {
 
-  // val localScratchPath = ConfigField("localScratchPath", "tmp", "Local scratch path")
-
   val driveClientIdFile = ConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
   val driveAccessTokenFile = ConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
 
   val driveInputPath = ConfigField("driveInputPath", "secondary/content", "Drive input path")
   val driveOutputPath = ConfigField("driveOutputPath", "secondary/web", "Drive output path")
+  val masterName = ConfigField("masterName", "master", "Master name")
   val mainCollectionNames = ConfigField("mainCollectionNames", "characters,locations,lore,images,tilesets,sprites", "Main collection names")
   val license = ConfigField("license", "", "License text")
   val localContentPath = ConfigField("localContentPath", "", "Local content path")
@@ -85,6 +93,7 @@ object DriverConfig {
       driveAccessTokenFile,
       driveInputPath,
       driveOutputPath,
+      masterName,
       mainCollectionNames,
       license,
       localContentPath)

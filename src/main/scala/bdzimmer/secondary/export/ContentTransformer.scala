@@ -23,39 +23,23 @@ import scala.reflect.ClassTag
 
 
 
-class ContentTransformer(
-    localScratchPath: String,
-    drive: Drive,
-    driveInputPath: List[String],
-    driveOutputPath: List[String],
-    masterCollectionName: String,
-    mainCollectionNames: List[String],
-    license: String) {
+class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
 
-
-
-  // val MASTER_COLLECTION_NAME = "master"
-  // val MAIN_COLLECTION_NAMES = List("characters", "locations", "lore", "tilesets", "sprites")
-
-
-  // download YAML files to local temporary area
-  val localDownloadPath = localScratchPath + File.separator + ProjectStructure.CacheDir + File.separator
-  val localExportPath = localScratchPath  + File.separator +  ProjectStructure.WebDir + File.separator
+  val localDownloadPath = projectConfig.projectDir + File.separator + ProjectStructure.CacheDir + File.separator
+  val localExportPath = projectConfig.projectDir  + File.separator +  ProjectStructure.WebDir + File.separator
 
   val localDownloadPathFile = new File(localDownloadPath)
   val localExportPathFile = new File(localExportPath)
 
+  // get Drive files
   val driveRootFile = DriveUtils.getRoot(drive)
+  val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, projectConfig.driveInputPathList).get
+  val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projectConfig.driveOutputPathList).get
 
-  // val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, driveInputPath).get
-
-  val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, driveInputPath).get
-  val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, driveOutputPath).get
-
-
-  // create local directories if they don't exist
+  // create local project directories if they don't already exist
   localDownloadPathFile.mkdirs
   localExportPathFile.mkdirs
+
 
 
 
@@ -83,8 +67,8 @@ class ContentTransformer(
     // build the collection
     val masterCollection = WorldLoader.loadWorld(
         localDownloadPath,
-        masterCollectionName,
-        mainCollectionNames,
+        projectConfig.masterName,
+        projectConfig.mainCollections,
         updatedFileStatus)
 
     println("--created collection")
@@ -194,9 +178,8 @@ class ContentTransformer(
 
     filesToExport foreach(x => println("file to export: " + x.id))
 
-    val exportImages = new ExportImages(world, localExportPath, license)
-
-    val exportPages = new ExportPages(world, localExportPath, license)
+    val exportImages = new ExportImages(world, localExportPath, projectConfig.license)
+    val exportPages = new ExportPages(world, localExportPath, projectConfig.license)
 
     val localContentDir = localDownloadPath
 
