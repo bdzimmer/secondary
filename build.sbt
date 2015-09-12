@@ -18,6 +18,7 @@ lazy val root = (project in file("."))
     version := "2015.08.18",
     organization := "bdzimmer",
     scalaVersion := "2.10.5",
+    mainClass in (Compile, run) := Some("bdzimmer.secondary.export.Driver"),
     
     javacOptions ++= Seq("-source", jvmSettings.javacSource, "-target", jvmSettings.javacTarget),
     scalacOptions ++= Seq(s"-target:jvm-${jvmSettings.scalacTarget}"),

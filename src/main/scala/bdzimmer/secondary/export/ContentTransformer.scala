@@ -7,13 +7,16 @@ package bdzimmer.secondary.export
 
 import bdzimmer.gdrivescala.{DriveUtils, GoogleDriveKeys}
 
+import java.io.File
+
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
 
 import org.apache.commons.io.FileUtils
 import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.File
+import com.google.api.services.drive.model.{File => DriveFile}
 import com.google.api.client.util.DateTime
+
 
 import scala.ref
 import scala.reflect.ClassTag
@@ -36,11 +39,11 @@ class ContentTransformer(
 
 
   // download YAML files to local temporary area
-  val localDownloadPath = localScratchPath + "download/"
-  val localExportPath = localScratchPath + "export/"
+  val localDownloadPath = localScratchPath + File.separator + ProjectStructure.CacheDir + File.separator
+  val localExportPath = localScratchPath  + File.separator +  ProjectStructure.WebDir + File.separator
 
-  val localDownloadPathFile = new java.io.File(localDownloadPath)
-  val localExportPathFile = new java.io.File(localExportPath)
+  val localDownloadPathFile = new File(localDownloadPath)
+  val localExportPathFile = new File(localExportPath)
 
   val driveRootFile = DriveUtils.getRoot(drive)
 
@@ -146,7 +149,7 @@ class ContentTransformer(
 
   // download a list of files, creating proper directories in the
   // download location if they don't already exist.
-  def downloadFiles(files: List[(String, File)]): FileModifiedMap = {
+  def downloadFiles(files: List[(String, DriveFile)]): FileModifiedMap = {
 
     files.map({case (filename, driveFile) => {
 

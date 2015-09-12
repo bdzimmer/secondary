@@ -3,6 +3,9 @@
 // Driver configuration.
 
 // 2015-08-30: Created in refactor from Driver.
+// 2015-09-12: Changes for local rather than global configs.
+
+// TODO: rename to ProjectConfig
 
 package bdzimmer.secondary.export
 
@@ -29,9 +32,12 @@ class PropertiesWrapper(filename: String) {
 }
 
 
-class DriverConfig() {
+class DriverConfig(val projectDir: String) {
 
-  val prop = new PropertiesWrapper(DriverConfig.propFilename)
+  // val projectDir = System.getProperty("user.home")
+  val propFilename = projectDir + "/" + "secondary.properties"
+
+  val prop = new PropertiesWrapper(propFilename)
 
   val missing = DriverConfig.requiredProperties.filter(x => {
     !prop.prop.keySet().contains(x.key)
@@ -48,7 +54,7 @@ class DriverConfig() {
     prop(cf.key).getOrElse(cf.default)
   }
 
-  val localScratchPath = getProp(DriverConfig.localScratchPath)
+  // val localScratchPath = getProp(DriverConfig.localScratchPath)
   val driveClientIdFile = getProp(DriverConfig.driveClientIdFile)
   val driveAccessTokenFile = getProp(DriverConfig.driveAccessTokenFile)
   val driveInputPath = getProp(DriverConfig.driveInputPath)
@@ -62,10 +68,7 @@ class DriverConfig() {
 
 object DriverConfig {
 
-  val homeDir = System.getProperty("user.home")
-  val propFilename = homeDir + "/" + "worldbuilder.properties"
-
-  val localScratchPath = ConfigField("localScratchPath", "tmp", "Local scratch path")
+  // val localScratchPath = ConfigField("localScratchPath", "tmp", "Local scratch path")
 
   val driveClientIdFile = ConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
   val driveAccessTokenFile = ConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
@@ -77,7 +80,7 @@ object DriverConfig {
   val localContentPath = ConfigField("localContentPath", "", "Local content path")
 
   val requiredProperties =  List(
-      localScratchPath,
+      // localScratchPath,
       driveClientIdFile,
       driveAccessTokenFile,
       driveInputPath,

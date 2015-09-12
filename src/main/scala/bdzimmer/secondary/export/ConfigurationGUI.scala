@@ -18,9 +18,10 @@ import javax.swing.SwingConstants
 
 
 
-object ConfigurationGUI extends SimpleSwingApplication {
+class ConfigurationGUI(projectConfig: DriverConfig) extends SimpleSwingApplication {
 
-  val prop = new PropertiesWrapper(DriverConfig.propFilename)
+  val propFileName = projectConfig.propFilename
+  val prop = projectConfig.prop
 
   def top = new MainFrame {
 
@@ -40,7 +41,7 @@ object ConfigurationGUI extends SimpleSwingApplication {
           // TODO: verify the configuration
 
           prop.prop.store(
-              new java.io.FileOutputStream(DriverConfig.propFilename),
+              new java.io.FileOutputStream(propFileName),
               "created with configuration editor")
           saveStatus.text = "Saved."
         }
@@ -66,18 +67,18 @@ object ConfigurationGUI extends SimpleSwingApplication {
     }
 
 
-    val columnPairs = DriverConfig.requiredProperties.map(x => (configField(x.key, x.default), x.description + ":")) :+
-      (savePanel, "")
+    val columnPairs = DriverConfig.requiredProperties.map(
+        x => (configField(x.key, x.default), x.description + ":")) :+ (savePanel, "")
 
 
-    title = "World Builder Configuration"
+    title = "Secondary - Project Configuration"
 
     contents = new BorderPanel {
 
        border = myBorder
 
        layout(new FlowPanel {
-         contents += new Label("Configuration file: " + DriverConfig.propFilename)
+         contents += new Label("Configuration file: " + propFileName)
        }) = South
 
        val numRows = columnPairs.length
