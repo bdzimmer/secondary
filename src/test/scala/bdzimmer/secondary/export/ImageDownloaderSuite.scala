@@ -13,7 +13,6 @@ import org.scalatest.FunSuite
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 import java.io.File
-import java.nio.charset.StandardCharsets
 
 
 class ImageDownloaderSuite extends FunSuite {
@@ -28,7 +27,7 @@ class ImageDownloaderSuite extends FunSuite {
     assert(resultJson.isDefined)
 
     // for manual examination of JSON
-    // resultJson.map(x => FileUtils.writeStringToFile(new File("json.txt"), x, StandardCharsets.UTF_8))
+    // resultJson.map(x => FileUtils.writeStringToFile(new File("json.txt"), x, "UTF-8"))
 
     val meta = resultJson.flatMap(ImageDownloader.parseWikimediaJson(_))
     assert(meta.isDefined)

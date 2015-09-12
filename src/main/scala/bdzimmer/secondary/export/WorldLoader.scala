@@ -9,6 +9,7 @@
 package bdzimmer.secondary.export
 
 import java.io.File
+// import java.nio.charset.StandardCharsets
 
 import scala.collection.JavaConverters._
 import scala.ref
@@ -81,7 +82,7 @@ object WorldLoader {
 
     val yamlString = FileUtils.readFileToString(
         new java.io.File(inputDir + "/" + filename),
-        java.nio.charset.StandardCharsets.UTF_8)
+        "UTF-8")
 
     val collectionBean = loadCollection(yamlString)
 

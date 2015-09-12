@@ -5,7 +5,7 @@
 val whichJvmSettings = sys.props.getOrElse("jvm", default = "7")
 val jvmSettings = whichJvmSettings match {
   case "6" => JvmSettings("1.6", "1.6", "1.6")
-  case "7" => JvmSettings("1.7", "1.7", "1.7")
+  case _ => JvmSettings("1.7", "1.7", "1.7")
 }
 
 // JVM settings can be verified using the following command:
