@@ -16,53 +16,23 @@ import java.io.{File, FileOutputStream}
 import java.net.URI
 import java.util.zip.Deflater
 
-import scala.collection.JavaConverters
-
 
 class ExportLocalTest extends FunSuite {
 
-  val inputDir = "doc/"
-  val outputDir = "doc/export"
+  // test local export by building the documentation
+  test("local export integration test") {
 
-  val masterCollectionName = "master"
-  val mainCollectionNames = List("doc", "images")
-  val license = "Copyright &copy; 2015 Ben Zimmer. All rights reserved."
+    val projConf = new DriverConfig("doc/")
 
+    ContentTransformer.exportLocal(projConf)
 
-  test("local export 'integration' test") {
+    val outputDirFile = new File(projConf.localExportPath)
 
-    val outputDirFile = new File(outputDir)
-    FileUtils.deleteDirectory(outputDirFile)
-    outputDirFile.mkdirs
-
-    val world = WorldLoader.loadWorld(
-        inputDir,
-        masterCollectionName, mainCollectionNames,
-        ExportPages.getEmptyFileModifiedMap)
-
-    // val world = WorldLoader.collectionToList(masterCollection)
-
-    val exportPages = new ExportPages(world, outputDir, license)
-    val allPageOutputs = List(exportPages.createMasterPage,
-                              exportPages.createTasksPage,
-                              exportPages.createIndexPage) ++
-                         exportPages.exportPagesList(world)
-
-    val exportImages = new ExportImages(world, outputDir, license)
-    val imageOutputs = exportImages.exportAllImages(world, inputDir)
-
-    val charsToExport = WorldItem.filterList[CharacterItem](world)
-    val characterOutputs = if (charsToExport.length > 0) {
-       exportImages.prepareCharacterImages(charsToExport, inputDir)
-    } else {
-      ExportPages.getEmptyFileOutputsMap()
-    }
-
-    // if Boostrap doesn't exist in the doc folder, download and extract it
+    // if Bootsrap doesn't exist in the doc folder, download and extract it
     val extractedBootstrapName = FilenameUtils.removeExtension(Styles.BootstrapFilename)
-    val extractedBootstrap = new File(inputDir, extractedBootstrapName)
+    val extractedBootstrap = new File(projConf.localContentPath, extractedBootstrapName)
     if (!extractedBootstrap.exists) {
-      Styles.getBootstrap(inputDir)
+      Styles.getBootstrap(projConf.localContentPath)
     }
 
     // copy bootstrap into styles directory in export directory and rename
@@ -73,12 +43,12 @@ class ExportLocalTest extends FunSuite {
         new File(stylesDir, extractedBootstrapName),
         new File(stylesDir, "bootstrap"))
 
-
     // generate secondary.css in styles directory
-    Styles.createStyleSheet(outputDir + "/styles/" + "secondary.css")
+    Styles.createStyleSheet(projConf.localExportPath + "/styles/" + "secondary.css")
 
-    val curDir = System.getProperty("user.dir").replace('\\', '/')
-    Desktop.getDesktop.browse(new URI(s"${curDir}/${outputDir}/index.html"))
+    val curDir = System.getProperty("user.dir")
+    Desktop.getDesktop.browse(new File(s"${curDir}/${projConf.localExportPath}/index.html").toURI)
+
 
   }
 

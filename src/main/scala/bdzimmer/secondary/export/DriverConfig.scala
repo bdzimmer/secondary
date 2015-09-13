@@ -3,12 +3,11 @@
 // Driver configuration.
 
 // 2015-08-30: Created in refactor from Driver.
-// 2015-09-12: Changes for local rather than global configs.
+// 2015-09-12: Changes for per-project configs.
 
 // TODO: rename to ProjectConfig
 
 package bdzimmer.secondary.export
-
 
 import java.io.{File, FileInputStream}
 import java.util.Properties
@@ -35,7 +34,6 @@ class PropertiesWrapper(filename: String) {
 
 class DriverConfig(val projectDir: String) {
 
-  // val projectDir = System.getProperty("user.home")
   val propFilename = projectDir + File.separator + ProjectStructure.ConfigurationFile
 
   val prop = new PropertiesWrapper(propFilename)
@@ -63,13 +61,18 @@ class DriverConfig(val projectDir: String) {
   val masterName = getProp(DriverConfig.masterName)
   val mainCollectionNames = getProp(DriverConfig.mainCollectionNames)
   val license = getProp(DriverConfig.license)
-  val localContentPath = getProp(DriverConfig.localContentPath)
-
 
   // attributes derived from the above
   val mainCollections = mainCollectionNames.split(",").toList.map(_.trim)
   val driveInputPathList = driveInputPath.split("/").toList
   val driveOutputPathList = driveOutputPath.split("/").toList
+
+  val localDownloadPath = projectDir + File.separator + ProjectStructure.CacheDir + File.separator
+  val localExportPath = projectDir  + File.separator +  ProjectStructure.WebDir + File.separator
+  val localContentPath = projectDir + File.separator + ProjectStructure.ContentDir + File.separator
+  val localDownloadPathFile = new File(localDownloadPath)
+  val localExportPathFile = new File(localExportPath)
+  val localContentPathFile = new File(localContentPath)
 
 
 }
@@ -85,16 +88,13 @@ object DriverConfig {
   val masterName = ConfigField("masterName", "master", "Master name")
   val mainCollectionNames = ConfigField("mainCollectionNames", "characters,locations,lore,images,tilesets,sprites", "Main collection names")
   val license = ConfigField("license", "", "License text")
-  val localContentPath = ConfigField("localContentPath", "", "Local content path")
 
   val requiredProperties =  List(
-      // localScratchPath,
       driveClientIdFile,
       driveAccessTokenFile,
       driveInputPath,
       driveOutputPath,
       masterName,
       mainCollectionNames,
-      license,
-      localContentPath)
+      license)
 }

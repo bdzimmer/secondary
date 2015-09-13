@@ -6,7 +6,7 @@
 !collection
 id: master
 name: Secondary
-description: create worlds with text
+description: create worlds from text
 notes: |-
   Secondary is a tool for world building. Use Secondary for planning novels, creating game design documents, and more.
   <br /><br />

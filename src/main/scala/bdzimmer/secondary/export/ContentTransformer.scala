@@ -3,6 +3,8 @@
 // Class to wrap process of downloading content from Google drive,
 // exporting, and uploading.
 
+// 2015-09-12: Refactoring.
+
 package bdzimmer.secondary.export
 
 import bdzimmer.gdrivescala.{DriveUtils, GoogleDriveKeys}
@@ -11,47 +13,38 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
-
-import org.apache.commons.io.FileUtils
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.{File => DriveFile}
-import com.google.api.client.util.DateTime
-
-
 import scala.ref
 import scala.reflect.ClassTag
 
+import org.apache.commons.io.FileUtils
+import com.google.api.client.util.DateTime
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.model.{File => DriveFile}
+
+import bdzimmer.gdrivescala.DriveBuilder
 
 
-class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
-
-  val localDownloadPath = projectConfig.projectDir + File.separator + ProjectStructure.CacheDir + File.separator
-  val localExportPath = projectConfig.projectDir  + File.separator +  ProjectStructure.WebDir + File.separator
-
-  val localDownloadPathFile = new File(localDownloadPath)
-  val localExportPathFile = new File(localExportPath)
+// functions for syncing to and from Google Drive
+class ContentTransformer(projConf: DriverConfig, drive: Drive) {
 
   // get Drive files
   val driveRootFile = DriveUtils.getRoot(drive)
-  val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, projectConfig.driveInputPathList).get
-  val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projectConfig.driveOutputPathList).get
+  val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveInputPathList).get
+  val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveOutputPathList).get
 
   // create local project directories if they don't already exist
-  localDownloadPathFile.mkdirs
-  localExportPathFile.mkdirs
-
-
+  projConf.localDownloadPathFile.mkdirs
+  projConf.localExportPathFile.mkdirs
 
 
   def downloadMetadata(fileStatus: FileModifiedMap): (List[WorldItem],  FileModifiedMap) = {
-
 
     // find the yaml files in drive
     val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile) filter (_.getTitle.contains(".yml"))
     val driveYamlFilenames = driveYamlFiles.map(_.getTitle)
 
     // delete any local yaml files that aren't present on drive
-    localDownloadPathFile.listFiles.filter(_.getName.endsWith(".yml")).map(x => {
+    projConf.localDownloadPathFile.listFiles.filter(_.getName.endsWith(".yml")).map(x => {
       if (!driveYamlFilenames.contains(x.getName)) {
         println("deleting local: " + x.getName)
         x.delete
@@ -66,26 +59,21 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
 
     // build the collection
     val masterCollection = WorldLoader.loadWorld(
-        localDownloadPath,
-        projectConfig.masterName,
-        projectConfig.mainCollections,
+        projConf.localDownloadPath,
+        projConf.masterName,
+        projConf.mainCollections,
         updatedFileStatus)
 
     println("--created collection")
-
-    // used to return downloadFileStatus
-    // (masterCollection, downloadFileStatus)
 
     (masterCollection, downloadFileStatus)
 
   }
 
 
-
   def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
 
     // find a unique list of the files pointed to by meta items.
-    // val uniqueFiles = WorldItem.filterTree[MetaItem](masterCollection).map(_.filename).distinct
     val uniqueFiles = WorldItem.filterList[MetaItem](masterCollection).map(_.filename).distinct
 
     // some of these files are not actual files, but links to remote data.
@@ -95,7 +83,6 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
     downloadFilesIntelligent(filteredFiles, fileStatus)
 
   }
-
 
 
   // 2015-07-12
@@ -140,10 +127,10 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
       println("downloading: " + filename)
 
       val localDir = filename.split("/").dropRight(1).mkString("/")
-      val localDirFile = new java.io.File(localDownloadPath + "/" + localDir)
+      val localDirFile = new java.io.File(projConf.localDownloadPath + "/" + localDir)
       localDirFile.mkdirs
 
-      DriveUtils.downloadFile(drive, driveFile, localDownloadPath + "/" + filename)
+      DriveUtils.downloadFile(drive, driveFile, projConf.localDownloadPath + "/" + filename)
 
       (filename, (driveFile.getId, driveFile.getModifiedDate))
 
@@ -178,10 +165,10 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
 
     filesToExport foreach(x => println("file to export: " + x.id))
 
-    val exportImages = new ExportImages(world, localExportPath, projectConfig.license)
-    val exportPages = new ExportPages(world, localExportPath, projectConfig.license)
+    val exportImages = new ExportImages(world, projConf.localExportPath, projConf.license)
+    val exportPages = new ExportPages(world, projConf.localExportPath, projConf.license)
 
-    val localContentDir = localDownloadPath
+    val localContentDir = projConf.localDownloadPath
 
     println("--exporting pages")
     val allPageOutputs = List(exportPages.createMasterPage,
@@ -193,12 +180,13 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
     val allImageOutputs = if (images) {
       println("--exporting images")
 
-      val imageOutputs = exportImages.exportAllImages(filesToExport ++ imagesToExport, localDownloadPath)
+      val imageOutputs = exportImages.exportAllImages(
+          filesToExport ++ imagesToExport, projConf.localDownloadPath)
 
       val characterOutputs = if (charsToExport.length > 0) {
          exportImages.prepareCharacterImages(
              charsToExport,
-             localDownloadPath)
+             projConf.localDownloadPath)
       } else {
         ExportPages.getEmptyFileOutputsMap()
       }
@@ -230,7 +218,6 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
       DriveUtils.deleteFile(drive, x)
     })})
 
-
     // create all the parent directories first
     val parentDirs = filesToUploadSplit.map(_.dropRight(1))
 
@@ -247,12 +234,105 @@ class ContentTransformer(projectConfig: DriverConfig, drive: Drive) {
       // val location = DriveUtils.createFolders(drive, driveOutputFile, x.split("/").toList.dropRight(1)).get
 
       val location = parentDirsMap(drivePath)
-      DriveUtils.uploadFile(drive, localExportPath + "/" + x, location)
+      DriveUtils.uploadFile(drive, projConf.localExportPath + "/" + x, location)
 
     }})
+
+  }
+
+}
+
+
+
+// pipelines for local and synced exports
+object ContentTransformer {
+
+  // TODO: does AppName matter?
+  val AppName = "DriveTesting"
+
+  // local -> web
+  def exportLocal(projConf: DriverConfig): Unit = {
+
+    val outputDirFile = new File(projConf.localExportPath)
+    FileUtils.deleteDirectory(outputDirFile)
+    outputDirFile.mkdirs
+
+    val world = WorldLoader.loadWorld(
+        projConf.localContentPath,
+        projConf.masterName,
+        projConf.mainCollections,
+        ExportPages.getEmptyFileModifiedMap)
+
+    val exportPages = new ExportPages(
+        world,
+        projConf.localExportPath,
+        projConf.license)
+
+    val allPageOutputs = List(exportPages.createMasterPage,
+                              exportPages.createTasksPage,
+                              exportPages.createIndexPage) ++
+                         exportPages.exportPagesList(world)
+
+    val exportImages = new ExportImages(
+        world,
+        projConf.localExportPath,
+        projConf.license)
+
+    val imageOutputs = exportImages.exportAllImages(world, projConf.localContentPath)
+
+    val charsToExport = WorldItem.filterList[CharacterItem](world)
+    val characterOutputs = if (charsToExport.length > 0) {
+       exportImages.prepareCharacterImages(charsToExport, projConf.localContentPath)
+    } else {
+      ExportPages.getEmptyFileOutputsMap()
+    }
 
 
   }
 
+
+  // Drive -> cache, cache -> web, web -> Drive
+  def exportSync(projConf: DriverConfig): Unit = {
+
+    val drive = createDrive(projConf)
+    val ct = new ContentTransformer(projConf, drive)
+
+    // download the metadata, update status
+    val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.MetaStatusFile
+    val metaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
+    val (masterCollection, downloadMetaStatus) = ct.downloadMetadata(metaStatus)
+    val updatedMetaStatus = ExportPages.mergeDateTimes(metaStatus, downloadMetaStatus)
+    ExportPages.saveModifiedMap(metaStatusFile, updatedMetaStatus)
+
+    // download referenced files, update status
+    val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.FileStatusFile
+    val fileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+    val downloadFileStatus = ct.downloadImages(masterCollection, fileStatus)
+    val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
+    ExportPages.saveModifiedMap(fileStatusFile, updatedFileStatus)
+
+    // perform exports
+    val (allPageOutputs, allImageOutputs) = ct.export(downloadMetaStatus, downloadFileStatus, masterCollection, images = true)
+
+    allPageOutputs.foreach(x => println("page created: " + x ))
+    allImageOutputs.foreach{case (k, v) => {
+      v foreach(x => println("image created: " + k + " -> " + x))
+    }}
+
+    // do an upload; only uploading files derived from those that were downloaded
+    val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
+    filesToUpload foreach(x => println("to upload: " + x))
+
+    ct.upload(downloadFileStatus, filesToUpload)
+
+  }
+
+
+  def createDrive(projConf: DriverConfig): Drive = {
+     val keys = GoogleDriveKeys(
+         id = DriveBuilder.getClientIdFromJsonFile(new File(projConf.driveClientIdFile)),
+         token = DriveBuilder.getAccessTokenFromJsonFile(new File(projConf.driveAccessTokenFile)))
+    DriveBuilder.getDrive(keys, AppName)
+  }
 
 }
