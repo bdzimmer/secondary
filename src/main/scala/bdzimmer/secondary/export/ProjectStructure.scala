@@ -12,7 +12,6 @@ object ProjectStructure {
   // (working directory for Secondary)
 
   val ContentDir = "content"
-  val CacheDir = "cache"
   val WebDir = "web"
 
   // configuration file

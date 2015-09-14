@@ -7,6 +7,8 @@
 // 2015-08-30: Further configuration updates.
 // 2015-09-12: Per-project configs. Commands.
 
+// scalastyle:off regex
+
 package bdzimmer.secondary.export
 
 import java.awt.Desktop
@@ -33,13 +35,16 @@ object Driver {
 
     // project directory is current working directory
     val projectDir = System.getProperty("user.dir")
-    val projConf = new DriverConfig(projectDir)
+    val projConf = new ProjectConfig(projectDir)
 
     val command = args.headOption.getOrElse(defaultCommand)
 
     command match {
       case DriverCommands.Configure => new ConfigurationGUI(projConf).startup(Array())
-      case DriverCommands.ExportLocal => ContentTransformer.exportLocal(projConf)
+      case DriverCommands.ExportLocalAll => {
+        ContentTransformer.exportLocalAll(projConf)
+        ContentTransformer.addStyles(projConf)
+      }
       case DriverCommands.ExportSync => ContentTransformer.exportSync(projConf)
       case DriverCommands.Browse => {
         val filename = List(projectDir, ProjectStructure.WebDir, "index.html").mkString(File.separator)
@@ -62,7 +67,7 @@ object Driver {
 
 
   // browse to the project on Google Drive.
-  def browseRemote(conf: DriverConfig): Try[Unit] = Try({
+  def browseRemote(conf: ProjectConfig): Try[Unit] = Try({
     val drive = ContentTransformer.createDrive(conf)
     val driveOutputFile = DriveUtils.getFileByPath(
         drive,
@@ -95,7 +100,7 @@ object Driver {
 object DriverCommands {
 
   val Configure = "config"
-  val ExportLocal = "export-local"
+  val ExportLocalAll = "export-local-all"
   val ExportSync = "export-sync"
   val Browse = "browse"
   val BrowseDrive = "browse-drive"
@@ -103,8 +108,8 @@ object DriverCommands {
 
   val CommandsDescriptions = List(
       (Configure, "edit project configuration"),
-      (ExportLocal, "content to web"),
-      (ExportSync, "Drive to cache, cache to web, web to Drive"),
+      (ExportLocalAll, "content to web - all"),
+      (ExportSync, "Drive to content, content to web, web to Drive"),
       (Browse, "browse local project web site"),
       (BrowseDrive, "browse Drive project web site"),
       (Help, "show usage"))

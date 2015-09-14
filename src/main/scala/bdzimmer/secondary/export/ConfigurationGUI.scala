@@ -18,7 +18,7 @@ import javax.swing.SwingConstants
 
 
 
-class ConfigurationGUI(projectConfig: DriverConfig) extends SimpleSwingApplication {
+class ConfigurationGUI(projectConfig: ProjectConfig) extends SimpleSwingApplication {
 
   val propFileName = projectConfig.propFilename
   val prop = projectConfig.prop

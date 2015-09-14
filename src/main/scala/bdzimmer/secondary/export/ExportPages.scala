@@ -548,7 +548,7 @@ object ExportPages {
   }
 
 
-  // marge FileModifiedMapsm keeping newer dates / ids.
+  // marge FileModifiedMaps keeping newer dates / ids.
   def mergeDateTimes(map1: FileModifiedMap, map2: FileModifiedMap): FileModifiedMap = {
     map1 ++ map2.map{case (k, v) => k -> {
       map1.get(k) match {

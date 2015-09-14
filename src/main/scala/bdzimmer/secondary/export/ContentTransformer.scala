@@ -7,7 +7,6 @@
 
 package bdzimmer.secondary.export
 
-import bdzimmer.gdrivescala.{DriveUtils, GoogleDriveKeys}
 
 import java.io.File
 
@@ -16,16 +15,16 @@ import scala.collection.{immutable => sci}
 import scala.ref
 import scala.reflect.ClassTag
 
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.{File => DriveFile}
 
-import bdzimmer.gdrivescala.DriveBuilder
+import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 
 
 // functions for syncing to and from Google Drive
-class ContentTransformer(projConf: DriverConfig, drive: Drive) {
+class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
 
   // get Drive files
   val driveRootFile = DriveUtils.getRoot(drive)
@@ -33,18 +32,18 @@ class ContentTransformer(projConf: DriverConfig, drive: Drive) {
   val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveOutputPathList).get
 
   // create local project directories if they don't already exist
-  projConf.localDownloadPathFile.mkdirs
+  projConf.localContentPathFile.mkdirs
   projConf.localExportPathFile.mkdirs
 
 
-  def downloadMetadata(fileStatus: FileModifiedMap): (List[WorldItem],  FileModifiedMap) = {
+  def downloadMetadata(fileStatus: FileModifiedMap): FileModifiedMap = {
 
     // find the yaml files in drive
     val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile) filter (_.getTitle.contains(".yml"))
     val driveYamlFilenames = driveYamlFiles.map(_.getTitle)
 
     // delete any local yaml files that aren't present on drive
-    projConf.localDownloadPathFile.listFiles.filter(_.getName.endsWith(".yml")).map(x => {
+    projConf.localContentPathFile.listFiles.filter(_.getName.endsWith(".yml")).map(x => {
       if (!driveYamlFilenames.contains(x.getName)) {
         println("deleting local: " + x.getName)
         x.delete
@@ -53,20 +52,11 @@ class ContentTransformer(projConf: DriverConfig, drive: Drive) {
 
     // download / update the drive files to local with the download function
     val downloadFileStatus = downloadFilesIntelligent(driveYamlFilenames, fileStatus)
-    val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
+    // val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
 
     println("--downloaded YAML metadata")
 
-    // build the collection
-    val masterCollection = WorldLoader.loadWorld(
-        projConf.localDownloadPath,
-        projConf.masterName,
-        projConf.mainCollections,
-        updatedFileStatus)
-
-    println("--created collection")
-
-    (masterCollection, downloadFileStatus)
+    downloadFileStatus
 
   }
 
@@ -127,10 +117,10 @@ class ContentTransformer(projConf: DriverConfig, drive: Drive) {
       println("downloading: " + filename)
 
       val localDir = filename.split("/").dropRight(1).mkString("/")
-      val localDirFile = new java.io.File(projConf.localDownloadPath + "/" + localDir)
+      val localDirFile = new java.io.File(projConf.localContentPath + "/" + localDir)
       localDirFile.mkdirs
 
-      DriveUtils.downloadFile(drive, driveFile, projConf.localDownloadPath + "/" + filename)
+      DriveUtils.downloadFile(drive, driveFile, projConf.localContentPath + "/" + filename)
 
       (filename, (driveFile.getId, driveFile.getModifiedDate))
 
@@ -168,25 +158,25 @@ class ContentTransformer(projConf: DriverConfig, drive: Drive) {
     val exportImages = new ExportImages(world, projConf.localExportPath, projConf.license)
     val exportPages = new ExportPages(world, projConf.localExportPath, projConf.license)
 
-    val localContentDir = projConf.localDownloadPath
+    val localContentDir = projConf.localContentPath
 
     println("--exporting pages")
-    val allPageOutputs = List(exportPages.createMasterPage,
-                              exportPages.createTasksPage,
-                              exportPages.createIndexPage) ++
-                         exportPages.exportPagesList(metaToExport)
+    val allPageOutputs = List(
+        exportPages.createMasterPage,
+        exportPages.createTasksPage,
+        exportPages.createIndexPage) ++ exportPages.exportPagesList(metaToExport)
 
 
     val allImageOutputs = if (images) {
       println("--exporting images")
 
       val imageOutputs = exportImages.exportAllImages(
-          filesToExport ++ imagesToExport, projConf.localDownloadPath)
+          filesToExport ++ imagesToExport, projConf.localContentPath)
 
       val characterOutputs = if (charsToExport.length > 0) {
          exportImages.prepareCharacterImages(
              charsToExport,
-             projConf.localDownloadPath)
+             projConf.localContentPath)
       } else {
         ExportPages.getEmptyFileOutputsMap()
       }
@@ -250,12 +240,11 @@ object ContentTransformer {
   // TODO: does AppName matter?
   val AppName = "DriveTesting"
 
-  // local -> web
-  def exportLocal(projConf: DriverConfig): Unit = {
+  // local -> web; always export everything
+  def exportLocalAll(projConf: ProjectConfig): Unit = {
 
-    val outputDirFile = new File(projConf.localExportPath)
-    FileUtils.deleteDirectory(outputDirFile)
-    outputDirFile.mkdirs
+    FileUtils.deleteDirectory(projConf.localExportPathFile)
+    projConf.localExportPathFile.mkdirs
 
     val world = WorldLoader.loadWorld(
         projConf.localContentPath,
@@ -268,10 +257,10 @@ object ContentTransformer {
         projConf.localExportPath,
         projConf.license)
 
-    val allPageOutputs = List(exportPages.createMasterPage,
-                              exportPages.createTasksPage,
-                              exportPages.createIndexPage) ++
-                         exportPages.exportPagesList(world)
+    val allPageOutputs = List(
+        exportPages.createMasterPage,
+        exportPages.createTasksPage,
+        exportPages.createIndexPage) ++ exportPages.exportPagesList(world)
 
     val exportImages = new ExportImages(
         world,
@@ -291,8 +280,12 @@ object ContentTransformer {
   }
 
 
+  // local -> web; use file time stamps
+  def exportLocalSync(projConf: ProjectConfig): Unit = ???
+
+
   // Drive -> cache, cache -> web, web -> Drive
-  def exportSync(projConf: DriverConfig): Unit = {
+  def exportSync(projConf: ProjectConfig): Unit = {
 
     val drive = createDrive(projConf)
     val ct = new ContentTransformer(projConf, drive)
@@ -300,9 +293,18 @@ object ContentTransformer {
     // download the metadata, update status
     val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.MetaStatusFile
     val metaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
-    val (masterCollection, downloadMetaStatus) = ct.downloadMetadata(metaStatus)
+    val downloadMetaStatus = ct.downloadMetadata(metaStatus)
     val updatedMetaStatus = ExportPages.mergeDateTimes(metaStatus, downloadMetaStatus)
     ExportPages.saveModifiedMap(metaStatusFile, updatedMetaStatus)
+
+    // build the collection
+    val masterCollection = WorldLoader.loadWorld(
+        projConf.localContentPath,
+        projConf.masterName,
+        projConf.mainCollections,
+        updatedMetaStatus)
+
+    println("--created collection")
 
     // download referenced files, update status
     val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.FileStatusFile
@@ -328,7 +330,33 @@ object ContentTransformer {
   }
 
 
-  def createDrive(projConf: DriverConfig): Drive = {
+  // generate stylesheets into project web dir
+  def addStyles(projConf: ProjectConfig): Unit = {
+
+    val outputDirFile = new File(projConf.localExportPath)
+
+    // if Bootstrap doesn't exist in the project directory, download and extract it
+    val extractedBootstrapName = FilenameUtils.removeExtension(Styles.BootstrapFilename)
+    val extractedBootstrap = new File(projConf.projectDir, extractedBootstrapName)
+    if (!extractedBootstrap.exists) {
+      Styles.getBootstrap(projConf.projectDir)
+    }
+
+    // copy bootstrap into styles directory in export directory and rename
+    val stylesDir = new File(outputDirFile, "styles")
+    stylesDir.mkdir
+    FileUtils.copyDirectoryToDirectory(extractedBootstrap, stylesDir)
+    FileUtils.moveDirectory(
+        new File(stylesDir, extractedBootstrapName),
+        new File(stylesDir, "bootstrap"))
+
+    // generate secondary.css in styles directory
+    Styles.createStyleSheet(projConf.localExportPath + "/styles/" + "secondary.css")
+
+  }
+
+
+  def createDrive(projConf: ProjectConfig): Drive = {
      val keys = GoogleDriveKeys(
          id = DriveBuilder.getClientIdFromJsonFile(new File(projConf.driveClientIdFile)),
          token = DriveBuilder.getAccessTokenFromJsonFile(new File(projConf.driveAccessTokenFile)))
