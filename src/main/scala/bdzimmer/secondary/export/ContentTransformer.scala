@@ -201,6 +201,7 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
 
     // Note: when createFolders is called with List() for subfolders,
     // parent is returned - produces correct behavior
+    // TODO: awkward - empty list for current directory must attempt to be created.
     val parentDirsMap = parentDirs.distinct.map(x => {
       println("creating drive folder: " + x.mkString("/"))
       (x, DriveUtils.createFolders(drive, driveOutputFile, x).get)

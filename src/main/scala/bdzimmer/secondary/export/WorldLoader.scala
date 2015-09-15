@@ -37,7 +37,7 @@ object WorldLoader {
 
     val mainCollections = mainCollectionNames.map(collectionName => {
 
-      println(collectionName)
+      // println(collectionName)
 
       val fileName = collectionName + ".yml"
       val collection = loadFile(fileName, inputDir, fileStatus)
@@ -45,7 +45,7 @@ object WorldLoader {
       val prefix = collectionName + "_"
       val matchingFiles = new File(inputDir).listFiles.map(_.getName).filter(_.startsWith(prefix))
 
-      println("matching: " + matchingFiles.mkString(","))
+      // println("matching: " + matchingFiles.mkString(","))
 
       val childCollections = matchingFiles.map(loadFile(_, inputDir, fileStatus))
       val childCollectionsJava = childCollections.toList.asJava

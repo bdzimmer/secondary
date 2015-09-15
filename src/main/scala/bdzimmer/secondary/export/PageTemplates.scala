@@ -88,7 +88,9 @@ object PageTemplates {
       jumboTron(
           container(
               column(Column12,
-                  "<h1>%s</h1><h3>%s</h3>".format(title, description)))) +
+                  "<h1>%s</h1><h3>%s</h3>".format(
+                      NotesParser.processLine(title),
+                      NotesParser.processLine(description))))) +
 
       container(
         column(Column12,
@@ -100,35 +102,6 @@ object PageTemplates {
     )
 
   }
-
-
-
-  /*
-  def createArticlePage(
-      outputFile: String,
-      title: String, description: String, toolbar: Option[String],
-      body: String, license: String): Unit = {
-
-    createPage(
-      outputFile,
-      title,
-
-      "",
-
-      container(
-        column(Column12,
-          ("<h1>%s</h1><h3>%s</h3>".format(title, description)) +
-          toolbar.getOrElse("") +
-          hr
-        ) +
-        body
-      ) +
-      container(hr + centered(license))
-    )
-
-  }
-  */
-
 
 
 }
