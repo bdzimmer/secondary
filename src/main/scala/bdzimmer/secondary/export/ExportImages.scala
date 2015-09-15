@@ -76,27 +76,32 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     val spritesheetImageOutputs = (WorldItem.filterList[SpritesheetItem](items)
         map(x => (x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
 
-
     // In the case of ImageItems, the filename is already an image. It either exists
     // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
     // prefix.
-    val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x))).flatten
+    val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x)))
+
+    val characterOutputs = (WorldItem.filterList[CharacterItem](items)
+        map(x => prepareCharacterItemOutputs(x, contentDir)))
+
+    // we can't just call toMap on all of these lists and then merge them, because
+    // the lists may contain duplicate keys themselves.
 
     // skip adding spritesheet outputs to list, since we don't want to upload them
-    val allImageOutputsList = List(
-        mapImageOutputs.toMap,
-        tileImageOutputs.toMap,
-        imageOutputs.toMap)
 
-    val allImageOutputs = allImageOutputsList.reduce(ExportPages.mergeFileOutputsMaps(_, _))
+    val allImageOutputsList = (mapImageOutputs ++ tileImageOutputs ++ imageOutputs ++ characterOutputs)
+
+    val allImageOutputs = (allImageOutputsList
+        .map(x => List(x).toMap)
+        .foldLeft(ExportPages.getEmptyFileOutputsMap)(ExportPages.mergeFileOutputsMaps(_, _)))
 
     allImageOutputs
 
   }
 
 
-
-  def prepareImageItemOutputs(imageItem: ImageItem): Option[(String, List[String])] = {
+  // download or copy image files to the output location
+  def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
 
     val relativeName = ExportPages.imageItemImagePath(imageItem)
     val absoluteName = location + "/" + relativeName
@@ -114,9 +119,9 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
         if (srcFile.exists) {
           FileUtils.copyFile(srcFile, new java.io.File(absoluteName))
-          Some((srcFilename, List(relativeName)))
+          (srcFilename, List(relativeName))
         } else {
-          None
+          (srcFilename, List())
         }
       }
 
@@ -127,16 +132,17 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
         // only download if it doesn't already exist in the scratch location
         if (new java.io.File(absoluteName).exists) {
-          None
+          (srcFilename, List())
         } else {
 
           println("\t\t\tdownloading " + relativeName)
 
-          for {
+          val outputName = for {
             json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
             wm <- ImageDownloader.parseWikimediaJson(json)
             junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
-          } yield (srcFilename, List(relativeName))
+          } yield relativeName
+          (srcFilename, outputName.toList)
         }
 
       }
@@ -146,47 +152,35 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
 
 
-  def prepareCharacterImages(characterItems: List[CharacterItem], contentDir: String): FileOutputsMap = {
+  def prepareCharacterItemOutputs(ci: CharacterItem, contentDir: String): (String, List[String]) = {
 
-    // prepare character images
+    val (cm, sheetRow) = ExportPages.getCharacterImageInfo(ci, metaItems)
 
-    val characterImageOutputs = characterItems.map(ci => {
+    val outputPairs = cm match {
 
-      val (curMetaItem, sheetRow) = ExportPages.getCharacterImageInfo(ci, metaItems)
+      case Some(ss: SpritesheetItem) => {
 
-      val outputPair = curMetaItem.toList.map(cm => cm match {
+        val spritesheetType = TileOptionsNew.get(ss.tiletype)
+        val outputImageFiles = ExportImages.outputScales map (scale => {
+          val offset = 3
+          val inputFile = imagesLocation + "/" + ss.id + "_tiles/" + (sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"
+          val relativeName = ExportImages.imagesDir + "/" + ci.id + ExportImages.scalePostfix(scale) + ".png"
+          val absoluteName = location + "/" + relativeName
+          FileUtils.copyFile(new File(inputFile), new File(absoluteName))
 
-        case ss: SpritesheetItem => {
+          relativeName
 
-          val spritesheetType = TileOptionsNew.get(ss.tiletype)
+        })
 
-          val outputImageFiles = ExportImages.outputScales map (scale => {
-            val offset = 3
-            val inputFile = imagesLocation + "/" + cm.id + "_tiles/" + (sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"
+        (ss.filename, outputImageFiles)
 
-            val relativeName = ExportImages.imagesDir + "/" + ci.id + ExportImages.scalePostfix(scale) + ".png"
-            val absoluteName = location + "/" + relativeName
-            FileUtils.copyFile(new File(inputFile), new File(absoluteName))
+      }
 
-            relativeName
+      case _ => ("", List())
 
-          })
+    }
 
-          (ss.filename, outputImageFiles)
-
-        }
-
-        case _ => ("", List())
-
-      })
-
-      // println("prepared images: " + outputPair._1 + " " + outputPair._2.mkString(", "))
-
-      outputPair.toMap
-
-    }).reduce(ExportPages.mergeFileOutputsMaps(_, _))
-
-    characterImageOutputs
+    outputPairs
 
   }
 
@@ -195,10 +189,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
 
 
-
-
 object ExportImages {
-
 
   val imagesDir = "images"
 
@@ -228,7 +219,6 @@ object ExportImages {
     val image: BufferedImage = worldItem match {
       case x: MapItem => getMapImage(inputDir + "/" + inputName, inputDir + "/tile/")
       case x: TileMetaItem => {
-
         TileOptionsNew.types.get(x.tiletype) match {
           case Some(tiletype) => getTilesetImage(inputDir + "/" + inputName, tiletype)
           case None => {
@@ -237,8 +227,6 @@ object ExportImages {
             result
           }
         }
-
-
       }
     }
 
@@ -254,11 +242,7 @@ object ExportImages {
 
 
 
-  /**
-   *
-   * Export individual images of tiles in a tile set.
-   *
-   */
+  // Export individual images of tiles in a tile set.
   def exportIndividualTileImages(tilesetItem: TileMetaItem, inputDir: String, outputDir: String): List[String] = {
 
     // println(tilesetItem.name)

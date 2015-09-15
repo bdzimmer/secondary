@@ -7,7 +7,6 @@
 
 package bdzimmer.secondary.export
 
-
 import java.io.File
 
 import scala.collection.JavaConverters._
@@ -154,6 +153,7 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
     val imagesToExport = WorldItem.filterList[ImageItem](metaToExport).filter(x => x.filename.startsWith("wikimedia:"))
 
     filesToExport foreach(x => println("file to export: " + x.id))
+    imagesToExport foreach(x => println("image to export: " + x.id))
 
     val exportImages = new ExportImages(world, projConf.localExportPath, projConf.license)
     val exportPages = new ExportPages(world, projConf.localExportPath, projConf.license)
@@ -169,20 +169,8 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
 
     val allImageOutputs = if (images) {
       println("--exporting images")
-
-      val imageOutputs = exportImages.exportAllImages(
-          filesToExport ++ imagesToExport, projConf.localContentPath)
-
-      val characterOutputs = if (charsToExport.length > 0) {
-         exportImages.prepareCharacterImages(
-             charsToExport,
-             projConf.localContentPath)
-      } else {
-        ExportPages.getEmptyFileOutputsMap()
-      }
-
-      ExportPages.mergeFileOutputsMaps(imageOutputs, characterOutputs)
-
+      exportImages.exportAllImages(
+          filesToExport ++ imagesToExport ++ charsToExport, projConf.localContentPath)
     } else {
       ExportPages.getEmptyFileOutputsMap()
     }
@@ -268,14 +256,6 @@ object ContentTransformer {
         projConf.license)
 
     val imageOutputs = exportImages.exportAllImages(world, projConf.localContentPath)
-
-    val charsToExport = WorldItem.filterList[CharacterItem](world)
-    val characterOutputs = if (charsToExport.length > 0) {
-       exportImages.prepareCharacterImages(charsToExport, projConf.localContentPath)
-    } else {
-      ExportPages.getEmptyFileOutputsMap()
-    }
-
 
   }
 
