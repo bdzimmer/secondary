@@ -23,11 +23,10 @@ class ConfigurationGUI(projectConfig: ProjectConfig) extends SimpleSwingApplicat
   val propFileName = projectConfig.propFilename
   val prop = projectConfig.prop
 
-  def top = new MainFrame {
+  def top = new Frame {
 
     val BORDER_WIDTH = 10
     val myBorder = new EmptyBorder(BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH)
-
 
     val saveStatus = new Label("")
 
@@ -48,10 +47,14 @@ class ConfigurationGUI(projectConfig: ProjectConfig) extends SimpleSwingApplicat
       }
     }
 
+    val done = new Button("Done") {
+      reactions += {
+        case ButtonClicked(done) => dispose()
+      }
+    }
 
-
-    val savePanel = new GridPanel(1, 3) {
-      contents ++= List(saveStatus, new Label(), save)
+    val savePanel = new GridPanel(1, 4) {
+      contents ++= List(saveStatus, new Label(), save, done)
     }
 
     def configField(key: String, default: String) = new TextField {
@@ -69,7 +72,6 @@ class ConfigurationGUI(projectConfig: ProjectConfig) extends SimpleSwingApplicat
 
     val columnPairs = DriverConfig.requiredProperties.map(
         x => (configField(x.key, x.default), x.description + ":")) :+ (savePanel, "")
-
 
     title = "Secondary - Project Configuration"
 
