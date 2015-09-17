@@ -4,6 +4,7 @@
 // exporting, and uploading.
 
 // 2015-09-12: Refactoring.
+// 2015-09-17: WIP further refactoring.
 
 package bdzimmer.secondary.export
 
@@ -22,10 +23,13 @@ import com.google.api.services.drive.model.{File => DriveFile}
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 
 
+// TODO: rename ContentTransformer to something more meaningful
+// it really just validates and holds references to Drive files for nonlocal projects.
 // functions for syncing to and from Google Drive
 class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
 
   // get Drive files
+  // TODO: use pattern matching and sys.exit on these rather than get
   val driveRootFile = DriveUtils.getRoot(drive)
   val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveInputPathList).get
   val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveOutputPathList).get
@@ -38,7 +42,7 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
   def downloadMetadata(fileStatus: FileModifiedMap): FileModifiedMap = {
 
     // find the yaml files in drive
-    val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile) filter (_.getTitle.contains(".yml"))
+    val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile) filter (_.getTitle.endsWith(".yml"))
     val driveYamlFilenames = driveYamlFiles.map(_.getTitle)
 
     // delete any local yaml files that aren't present on drive
@@ -61,16 +65,8 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
 
 
   def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
-
-    // find a unique list of the files pointed to by meta items.
-    val uniqueFiles = WorldItem.filterList[MetaItem](masterCollection).map(_.filename).distinct
-
-    // some of these files are not actual files, but links to remote data.
-    // so filter those out
-    val filteredFiles = uniqueFiles.filter(x => !x.startsWith("wikimedia:"))
-
-    downloadFilesIntelligent(filteredFiles, fileStatus)
-
+    val imageFiles = ContentTransformer.getReferencedImages(masterCollection)
+    downloadFilesIntelligent(imageFiles, fileStatus)
   }
 
 
@@ -128,10 +124,191 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
   }
 
 
+  // 2015-07-19
+  // new upload function
+  def upload(fileStatus: FileModifiedMap, filesToUpload: List[String]): Unit = {
+
+    val filesToUploadSplit = filesToUpload map (_.split("/").toList)
+
+    // for each file to upload, delete it if it already exists
+    val driveFiles = filesToUpload.zip(filesToUploadSplit.map(x => DriveUtils.getFileByPath(drive, driveOutputFile, x)))
+    driveFiles.map({case(path, f) => f.foreach(x => {
+      println("deleting drive: " + path )
+      DriveUtils.deleteFile(drive, x)
+    })})
+
+    // create all the parent directories first
+    val parentDirs = filesToUploadSplit.map(_.dropRight(1))
+
+    // Note: when createFolders is called with List() for subfolders,
+    // parent is returned - produces correct behavior
+    // TODO: awkward - empty list for current directory must attempt to be created.
+    val parentDirsMap = parentDirs.distinct.map(x => {
+      println("creating drive folder: " + x.mkString("/"))
+      (x, DriveUtils.createFolders(drive, driveOutputFile, x).get)
+    }).toMap
+
+    // then upload the files
+    val resultFiles = filesToUpload.zip(parentDirs).map({case (x, drivePath) => {
+      println("uploading: " + x)
+      // val location = DriveUtils.createFolders(drive, driveOutputFile, x.split("/").toList.dropRight(1)).get
+
+      val location = parentDirsMap(drivePath)
+      DriveUtils.uploadFile(drive, projConf.localExportPath + "/" + x, location)
+
+    }})
+
+  }
+
+}
+
+
+
+// pipelines for local and synced exports
+object ContentTransformer {
+
+  // TODO: does AppName matter?
+  val AppName = "DriveTesting"
+
+  // content -> web; always export everything
+  def exportLocalAll(projConf: ProjectConfig): Unit = {
+
+    FileUtils.deleteDirectory(projConf.localExportPathFile)
+    projConf.localExportPathFile.mkdirs
+
+    val world = WorldLoader.loadWorld(
+        projConf.localContentPath,
+        projConf.masterName,
+        projConf.mainCollections,
+        ExportPages.getEmptyFileModifiedMap)
+
+    val exportPages = new ExportPages(
+        world,
+        projConf.localExportPath,
+        projConf.license)
+
+    val allPageOutputs = List(
+        exportPages.createMasterPage,
+        exportPages.createTasksPage,
+        exportPages.createIndexPage) ++ exportPages.exportPagesList(world)
+
+    val exportImages = new ExportImages(
+        world,
+        projConf.localExportPath,
+        projConf.license)
+
+    val imageOutputs = exportImages.exportAllImages(world, projConf.localContentPath)
+
+  }
+
+
+  // content -> web; use local file time stamps
+  // this is untested!
+  def exportLocalSync(projConf: ProjectConfig): Unit = {
+
+    // WIP WIP WIP WIP WIP
+
+    return // do nothing for now if run
+
+
+    def localMetaStatusChanges(oldMetaStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
+      val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(_.endsWith(".yml"))
+      localFileUpdates(ymlFiles, oldMetaStatus, projConf)
+    }
+
+    def localFileStatusChanges(world: List[WorldItem], oldFileStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
+      val imageFiles =  getReferencedImages(world)
+      localFileUpdates(imageFiles, oldFileStatus, projConf)
+    }
+
+    val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalMetaStatusFile
+    val oldMetaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
+    val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
+    val newMetaStatus = ExportPages.mergeDateTimes(oldMetaStatus, metaStatusChanges)
+    ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
+
+    // build the collection
+    val world = WorldLoader.loadWorld(
+        projConf.localContentPath,
+        projConf.masterName,
+        projConf.mainCollections,
+        newMetaStatus)
+
+    // download referenced files, update status
+    val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
+    val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+    val fileStatusChanges = localFileStatusChanges(world, oldFileStatus, projConf)
+    val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
+    ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+
+    // perform exports
+    val (allPageOutputs, allImageOutputs) = ContentTransformer.export(
+        metaStatusChanges, fileStatusChanges, world, images = true, projConf)
+
+    allPageOutputs.foreach(x => println("page created: " + x ))
+    allImageOutputs.foreach{case (k, v) => {
+      v foreach(x => println("image created: " + k + " -> " + x))
+    }}
+
+  }
+
+
+
+  // Drive -> content, content -> web, web -> Drive
+  def exportSync(projConf: ProjectConfig): Unit = {
+
+    // TODO: rename variables like exportLocalSync
+    // TODO: think about how to handle duplicate code between the different pipelines
+
+    val drive = createDrive(projConf)
+    val ct = new ContentTransformer(projConf, drive)
+
+    // download the metadata, update status
+    val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveMetaStatusFile
+    val metaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
+    val downloadMetaStatus = ct.downloadMetadata(metaStatus)
+    val updatedMetaStatus = ExportPages.mergeDateTimes(metaStatus, downloadMetaStatus)
+    ExportPages.saveModifiedMap(metaStatusFile, updatedMetaStatus)
+
+    // build the collection
+    val masterCollection = WorldLoader.loadWorld(
+        projConf.localContentPath,
+        projConf.masterName,
+        projConf.mainCollections,
+        updatedMetaStatus)
+
+    println("--created collection")
+
+    // download referenced files, update status
+    val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile
+    val fileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+    val downloadFileStatus = ct.downloadImages(masterCollection, fileStatus)
+    val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
+    ExportPages.saveModifiedMap(fileStatusFile, updatedFileStatus)
+
+    // perform exports
+    val (allPageOutputs, allImageOutputs) = ContentTransformer.export(
+        downloadMetaStatus, downloadFileStatus, masterCollection, images = true, projConf)
+
+    allPageOutputs.foreach(x => println("page created: " + x ))
+    allImageOutputs.foreach{case (k, v) => {
+      v foreach(x => println("image created: " + k + " -> " + x))
+    }}
+
+    // do an upload; only upload files derived from those that were downloaded
+    val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
+    filesToUpload foreach(x => println("to upload: " + x))
+
+    ct.upload(downloadFileStatus, filesToUpload)
+
+  }
+
+
+
   // export content from download location to export location
-  // using master collection
+  // using file timestamps to only process content that has changed
   def export(metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
-             world: List[WorldItem], images: Boolean = false): (List[String], FileOutputsMap) = {
+             world: List[WorldItem], images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
 
     // get only the world items that are described in the subset of the
     // meta we just downloaded
@@ -183,133 +360,6 @@ class ContentTransformer(projConf: ProjectConfig, drive: Drive) {
 
 
 
-  // 2015-07-19
-  // new upload function
-  def upload(fileStatus: FileModifiedMap, filesToUpload: List[String]): Unit = {
-
-    val filesToUploadSplit = filesToUpload map (_.split("/").toList)
-
-    // for each file to upload, delete it if it already exists
-    val driveFiles = filesToUpload.zip(filesToUploadSplit.map(x => DriveUtils.getFileByPath(drive, driveOutputFile, x)))
-    driveFiles.map({case(path, f) => f.foreach(x => {
-      println("deleting drive: " + path )
-      DriveUtils.deleteFile(drive, x)
-    })})
-
-    // create all the parent directories first
-    val parentDirs = filesToUploadSplit.map(_.dropRight(1))
-
-    // Note: when createFolders is called with List() for subfolders,
-    // parent is returned - produces correct behavior
-    // TODO: awkward - empty list for current directory must attempt to be created.
-    val parentDirsMap = parentDirs.distinct.map(x => {
-      println("creating drive folder: " + x.mkString("/"))
-      (x, DriveUtils.createFolders(drive, driveOutputFile, x).get)
-    }).toMap
-
-    // then upload the files
-    val resultFiles = filesToUpload.zip(parentDirs).map({case (x, drivePath) => {
-      println("uploading: " + x)
-      // val location = DriveUtils.createFolders(drive, driveOutputFile, x.split("/").toList.dropRight(1)).get
-
-      val location = parentDirsMap(drivePath)
-      DriveUtils.uploadFile(drive, projConf.localExportPath + "/" + x, location)
-
-    }})
-
-  }
-
-}
-
-
-
-// pipelines for local and synced exports
-object ContentTransformer {
-
-  // TODO: does AppName matter?
-  val AppName = "DriveTesting"
-
-  // local -> web; always export everything
-  def exportLocalAll(projConf: ProjectConfig): Unit = {
-
-    FileUtils.deleteDirectory(projConf.localExportPathFile)
-    projConf.localExportPathFile.mkdirs
-
-    val world = WorldLoader.loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        projConf.mainCollections,
-        ExportPages.getEmptyFileModifiedMap)
-
-    val exportPages = new ExportPages(
-        world,
-        projConf.localExportPath,
-        projConf.license)
-
-    val allPageOutputs = List(
-        exportPages.createMasterPage,
-        exportPages.createTasksPage,
-        exportPages.createIndexPage) ++ exportPages.exportPagesList(world)
-
-    val exportImages = new ExportImages(
-        world,
-        projConf.localExportPath,
-        projConf.license)
-
-    val imageOutputs = exportImages.exportAllImages(world, projConf.localContentPath)
-
-  }
-
-
-  // local -> web; use file time stamps
-  def exportLocalSync(projConf: ProjectConfig): Unit = ???
-
-
-  // Drive -> cache, cache -> web, web -> Drive
-  def exportSync(projConf: ProjectConfig): Unit = {
-
-    val drive = createDrive(projConf)
-    val ct = new ContentTransformer(projConf, drive)
-
-    // download the metadata, update status
-    val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.MetaStatusFile
-    val metaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
-    val downloadMetaStatus = ct.downloadMetadata(metaStatus)
-    val updatedMetaStatus = ExportPages.mergeDateTimes(metaStatus, downloadMetaStatus)
-    ExportPages.saveModifiedMap(metaStatusFile, updatedMetaStatus)
-
-    // build the collection
-    val masterCollection = WorldLoader.loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        projConf.mainCollections,
-        updatedMetaStatus)
-
-    println("--created collection")
-
-    // download referenced files, update status
-    val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.FileStatusFile
-    val fileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
-    val downloadFileStatus = ct.downloadImages(masterCollection, fileStatus)
-    val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
-    ExportPages.saveModifiedMap(fileStatusFile, updatedFileStatus)
-
-    // perform exports
-    val (allPageOutputs, allImageOutputs) = ct.export(downloadMetaStatus, downloadFileStatus, masterCollection, images = true)
-
-    allPageOutputs.foreach(x => println("page created: " + x ))
-    allImageOutputs.foreach{case (k, v) => {
-      v foreach(x => println("image created: " + k + " -> " + x))
-    }}
-
-    // do an upload; only uploading files derived from those that were downloaded
-    val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
-    filesToUpload foreach(x => println("to upload: " + x))
-
-    ct.upload(downloadFileStatus, filesToUpload)
-
-  }
-
 
   // generate stylesheets into project web dir
   def addStyles(projConf: ProjectConfig): Unit = {
@@ -343,5 +393,36 @@ object ContentTransformer {
          token = DriveBuilder.getAccessTokenFromJsonFile(new File(projConf.driveAccessTokenFile)))
     DriveBuilder.getDrive(keys, AppName)
   }
+
+
+  // get all of the local image files referenced by a world
+  def getReferencedImages(world: List[WorldItem]): List[String] = {
+
+    // find a unique list of the files pointed to by meta items.
+    val uniqueFiles = WorldItem.filterList[MetaItem](world).map(_.filename).distinct
+
+    // some of these files are not actual files, but links to remote data.
+    // so filter those out
+    uniqueFiles.filter(x => !x.startsWith("wikimedia:"))
+
+  }
+
+
+  // files is names of files relative to local content directory
+  def localFileUpdates(
+      files: List[String],
+      oldFileStatus: FileModifiedMap,
+      projConf: ProjectConfig): FileModifiedMap = {
+
+    val currentStatus = files.map(x =>
+      (x, new File(projConf.localContentPath + File.separator + x).lastModified))
+
+    currentStatus.filter({case (k, v) => oldFileStatus.get(k) match {
+        case Some(x) => v > x._2.getValue
+        case None => true
+    }}).map(x => (x._1, ("", new DateTime(x._2)))).toMap
+
+  }
+
 
 }
