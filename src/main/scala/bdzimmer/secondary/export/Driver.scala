@@ -72,7 +72,8 @@ object Driver {
       ContentTransformer.exportLocalAll(projConf)
       ContentTransformer.addStyles(projConf)
     }
-    case DriverCommands.ExportSync => ContentTransformer.exportSync(projConf)
+    case DriverCommands.ExportLocalSync => ContentTransformer.exportLocalSync(projConf)
+    case DriverCommands.ExportDriveSync => ContentTransformer.exportDriveSync(projConf)
     case DriverCommands.Browse => {
       val filename = List(projectDir, ProjectStructure.WebDir, "index.html").mkString(File.separator)
       browseLocal(filename)
@@ -93,7 +94,7 @@ object Driver {
 
   // browse to the project on Google Drive.
   def browseRemote(conf: ProjectConfig): Try[Unit] = Try({
-    val drive = ContentTransformer.createDrive(conf)
+    val drive = DriveSync.createDrive(conf)
     val driveOutputFile = DriveUtils.getFileByPath(
         drive,
         DriveUtils.getRoot(drive),
@@ -135,7 +136,8 @@ object DriverCommands {
 
   val Configure = "config"
   val ExportLocalAll = "export-local-all"
-  val ExportSync = "export-sync"
+  val ExportLocalSync = "export-local-sync"
+  val ExportDriveSync = "export-drive-sync"
   val Browse = "browse"
   val BrowseDrive = "browse-drive"
   val Interactive = "interactive"
@@ -144,9 +146,9 @@ object DriverCommands {
   val CommandsDescriptions = List(
       (Configure, "edit project configuration"),
       (ExportLocalAll, "content to web - all"),
-      (ExportSync, "Drive to content, content to web, web to Drive"),
+      (ExportLocalSync, "content to web - sync"),
+      (ExportDriveSync, "Drive to content, content to web, web to Drive - sync"),
       (Browse, "browse local project web site"),
       (BrowseDrive, "browse Drive project web site"),
-      (Interactive, "start interactive mode"),
       (Help, "show usage"))
 }
