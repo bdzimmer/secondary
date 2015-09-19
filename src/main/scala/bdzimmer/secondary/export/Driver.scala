@@ -16,20 +16,14 @@ import java.awt.Desktop
 import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
-import scala.collection.JavaConverters._
 import scala.util.Try
-
-import com.google.api.client.util.DateTime
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.{File => DriveFile}
-import org.apache.commons.io.{FileUtils, FilenameUtils}
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.09.15"
+  val Title = "Secondary - create worlds from text - v2015.09.18"
 
   def main(args: Array[String]): Unit = {
 
@@ -42,15 +36,16 @@ object Driver {
     val command = args.headOption.getOrElse(defaultCommand)
 
     command match {
-      case DriverCommands.Interactive => runInteractive(projectDir, projConf)
+      case DriverCommands.Interactive => runInteractive(projConf)
       case DriverCommands.Help => showUsage
-      case _ => runCommand(command, projectDir, projConf)
+      case _ => runCommand(command, projConf)
     }
 
   }
 
 
-  def runInteractive(projectDir: String, projConf: ProjectConfig): Unit = {
+  // start the interactive shell
+  def runInteractive(projConf: ProjectConfig): Unit = {
     println(Title)
     val br = new BufferedReader(new InputStreamReader(System.in))
     while (true) {
@@ -59,25 +54,23 @@ object Driver {
 
       command match {
         case "" => () // do nothing
-        case "exit" | "quit" | "q" => System.exit(0)
-        case _ => runCommand(command, projectDir, projConf)
+        case "exit" | "quit" | "q" => sys.exit(0)
+        case _ => runCommand(command, projConf)
       }
     }
   }
 
 
-  def runCommand(command: String, projectDir: String, projConf: ProjectConfig): Unit = command match {
+  // run a command
+  def runCommand(command: String, projConf: ProjectConfig): Unit = command match {
     case DriverCommands.Configure => new ConfigurationGUI(projConf).startup(Array())
     case DriverCommands.ExportLocalAll => {
-      ContentTransformer.exportLocalAll(projConf)
-      ContentTransformer.addStyles(projConf)
+      ExportPipelines.exportLocalAll(projConf)
+      ExportPipelines.addStyles(projConf)
     }
-    case DriverCommands.ExportLocalSync => ContentTransformer.exportLocalSync(projConf)
-    case DriverCommands.ExportDriveSync => ContentTransformer.exportDriveSync(projConf)
-    case DriverCommands.Browse => {
-      val filename = List(projectDir, ProjectStructure.WebDir, "index.html").mkString(File.separator)
-      browseLocal(filename)
-    }
+    case DriverCommands.ExportLocalSync => ExportPipelines.exportLocalSync(projConf)
+    case DriverCommands.ExportDriveSync => ExportPipelines.exportDriveSync(projConf)
+    case DriverCommands.Browse => browseLocal(projConf)
     case DriverCommands.BrowseDrive => browseRemote(projConf)
     case DriverCommands.Help => showCommands
     case _ => println("Invalid command. Use 'help' for a list of commands.")
@@ -85,7 +78,11 @@ object Driver {
 
 
   // open a local file in the default web browser
-  def browseLocal(filename: String): Try[Unit] = Try({
+  def browseLocal(projConf: ProjectConfig): Try[Unit] = Try({
+    val filename = List(
+        projConf.projectDir,
+        ProjectStructure.WebDir,
+        "index.html").mkString(File.separator)
     val uri = new File(filename).toURI
     println(uri.getPath)
     Desktop.getDesktop.browse(uri)
@@ -136,19 +133,19 @@ object DriverCommands {
 
   val Configure = "config"
   val ExportLocalAll = "export-local-all"
-  val ExportLocalSync = "export-local-sync"
-  val ExportDriveSync = "export-drive-sync"
-  val Browse = "browse"
-  val BrowseDrive = "browse-drive"
+  val ExportLocalSync = "export-local"
+  val ExportDriveSync = "export"
+  val Browse = "browse-local"
+  val BrowseDrive = "browse"
   val Interactive = "interactive"
   val Help = "help"
 
   val CommandsDescriptions = List(
       (Configure, "edit project configuration"),
       (ExportLocalAll, "content to web - all"),
-      (ExportLocalSync, "content to web - sync"),
-      (ExportDriveSync, "Drive to content, content to web, web to Drive - sync"),
+      (ExportLocalSync, "content to web"),
+      (ExportDriveSync, "Drive to content, content to web, web to Drive"),
       (Browse, "browse local project web site"),
       (BrowseDrive, "browse Drive project web site"),
-      (Help, "show usage"))
+      (Help, "show usage / commands"))
 }

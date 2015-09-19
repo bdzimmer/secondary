@@ -10,11 +10,8 @@ package bdzimmer.secondary.export
 
 import org.scalatest.FunSuite
 
-import org.apache.commons.io.{FileUtils, FilenameUtils}
 import java.awt.Desktop
-import java.io.{File, FileOutputStream}
-import java.net.URI
-import java.util.zip.Deflater
+import java.io.File
 
 
 class ExportLocalTest extends FunSuite {
@@ -24,12 +21,11 @@ class ExportLocalTest extends FunSuite {
 
     val projConf = new ProjectConfig("doc/")
 
-    ContentTransformer.exportLocalAll(projConf)
-    ContentTransformer.addStyles(projConf)
+    ExportPipelines.exportLocalAll(projConf)
+    ExportPipelines.addStyles(projConf)
 
     val curDir = System.getProperty("user.dir")
     Desktop.getDesktop.browse(new File(s"${curDir}/${projConf.localExportPath}/index.html").toURI)
-
 
   }
 

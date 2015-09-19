@@ -1,8 +1,5 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Class to wrap process of downloading content from Google drive,
-// exporting, and uploading.
-
 // 2015-09-12: Refactoring.
 // 2015-09-17: WIP further refactoring.
 
@@ -12,15 +9,13 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
-import scala.ref
-import scala.reflect.ClassTag
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
 
 
 // pipelines for local and synced exports
-object ContentTransformer {
+object ExportPipelines {
 
   // content -> web; always export everything
   def exportLocalAll(projConf: ProjectConfig): Unit = {
@@ -58,10 +53,6 @@ object ContentTransformer {
   // this is untested!
   def exportLocalSync(projConf: ProjectConfig): Unit = {
 
-    // WIP WIP WIP - untested - do nothing for now
-
-    return
-
     def localMetaStatusChanges(oldMetaStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
       val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(_.endsWith(".yml"))
       localFileUpdates(ymlFiles, oldMetaStatus, projConf)
@@ -93,7 +84,7 @@ object ContentTransformer {
     ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
     // perform exports
-    val (allPageOutputs, allImageOutputs) = ContentTransformer.export(
+    val (allPageOutputs, allImageOutputs) = export(
         metaStatusChanges, fileStatusChanges, world, images = true, projConf)
 
     allPageOutputs.foreach(x => println("page created: " + x ))
@@ -137,7 +128,7 @@ object ContentTransformer {
     ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
     // perform exports
-    val (allPageOutputs, allImageOutputs) = ContentTransformer.export(
+    val (allPageOutputs, allImageOutputs) = export(
         metaStatusChanges, fileStatusChanges, masterCollection, images = true, projConf)
 
     allPageOutputs.foreach(x => println("page created: " + x ))

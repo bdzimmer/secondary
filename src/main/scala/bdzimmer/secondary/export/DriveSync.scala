@@ -55,7 +55,7 @@ class DriveSync(projConf: ProjectConfig, drive: Drive) {
 
 
   def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
-    val imageFiles = ContentTransformer.getReferencedImages(masterCollection)
+    val imageFiles = ExportPipelines.getReferencedImages(masterCollection)
     downloadFilesIntelligent(imageFiles, fileStatus)
   }
 
