@@ -15,7 +15,7 @@ case class ConfigField(key: String, default: String, description: String)
 
 
 // idiomatic Scala for Java Properties
-class PropertiesWrapper(filename: String) {
+class PropertiesWrapper(val filename: String) {
 
   val file = new java.io.File(filename)
   val prop = new Properties()
@@ -30,51 +30,33 @@ class PropertiesWrapper(filename: String) {
 }
 
 
-class ProjectConfig(val projectDir: String) {
 
-  val propFilename = projectDir + File.separator + ProjectStructure.ConfigurationFile
+class ProjectConfig(
+  val projectDir: String,
+  val driveClientIdFile: String,
+  val driveAccessTokenFile: String,
+  val driveInputPath: String,
+  val driveOutputPath: String,
+  val masterName: String,
+  val mainCollectionNames: String,
+  val license: String) {
 
-  val prop = new PropertiesWrapper(propFilename)
-
-  val missing = DriverConfig.requiredProperties.filter(x => {
-    !prop.prop.keySet().contains(x.key)
-  })
-
-  missing foreach(x => {
-    System.err.println(
-        "property " + x.key + " missing from driver configuration\n" +
-        "\tusing default value " + x.default)
-  })
-
-
-  def getProp(cf: ConfigField): String = {
-    prop(cf.key).getOrElse(cf.default)
-  }
-
-  // attributes described in the companion object
-  val driveClientIdFile = getProp(DriverConfig.driveClientIdFile)
-  val driveAccessTokenFile = getProp(DriverConfig.driveAccessTokenFile)
-  val driveInputPath = getProp(DriverConfig.driveInputPath)
-  val driveOutputPath = getProp(DriverConfig.driveOutputPath)
-  val masterName = getProp(DriverConfig.masterName)
-  val mainCollectionNames = getProp(DriverConfig.mainCollectionNames)
-  val license = getProp(DriverConfig.license)
 
   // attributes derived from the above
   val mainCollections = mainCollectionNames.split(",").toList.map(_.trim)
   val driveInputPathList = driveInputPath.split("/").toList
   val driveOutputPathList = driveOutputPath.split("/").toList
 
-  val localExportPath = projectDir  + File.separator +  ProjectStructure.WebDir + File.separator
+  val localExportPath = projectDir  + File.separator + ProjectStructure.WebDir + File.separator
   val localContentPath = projectDir + File.separator + ProjectStructure.ContentDir + File.separator
   val localExportPathFile = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
 
-
 }
 
 
-object DriverConfig {
+
+object ProjectConfig {
 
   val driveClientIdFile = ConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
   val driveAccessTokenFile = ConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
@@ -93,4 +75,41 @@ object DriverConfig {
       masterName,
       mainCollectionNames,
       license)
+
+
+  def getProperties(projectDir: String): PropertiesWrapper = {
+    val propFilename = projectDir + File.separator + ProjectStructure.ConfigurationFile
+    new PropertiesWrapper(propFilename)
+  }
+
+  def apply(projectDir: String): ProjectConfig = {
+
+    val prop = getProperties(projectDir)
+
+    val missing = requiredProperties.filter(x => {
+      !prop.prop.keySet().contains(x.key)
+    })
+
+    missing foreach(x => {
+      System.err.println(
+          "property " + x.key + " missing from driver configuration\n" +
+          "\tusing default value " + x.default)
+    })
+
+    def getProp(cf: ConfigField): String = {
+      prop(cf.key).getOrElse(cf.default)
+    }
+
+    new ProjectConfig(
+        projectDir = projectDir,
+        driveClientIdFile = getProp(ProjectConfig.driveClientIdFile),
+        driveAccessTokenFile = getProp(ProjectConfig.driveAccessTokenFile),
+        driveInputPath = getProp(ProjectConfig.driveInputPath),
+        driveOutputPath = getProp(ProjectConfig.driveOutputPath),
+        masterName = getProp(ProjectConfig.masterName),
+        mainCollectionNames = getProp(ProjectConfig.mainCollectionNames),
+        license = getProp(ProjectConfig.license))
+
+
+  }
 }

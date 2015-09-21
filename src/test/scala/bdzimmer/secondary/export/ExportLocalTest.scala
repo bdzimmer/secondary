@@ -19,7 +19,7 @@ class ExportLocalTest extends FunSuite {
   // test local export by building the documentation
   test("local export integration test") {
 
-    val projConf = new ProjectConfig("doc/")
+    val projConf = ProjectConfig("doc/")
 
     ExportPipelines.exportLocalAll(projConf)
     ExportPipelines.addStyles(projConf)

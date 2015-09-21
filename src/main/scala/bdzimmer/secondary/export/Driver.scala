@@ -31,7 +31,7 @@ object Driver {
 
     // project directory is current working directory
     val projectDir = System.getProperty("user.dir")
-    val projConf = new ProjectConfig(projectDir)
+    val projConf = ProjectConfig(projectDir)
 
     val command = args.headOption.getOrElse(defaultCommand)
 
