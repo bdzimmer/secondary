@@ -7,6 +7,8 @@
 
 // 2015-01-10
 
+// TODO: redo with Scala Swing
+
 package bdzimmer.secondary.model
 
 import bdzimmer.secondary.view.Main
@@ -27,14 +29,9 @@ import scala.collection.JavaConverters._
 
 object TileOptionsNew {
 
-  val ATTRIBUTES_CONFIG = "/edconfig/tiletypes.txt"
-
   val types = TileOptionsNew.getTileTypes
 
   def getOptions(): TileAttributes = {
-
-    // throw up a swing dialog with a bunch of radio buttons!
-    // gosh I hope this works
 
     val dialog = new JDialog();
     dialog.setTitle("Tile Type");
@@ -72,9 +69,6 @@ object TileOptionsNew {
   }
 
 
-
-  // 2015-04-27: loads from tiletypes.properties
-
   def getTileTypes(): scala.collection.Map[String, TileAttributes] = {
 
     val prop = new Properties()
@@ -84,10 +78,10 @@ object TileOptionsNew {
 
       val items = prop.getProperty(x).split(",\\s*").map(_.trim)
 
-      (x,
-      new TileAttributes(items(0).toInt, items(1).toInt, items(2).toInt,
-                         items(3).toInt, items(4).toInt, items(5).toBoolean,
-                         items(6).toInt))
+      (x, new TileAttributes(
+          items(0).toInt, items(1).toInt, items(2).toInt,
+          items(3).toInt, items(4).toInt, items(5).toBoolean,
+          items(6).toInt))
 
     }).toList.toMap
 
@@ -98,7 +92,10 @@ object TileOptionsNew {
 
   // for Java compatibility
   def get(key: String): TileAttributes = {
-    types.get(key).get
+    types.get(key).getOrElse({
+      println("Tile type does not exist!")
+      sys.exit(1)
+    })
   }
 
 }

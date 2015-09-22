@@ -14,12 +14,15 @@
 //             on loaded world to make sure required fields are provided.
 // 2015-08-24: Added ImageItemBean / ImageItem classes.
 // 2015-09-08: Added tag list field to item classes.
+// 2015-09-21: Manually implemented getters / setters to avoid null strings for missing
+//             attributes.
 
 package bdzimmer.secondary.export
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.ClassTag
+
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
@@ -27,15 +30,45 @@ import org.yaml.snakeyaml.nodes.Tag
 import bdzimmer.secondary.export.{NotesParser => np}
 
 
-// bean version of world items -- for loading from
+// convert null strings to empty
+object NonNullString {
+  def apply(s: String): String = s match {
+    case null => ""
+    case _ => s
+  }
+}
+
+
+// bean version of world items -- for loading from YAML
 
 trait WorldItemBean {
-  @BeanProperty var id: String = ""             // TODO: enforce provided
-  @BeanProperty var name: String = ""           // TODO: enforce provided
-  @BeanProperty var description: String = ""
-  @BeanProperty var notes: String = ""
-  @BeanProperty var srcyml: String = ""
-  @BeanProperty var remoteid: String = ""
+
+  // @BeanProperty var id: String = ""             // TODO: enforce provided
+  // @BeanProperty var name: String = ""           // TODO: enforce provided
+  // @BeanProperty var description: String = ""
+  // @BeanProperty var notes: String = ""
+
+  var id: String = ""
+  def getId(): String = id
+  def setId(id: String): Unit = {this.id = NonNullString(id)}
+
+  var name: String = ""
+  def getName(): String = name
+  def setName(name: String): Unit = {this.name = NonNullString(name)}
+
+  var description: String = ""
+  def getDescription(): String = description
+  def setDescription(description: String): Unit = {
+    this.description = NonNullString(description)
+  }
+
+  var notes: String = ""
+  def getNotes(): String = notes
+  def setNotes(notes: String): Unit = {this.notes = NonNullString(notes)}
+
+
+  var srcyml: String = ""
+  var remoteid: String = ""
 
   // function to get immutable version
   def getVal(): WorldItem
@@ -54,42 +87,49 @@ trait TileMetaItemBean extends MetaItemBean {
 
 
 class BareWorldItemBean extends WorldItemBean {
-  def getVal(): BareWorldItem = BareWorldItem(id, name, description, notes, srcyml, remoteid, np.getAllTags(notes))
+  def getVal(): BareWorldItem = BareWorldItem(
+      id, name, description, notes,
+      srcyml, remoteid, np.getAllTags(notes))
 }
 
 class CollectionItemBean extends WorldItemBean {
    @BeanProperty var children: java.util.List[WorldItemBean] = new java.util.LinkedList[WorldItemBean]()
 
    def getVal(): CollectionItem = CollectionItem (
-       id, name, description, notes, srcyml, remoteid,
+       id, name, description, notes,
+       srcyml, remoteid,
        np.getAllTags(notes),
        children.asScala.map(_.getVal).toList)
 }
 
 class ImageItemBean extends MetaItemBean {
   def getVal(): ImageItem = ImageItem(
-      id, name, description, notes, srcyml, remoteid,
+      id, name, description, notes,
+      srcyml, remoteid,
       np.getAllTags(notes),
       filename)
 }
 
 class TilesetItemBean extends TileMetaItemBean {
   def getVal(): TilesetItem = TilesetItem(
-      id, name, description, notes, srcyml, remoteid,
+      id, name, description, notes,
+      srcyml, remoteid,
       np.getAllTags(notes),
       filename, tiletype)
 }
 
 class SpritesheetItemBean extends TileMetaItemBean {
   def getVal(): SpritesheetItem = SpritesheetItem(
-      id, name, description, notes, srcyml, remoteid,
+      id, name, description, notes,
+      srcyml, remoteid,
       np.getAllTags(notes),
       filename, tiletype)
 }
 
 class MapItemBean extends MetaItemBean {
   def getVal(): MapItem = MapItem(
-      id, name, description, notes, srcyml, remoteid,
+      id, name, description, notes,
+      srcyml, remoteid,
       np.getAllTags(notes),
       filename)
 }
@@ -97,10 +137,10 @@ class MapItemBean extends MetaItemBean {
 class CharacterItemBean extends WorldItemBean {
 
   @BeanProperty var image: String = ""    // TODO: enforce provided
-  // @BeanProperty var sheetrow: String = ""       // TODO: enforce provided
 
   def getVal(): CharacterItem = CharacterItem(
-      id, name, description, notes, srcyml, remoteid,
+      id, name, description, notes,
+      srcyml, remoteid,
       np.getAllTags(notes),
       image) // sheetrow
 
@@ -169,9 +209,6 @@ case class CharacterItem(
 ////////////////////////////////////////////////////////////////////////////////////
 
 
-
-// 2015-07-26 - WorldItem companion object
-
 object WorldItem {
 
 
@@ -203,39 +240,4 @@ object WorldItem {
   }
 
 
-
-  // TODO: not sure if filterTree needs to remain
-
-  /**
-   * Filter a tree of WorldItems by type.
-   *
-   * @tparam A               type of WorldItem to keep
-   * @param  worldItem       root WorldItem to filter
-   * @return a list of the WorldItems of type A in the tree
-   */
-  def filterTree[A <: WorldItem : ClassTag](worldItem: WorldItem): List[A] = worldItem match {
-    case x: CollectionItem => x.children.flatMap(x => filterTree[A](x))
-    case x: A => List(x)
-    case _ => Nil
-  }
-
-
-   // TODO: not sure if filterTreeForCollections needs to remain
-
-   /**
-   * Filter a tree of WorldItems, keeping Collections.
-   *
-   * @param  worldItem       root WorldItem to filter
-   * @return a list of the CollectionItems in the tree
-   *
-   */
-  def filterTreeForCollections(worldItem: WorldItem): List[CollectionItem] = worldItem match {
-    case x: CollectionItem => x :: x.children.flatMap(x => filterTreeForCollections(x))
-    case _ => Nil
-  }
-
-
 }
-
-
-

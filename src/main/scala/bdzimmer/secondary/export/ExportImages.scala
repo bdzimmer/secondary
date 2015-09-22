@@ -198,7 +198,7 @@ object ExportImages {
 
   val outputScales = List(1, 4, 12)    // scalastyle:ignore magic.number
 
-  def scalePostfix(scale: Int, ignore: Int = 1): String =  scale match {
+  def scalePostfix(scale: Int, ignore: Int = 1): String = scale match {
     case `ignore` => ""
     case _ => "_" + scale + "x"
   }
@@ -212,7 +212,7 @@ object ExportImages {
   * @param outputDir  output directory to save images to
   * @returns          names of files exported
   */
-  def exportImage(worldItem: WorldItem with MetaItem, inputDir: String, outputDir: String): List[String] = {
+  def exportImage(worldItem: MetaItem, inputDir: String, outputDir: String): List[String] = {
 
     val inputName = worldItem.filename
 
@@ -221,13 +221,10 @@ object ExportImages {
       case x: TileMetaItem => {
         TileOptionsNew.types.get(x.tiletype) match {
           case Some(tiletype) => getTilesetImage(inputDir + "/" + inputName, tiletype)
-          case None => {
-            val result = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB)
-            result.getGraphics.drawString("Invalid tile type.", 0, 20)
-            result
-          }
+          case None => ExportImages.imageMessage("Invalid tile type.")
         }
       }
+      case _ => ExportImages.imageMessage("MetaItem type not supported.")
     }
 
     // various scales to output
@@ -370,4 +367,12 @@ object ExportImages {
   }
 
 
+  // create an image with an error message
+  def imageMessage(message: String): BufferedImage = {
+    val result = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB)
+    result.getGraphics.drawString(message, 0, 20)
+    result
+  }
+
 }
+

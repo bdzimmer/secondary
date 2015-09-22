@@ -6,6 +6,8 @@
 
 // 2015-01-10
 
+// TODO: redo with Scala Swing
+
 
 package bdzimmer.secondary.view
 
@@ -23,14 +25,14 @@ class SpriteLoadWindow(inputDir: String) extends WorldObjectWindow(inputDir, "Lo
 
   val serialVersionUID: Long = 1L
 
-  val SPRITESHEET_LIST = "list.csv"
+  val spritesheetList = "list.csv"
 
   def populateObjects(inputDir: String): ArrayList[WorldObject] = {
 
     // load a list from the sprite directory describing the collection
     // of spritesheets and their various types and descriptions
 
-    val lines = scala.io.Source.fromFile(inputDir + SPRITESHEET_LIST).getLines
+    val lines = scala.io.Source.fromFile(inputDir + spritesheetList).getLines
 
     val filesAndDescriptions = lines.map(x => {
       val items = x.split(",\\s*").map(_.trim)
@@ -57,7 +59,6 @@ class SpriteLoadWindow(inputDir: String) extends WorldObjectWindow(inputDir, "Lo
 
     val serialVersionUID: Long = 1L
 
-
     val dg = new DosGraphics
 
     val spriteSheet = new Tiles(attrs)
@@ -68,32 +69,25 @@ class SpriteLoadWindow(inputDir: String) extends WorldObjectWindow(inputDir, "Lo
 
     setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-   val loader = new JButton();
-   loader.setSize(width, height);
-   loader.setIcon(new ImageIcon(spriteSheetImage));
-   loader.setBackground(Color.BLACK);
-   loader.setForeground(Color.WHITE);
-   loader.setText("\n\n\n" + description + " -  " + new File(spriteFileName).getName());
+     val loader = new JButton();
+     loader.setSize(width, height);
+     loader.setIcon(new ImageIcon(spriteSheetImage));
+     loader.setBackground(Color.BLACK);
+     loader.setForeground(Color.WHITE);
+     loader.setText("\n\n\n" + description + " -  " + new File(spriteFileName).getName());
 
-   // don't know why this doesn't work
-//   loader.setHorizontalTextPosition(JButton.CENTER)
-//   loader.setVerticalTextPosition(JButton.CENTER)
+     // don't know why this doesn't work
+     // loader.setHorizontalTextPosition(JButton.CENTER)
+     // loader.setVerticalTextPosition(JButton.CENTER)
 
-   loader.addActionListener(new ActionListener() {
-     def actionPerformed(e: ActionEvent): Unit = {
-       // do nothing
-     }
-   })
+     loader.addActionListener(new ActionListener() {
+       def actionPerformed(e: ActionEvent): Unit = {
+         // do nothing
+       }
+     })
 
-   this.add(loader);
+     this.add(loader);
 
-
-
-}
-
-
-
-
-
+  }
 
 }
