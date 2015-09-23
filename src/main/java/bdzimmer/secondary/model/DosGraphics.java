@@ -13,7 +13,7 @@ import java.awt.image.DataBufferInt;
 import javax.swing.JPanel;
 
 public class DosGraphics extends JPanel {
-  static final long serialVersionUID = 1; // Meaningless junk.
+  private static final long serialVersionUID = 1; // Meaningless junk.
 
   private int scale;
   private int sud;

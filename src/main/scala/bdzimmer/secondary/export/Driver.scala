@@ -63,7 +63,10 @@ object Driver {
 
   // run a command
   def runCommand(command: String, projConf: ProjectConfig): Unit = command match {
-    case DriverCommands.Configure => new ConfigurationGUI(projConf).startup(Array())
+    case DriverCommands.Configure => {
+      val prop = ProjectConfig.getProperties(projConf.projectDir)
+      new ConfigurationGUI(prop).startup(Array())
+    }
     case DriverCommands.ExportLocalAll => {
       ExportPipelines.exportLocalAll(projConf)
       ExportPipelines.addStyles(projConf)

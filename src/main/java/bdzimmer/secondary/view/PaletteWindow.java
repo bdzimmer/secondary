@@ -26,20 +26,19 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 
-
-
-
 class PaletteWindow extends JFrame {
+  
   private static final long serialVersionUID = 1L;
   private DosGraphics dosGraphics;
-  JSpinner redNumber = new JSpinner();
-  JSpinner greenNumber = new JSpinner();
-  JSpinner blueNumber = new JSpinner();
+  
+  private JSpinner redNumber = new JSpinner();
+  private JSpinner greenNumber = new JSpinner();
+  private JSpinner blueNumber = new JSpinner();
+  
   public static Canvas cColorLabel;
 
   public PaletteWindow(int[][] rgbPalette) {
-    // setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
-
+   
     setLayout(new BorderLayout(5, 5));
     setTitle("Palette");
     this.dosGraphics = new DosGraphics(128, 128, 2);

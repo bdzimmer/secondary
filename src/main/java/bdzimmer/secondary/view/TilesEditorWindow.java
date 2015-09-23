@@ -26,7 +26,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 public class TilesEditorWindow extends JFrame {
-  static final long serialVersionUID = 0; // Meaningless junk.
+  
+  private static final long serialVersionUID = 0; // Meaningless junk.
 
   private Tiles tileSet;
   public String tileFileName = "";
@@ -35,14 +36,13 @@ public class TilesEditorWindow extends JFrame {
   private PaletteWindow paletteWindow;
   private ZoomedTileWindow zoomWindow;
 
-  private int currentTile;
-
   private JPanel graphicsPanel = new JPanel();
+  private StatusBar myStatusBar = new StatusBar();
 
+  private int currentTile;
   private int scale = 3;
 
-  StatusBar myStatusBar;
-
+  
   /**
    * Create a TilesEditorWindow.
    * 
@@ -165,7 +165,6 @@ public class TilesEditorWindow extends JFrame {
     graphicsPanel.add(dosGraphics);
 
     this.add(graphicsPanel, BorderLayout.NORTH);
-    myStatusBar = new StatusBar();
     this.add(myStatusBar, BorderLayout.SOUTH);
 
     pack();

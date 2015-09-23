@@ -18,27 +18,20 @@ import javax.swing.SwingConstants
 
 
 
-class ConfigurationGUI(projectConfig: ProjectConfig) extends SimpleSwingApplication {
+class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
 
-  val prop = ProjectConfig.getProperties(projectConfig.projectDir)
   val propFile = prop.file
 
   def top = new Frame {
 
-    val BORDER_WIDTH = 10
-    val myBorder = new EmptyBorder(BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH)
+    val myBorder = new EmptyBorder(10, 10, 10, 10)
 
     val saveStatus = new Label("")
 
     val save = new Button("Save") {
       reactions += {
         case ButtonClicked(save) => {
-
-          // it appears that other events be handled while this is running,
-          // which is exactly what I want
-
           // TODO: verify the configuration
-
           prop.prop.store(
               new java.io.FileOutputStream(propFile),
               "created with configuration editor")

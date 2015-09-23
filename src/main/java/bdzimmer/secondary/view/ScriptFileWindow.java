@@ -33,7 +33,7 @@ import javax.swing.JPanel;
 
 public class ScriptFileWindow extends WorldObjectWindow {
 
-  static final long serialVersionUID = 0; // Meaningless junk.
+  private static final long serialVersionUID = 0; // Meaningless junk.
 
   public ScriptFileWindow(String inputDir) {
     super(inputDir, "Script Files");

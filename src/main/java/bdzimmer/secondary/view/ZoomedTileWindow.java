@@ -365,7 +365,7 @@ public class ZoomedTileWindow extends JFrame {
   private void handleTools(ActionEvent event) {
     String commandString = event.getActionCommand();
 
-    if (commandString.equals("Lighten")) {
+    if ("Lighten".equals(commandString)) {
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
           int curColor = tile[i][j];
@@ -379,7 +379,7 @@ public class ZoomedTileWindow extends JFrame {
         }
       }
 
-    } else if (commandString.equals("Darken")) {
+    } else if ("Darken".equals(commandString)) {
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
           int curColor = tile[i][j];
@@ -393,7 +393,7 @@ public class ZoomedTileWindow extends JFrame {
         }
       }
 
-    } else if (commandString.equals("Overlay")) {
+    } else if ("Overlay".equals(commandString)) {
       this.overlayTile = tile;
 
     } else if (commandString.equals("Fill")) {
@@ -403,7 +403,7 @@ public class ZoomedTileWindow extends JFrame {
         }
       }
 
-    } else if (commandString.equals("Flip >")) {
+    } else if ("Flip >".equals(commandString)) {
       int[][] tempTile = copyTile();
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
@@ -411,7 +411,7 @@ public class ZoomedTileWindow extends JFrame {
         }
       }
 
-    } else if (commandString.equals("Flip ^")) {
+    } else if ("Flip ^".equals(commandString)) {
       int[][] tempTile = copyTile();
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
@@ -419,7 +419,7 @@ public class ZoomedTileWindow extends JFrame {
         }
       }
 
-    } else if (commandString.equals("Shift ^")) {
+    } else if ("Shift ^".equals(commandString)) {
       int[][] tempTile = copyTile();
       for (int j = 0; j < tile[0].length; j++) {
         tile[0][j] = tempTile[tile.length - 1][j];
@@ -430,7 +430,7 @@ public class ZoomedTileWindow extends JFrame {
         }
       }
 
-    } else if (commandString.equals("Shift >")) {
+    } else if ("Shift >".equals(commandString)) {
       int[][] tempTile = copyTile();
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length - 1; j++) {

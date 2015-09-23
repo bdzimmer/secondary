@@ -37,7 +37,7 @@ import javax.swing.JOptionPane;
 
 
 public class MapEditorWindow extends JFrame {
-  static final long serialVersionUID = 0; // Meaningless junk.
+  private static final long serialVersionUID = 0; // Meaningless junk.
 
   private static final int TILE_SIZE = 16;
 
@@ -54,7 +54,7 @@ public class MapEditorWindow extends JFrame {
   private int overlayEdit;
 
   // private int overlayEdit = 0;
-  private StatusBar myStatusBar;
+  private StatusBar myStatusBar = new StatusBar();
 
 
   // TODO: resolve the resize / inUpdate problem
@@ -317,7 +317,6 @@ public class MapEditorWindow extends JFrame {
     this.add(mapViewPanel, BorderLayout.NORTH);
 
     // / map status bar
-    myStatusBar = new StatusBar();
     this.add(myStatusBar, BorderLayout.SOUTH);
     this.pack();
 
