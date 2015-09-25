@@ -19,6 +19,7 @@ import java.io.{BufferedReader, File, InputStreamReader}
 import scala.util.Try
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
+import bdzimmer.secondary.view.Main
 
 
 object Driver {
@@ -66,6 +67,7 @@ object Driver {
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(prop).startup(Array())
+      println("You must restart Secondary for configuration changes to take effect.")
     }
     case DriverCommands.ExportLocalAll => {
       ExportPipelines.exportLocalAll(projConf)
@@ -75,6 +77,7 @@ object Driver {
     case DriverCommands.ExportDriveSync => ExportPipelines.exportDriveSync(projConf)
     case DriverCommands.Browse => browseLocal(projConf)
     case DriverCommands.BrowseDrive => browseRemote(projConf)
+    case DriverCommands.Editor => new Main(projConf.mappedContentPathActual, "Secondary Editor")
     case DriverCommands.Help => showCommands
     case _ => println("Invalid command. Use 'help' for a list of commands.")
   }
@@ -140,6 +143,7 @@ object DriverCommands {
   val ExportDriveSync = "export"
   val Browse = "browse-local"
   val BrowseDrive = "browse"
+  val Editor = "editor"
   val Interactive = "interactive"
   val Help = "help"
 
@@ -150,5 +154,6 @@ object DriverCommands {
       (ExportDriveSync, "Drive to content, content to web, web to Drive"),
       (Browse, "browse local project web site"),
       (BrowseDrive, "browse Drive project web site"),
+      (Editor, "start editor (beta)"),
       (Help, "show usage / commands"))
 }

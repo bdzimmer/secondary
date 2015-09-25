@@ -16,6 +16,8 @@ import javax.swing.JScrollPane;
 public abstract class WorldObjectWindow extends JFrame {
 
   private static final long serialVersionUID = 1L;
+  
+  protected final Main main;
 
   private ArrayList<WorldObject> worldObjects = new ArrayList<WorldObject>();
 
@@ -29,7 +31,10 @@ public abstract class WorldObjectWindow extends JFrame {
    * @param inputDir      input directory for world data
    * @param title         title for window
    */
-  public WorldObjectWindow(String inputDir, String title) {
+  public WorldObjectWindow(Main main, String inputDir, String title) {
+    
+    this.main = main;
+    
     this.inputDir = inputDir;
     this.setTitle(title);
 

@@ -38,8 +38,11 @@ import javax.swing.JOptionPane;
 
 public class MapEditorWindow extends JFrame {
   private static final long serialVersionUID = 0; // Meaningless junk.
-
+  
   private static final int TILE_SIZE = 16;
+  
+  private final String mapsDir;
+  
 
   private Tiles tileSet;
   private int[][] rgbPalette;
@@ -68,14 +71,22 @@ public class MapEditorWindow extends JFrame {
   /**
    * Create a new MapEditorWindow.
    * 
+   * @param contentDir    main content directory
    * @param title         title string
    * @param fileName      file name of map to load
    * @param tileSet       Tiles object to use
    * @param rgbPalette    2d int array of palette to update the view with
    */
-  public MapEditorWindow(String title, String fileName, Tiles tileSet,
+  public MapEditorWindow(
+      String mapsDir,
+      String title,
+      String fileName,
+      Tiles tileSet,
       int[][] rgbPalette) { // constructor
 
+    this.mapsDir = mapsDir;
+    
+    
     this.map = new Map();
 
     setTitle(title);
@@ -421,7 +432,6 @@ public class MapEditorWindow extends JFrame {
     if ((ctlr < 0) || (ctlr > 127)) {
       return;
     }
-    // System.out.println(ctud + " " + ctlr + " " + ATFWed.currentTile);
     if (!ae.isMetaDown()) {
       if (this.overlayEdit == 0) {
         this.map.map[ctud][ctlr] = Main.currentTile; // setting tile
@@ -452,10 +462,7 @@ public class MapEditorWindow extends JFrame {
 
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.OPEN_DIALOG);
-    jfc.setCurrentDirectory(new File(Main.DATA_PATH + "map/"));
-    
-    
-    // call up the dialog and examine what it returns.
+    jfc.setCurrentDirectory(new File(mapsDir));
     
     if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) { 
       
@@ -488,17 +495,13 @@ public class MapEditorWindow extends JFrame {
   public void chooseSaveMap() {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.SAVE_DIALOG);
-    jfc.setCurrentDirectory(new File(Main.DATA_PATH + "map/"));
+    jfc.setCurrentDirectory(new File(mapsDir));
     jfc.setSelectedFile(new File(this.mapFileName));
     
     // call up the dialog and examine what it returns.
     
-    if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) { // call up
-                                                                   // the dialog
-                                                                   // and
-                                                                   // examine
-                                                                   // what it
-                                                                   // returns.
+    if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) { 
+      
       File mapFile = jfc.getSelectedFile();
       try {
         map.save(mapFile); // getSelectedFile returns the file that was selected
@@ -520,19 +523,12 @@ public class MapEditorWindow extends JFrame {
 
   private void updateGraphics() {
 
-    System.out.println("setting inUpdate to true");
-
-    // this.inUpdate = true;
-
     this.mapViewPanel.updateGraphics();
 
     this.pack();
     this.repaint();
     this.dosGraphics.repaint();
 
-    System.out.println("setting inUpdate to false");
-
-    // this.inUpdate = false;
   }
 
   /*

@@ -8,7 +8,7 @@ import bdzimmer.secondary.model.ScriptFile;
 import bdzimmer.secondary.model.TileOptionsNew;
 import bdzimmer.secondary.model.Tiles;
 import bdzimmer.secondary.model.World;
-
+import bdzimmer.secondary.model.ContentStructure;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -35,15 +35,15 @@ public class ScriptFileWindow extends WorldObjectWindow {
 
   private static final long serialVersionUID = 0; // Meaningless junk.
 
-  public ScriptFileWindow(String inputDir) {
-    super(inputDir, "Script Files");
+  public ScriptFileWindow(Main main, String inputDir) {
+    super(main, inputDir, "Script Files");
   }
 
   @Override
   public ArrayList<WorldObject> populateObjects(String inputDir) {
 
     ArrayList<WorldObject> result = new ArrayList<WorldObject>();
-    World world = new World();
+    World world = new World(main.contentDir);
 
     for (ScriptFile curScriptFile : world.getScriptFiles()) {
       result.add(new ScriptObject(curScriptFile));
@@ -70,10 +70,19 @@ public class ScriptFileWindow extends WorldObjectWindow {
 
         DosGraphics dosGraphics = new DosGraphics();
         Map curMap = new Map();
-        curMap.load(new File(Main.DATA_PATH + "map/" + curMapName + ".map"));
+        
+        curMap.load(new File(
+            main.contentDir + File.separator 
+            + ContentStructure.MapDir() + File.separator 
+            + curMapName + ".map"));
+        
         Tiles curTiles = new Tiles(TileOptionsNew.get("Tiles"));
-        curTiles.load(new File(Main.DATA_PATH + "tile/" + curMap.tileFileName + ".til"),
-            dosGraphics);
+        
+        curTiles.load(new File(
+            main.contentDir + File.separator
+            + ContentStructure.TileDir() + File.separator
+            + curMap.tileFileName + ".til"), dosGraphics);
+        
         this.mapImages.add(curMap.getMapImage(curTiles, dosGraphics));
 
       }
@@ -109,7 +118,11 @@ public class ScriptFileWindow extends WorldObjectWindow {
             String tileFileName;
             try {
               DataInputStream mapIn = new DataInputStream(new FileInputStream(
-                  Main.DATA_PATH + "map/" + curMapName + ".map"));
+                  main.contentDir + File.separator
+                  + ContentStructure.MapDir() + File.separator + curMapName + ".map"));
+              
+              // TODO: this is duplicate code
+              
               // read description
               int[] mapDescB = new int[30];
               for (int i = 0; i < 30; i++) {
@@ -136,12 +149,17 @@ public class ScriptFileWindow extends WorldObjectWindow {
               return;
             }
 
-            tileFileName = Main.DATA_PATH + "tile/" + tileFileName + ".til";
-            String fullMapName = Main.DATA_PATH + "map/" + curMapName + ".map";
+            tileFileName = main.contentDir + File.separator
+                + ContentStructure.TileDir() + File.separator
+                + tileFileName + ".til";
+            
+            String fullMapName = main.contentDir + File.separator
+                + ContentStructure.MapDir() + File.separator
+                + curMapName + ".map";
 
             System.out.println(fullMapName);
 
-            Main.createLinkedTileAndMapWindows(tileFileName, fullMapName);
+            ScriptFileWindow.this.main.createLinkedTileAndMapWindows(tileFileName, fullMapName);
 
           }
 
@@ -158,8 +176,9 @@ public class ScriptFileWindow extends WorldObjectWindow {
           // /new ScriptWindow(scriptFile);
           try {
             Runtime.getRuntime().exec(
-                "notepad.exe " + Main.DATA_PATH + "script/"
-                    + scriptFile.getFileName());
+                "notepad.exe " + main.contentDir + File.separator
+                + "script" + File.separator 
+                + scriptFile.getFileName());
           } catch (IOException e1) {
             e1.printStackTrace();
           }

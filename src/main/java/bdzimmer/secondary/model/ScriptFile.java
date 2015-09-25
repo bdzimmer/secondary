@@ -14,8 +14,10 @@ import java.util.ArrayList;
 
 public class ScriptFile implements Comparable<ScriptFile> {
 
-  private String fileName;
-  private String title;
+  private final String contentDir;
+  private final String fileName;
+  private final String title;
+  
   private ArrayList<String> lines = new ArrayList<String>();
   private ArrayList<String> links = new ArrayList<String>();
   private ArrayList<String> maps = new ArrayList<String>();
@@ -25,11 +27,14 @@ public class ScriptFile implements Comparable<ScriptFile> {
    * 
    * @param fileName    name of file to load
    */
-  public ScriptFile(String fileName) {
+  public ScriptFile(String contentDir, String fileName) {
 
+    this.contentDir = contentDir;
     this.fileName = fileName;
-    File inputFile = new File(Main.DATA_PATH + "/script/" + this.fileName);
+    
+    File inputFile = new File(this.contentDir + File.separator + "script" + File.separator + this.fileName);
 
+    
     // Read in file
     try {
 
@@ -57,18 +62,17 @@ public class ScriptFile implements Comparable<ScriptFile> {
 
     } catch (FileNotFoundException e) {
       System.err.println(e); // print exception if the file doesn't exist.
-      return;
     } catch (IOException e) {
       System.err.println(e); // print exception if the file doesn't exist.
-      return;
     }
-
+    
     // Set title of scriptfile object
-
     this.title = lines.get(0).substring(1, lines.get(0).length());
 
   }
 
+  
+  
   public String getFileName() {
     return this.fileName;
   }
@@ -106,6 +110,7 @@ public class ScriptFile implements Comparable<ScriptFile> {
 
   }
 
+  @Override
   public String toString() {
     return this.fileName.substring(this.fileName.lastIndexOf('/') + 1,
         this.fileName.length()) + ": " + this.title;

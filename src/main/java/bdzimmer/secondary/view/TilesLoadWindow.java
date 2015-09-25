@@ -24,8 +24,8 @@ public class TilesLoadWindow extends WorldObjectWindow {
 
   private static final long serialVersionUID = 1L;
 
-  public TilesLoadWindow(String inputDir) {
-    super(inputDir, "Load Tiles");
+  public TilesLoadWindow(Main main, String inputDir) {
+    super(main, inputDir, "Load Tiles");
   }
 
   @Override
@@ -58,7 +58,6 @@ public class TilesLoadWindow extends WorldObjectWindow {
         result.add(new TilesIcon(curTileFilename, name));
 
       }
-
     }
 
     return result;
@@ -91,7 +90,7 @@ public class TilesLoadWindow extends WorldObjectWindow {
 
       loader.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent event) {
-          Main.createLinkedTileAndMapWindows(tilesFile, null);
+          main.createLinkedTileAndMapWindows(tilesFile, null);
         }
       });
 

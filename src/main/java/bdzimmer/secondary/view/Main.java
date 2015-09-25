@@ -70,11 +70,14 @@ package bdzimmer.secondary.view;
 
 import bdzimmer.secondary.model.TileOptionsNew;
 import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.model.ContentStructure;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -87,8 +90,8 @@ import javax.swing.JMenuItem;
 public class Main extends JFrame {
 
   private static final long serialVersionUID = 1L;
-
-  public static String DATA_PATH = "path to content"; // TODO: fix
+  
+  public final String contentDir;
 
   // private MapWindow mapWindow;
 
@@ -98,7 +101,7 @@ public class Main extends JFrame {
 
   public static int[][] currentTileBitmap;
   public static int currentTile;
-  public static int currentSprite;
+  // public static int currentSprite;
   public static int currentColor; // for now
 
   public static int[][] globalPalette = new int[256][3];
@@ -106,9 +109,14 @@ public class Main extends JFrame {
   /**
    * Create a new Main window.
    * 
-   * @param title Title of the Main window
+   * @param contentDir  Content directory
+   * @param title       Title of the Main window
    */
-  public Main(String title) {
+  public Main(String contentDir, String title) {
+    
+    System.out.println("content directory: " + contentDir);
+    
+    this.contentDir = contentDir;
 
     Main.paletteWindow = new PaletteWindow(Main.globalPalette);
     Main.paletteWindow.setLocationRelativeTo(null);
@@ -136,13 +144,11 @@ public class Main extends JFrame {
     JButton addTileMapWindow = new JButton("Add Tileset / Map Windows");
     addTileMapWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-
         createLinkedTileAndMapWindows(null, null);
-
       }
     });
     this.add(addTileMapWindow);
-
+    
     JButton addSpriteWindow = new JButton("Add Sprite Window");
     addSpriteWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
@@ -151,7 +157,9 @@ public class Main extends JFrame {
 
         Tiles spriteTiles = new Tiles(TileOptionsNew.get("NPC"));
 
-        TilesEditorWindow spriteWindow = new TilesEditorWindow(spriteTiles, "Sprites",
+        TilesEditorWindow spriteWindow = new TilesEditorWindow(
+            Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
+            spriteTiles, "Sprites",
             null, Main.paletteWindow);
         spriteWindow.dosGraphics.setRgbPalette(globalPalette);
 
@@ -164,7 +172,7 @@ public class Main extends JFrame {
     JButton addWorldWindow = new JButton("Load Script Files");
     addWorldWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new ScriptFileWindow("").setLocationRelativeTo(null);
+        new ScriptFileWindow(Main.this, "").setLocationRelativeTo(null);
       }
     });
     this.add(addWorldWindow);
@@ -172,7 +180,7 @@ public class Main extends JFrame {
     JButton addTilesetListWindow = new JButton("Load Map Tiles");
     addTilesetListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new TilesLoadWindow(Main.DATA_PATH + "/tile/")
+        new TilesLoadWindow(Main.this, Main.this.contentDir + File.separator + "tile")
             .setLocationRelativeTo(null);
       }
     });
@@ -181,7 +189,7 @@ public class Main extends JFrame {
     JButton addMapListWindow = new JButton("Load Maps");
     addMapListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new MapLoadWindow(Main.DATA_PATH + "/map/").setLocationRelativeTo(null);
+        new MapLoadWindow(Main.this, Main.this.contentDir + File.separator + ContentStructure.MapDir()).setLocationRelativeTo(null);
       }
     });
     this.add(addMapListWindow);
@@ -197,15 +205,18 @@ public class Main extends JFrame {
    * @param tileFileName  name of tiles file
    * @param mapFileName   name of map file
    */
-  public static void createLinkedTileAndMapWindows(String tileFileName,
-      String mapFileName) {
+  public void createLinkedTileAndMapWindows(String tileFileName, String mapFileName) {
 
     // Tiles t = new Tiles(TileOptions.TILES);
     Tiles tiles = new Tiles(TileOptionsNew.get("Tiles"));
 
-    TilesEditorWindow tileWindow = new TilesEditorWindow(tiles, "Tileset",
+    TilesEditorWindow tileWindow = new TilesEditorWindow(
+        Main.this.contentDir + File.separator + ContentStructure.TileDir(),
+        tiles, "Tileset",
         tileFileName, Main.paletteWindow);
-    new MapEditorWindow("Map", mapFileName, tileWindow.getTileSet(),
+    new MapEditorWindow(
+        contentDir + File.separator + ContentStructure.MapDir(),
+        "Map", mapFileName, tileWindow.getTileSet(),
         Main.globalPalette);
     tileWindow.toFront();
 
@@ -219,7 +230,7 @@ public class Main extends JFrame {
   public static void main(String[] args) {
     // MetalLookAndFeel.setCurrentTheme(new DefaultMetalTheme());
 
-    new Main("Pixel World Editor");
+    new Main(System.getProperty("user.dir"), "Secondary Editor");
   }
 
 }

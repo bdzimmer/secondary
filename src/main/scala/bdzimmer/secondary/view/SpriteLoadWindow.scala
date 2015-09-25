@@ -21,7 +21,7 @@ import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptionsNew, Ti
 import javax.swing.{ImageIcon, JButton}
 
 
-class SpriteLoadWindow(inputDir: String) extends WorldObjectWindow(inputDir, "Load Sprites") {
+class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(main, inputDir, "Load Sprites") {
 
   val serialVersionUID: Long = 1L
 
@@ -32,6 +32,7 @@ class SpriteLoadWindow(inputDir: String) extends WorldObjectWindow(inputDir, "Lo
     // load a list from the sprite directory describing the collection
     // of spritesheets and their various types and descriptions
 
+    // TODO: this is incorrect and obsolete
     val lines = scala.io.Source.fromFile(inputDir + spritesheetList).getLines
 
     val filesAndDescriptions = lines.map(x => {

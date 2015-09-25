@@ -7,6 +7,7 @@ import bdzimmer.secondary.model.DosGraphics;
 import bdzimmer.secondary.model.Map;
 import bdzimmer.secondary.model.TileOptionsNew;
 import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.model.ContentStructure;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -23,8 +24,8 @@ public class MapLoadWindow extends WorldObjectWindow {
 
   private static final long serialVersionUID = 1L;
 
-  public MapLoadWindow(String inputDir) {
-    super(inputDir, "Load Maps");
+  public MapLoadWindow(Main main, String inputDir) {
+    super(main, inputDir, "Load Maps");
   }
 
   @Override
@@ -40,24 +41,28 @@ public class MapLoadWindow extends WorldObjectWindow {
   }
 
   class MapIcon extends WorldObject {
+  
     private static final long serialVersionUID = 1L;
-
-    private String mapFile;
-    private String tilesFile;
-    private String description;
-    private BufferedImage mapImage;
+  
+    private final String mapFile;
+    private final String tilesFile;
+    private final String description;
+    private final BufferedImage mapImage;
 
     public MapIcon(String mapFileName, int width, int height) {
 
       this.mapFile = mapFileName;
-
 
       Map curMap = new Map();
       curMap.load(new File(mapFileName));
       this.description = curMap.mapDesc;
 
       Tiles mapTiles = new Tiles(TileOptionsNew.get("Tiles"));
-      this.tilesFile = Main.DATA_PATH + "tile/" + curMap.tileFileName + ".til";
+      
+      this.tilesFile = main.contentDir + File.separator
+          + ContentStructure.TileDir() + File.separator
+          + curMap.tileFileName + ".til";
+      
       DosGraphics dg = new DosGraphics();
       mapTiles.load(new File(this.tilesFile), dg);
       this.mapImage = curMap.getMapImage(mapTiles, dg);
@@ -79,7 +84,7 @@ public class MapLoadWindow extends WorldObjectWindow {
 
       loader.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent event) {
-          Main.createLinkedTileAndMapWindows(tilesFile, mapFile);
+          MapLoadWindow.this.main.createLinkedTileAndMapWindows(tilesFile, mapFile);
         }
 
       });

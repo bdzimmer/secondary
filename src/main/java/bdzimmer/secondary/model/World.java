@@ -8,10 +8,15 @@ public class World {
 
   private ArrayList<ScriptFile> scriptFiles = new ArrayList<ScriptFile>();
 
+  private final String contentDir;
+  
   /**
    * Create a new World object.
    */
-  public World() {
+  public World(String contentDir) {
+    
+    this.contentDir = contentDir;
+    
     this.addScriptFile("start.spt");
 
     // Collections.sort(this.scriptFiles);
@@ -24,7 +29,7 @@ public class World {
 
   // recursive sub to populate list of scripts
   ScriptFile addScriptFile(String filename) {
-    ScriptFile curScriptFile = new ScriptFile(filename);
+    ScriptFile curScriptFile = new ScriptFile(contentDir, filename);
 
     // if we haven't already done this
     if (!this.scriptFiles.contains(curScriptFile)) {

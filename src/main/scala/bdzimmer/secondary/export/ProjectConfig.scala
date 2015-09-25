@@ -37,6 +37,7 @@ class ProjectConfig(
   val driveAccessTokenFile: String,
   val driveInputPath: String,
   val driveOutputPath: String,
+  val mappedContentPath: String,
   val masterName: String,
   val mainCollectionNames: String,
   val license: String) {
@@ -52,6 +53,13 @@ class ProjectConfig(
   val localExportPathFile = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
 
+  // TODO: this is awkward
+  val mappedContentPathActual = if (mappedContentPath.equals("")) {
+    localContentPath
+  } else {
+    mappedContentPath
+  }
+
 }
 
 
@@ -63,15 +71,18 @@ object ProjectConfig {
 
   val driveInputPath = ConfigField("driveInputPath", "secondary/content", "Drive input path")
   val driveOutputPath = ConfigField("driveOutputPath", "secondary/web", "Drive output path")
+  val mappedContentPath = ConfigField("mappedContentPath", "", "Mapped content path")
   val masterName = ConfigField("masterName", "master", "Master name")
   val mainCollectionNames = ConfigField("mainCollectionNames", "characters,locations,lore,images,tilesets,sprites", "Main collection names")
   val license = ConfigField("license", "", "License text")
+
 
   val requiredProperties =  List(
       driveClientIdFile,
       driveAccessTokenFile,
       driveInputPath,
       driveOutputPath,
+      mappedContentPath,
       masterName,
       mainCollectionNames,
       license)
@@ -106,6 +117,7 @@ object ProjectConfig {
         driveAccessTokenFile = getProp(ProjectConfig.driveAccessTokenFile),
         driveInputPath = getProp(ProjectConfig.driveInputPath),
         driveOutputPath = getProp(ProjectConfig.driveOutputPath),
+        mappedContentPath = getProp(ProjectConfig.mappedContentPath),
         masterName = getProp(ProjectConfig.masterName),
         mainCollectionNames = getProp(ProjectConfig.mainCollectionNames),
         license = getProp(ProjectConfig.license))

@@ -28,6 +28,8 @@ import javax.swing.JPanel;
 public class TilesEditorWindow extends JFrame {
   
   private static final long serialVersionUID = 0; // Meaningless junk.
+  
+  private final String tilesDir;
 
   private Tiles tileSet;
   public String tileFileName = "";
@@ -46,14 +48,21 @@ public class TilesEditorWindow extends JFrame {
   /**
    * Create a TilesEditorWindow.
    * 
+   * @param contentDir          main content directory
    * @param tiles               tile set to edit in the window
    * @param title               title for window
    * @param fileName            file name of tiles (for save menu option)
    * @param paletteWindow       palette window to edit 
    */
-  public TilesEditorWindow(Tiles tiles, String title, String fileName,
+  public TilesEditorWindow(
+      String tilesDir,
+      Tiles tiles,
+      String title,
+      String fileName,
       PaletteWindow paletteWindow) { // constructor
 
+    this.tilesDir = tilesDir;
+    
     this.tileSet = tiles;
 
     setTitle(title);
@@ -312,13 +321,9 @@ public class TilesEditorWindow extends JFrame {
   public void chooseLoadTileset() {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.OPEN_DIALOG);
-    jfc.setCurrentDirectory(new File("path to content"));     // TODO: fix
-    if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) { // call up
-                                                                   // the dialog
-                                                                   // and
-                                                                   // examine
-                                                                   // what it
-                                                                   // returns.
+    jfc.setCurrentDirectory(new File(tilesDir));     
+    if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) { 
+      
       File tilesFile = jfc.getSelectedFile();
       try {
         this.tileSet.load(tilesFile, this.dosGraphics);
@@ -340,13 +345,9 @@ public class TilesEditorWindow extends JFrame {
   public void chooseSaveTileset() {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.SAVE_DIALOG);
-    jfc.setCurrentDirectory(new File("path to content"));
-    if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) { // call up
-                                                                   // the dialog
-                                                                   // and
-                                                                   // examine
-                                                                   // what it
-                                                                   // returns.
+    jfc.setCurrentDirectory(new File(tilesDir));
+    if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) { 
+      
       File tilesFile = jfc.getSelectedFile();
       try {
         this.tileSet.save(tilesFile, this.dosGraphics); // getSelectedFile returns
@@ -371,6 +372,7 @@ public class TilesEditorWindow extends JFrame {
   /**
    * Draw the component.
    */
+  @Override
   public void paint(Graphics graphics) {
     super.paint(graphics);
 
