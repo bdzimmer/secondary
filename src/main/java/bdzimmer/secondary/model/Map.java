@@ -5,8 +5,6 @@
 package bdzimmer.secondary.model;
 
 import java.awt.image.BufferedImage;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,9 +29,8 @@ public class Map {
   public int pmlr;
 
   
-  // no-arg constructor - blank map
   public Map() {
-    
+    // no-arg constructor - blank map
   }
   
 
@@ -58,12 +55,12 @@ public class Map {
 
     // open file for input
     try {
-      DataInputStream mapIn = new DataInputStream(new FileInputStream(mapFile));
+      QbInputStream mapIn = new QbInputStream(new FileInputStream(mapFile));
       // read description
       int[] mapDescB = new int[30];
       char[] mapDesc = new char[30];
       for (int i = 0; i < 30; i++) {
-        mapDescB[i] = 0x000000FF & (int)mapIn.readByte();
+        mapDescB[i] = mapIn.readQbUnsignedByte();
         mapDesc[i] = (char) mapDescB[i];
         // System.out.println(mapDesc[i]);
       }
@@ -72,27 +69,23 @@ public class Map {
       int[] tileFileNameB = new int[8];
       char[] tileFileName = new char[8];
       for (int i = 0; i < 8; i++) {
-        tileFileNameB[i] = 0x000000FF & (int)mapIn.readByte();
+        tileFileNameB[i] = mapIn.readQbUnsignedByte();
         tileFileName[i] = (char) tileFileNameB[i];
       }
       this.tileFileName = new String(tileFileName).trim();
 
-      this.mud = (0x000000FF & (int) mapIn.readByte());
-      mapIn.readByte();
-      this.mlr = (0x000000FF & (int) mapIn.readByte());
-      mapIn.readByte();
+      this.mud = mapIn.readQbUnsignedShortLow();
+      this.mlr = mapIn.readQbUnsignedShortLow();
 
       // map data
       for (int i = 0; i <= mud; i++) {
         for (int j = 0; j <= mlr; j++) {
-          this.map[i][j] = 0x000000FF & (int)mapIn.readByte();
-          mapIn.readByte();
+          this.map[i][j] = mapIn.readQbUnsignedShortLow();
         }
       }
       for (int i = 0; i <= mud; i++) {
         for (int j = 0; j <= mlr; j++) {
-          this.overMap[i][j] = 0x000000FF & (int)mapIn.readByte();
-          mapIn.readByte();
+          this.overMap[i][j] = mapIn.readQbUnsignedShortLow();
         }
       }
 
@@ -102,14 +95,11 @@ public class Map {
         this.pmud = mapIn.readByte();
 
         if (this.pmud > -1) { // load parallax layer
-          this.pmud = 0x000000FF & (int)this.pmud;
-          mapIn.readByte();
-          this.pmlr = 0x000000FF & (int)mapIn.readByte();
-          mapIn.readByte();
+          this.pmud = mapIn.readQbUnsignedShortLow();
+          this.pmlr = mapIn.readQbUnsignedShortLow();
           for (int i = 0; i <= pmud; i++) {
             for (int j = 0; j <= pmlr; j++) {
-              this.paraMap[i][j] = 0x000000FF & (int)mapIn.readByte();
-              mapIn.readByte();
+              this.paraMap[i][j] = mapIn.readQbUnsignedShortLow();
             }
           }
           this.hasParallax = true;
@@ -143,10 +133,10 @@ public class Map {
    * @param mapFile File to save
    */
   public void save(File mapFile) {
+    
     // open file for input
     try {
-      DataOutputStream mapOut = new DataOutputStream(new FileOutputStream(
-          mapFile));
+      QbOutputStream mapOut = new QbOutputStream(new FileOutputStream(mapFile));
       // System.out.println("Opened output stream.");
       // read description
       int[] mapDescB = new int[30];
@@ -157,7 +147,7 @@ public class Map {
         } else {
           mapDescB[i] = (int) ' ';
         }
-        mapOut.writeByte(mapDescB[i] & 0xFF);
+        mapOut.writeQbUnsignedByte(mapDescB[i]);
       }
       // write tileset name
       int[] tileFileNameB = new int[8];
@@ -168,7 +158,7 @@ public class Map {
         } else {
           tileFileNameB[i] = (int) ' ';
         }
-        mapOut.writeByte(tileFileNameB[i] & 0xFF);
+        mapOut.writeQbUnsignedByte(tileFileNameB[i]);
 
       }
 
@@ -190,22 +180,18 @@ public class Map {
 
       System.out.println("Map size: " + mud + " " + mlr);
 
-      mapOut.writeByte(this.mud & 0xFF);
-      mapOut.writeByte(0);
-      mapOut.writeByte(this.mlr & 0xFF);
-      mapOut.writeByte(0);
+      mapOut.writeQbUnsignedShortLow(this.mud);
+      mapOut.writeQbUnsignedShortLow(this.mlr);
 
       // map data
       for (int i = 0; i <= mud; i++) {
         for (int j = 0; j <= mlr; j++) {
-          mapOut.writeByte(this.map[i][j] & 0xFF);
-          mapOut.writeByte(0);
+          mapOut.writeQbUnsignedShortLow(this.map[i][j]);
         }
       }
       for (int i = 0; i <= mud; i++) {
         for (int j = 0; j <= mlr; j++) {
-          mapOut.writeByte(this.overMap[i][j] & 0xFF);
-          mapOut.writeByte(0);
+          mapOut.writeQbUnsignedShortLow(this.overMap[i][j]);
         }
       }
 
@@ -230,16 +216,13 @@ public class Map {
 
         System.out.println("Parallax map size: " + pmud + " " + pmlr);
 
-        mapOut.writeByte(this.pmud & 0xFF);
-        mapOut.writeByte(0);
-        mapOut.writeByte(this.pmlr & 0xFF);
-        mapOut.writeByte(0);
+        mapOut.writeQbUnsignedShortLow(this.pmud);
+        mapOut.writeQbUnsignedShortLow(this.pmlr);
 
         // map data
         for (int i = 0; i <= pmud; i++) {
           for (int j = 0; j <= pmlr; j++) {
-            mapOut.writeByte(this.paraMap[i][j] & 0xFF);
-            mapOut.writeByte(0);
+            mapOut.writeQbUnsignedShortLow(this.paraMap[i][j]);
           }
         }
 

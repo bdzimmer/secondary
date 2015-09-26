@@ -2,6 +2,8 @@
 
 package bdzimmer.secondary.model;
 
+import bdzimmer.secondary.model.ContentStructure;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +14,6 @@ import java.util.ArrayList;
 
 public class ScriptFile implements Comparable<ScriptFile> {
 
-  private final String contentDir;
   private final String fileName;
   private final String title;
   
@@ -23,17 +24,19 @@ public class ScriptFile implements Comparable<ScriptFile> {
   /**
    * Create a new ScriptFile object.
    * 
+   * @param contentDir  main content directory
    * @param fileName    name of file to load
    */
   public ScriptFile(String contentDir, String fileName) {
 
-    this.contentDir = contentDir;
     this.fileName = fileName;
     
-    File inputFile = new File(this.contentDir + File.separator + "script" + File.separator + this.fileName);
+    File inputFile = new File(
+        contentDir + File.separator
+        + ContentStructure.ScriptDir() + File.separator
+        + this.fileName);
 
-    
-    // Read in file
+    // Read file
     try {
 
       BufferedReader scriptIn = new BufferedReader(new FileReader(inputFile));
@@ -45,12 +48,12 @@ public class ScriptFile implements Comparable<ScriptFile> {
         String tempLine = curLine.trim();
         String[] curWords = tempLine.split("\\s+");
 
-        if (curWords[0].toLowerCase().equals("mapfile")
+        if (curWords[0].equalsIgnoreCase("mapfile")
             && !this.maps.contains(curWords[2])) {
           this.maps.add(curWords[2]);
         }
 
-        if (curWords[0].toLowerCase().equals("scriptfile")) {
+        if (curWords[0].equalsIgnoreCase("scriptfile")) {
           this.links.add(curWords[2] + ".spt");
         }
 
@@ -59,9 +62,9 @@ public class ScriptFile implements Comparable<ScriptFile> {
       scriptIn.close();
 
     } catch (FileNotFoundException e) {
-      System.err.println(e); // print exception if the file doesn't exist.
+      System.err.println(e);
     } catch (IOException e) {
-      System.err.println(e); // print exception if the file doesn't exist.
+      System.err.println(e);
     }
     
     // Set title of scriptfile object
@@ -69,8 +72,6 @@ public class ScriptFile implements Comparable<ScriptFile> {
 
   }
 
-  
-  
   public String getFileName() {
     return this.fileName;
   }
@@ -97,21 +98,19 @@ public class ScriptFile implements Comparable<ScriptFile> {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj.getClass() != this.getClass()) {
+  public boolean equals(Object obj) {  
+    if ((obj.getClass() == getClass()) && (compareTo((ScriptFile)obj) == 0)) {
+      return true;
+    } else {
       return false;
     }
-    if (this.compareTo((ScriptFile) obj) != 0) {
-      return false;
-    }
-    return true;
-
   }
 
   @Override
   public String toString() {
-    return this.fileName.substring(this.fileName.lastIndexOf('/') + 1,
-        this.fileName.length()) + ": " + this.title;
+    return fileName.substring(
+        fileName.lastIndexOf(File.separator) + 1,
+        fileName.length()) + ": " + this.title;
   }
 
 }

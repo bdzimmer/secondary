@@ -2,13 +2,13 @@
 
 package bdzimmer.secondary.view;
 
+import bdzimmer.secondary.model.ContentStructure;
 import bdzimmer.secondary.model.DosGraphics;
 import bdzimmer.secondary.model.Map;
 import bdzimmer.secondary.model.ScriptFile;
 import bdzimmer.secondary.model.TileOptionsNew;
 import bdzimmer.secondary.model.Tiles;
 import bdzimmer.secondary.model.World;
-import bdzimmer.secondary.model.ContentStructure;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

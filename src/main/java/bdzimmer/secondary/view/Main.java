@@ -187,7 +187,10 @@ public class Main extends JFrame {
     JButton addMapListWindow = new JButton("Load Maps");
     addMapListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new MapLoadWindow(Main.this, Main.this.contentDir + File.separator + ContentStructure.MapDir()).setLocationRelativeTo(null);
+        new MapLoadWindow(
+            Main.this,
+            Main.this.contentDir + File.separator
+            + ContentStructure.MapDir()).setLocationRelativeTo(null);
       }
     });
     this.add(addMapListWindow);

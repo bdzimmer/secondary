@@ -14,5 +14,6 @@ object ContentStructure {
   val TileDir = "tile"
   val MapDir = "map"
   val SpriteDir = "sprite"
+  val ScriptDir = "script"
 
 }

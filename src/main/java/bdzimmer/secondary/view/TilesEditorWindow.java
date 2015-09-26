@@ -47,7 +47,7 @@ public class TilesEditorWindow extends JFrame {
   /**
    * Create a TilesEditorWindow.
    * 
-   * @param contentDir          main content directory
+   * @param tilesDir            tiles directory
    * @param tiles               tile set to edit in the window
    * @param title               title for window
    * @param fileName            file name of tiles (for save menu option)

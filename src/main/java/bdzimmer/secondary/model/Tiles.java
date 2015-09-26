@@ -5,8 +5,6 @@
 package bdzimmer.secondary.model;
 
 import java.awt.image.BufferedImage;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,7 +34,7 @@ public class Tiles {
    * 
    * @param ta                    tile attributes to use
    * @param tilesFile             file to load           
-   * @param graphicsForPalette    DosGraphics instance to load the palette into.
+   * @param rgbPalette            DosGraphics instance to load the palette into.
    */
   public Tiles(TileAttributes ta, File tilesFile, int[][] rgbPalette) {
     
@@ -44,14 +42,14 @@ public class Tiles {
     
     // open file for input
     try {
-      DataInputStream graphicsIn = new DataInputStream(
+      QbInputStream graphicsIn = new QbInputStream(
           new FileInputStream(tilesFile));
 
       // System.out.println("Loading pixel data");
 
       int numThings = this.attrs.count;
 
-      // Un-remark this to load small member files into a large member file.
+      // load small member files into a large member file.
       // if (nTiles == 128) {
       // nThings = 64;
       // }
@@ -59,40 +57,21 @@ public class Tiles {
       for (int i = 0; i < numThings; i++) {
         for (int j = 0; j < this.attrs.height; j++) {
           for (int k = 0; k < this.attrs.width; k++) {
-            this.tiles[i][j][k] = (0x000000FF & (int) graphicsIn.readByte());
+            this.tiles[i][j][k] = graphicsIn.readQbUnsignedByte();
           }
         }
-
       }
 
       for (int i = this.attrs.palStart; i <= this.attrs.palEnd; i++) {
-
-        final int r = (0x000000FF & (int) graphicsIn.readByte());
-        graphicsIn.readByte();
-        final int g = (0x000000FF & (int) graphicsIn.readByte());
-        graphicsIn.readByte();
-        final int b = (0x000000FF & (int) graphicsIn.readByte());
-        graphicsIn.readByte();
-
-        // System.out.println("r: "+r+" g: "+g+" b: "+ b);
-        // graphicsForPalette.getPalette()[i] = 255 << 24 | (r * 4) << 16
-        //     | (g * 4) << 8 | (b * 4);
-        rgbPalette[i][0] = r;
-        rgbPalette[i][1] = g;
-        rgbPalette[i][2] = b;
-
+        rgbPalette[i][0] = graphicsIn.readQbUnsignedShortLow(); // red
+        rgbPalette[i][1] = graphicsIn.readQbUnsignedShortLow(); // green
+        rgbPalette[i][2] = graphicsIn.readQbUnsignedShortLow(); // blue
       }
+      
       // read in tile properties.
-
       if (this.attrs.tileProperties) {
-        // System.out.println("Loading tile properties");
         for (int i = 0; i < this.attrs.count; i++) {
-          // this.tileProps[i] = (int)graphicsIn.readShort(); // I think
-          this.tileProps[i] = (0x000000FF & (int) graphicsIn.readByte()); // I
-                                                                          // think
-          graphicsIn.readByte();
-
-          // System.out.println(tileProps[i]);
+          this.tileProps[i] = graphicsIn.readQbUnsignedShortLow();
         }
       }
 
@@ -119,36 +98,31 @@ public class Tiles {
     // open file for output
     try {
 
-      System.out.println("Saving pixel data");
+      // System.out.println("Saving pixel data");
 
-      DataOutputStream graphicsOut = new DataOutputStream(new FileOutputStream(
+      QbOutputStream graphicsOut = new QbOutputStream(new FileOutputStream(
           tilesFile));
 
       // Write out data.
       for (int i = 0; i < this.attrs.count; i++) {
         for (int j = 0; j < this.attrs.height; j++) {
           for (int k = 0; k < this.attrs.width; k++) {
-            graphicsOut.writeByte(this.tiles[i][j][k] & 0xFF);
+            graphicsOut.writeQbUnsignedByte(this.tiles[i][j][k]);
           }
         }
-
       }
 
       for (int i = this.attrs.palStart; i <= this.attrs.palEnd; i++) {
-        graphicsOut.writeByte(graphicsForPalette.getRgbPalette()[i][0] & 0xFF);
-        graphicsOut.writeByte(0);
-        graphicsOut.writeByte(graphicsForPalette.getRgbPalette()[i][1] & 0xFF);
-        graphicsOut.writeByte(0);
-        graphicsOut.writeByte(graphicsForPalette.getRgbPalette()[i][2] & 0xFF);
-        graphicsOut.writeByte(0);
+        graphicsOut.writeQbUnsignedShortLow(graphicsForPalette.getRgbPalette()[i][0]);
+        graphicsOut.writeQbUnsignedShortLow(graphicsForPalette.getRgbPalette()[i][1]);
+        graphicsOut.writeQbUnsignedShortLow(graphicsForPalette.getRgbPalette()[i][2]);
       }
 
       // tile properties
       if (this.attrs.tileProperties) {
-        System.out.println("Saving tile properties");
+        // System.out.println("Saving tile properties");
         for (int i = 0; i < this.attrs.count; i++) {
-          graphicsOut.writeByte(this.tileProps[i] & 0xFF); // I think
-          graphicsOut.writeByte(0);
+          graphicsOut.writeQbUnsignedShortLow(this.tileProps[i]);
         }
       }
 
