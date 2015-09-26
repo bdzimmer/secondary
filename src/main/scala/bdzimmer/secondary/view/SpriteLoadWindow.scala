@@ -62,8 +62,9 @@ class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(m
 
     val dg = new DosGraphics
 
-    val spriteSheet = new Tiles(attrs)
-    spriteSheet.load(new File(spriteFileName), dg)
+    val spriteSheet = new Tiles(
+        attrs, new File(spriteFileName), dg.getRgbPalette)
+    dg.updateClut()
 
     val spriteSheetImage = spriteSheet.getTilesImage(spriteSheet.attrs.count / 16, 16, dg.getPalette)
 

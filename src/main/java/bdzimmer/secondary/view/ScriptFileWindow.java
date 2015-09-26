@@ -69,19 +69,20 @@ public class ScriptFileWindow extends WorldObjectWindow {
       for (String curMapName : scriptFile.getMaps()) {
 
         DosGraphics dosGraphics = new DosGraphics();
-        Map curMap = new Map();
         
-        curMap.load(new File(
+        Map curMap = new Map(new File(
             main.contentDir + File.separator 
             + ContentStructure.MapDir() + File.separator 
             + curMapName + ".map"));
         
-        Tiles curTiles = new Tiles(TileOptionsNew.get("Tiles"));
+        Tiles curTiles = new Tiles(    
+            TileOptionsNew.get("Tiles"),
+            new File(
+              main.contentDir + File.separator
+              + ContentStructure.TileDir() + File.separator
+              + curMap.tileFileName + ".til"), dosGraphics.getRgbPalette());
         
-        curTiles.load(new File(
-            main.contentDir + File.separator
-            + ContentStructure.TileDir() + File.separator
-            + curMap.tileFileName + ".til"), dosGraphics);
+        dosGraphics.updateClut();
         
         this.mapImages.add(curMap.getMapImage(curTiles, dosGraphics));
 

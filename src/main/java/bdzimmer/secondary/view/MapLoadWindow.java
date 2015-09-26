@@ -53,18 +53,19 @@ public class MapLoadWindow extends WorldObjectWindow {
 
       this.mapFile = mapFileName;
 
-      Map curMap = new Map();
-      curMap.load(new File(mapFileName));
+      Map curMap = new Map(new File(mapFileName));
       this.description = curMap.mapDesc;
-
-      Tiles mapTiles = new Tiles(TileOptionsNew.get("Tiles"));
       
       this.tilesFile = main.contentDir + File.separator
           + ContentStructure.TileDir() + File.separator
           + curMap.tileFileName + ".til";
       
       DosGraphics dg = new DosGraphics();
-      mapTiles.load(new File(this.tilesFile), dg);
+      
+      Tiles mapTiles = new Tiles(
+          TileOptionsNew.get("Tiles"),
+          new File(this.tilesFile), dg.getRgbPalette());
+      dg.updateClut();
       this.mapImage = curMap.getMapImage(mapTiles, dg);
 
       this.width = width;

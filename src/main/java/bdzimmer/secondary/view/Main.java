@@ -68,9 +68,10 @@
 
 package bdzimmer.secondary.view;
 
+import bdzimmer.secondary.model.ContentStructure;
+import bdzimmer.secondary.model.Map;
 import bdzimmer.secondary.model.TileOptionsNew;
 import bdzimmer.secondary.model.Tiles;
-import bdzimmer.secondary.model.ContentStructure;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -91,20 +92,19 @@ public class Main extends JFrame {
 
   private static final long serialVersionUID = 1L;
   
+  public static final int[][] globalPalette = new int[256][3];
+  public static final PaletteWindow paletteWindow = new PaletteWindow(globalPalette);
+  
   public final String contentDir;
-
-  // private MapWindow mapWindow;
 
   private JMenuItem jmExit;
   private JMenuBar mainMenu;
-  public static PaletteWindow paletteWindow;
-
+  
   public static int[][] currentTileBitmap;
   public static int currentTile;
-  // public static int currentSprite;
   public static int currentColor; // for now
 
-  public static int[][] globalPalette = new int[256][3];
+  
 
   /**
    * Create a new Main window.
@@ -117,8 +117,7 @@ public class Main extends JFrame {
     System.out.println("content directory: " + contentDir);
     
     this.contentDir = contentDir;
-
-    Main.paletteWindow = new PaletteWindow(Main.globalPalette);
+ 
     Main.paletteWindow.setLocationRelativeTo(null);
 
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -160,7 +159,7 @@ public class Main extends JFrame {
         TilesEditorWindow spriteWindow = new TilesEditorWindow(
             Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
             spriteTiles, "Sprites",
-            null, Main.paletteWindow);
+            "", Main.paletteWindow);
         spriteWindow.dosGraphics.setRgbPalette(globalPalette);
 
         spriteWindow.setLocationRelativeTo(null);
@@ -207,16 +206,27 @@ public class Main extends JFrame {
    */
   public void createLinkedTileAndMapWindows(String tileFileName, String mapFileName) {
 
+    // these names seem to be absolute paths.
+    
     // Tiles t = new Tiles(TileOptions.TILES);
-    Tiles tiles = new Tiles(TileOptionsNew.get("Tiles"));
-
+    Tiles tiles = new Tiles(
+        TileOptionsNew.get("Tiles"),
+        new File(tileFileName),
+        Main.globalPalette);
+    
+    Map map = new Map(new File(mapFileName));
+    
     TilesEditorWindow tileWindow = new TilesEditorWindow(
         Main.this.contentDir + File.separator + ContentStructure.TileDir(),
         tiles, "Tileset",
         tileFileName, Main.paletteWindow);
+    
     new MapEditorWindow(
         contentDir + File.separator + ContentStructure.MapDir(),
-        "Map", mapFileName, tileWindow.getTileSet(),
+        map,
+        "Map",
+        mapFileName,
+        tileWindow.getTileSet(),
         Main.globalPalette);
     tileWindow.toFront();
 

@@ -7,7 +7,6 @@
 
 package bdzimmer.secondary.view;
 
-import bdzimmer.secondary.model.DosGraphics;
 import bdzimmer.secondary.model.Map;
 import bdzimmer.secondary.model.Tiles;
 import bdzimmer.secondary.view.MapViewPanel;
@@ -37,6 +36,7 @@ import javax.swing.JOptionPane;
 
 
 public class MapEditorWindow extends JFrame {
+  
   private static final long serialVersionUID = 0; // Meaningless junk.
   
   private static final int TILE_SIZE = 16;
@@ -46,32 +46,21 @@ public class MapEditorWindow extends JFrame {
 
   private Tiles tileSet;
   private int[][] rgbPalette;
-
-  private MapViewPanel mapViewPanel;
-  public DosGraphics dosGraphics;
-
   private Map map;
-
   public String mapFileName = "";
+  
+  private final JCheckBoxMenuItem jmHasParallax = new JCheckBoxMenuItem("Parallax Layer");
+  private MapViewPanel mapViewPanel;
 
   private int overlayEdit;
-
-  // private int overlayEdit = 0;
   private StatusBar myStatusBar = new StatusBar();
 
-
-  // TODO: resolve the resize / inUpdate problem
-  // private boolean inUpdate = false;
-
-  private JCheckBoxMenuItem jmDispBack;
-  private JCheckBoxMenuItem jmDispOver;
-  private JCheckBoxMenuItem jmDispBounds;
-  private JCheckBoxMenuItem jmHasParallax;
 
   /**
    * Create a new MapEditorWindow.
    * 
-   * @param contentDir    main content directory
+   * @param mapsDir       main content directory
+   * @param map           Map to display
    * @param title         title string
    * @param fileName      file name of map to load
    * @param tileSet       Tiles object to use
@@ -79,27 +68,24 @@ public class MapEditorWindow extends JFrame {
    */
   public MapEditorWindow(
       String mapsDir,
+      Map map,
       String title,
       String fileName,
       Tiles tileSet,
       int[][] rgbPalette) { // constructor
 
     this.mapsDir = mapsDir;
-    
-    
-    this.map = new Map();
-
+    this.map = map;
     setTitle(title);
     this.tileSet = tileSet;
     this.rgbPalette = rgbPalette;
 
     // ///////////// menu stuff ///////////////////////
 
+    final JCheckBoxMenuItem jmDispOver = new JCheckBoxMenuItem("Display Overlay Layer");
+    final JCheckBoxMenuItem jmDispBack = new JCheckBoxMenuItem("Display Background Layer");
+    final JCheckBoxMenuItem jmDispBounds = new JCheckBoxMenuItem("Display Bounds");
     
-    jmDispOver = new JCheckBoxMenuItem("Display Overlay Layer");
-    jmDispBack = new JCheckBoxMenuItem("Display Background Layer");
-    jmDispBounds = new JCheckBoxMenuItem("Display Bounds");
-    jmHasParallax = new JCheckBoxMenuItem("Parallax Layer");
     jmDispOver.setSelected(true);
     jmDispBack.setSelected(true);
     jmDispBounds.setSelected(false);
@@ -150,7 +136,7 @@ public class MapEditorWindow extends JFrame {
 
     jmNew.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-        map.erase();
+        MapEditorWindow.this.map.erase();
         mapViewPanel.vud = 0;
         mapViewPanel.vlr = 0;
         repaint();
@@ -165,7 +151,7 @@ public class MapEditorWindow extends JFrame {
 
     jmSave.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-        map.save(new File(mapFileName));
+        MapEditorWindow.this.map.save(new File(mapFileName));
       }
     });
 
@@ -177,8 +163,8 @@ public class MapEditorWindow extends JFrame {
 
     jmSetTitle.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-        map.mapDesc = JOptionPane.showInputDialog("Enter new title:");
-        map.tileFileName = JOptionPane
+        MapEditorWindow.this.map.mapDesc = JOptionPane.showInputDialog("Enter new title:");
+        MapEditorWindow.this.map.tileFileName = JOptionPane
             .showInputDialog("Enter new tile file name:");
 
       }
@@ -245,8 +231,8 @@ public class MapEditorWindow extends JFrame {
           } else {
             for (int i = mapViewPanel.vud; i < 127; i++) {
               for (int j = 0; j < 128; j++) {
-                map.map[i][j] = map.map[i + 1][j];
-                map.overMap[i][j] = map.overMap[i + 1][j];
+                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i + 1][j];
+                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i + 1][j];
               }
             }
           }
@@ -256,8 +242,8 @@ public class MapEditorWindow extends JFrame {
           } else {
             for (int i = 127; i >= (mapViewPanel.vud + 1); i--) {
               for (int j = 0; j < 128; j++) {
-                map.map[i][j] = map.map[i - 1][j];
-                map.overMap[i][j] = map.overMap[i - 1][j];
+                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i - 1][j];
+                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i - 1][j];
               }
             }
           }
@@ -267,8 +253,8 @@ public class MapEditorWindow extends JFrame {
           } else {
             for (int i = 0; i < 128; i++) {
               for (int j = mapViewPanel.vlr; j < 127; j++) {
-                map.map[i][j] = map.map[i][j + 1];
-                map.overMap[i][j] = map.overMap[i][j + 1];
+                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i][j + 1];
+                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i][j + 1];
               }
             }
           }
@@ -278,8 +264,8 @@ public class MapEditorWindow extends JFrame {
           } else {
             for (int i = 0; i < 128; i++) {
               for (int j = 127; j >= mapViewPanel.vlr + 1; j--) {
-                map.map[i][j] = map.map[i][j - 1];
-                map.overMap[i][j] = map.overMap[i][j - 1];
+                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i][j - 1];
+                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i][j - 1];
               }
             }
           }
@@ -290,11 +276,12 @@ public class MapEditorWindow extends JFrame {
 
       @Override
       public void keyReleased(KeyEvent ae) {
-
+        // do nothing
       }
 
       @Override
       public void keyTyped(KeyEvent ae) {
+        // do nothing
       }
 
     });
@@ -355,17 +342,17 @@ public class MapEditorWindow extends JFrame {
 
       @Override
       public void mouseClicked(MouseEvent arg0) {
-
+        // do nothing
       }
 
       @Override
       public void mouseEntered(MouseEvent arg0) {
-
+         // do nothing
       }
 
       @Override
       public void mouseExited(MouseEvent arg0) {
-
+        // do nothing
       }
 
       @Override
@@ -375,7 +362,7 @@ public class MapEditorWindow extends JFrame {
 
       @Override
       public void mouseReleased(MouseEvent ae) {
-
+        // do nothing
       }
 
     });
@@ -387,23 +374,15 @@ public class MapEditorWindow extends JFrame {
 
     this.addComponentListener(new ComponentAdapter() {
       public void componentResized(ComponentEvent ae) {
-
         System.out.println("component resized!!");
         System.out.println(ae.getComponent());
-
       }
-
     });
 
     // ////////////////////////////////
 
-    // if we passed it a filename, open that mapfile.
-    if (fileName != null) {
-      System.out.println("mapfile: " + fileName);
-      this.mapFileName = fileName;
-      this.map.load(new File(this.mapFileName));
-    }
-
+    this.mapViewPanel.repaint();
+    this.repaint();
     setVisible(true);
 
   }
@@ -468,20 +447,18 @@ public class MapEditorWindow extends JFrame {
       
       File selFile = jfc.getSelectedFile();
       try {
-        map.load(selFile); // getSelectedFile returns the file that was selected
-        this.jmHasParallax.setSelected(map.hasParallax);
-        this.mapFileName = selFile.getAbsolutePath();
-        this.setTitle(this.map.mapDesc + " " + this.map.tileFileName);
+        map = new Map(selFile);
+        jmHasParallax.setSelected(map.hasParallax);
+        mapFileName = selFile.getAbsolutePath();
+        setTitle(map.mapDesc + " " + map.tileFileName);
 
-        System.out.println("Map file name: " + this.mapFileName);
-        this.mapViewPanel.vud = 0;
-        this.mapViewPanel.vlr = 0;
-
-        // TODO: Is there still a problem with repainting after loading?
-        // this.mapViewPanel.drawMap();
-        // this.mapViewPanel.updateGraphics();
-
-        this.mapViewPanel.repaint();
+        System.out.println("Map file name: " + mapFileName);
+        mapViewPanel.setMap(map);
+        mapViewPanel.vud = 0;
+        mapViewPanel.vlr = 0;
+        mapViewPanel.updateGraphics();
+        mapViewPanel.repaint();
+        
       } catch (NullPointerException e) {
         System.err.println(e);
         return;
@@ -527,8 +504,7 @@ public class MapEditorWindow extends JFrame {
 
     this.pack();
     this.repaint();
-    this.dosGraphics.repaint();
-
+  
   }
 
   /*
@@ -549,10 +525,6 @@ public class MapEditorWindow extends JFrame {
 
   public int[] getTileProps() {
     return this.tileSet.getTileProps();
-  }
-
-  public DosGraphics getDosGraphics() {
-    return this.dosGraphics;
   }
 
 }

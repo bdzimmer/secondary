@@ -30,9 +30,8 @@ public class TilesEditorWindow extends JFrame {
   private static final long serialVersionUID = 0; // Meaningless junk.
   
   private final String tilesDir;
-
   private Tiles tileSet;
-  public String tileFileName = "";
+  public String tileFileName;
 
   public DosGraphics dosGraphics;
   private PaletteWindow paletteWindow;
@@ -59,16 +58,17 @@ public class TilesEditorWindow extends JFrame {
       Tiles tiles,
       String title,
       String fileName,
-      PaletteWindow paletteWindow) { // constructor
-
-    this.tilesDir = tilesDir;
+      PaletteWindow paletteWindow) { 
     
+    this.tilesDir = tilesDir;    
     this.tileSet = tiles;
+    this.tileFileName = fileName;
 
     setTitle(title);
-
     this.paletteWindow = paletteWindow;
 
+    ////// UI stuff
+    
     addFocusListener(new FocusAdapter() {
       public void focusGained(FocusEvent event) {
         repaint();
@@ -178,13 +178,6 @@ public class TilesEditorWindow extends JFrame {
 
     pack();
     this.setResizable(false);
-
-    // if we passed it a filename, open that tilefile.
-    if (fileName != null) {
-      this.tileFileName = fileName;
-      this.tileSet.load(new File(this.tileFileName), dosGraphics);
-    }
-
     setVisible(true);
 
   }
@@ -326,11 +319,10 @@ public class TilesEditorWindow extends JFrame {
       
       File tilesFile = jfc.getSelectedFile();
       try {
-        this.tileSet.load(tilesFile, this.dosGraphics);
-        this.tileFileName = tilesFile.getAbsolutePath(); // save the name of the
-                                                     // file that we loaded
-
-        this.paletteWindow.refreshPalette();
+        tileSet = new Tiles(this.tileSet.attrs, tilesFile, this.dosGraphics.getRgbPalette());
+        dosGraphics.updateClut();
+        tileFileName = tilesFile.getAbsolutePath(); 
+        paletteWindow.refreshPalette();
         repaint();
       } catch (NullPointerException e) {
         System.err.println(e);

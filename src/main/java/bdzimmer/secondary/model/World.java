@@ -28,7 +28,7 @@ public class World {
   }
 
   // recursive sub to populate list of scripts
-  ScriptFile addScriptFile(String filename) {
+  private ScriptFile addScriptFile(String filename) {
     ScriptFile curScriptFile = new ScriptFile(contentDir, filename);
 
     // if we haven't already done this

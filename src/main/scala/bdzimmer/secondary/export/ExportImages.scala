@@ -293,9 +293,9 @@ object ExportImages {
                       transparentColor: (Int, Int, Int) = ExportImages.transparentColor): BufferedImage = {
 
     val dg = new DosGraphics()
-
-    val tiles = new Tiles(tileAttributes)
-    tiles.load(new File(inputFile), dg)
+    val tiles = new Tiles(
+        tileAttributes, new File(inputFile), dg.getRgbPalette)
+    dg.updateClut()
 
     val tc: Int =  255 << 24 | transparentColor._1 << 16 |  transparentColor._2 << 8 | transparentColor._3
 
@@ -303,7 +303,6 @@ object ExportImages {
     if ((0 to 255).map(i => dg.getPalette()(i) == tc).contains(true)) {
       throw new Exception("Transparent color collision!")
     }
-
 
     dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
 
@@ -330,11 +329,14 @@ object ExportImages {
 
     val dg = new DosGraphics()
 
-    val map = new Map
-    map.load(new File(inputFile))
+    val map = new Map(new File(inputFile))
 
-    val tiles = new Tiles(TileOptionsNew.get("Tiles"))
-    tiles.load(new File(tilesDir + "/" + map.tileFileName + ".til"), dg)
+    val tiles = new Tiles(
+        TileOptionsNew.get("Tiles"),
+        new File(tilesDir + "/" + map.tileFileName + ".til"),
+        dg.getRgbPalette)
+
+    dg.updateClut()
 
     val image = map.getMapImage(tiles, dg)
 

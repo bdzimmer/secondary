@@ -2,8 +2,6 @@
 
 package bdzimmer.secondary.model;
 
-import bdzimmer.secondary.view.Main;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;

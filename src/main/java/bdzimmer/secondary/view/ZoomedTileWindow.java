@@ -396,7 +396,7 @@ public class ZoomedTileWindow extends JFrame {
     } else if ("Overlay".equals(commandString)) {
       this.overlayTile = tile;
 
-    } else if (commandString.equals("Fill")) {
+    } else if ("Fill".equals(commandString)) {
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
           tile[i][j] = Main.currentColor;

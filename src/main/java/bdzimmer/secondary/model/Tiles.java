@@ -15,10 +15,9 @@ import java.io.IOException;
 
 public class Tiles {
 
-  public int[][][] tiles;
-  public int[] tileProps;
-
-  public TileAttributes attrs;
+  public final int[][][] tiles;
+  public final int[] tileProps;
+  public final TileAttributes attrs;
 
   /**
    * Create a new tile set.
@@ -27,9 +26,7 @@ public class Tiles {
   public Tiles(TileAttributes ta) {
 
     this.attrs = ta;
-
     tiles = new int[ta.count][ta.height][ta.width];
-
     tileProps = new int[ta.count];
 
   }
@@ -37,17 +34,18 @@ public class Tiles {
   /**
    * Load the tile set from a file.
    * 
+   * @param ta                    tile attributes to use
    * @param tilesFile             file to load           
    * @param graphicsForPalette    DosGraphics instance to load the palette into.
    */
-  public void load(File tilesFile, DosGraphics graphicsForPalette) {
-
+  public Tiles(TileAttributes ta, File tilesFile, int[][] rgbPalette) {
+    
+    this(ta);
+    
     // open file for input
     try {
-      DataInputStream graphicsIn = new DataInputStream(new FileInputStream(
-          tilesFile));
-
-      // Read in data.
+      DataInputStream graphicsIn = new DataInputStream(
+          new FileInputStream(tilesFile));
 
       // System.out.println("Loading pixel data");
 
@@ -77,11 +75,11 @@ public class Tiles {
         graphicsIn.readByte();
 
         // System.out.println("r: "+r+" g: "+g+" b: "+ b);
-        graphicsForPalette.getPalette()[i] = 255 << 24 | (r * 4) << 16
-            | (g * 4) << 8 | (b * 4);
-        graphicsForPalette.getRgbPalette()[i][0] = r;
-        graphicsForPalette.getRgbPalette()[i][1] = g;
-        graphicsForPalette.getRgbPalette()[i][2] = b;
+        // graphicsForPalette.getPalette()[i] = 255 << 24 | (r * 4) << 16
+        //     | (g * 4) << 8 | (b * 4);
+        rgbPalette[i][0] = r;
+        rgbPalette[i][1] = g;
+        rgbPalette[i][2] = b;
 
       }
       // read in tile properties.

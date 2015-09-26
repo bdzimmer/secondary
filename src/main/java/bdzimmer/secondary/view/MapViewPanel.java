@@ -53,10 +53,9 @@ public class MapViewPanel extends JPanel {
     this.tileSet = tileSet;
     this.rgbPalette = rgbPalette;
 
-    this.dosGraphics = new DosGraphics(192, 320, this.scale); // this will
-                                                              // change if I add
-                                                              // a zoom factor
+    this.dosGraphics = new DosGraphics(192, 320, this.scale); 
     this.dosGraphics.setRgbPalette(this.rgbPalette);
+    // this.dosGraphics.updateClut();
     this.add(dosGraphics, BorderLayout.SOUTH);
 
   }
@@ -70,8 +69,7 @@ public class MapViewPanel extends JPanel {
 
     this.remove(this.dosGraphics);
     this.dosGraphics = new DosGraphics(this.numVerticalTiles * 16,
-        this.numHorizontalTiles * 16, this.scale); // call normal DosGraphics
-                                                   // constructor
+        this.numHorizontalTiles * 16, this.scale);
 
     this.dosGraphics.setRgbPalette(this.rgbPalette);
     this.add(this.dosGraphics);
@@ -292,6 +290,12 @@ public class MapViewPanel extends JPanel {
 
   // ###--------Getters and setters---------------
 
+  public void setMap(Map map) {
+    this.map = map;
+  }
+  
+  
+  
   public int getScale() {
     return this.scale;
   }

@@ -46,7 +46,7 @@ public class TilesLoadWindow extends WorldObjectWindow {
 
     for (String curLine : tileFilenames) {
 
-      if (!curLine.equals("")) {
+      if (!"".equals(curLine)) {
 
         String[] splitted = curLine.split(", ");
         String curTileFilename = splitted[1];
@@ -76,9 +76,15 @@ public class TilesLoadWindow extends WorldObjectWindow {
       this.tilesFile = tilesFileName;
       this.name = name;
 
-      Tiles tiles = new Tiles(TileOptionsNew.get("Tiles"));
+      
       DosGraphics dosGraphics = new DosGraphics();
-      tiles.load(new File(this.tilesFile), dosGraphics);
+      
+      Tiles tiles = new Tiles(
+          TileOptionsNew.get("Tiles"),
+          new File(this.tilesFile),
+          dosGraphics.getRgbPalette());
+      
+      dosGraphics.updateClut();
 
       this.tilesImage = tiles.getTilesImage(16, 16, dosGraphics.getPalette());
 

@@ -1,5 +1,7 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
+// TODO: refactor.
+
 package bdzimmer.secondary.model;
 
 import java.awt.image.BufferedImage;
@@ -28,42 +30,30 @@ public class Map {
   public int pmud;
   public int pmlr;
 
-  /**
-   * Wipe out the contents of the Map.
-   * 
-   */
-  public void erase() {
-    mapDesc = "";
-    tileFileName = "";
-    for (int i = 0; i < 128; i++) {
-      for (int j = 0; j < 128; j++) {
-        map[i][j] = 0;
-        overMap[i][j] = 0;
-      }
-
-    }
-
+  
+  // no-arg constructor - blank map
+  public Map() {
+    
   }
+  
 
   /**
    * Load the map from a file.
    * 
    * @param mapFile File to load.
    */
-  public void load(File mapFile) {
+  public Map(File mapFile) {
     // erase current map
     for (int i = 0; i < 128; i++) {
       for (int j = 0; j < 128; j++) {
         this.map[i][j] = 0;
         this.overMap[i][j] = 0;
       }
-
     }
     for (int i = 0; i < 24; i++) {
       for (int j = 0; j < 40; j++) {
         this.paraMap[i][j] = 0;
       }
-
     }
 
     // open file for input
@@ -309,4 +299,22 @@ public class Map {
 
   }
 
+  
+  /**
+   * Wipe out the contents of the Map.
+   * 
+   */
+  public void erase() {
+    mapDesc = "";
+    tileFileName = "";
+    for (int i = 0; i < 128; i++) {
+      for (int j = 0; j < 128; j++) {
+        map[i][j] = 0;
+        overMap[i][j] = 0;
+      }
+
+    }
+
+  }
+  
 }
