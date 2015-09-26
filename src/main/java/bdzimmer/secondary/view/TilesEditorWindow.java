@@ -5,7 +5,7 @@
 package bdzimmer.secondary.view;
 
 import bdzimmer.secondary.model.DosGraphics;
-import bdzimmer.secondary.model.TileOptionsNew;
+import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
 
 import java.awt.BorderLayout;
@@ -168,8 +168,10 @@ public class TilesEditorWindow extends JFrame {
 
     // setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
 
-    dosGraphics = new DosGraphics((this.tileSet.attrs.count / 16)
-        * this.tileSet.attrs.height, 16 * this.tileSet.attrs.width, this.scale);
+    dosGraphics = new DosGraphics(
+        this.tileSet.attrs.count / 16 * this.tileSet.attrs.height,
+        16 * this.tileSet.attrs.width,
+        this.scale);
     dosGraphics.setRgbPalette(paletteWindow.getDosGraphics().getRgbPalette());
     graphicsPanel.add(dosGraphics);
 
@@ -192,8 +194,9 @@ public class TilesEditorWindow extends JFrame {
       Main.currentTile = this.currentTile;
       Main.currentTileBitmap = this.tileSet.getTiles()[this.currentTile];
 
-      if ((this.zoomWindow == null) || !(this.zoomWindow.isVisible())) {
-        this.zoomWindow = new ZoomedTileWindow("Zoom",
+      if (this.zoomWindow == null || !this.zoomWindow.isVisible()) {
+        this.zoomWindow = new ZoomedTileWindow(
+            "Zoom",
             this.tileSet.getTiles()[currentTile],
             this.dosGraphics.getRgbPalette());
         this.zoomWindow.setTileWindow(this);
@@ -227,14 +230,6 @@ public class TilesEditorWindow extends JFrame {
           this.tileSet.getTiles()[newTile][i][j] = Main.currentTileBitmap[i][j];
         }
       }
-
-      // original--didn't allow copying across tilesets
-
-      // for (int i = 0; i < this.getTudSize(); i++) {
-      // for (int j = 0; j < this.getTlrSize(); j++) {
-      // this.getTiles()[newTile][i][j] = this.getTiles()[currentTile][i][j];
-      // }
-      // }
 
       this.repaint();
     }
@@ -275,18 +270,14 @@ public class TilesEditorWindow extends JFrame {
    */
   public void changeTiles() {
 
-    // TileOptions newSettings = new TileOptions();
-    // newSettings.getOptions();
-    // this.tileSet = new Tiles(newSettings.getAttrs());
-
-    this.tileSet = new Tiles(TileOptionsNew.getOptions());
+    this.tileSet = new Tiles(TileOptions.getOptions());
 
     int[][] rgbPalette = this.dosGraphics.getRgbPalette();
 
     graphicsPanel.remove(dosGraphics);
     if (this.tileSet.attrs.count >= 16) {
       dosGraphics = new DosGraphics(
-          (int) Math.ceil((this.tileSet.attrs.count / 16.0))
+          (int)Math.ceil(this.tileSet.attrs.count / 16.0)
               * this.tileSet.attrs.height, 16 * this.tileSet.attrs.width,
           this.scale);
     } else {

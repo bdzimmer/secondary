@@ -16,7 +16,7 @@ import java.awt.event.{ActionEvent, ActionListener}
 import java.io.File
 import java.util.ArrayList
 
-import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptionsNew, Tiles}
+import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 import javax.swing.{ImageIcon, JButton}
 
@@ -38,7 +38,7 @@ class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(m
     val filesAndDescriptions = lines.map(x => {
       val items = x.split(",\\s*").map(_.trim)
 
-      (items(0), items(1), TileOptionsNew.get(items(2)))
+      (items(0), items(1), TileOptions.get(items(2)))
 
     }).toList
 

@@ -3,7 +3,7 @@
 package bdzimmer.secondary.view;
 
 import bdzimmer.secondary.model.DosGraphics;
-import bdzimmer.secondary.model.TileOptionsNew;
+import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
 
 import java.awt.Color;
@@ -80,7 +80,7 @@ public class TilesLoadWindow extends WorldObjectWindow {
       DosGraphics dosGraphics = new DosGraphics();
       
       Tiles tiles = new Tiles(
-          TileOptionsNew.get("Tiles"),
+          TileOptions.get("Tiles"),
           new File(this.tilesFile),
           dosGraphics.getRgbPalette());
       

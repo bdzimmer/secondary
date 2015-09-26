@@ -169,122 +169,121 @@ public class MapViewPanel extends JPanel {
     System.out.println("got graphics");
 
     // Bounds drawing...
-    if (this.dispBounds) {
-      if (this.tileSet != null) {
+    if (this.dispBounds && this.tileSet != null) {
         
-        dgGraphics.setColor(new Color(dosGraphics.getPalette()[255]));
+      dgGraphics.setColor(new Color(dosGraphics.getPalette()[255]));
+      for (int i = 0; i < 12; i++) {
+        for (int j = 0; j < 20; j++) {
+          
+          if (this.dispBack) {
+            int curTile;
+            if ((vud + i) <= 127 && (vud + i) >= 0 
+                && (vlr + j) <= 127 && (vlr + j) >= 0) {
+              curTile = map.map[i + vud][j + vlr];
+            } else {
+              curTile = 0;
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 1) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 2) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 4) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 8) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 16) != 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+
+          }
+        }
+      }
+          
+      dgGraphics.setColor(new Color(dosGraphics.getPalette()[10]));
+      
+      if (this.dispOver) {
         for (int i = 0; i < 12; i++) {
           for (int j = 0; j < 20; j++) {
-            if (this.dispBack) {
-              int curTile;
-              if (((vud + i) <= 127) && ((vud + i) >= 0) && ((vlr + j) <= 127)
-                  && ((vlr + j) >= 0)) {
-                curTile = map.map[i + vud][j + vlr];
-              } else {
-                curTile = 0;
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 1) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 2) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 4) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 8) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 16) != 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-
+            int curTile;
+            if (((vud + i) <= 127) && ((vud + i) >= 0) && ((vlr + j) <= 127)
+                && ((vlr + j) >= 0)) {
+              curTile = map.overMap[i + vud][j + vlr];
+            } else {
+              curTile = 0;
             }
+            if ((this.tileSet.getTileProps()[curTile] & 1) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 2) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 4) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 8) == 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale);
+            }
+            if ((this.tileSet.getTileProps()[curTile] & 16) != 0) {
+              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
+                  * this.tileSet.attrs.height * this.scale, j
+                  * this.tileSet.attrs.width * this.scale
+                  + this.tileSet.attrs.width * this.scale - 1, i
+                  * this.tileSet.attrs.height * this.scale
+                  + this.tileSet.attrs.height * this.scale - 1);
+            }
+
           }
         }
-        dgGraphics.setColor(new Color(dosGraphics.getPalette()[10]));
-        if (this.dispOver) {
-          for (int i = 0; i < 12; i++) {
-            for (int j = 0; j < 20; j++) {
-              int curTile;
-              if (((vud + i) <= 127) && ((vud + i) >= 0) && ((vlr + j) <= 127)
-                  && ((vlr + j) >= 0)) {
-                curTile = map.overMap[i + vud][j + vlr];
-              } else {
-                curTile = 0;
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 1) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 2) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 4) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 8) == 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale);
-              }
-              if ((this.tileSet.getTileProps()[curTile] & 16) != 0) {
-                dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                    * this.tileSet.attrs.height * this.scale, j
-                    * this.tileSet.attrs.width * this.scale
-                    + this.tileSet.attrs.width * this.scale - 1, i
-                    * this.tileSet.attrs.height * this.scale
-                    + this.tileSet.attrs.height * this.scale - 1);
-              }
-
-            }
-          }
-        }
-
       }
-
     }
 
   }

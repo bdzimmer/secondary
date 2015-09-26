@@ -5,7 +5,7 @@ package bdzimmer.secondary.view;
 import bdzimmer.secondary.model.ContentStructure;
 import bdzimmer.secondary.model.DosGraphics;
 import bdzimmer.secondary.model.Map;
-import bdzimmer.secondary.model.TileOptionsNew;
+import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
 
 import java.awt.Color;
@@ -62,7 +62,7 @@ public class MapLoadWindow extends WorldObjectWindow {
       DosGraphics dg = new DosGraphics();
       
       Tiles mapTiles = new Tiles(
-          TileOptionsNew.get("Tiles"),
+          TileOptions.get("Tiles"),
           new File(this.tilesFile), dg.getRgbPalette());
       dg.updateClut();
       this.mapImage = curMap.getMapImage(mapTiles, dg);

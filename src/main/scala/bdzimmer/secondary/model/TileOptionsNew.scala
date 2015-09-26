@@ -27,9 +27,9 @@ import java.util.Properties
 
 import scala.collection.JavaConverters._
 
-object TileOptionsNew {
+object TileOptions {
 
-  val types = TileOptionsNew.getTileTypes
+  val types = getTileTypes
 
   def getOptions(): TileAttributes = {
 

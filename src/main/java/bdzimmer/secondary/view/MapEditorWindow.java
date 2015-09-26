@@ -331,10 +331,10 @@ public class MapEditorWindow extends JFrame {
         + (ae.getY() / (MapEditorWindow.TILE_SIZE * this.mapViewPanel.scale));
     int ctlr = mapViewPanel.vlr
         + (ae.getX() / (MapEditorWindow.TILE_SIZE * this.mapViewPanel.scale));
-    if ((ctud < 0) || (ctud > 127)) {
+    if (ctud < 0 || ctud > 127) {
       return;
     }
-    if ((ctlr < 0) || (ctlr > 127)) {
+    if (ctlr < 0 || ctlr > 127) {
       return;
     }
     if (!ae.isMetaDown()) {

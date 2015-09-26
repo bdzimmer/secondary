@@ -8,7 +8,7 @@ import java.io.InputStream;
 
 public class QbInputStream extends DataInputStream {
 
-  QbInputStream(InputStream is) {
+  public QbInputStream(InputStream is) {
     super(is);
   }
   

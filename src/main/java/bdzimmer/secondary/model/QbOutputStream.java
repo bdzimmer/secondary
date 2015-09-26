@@ -8,7 +8,7 @@ import java.io.OutputStream;
 
 public class QbOutputStream extends DataOutputStream {
 
-  QbOutputStream(OutputStream os) {
+  public QbOutputStream(OutputStream os) {
     super(os);
   }
   

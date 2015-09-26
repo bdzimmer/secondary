@@ -70,7 +70,7 @@ package bdzimmer.secondary.view;
 
 import bdzimmer.secondary.model.ContentStructure;
 import bdzimmer.secondary.model.Map;
-import bdzimmer.secondary.model.TileOptionsNew;
+import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
 
 import java.awt.GridLayout;
@@ -153,7 +153,7 @@ public class Main extends JFrame {
 
         // Tiles t = new Tiles(TileOptions.NPC);
 
-        Tiles spriteTiles = new Tiles(TileOptionsNew.get("NPC"));
+        Tiles spriteTiles = new Tiles(TileOptions.get("NPC"));
 
         TilesEditorWindow spriteWindow = new TilesEditorWindow(
             Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
@@ -212,7 +212,7 @@ public class Main extends JFrame {
     
     // Tiles t = new Tiles(TileOptions.TILES);
     Tiles tiles = new Tiles(
-        TileOptionsNew.get("Tiles"),
+        TileOptions.get("Tiles"),
         new File(tileFileName),
         Main.globalPalette);
     

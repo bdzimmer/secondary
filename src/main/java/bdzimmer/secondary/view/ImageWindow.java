@@ -10,9 +10,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 public class ImageWindow extends JFrame {
+  
   private static final long serialVersionUID = 1L;
 
-  private ImagePanel imagePanel;
 
   /**
    * Create a new ImageWindow from an Image object. 
@@ -20,8 +20,7 @@ public class ImageWindow extends JFrame {
    * @param image Image object
    */
   public ImageWindow(Image image) {
-    this.imagePanel = new ImagePanel(image);
-    this.add(this.imagePanel);
+    this.add(new ImagePanel(image));
     this.pack();
     this.setLocationRelativeTo(null);
     this.setVisible(true);
@@ -30,7 +29,7 @@ public class ImageWindow extends JFrame {
   class ImagePanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
-    private Image image;
+    private final Image image;
 
     ImagePanel(Image image) {
       this.image = image;

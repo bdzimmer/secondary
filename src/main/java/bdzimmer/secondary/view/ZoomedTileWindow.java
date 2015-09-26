@@ -37,7 +37,7 @@ public class ZoomedTileWindow extends JFrame {
 
   private int[][] rgbPalette;
 
-  private DosGraphics myDosGraphics;
+  private DosGraphics dosGraphics;
   private DosGraphics tileTile;
   private JPanel graphicsPanel = new JPanel();
 
@@ -63,11 +63,11 @@ public class ZoomedTileWindow extends JFrame {
     if (tile != null) {
       this.tileHeight = tile.length;
       this.tileWidth = tile[0].length;
-      this.myDosGraphics = new DosGraphics(tileHeight * zoomFactor, tileWidth
+      this.dosGraphics = new DosGraphics(tileHeight * zoomFactor, tileWidth
           * zoomFactor, 2);
       tileTile = new DosGraphics(tileHeight * 3, tileWidth * 3, 2);
     } else {
-      myDosGraphics = new DosGraphics(64, 64, 2); // call normal DosGraphics
+      dosGraphics = new DosGraphics(64, 64, 2); // call normal DosGraphics
                                                   // constructor
       tileTile = new DosGraphics(64, 64, 2);
     }
@@ -78,7 +78,7 @@ public class ZoomedTileWindow extends JFrame {
 
     this.setLayout(new BorderLayout(0, 0));
 
-    graphicsPanel.add(myDosGraphics, BorderLayout.SOUTH);
+    graphicsPanel.add(dosGraphics, BorderLayout.SOUTH);
     this.add(graphicsPanel);
 
     this.getContentPane().addMouseMotionListener(new MouseMotionListener() {
@@ -459,15 +459,15 @@ public class ZoomedTileWindow extends JFrame {
     // evidently this is more proper than a switch thingy
 
     if (whichWindow == 3) { // zoom window(
-      int tud = (int) ((event.getY() - myDosGraphics.getY()) / zoomFactor / 2); // Painting
+      int tud = (int) ((event.getY() - dosGraphics.getY()) / zoomFactor / 2); // Painting
                                                                             // in
                                                                             // zoom
                                                                             // window.
-      int tlr = (int) ((event.getX() - myDosGraphics.getX()) / zoomFactor / 2);
+      int tlr = (int) ((event.getX() - dosGraphics.getX()) / zoomFactor / 2);
 
       // System.out.println("In ZoomWindow -- " + tud + " " + tlr);
 
-      if ((tud < this.tile.length) && (tlr < this.tile[0].length)) {
+      if (tud < this.tile.length && tlr < this.tile[0].length) {
         if (!event.isMetaDown()) { // right click
           if (this.penMode == 0) { // normal pen
             this.tile[tud][tlr] = Main.currentColor;
@@ -500,13 +500,13 @@ public class ZoomedTileWindow extends JFrame {
         for (int j = 0; j < tile[0].length; j++) {
           for (int k = 0; k < zoomFactor; k++) {
             for (int l = 0; l < zoomFactor; l++) {
-              myDosGraphics.setPixel(i * zoomFactor + k, j * zoomFactor + l,
+              dosGraphics.setPixel(i * zoomFactor + k, j * zoomFactor + l,
                   tile[i][j]);
             }
           }
         }
       }
-      myDosGraphics.repaint();
+      dosGraphics.repaint();
     }
   }
 
@@ -556,22 +556,22 @@ public class ZoomedTileWindow extends JFrame {
   }
 
   public DosGraphics getDosGraphics() {
-    return myDosGraphics;
+    return dosGraphics;
   }
 
   private void updateGraphics() {
-    graphicsPanel.remove(myDosGraphics);
-    if ((tile != null)) {
+    graphicsPanel.remove(dosGraphics);
+    if (tile != null) {
       tileHeight = tile.length;
       tileWidth = tile[0].length;
     }
-    this.myDosGraphics = new DosGraphics(tileHeight * zoomFactor, tileWidth
-        * zoomFactor, 2); // call normal DosGraphics constructor
-    this.myDosGraphics.setRgbPalette(this.rgbPalette);
-    graphicsPanel.add(myDosGraphics);
+    dosGraphics = new DosGraphics(
+        tileHeight * zoomFactor, tileWidth * zoomFactor, 2);
+    dosGraphics.setRgbPalette(this.rgbPalette);
+    graphicsPanel.add(dosGraphics);
     this.pack();
     this.repaint();
-    this.myDosGraphics.repaint();
+    dosGraphics.repaint();
   }
 
   private void updateTileProps() {
@@ -627,7 +627,7 @@ public class ZoomedTileWindow extends JFrame {
   public void paint(Graphics gr) {
     super.paint(gr);
 
-    this.myDosGraphics.updateClut();
+    dosGraphics.updateClut();
     this.tileTile.updateClut();
 
     this.drawTile();

@@ -41,7 +41,7 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.FileUtils
 
-import bdzimmer.secondary.model.{DosGraphics, Map, TileAttributes, TileOptionsNew, Tiles}
+import bdzimmer.secondary.model.{DosGraphics, Map, TileAttributes, TileOptions, Tiles}
 
 
 class ExportImages(world: List[WorldItem], val location: String, license: String) {
@@ -160,7 +160,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
       case Some(ss: SpritesheetItem) => {
 
-        val spritesheetType = TileOptionsNew.get(ss.tiletype)
+        val spritesheetType = TileOptions.get(ss.tiletype)
         val outputImageFiles = ExportImages.outputScales map (scale => {
           val offset = 3
           val inputFile = imagesLocation + "/" + ss.id + "_tiles/" + (sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"
@@ -219,7 +219,7 @@ object ExportImages {
     val image: BufferedImage = worldItem match {
       case x: MapItem => getMapImage(inputDir + "/" + inputName, inputDir + "/tile/")
       case x: TileMetaItem => {
-        TileOptionsNew.types.get(x.tiletype) match {
+        TileOptions.types.get(x.tiletype) match {
           case Some(tiletype) => getTilesetImage(inputDir + "/" + inputName, tiletype)
           case None => ExportImages.imageMessage("Invalid tile type.")
         }
@@ -245,7 +245,7 @@ object ExportImages {
     // println(tilesetItem.name)
 
     val inputName = tilesetItem.filename
-    val tileType = TileOptionsNew.types.get(tilesetItem.tiletype).get
+    val tileType = TileOptions.types.get(tilesetItem.tiletype).get
 
     val outputDirRelative = ExportImages.imagesDir + "/" + tilesetItem.id + "_tiles"
     new File(outputDir + "/" + outputDirRelative).mkdir
@@ -332,7 +332,7 @@ object ExportImages {
     val map = new Map(new File(inputFile))
 
     val tiles = new Tiles(
-        TileOptionsNew.get("Tiles"),
+        TileOptions.get("Tiles"),
         new File(tilesDir + "/" + map.tileFileName + ".til"),
         dg.getRgbPalette)
 

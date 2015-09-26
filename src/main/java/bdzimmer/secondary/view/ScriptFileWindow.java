@@ -5,8 +5,9 @@ package bdzimmer.secondary.view;
 import bdzimmer.secondary.model.ContentStructure;
 import bdzimmer.secondary.model.DosGraphics;
 import bdzimmer.secondary.model.Map;
+import bdzimmer.secondary.model.QbInputStream;
 import bdzimmer.secondary.model.ScriptFile;
-import bdzimmer.secondary.model.TileOptionsNew;
+import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
 import bdzimmer.secondary.model.World;
 
@@ -19,7 +20,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -76,7 +76,7 @@ public class ScriptFileWindow extends WorldObjectWindow {
             + curMapName + ".map"));
         
         Tiles curTiles = new Tiles(    
-            TileOptionsNew.get("Tiles"),
+            TileOptions.get("Tiles"),
             new File(
               main.contentDir + File.separator
               + ContentStructure.TileDir() + File.separator
@@ -118,7 +118,7 @@ public class ScriptFileWindow extends WorldObjectWindow {
             // get tileFileName
             String tileFileName;
             try {
-              DataInputStream mapIn = new DataInputStream(new FileInputStream(
+              QbInputStream mapIn = new QbInputStream(new FileInputStream(
                   main.contentDir + File.separator
                   + ContentStructure.MapDir() + File.separator + curMapName + ".map"));
               
@@ -127,15 +127,14 @@ public class ScriptFileWindow extends WorldObjectWindow {
               // read description
               int[] mapDescB = new int[30];
               for (int i = 0; i < 30; i++) {
-                mapDescB[i] = (0x000000FF & (int) mapIn.readByte());
+                mapDescB[i] = mapIn.readQbUnsignedByte();
               }
-              // this.mapDesc = new String(mapDesc);
-
+              
               // read tileset
               int[] tileFileNameB = new int[8];
               char[] tileFileNameC = new char[8];
               for (int i = 0; i < 8; i++) {
-                tileFileNameB[i] = (0x000000FF & (int) mapIn.readByte());
+                tileFileNameB[i] = mapIn.readQbUnsignedByte();
                 tileFileNameC[i] = (char) tileFileNameB[i];
               }
               tileFileName = new String(tileFileNameC).trim();

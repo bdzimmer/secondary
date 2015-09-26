@@ -2,7 +2,6 @@
 
 package bdzimmer.secondary.view;
 
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -21,7 +20,6 @@ public abstract class WorldObjectWindow extends JFrame {
 
   private ArrayList<WorldObject> worldObjects = new ArrayList<WorldObject>();
 
-  private String inputDir;
 
   private JPanel scrollingSurface = new JPanel();
 
@@ -34,8 +32,6 @@ public abstract class WorldObjectWindow extends JFrame {
   public WorldObjectWindow(Main main, String inputDir, String title) {
     
     this.main = main;
-    
-    this.inputDir = inputDir;
     this.setTitle(title);
 
     this.scrollingSurface.setLayout(new GridLayout(20, 2, 20, 20));
@@ -51,7 +47,7 @@ public abstract class WorldObjectWindow extends JFrame {
 
     this.setContentPane(scrollPane);
 
-    this.worldObjects = this.populateObjects(this.inputDir);
+    this.worldObjects = this.populateObjects(inputDir);
 
     // populate the scrolling surface with the objects
     this.refresh();

@@ -99,11 +99,7 @@ public class ScriptFile implements Comparable<ScriptFile> {
 
   @Override
   public boolean equals(Object obj) {  
-    if ((obj.getClass() == getClass()) && (compareTo((ScriptFile)obj) == 0)) {
-      return true;
-    } else {
-      return false;
-    }
+    return obj.getClass() == getClass() && compareTo((ScriptFile)obj) == 0;
   }
 
   @Override
