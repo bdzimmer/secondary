@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Ben Zimmer. All right reserved.
+// Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
 // Functions for managing style sheets for an export.
 

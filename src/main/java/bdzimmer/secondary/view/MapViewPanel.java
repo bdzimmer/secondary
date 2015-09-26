@@ -72,6 +72,7 @@ public class MapViewPanel extends JPanel {
         this.numHorizontalTiles * 16, this.scale);
 
     this.dosGraphics.setRgbPalette(this.rgbPalette);
+    this.dosGraphics.updateClut();
     this.add(this.dosGraphics);
 
   }

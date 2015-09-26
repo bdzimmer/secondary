@@ -77,7 +77,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-
 import java.io.File;
 
 import javax.swing.JButton;
@@ -97,8 +96,6 @@ public class Main extends JFrame {
   
   public final String contentDir;
 
-  private JMenuItem jmExit;
-  private JMenuBar mainMenu;
   
   public static int[][] currentTileBitmap;
   public static int currentTile;
@@ -120,22 +117,24 @@ public class Main extends JFrame {
  
     Main.paletteWindow.setLocationRelativeTo(null);
 
+    setAlwaysOnTop(true);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setTitle(title);
 
-    // Menu stuff
-    mainMenu = new JMenuBar();
+    // Menubar
+    JMenuBar mainMenu = new JMenuBar();
     setJMenuBar(mainMenu);
 
     JMenu fileMenu = new JMenu("File");
     mainMenu.add(fileMenu);
-    fileMenu.add(jmExit = new JMenuItem("Exit"));
-
+    
+    JMenuItem jmExit = new JMenuItem("Exit");
     jmExit.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         System.exit(0);
       }
     });
+    fileMenu.add(jmExit);
 
     // Add buttons for spawning new windows.
     this.setLayout(new GridLayout(5, 1, 5, 5));
@@ -224,10 +223,10 @@ public class Main extends JFrame {
     new MapEditorWindow(
         contentDir + File.separator + ContentStructure.MapDir(),
         map,
-        "Map",
         mapFileName,
         tileWindow.getTileSet(),
         Main.globalPalette);
+    
     tileWindow.toFront();
 
   }

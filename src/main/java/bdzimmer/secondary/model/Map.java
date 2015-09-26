@@ -63,7 +63,7 @@ public class Map {
       int[] mapDescB = new int[30];
       char[] mapDesc = new char[30];
       for (int i = 0; i < 30; i++) {
-        mapDescB[i] = (0x000000FF & (int) mapIn.readByte());
+        mapDescB[i] = 0x000000FF & (int)mapIn.readByte();
         mapDesc[i] = (char) mapDescB[i];
         // System.out.println(mapDesc[i]);
       }
@@ -72,7 +72,7 @@ public class Map {
       int[] tileFileNameB = new int[8];
       char[] tileFileName = new char[8];
       for (int i = 0; i < 8; i++) {
-        tileFileNameB[i] = (0x000000FF & (int) mapIn.readByte());
+        tileFileNameB[i] = 0x000000FF & (int)mapIn.readByte();
         tileFileName[i] = (char) tileFileNameB[i];
       }
       this.tileFileName = new String(tileFileName).trim();
@@ -85,13 +85,13 @@ public class Map {
       // map data
       for (int i = 0; i <= mud; i++) {
         for (int j = 0; j <= mlr; j++) {
-          this.map[i][j] = (0x000000FF & (int) mapIn.readByte());
+          this.map[i][j] = 0x000000FF & (int)mapIn.readByte();
           mapIn.readByte();
         }
       }
       for (int i = 0; i <= mud; i++) {
         for (int j = 0; j <= mlr; j++) {
-          this.overMap[i][j] = (0x000000FF & (int) mapIn.readByte());
+          this.overMap[i][j] = 0x000000FF & (int)mapIn.readByte();
           mapIn.readByte();
         }
       }
@@ -102,13 +102,13 @@ public class Map {
         this.pmud = mapIn.readByte();
 
         if (this.pmud > -1) { // load parallax layer
-          this.pmud = (0x000000FF & (int) this.pmud);
+          this.pmud = 0x000000FF & (int)this.pmud;
           mapIn.readByte();
-          this.pmlr = (0x000000FF & (int) mapIn.readByte());
+          this.pmlr = 0x000000FF & (int)mapIn.readByte();
           mapIn.readByte();
           for (int i = 0; i <= pmud; i++) {
             for (int j = 0; j <= pmlr; j++) {
-              this.paraMap[i][j] = (0x000000FF & (int) mapIn.readByte());
+              this.paraMap[i][j] = 0x000000FF & (int)mapIn.readByte();
               mapIn.readByte();
             }
           }

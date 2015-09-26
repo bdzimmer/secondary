@@ -12,6 +12,7 @@ import bdzimmer.secondary.model.Tiles;
 import bdzimmer.secondary.view.MapViewPanel;
 
 import java.awt.BorderLayout;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -43,17 +44,15 @@ public class MapEditorWindow extends JFrame {
   
   private final String mapsDir;
   
-
-  private Tiles tileSet;
-  private int[][] rgbPalette;
   private Map map;
-  public String mapFileName = "";
+  public String mapFileName;
+  private Tiles tileSet;
   
   private final JCheckBoxMenuItem jmHasParallax = new JCheckBoxMenuItem("Parallax Layer");
   private MapViewPanel mapViewPanel;
 
   private int overlayEdit;
-  private StatusBar myStatusBar = new StatusBar();
+  private StatusBar statusBar = new StatusBar();
 
 
   /**
@@ -61,7 +60,6 @@ public class MapEditorWindow extends JFrame {
    * 
    * @param mapsDir       main content directory
    * @param map           Map to display
-   * @param title         title string
    * @param fileName      file name of map to load
    * @param tileSet       Tiles object to use
    * @param rgbPalette    2d int array of palette to update the view with
@@ -69,16 +67,16 @@ public class MapEditorWindow extends JFrame {
   public MapEditorWindow(
       String mapsDir,
       Map map,
-      String title,
       String fileName,
       Tiles tileSet,
       int[][] rgbPalette) { // constructor
 
     this.mapsDir = mapsDir;
     this.map = map;
-    setTitle(title);
+    this.mapFileName = fileName;
     this.tileSet = tileSet;
-    this.rgbPalette = rgbPalette;
+    
+    setTitle(generateTitle());
 
     // ///////////// menu stuff ///////////////////////
 
@@ -95,7 +93,6 @@ public class MapEditorWindow extends JFrame {
     setJMenuBar(mainMenu);
 
     JMenu fileMenu = new JMenu("File");
-    
     
     JMenuItem jmNew = new JMenuItem("New");
     fileMenu.add(jmNew);
@@ -166,7 +163,7 @@ public class MapEditorWindow extends JFrame {
         MapEditorWindow.this.map.mapDesc = JOptionPane.showInputDialog("Enter new title:");
         MapEditorWindow.this.map.tileFileName = JOptionPane
             .showInputDialog("Enter new tile file name:");
-
+        setTitle(generateTitle());
       }
     });
 
@@ -225,64 +222,14 @@ public class MapEditorWindow extends JFrame {
 
       @Override
       public void keyPressed(KeyEvent ae) {
-        if (ae.getKeyCode() == KeyEvent.VK_UP) {
-          if (!ae.isAltDown()) {
-            mapViewPanel.vud -= 1;
-          } else {
-            for (int i = mapViewPanel.vud; i < 127; i++) {
-              for (int j = 0; j < 128; j++) {
-                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i + 1][j];
-                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i + 1][j];
-              }
-            }
-          }
-        } else if (ae.getKeyCode() == KeyEvent.VK_DOWN) {
-          if (!ae.isAltDown()) {
-            mapViewPanel.vud += 1;
-          } else {
-            for (int i = 127; i >= (mapViewPanel.vud + 1); i--) {
-              for (int j = 0; j < 128; j++) {
-                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i - 1][j];
-                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i - 1][j];
-              }
-            }
-          }
-        } else if (ae.getKeyCode() == KeyEvent.VK_LEFT) {
-          if (!ae.isAltDown()) {
-            mapViewPanel.vlr -= 1;
-          } else {
-            for (int i = 0; i < 128; i++) {
-              for (int j = mapViewPanel.vlr; j < 127; j++) {
-                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i][j + 1];
-                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i][j + 1];
-              }
-            }
-          }
-        } else if (ae.getKeyCode() == KeyEvent.VK_RIGHT) {
-          if (!ae.isAltDown()) {
-            mapViewPanel.vlr += 1;
-          } else {
-            for (int i = 0; i < 128; i++) {
-              for (int j = 127; j >= mapViewPanel.vlr + 1; j--) {
-                MapEditorWindow.this.map.map[i][j] = MapEditorWindow.this.map.map[i][j - 1];
-                MapEditorWindow.this.map.overMap[i][j] = MapEditorWindow.this.map.overMap[i][j - 1];
-              }
-            }
-          }
-        }
-
-        repaint();
+        handleKeys(ae);
       }
 
       @Override
-      public void keyReleased(KeyEvent ae) {
-        // do nothing
-      }
-
+      public void keyReleased(KeyEvent ae) {}
+      
       @Override
-      public void keyTyped(KeyEvent ae) {
-        // do nothing
-      }
+      public void keyTyped(KeyEvent ae) {}
 
     });
 
@@ -301,21 +248,10 @@ public class MapEditorWindow extends JFrame {
     // Set the layout manager.
     this.setLayout(new BorderLayout());
 
-    // / map view
-
-    this.mapViewPanel = new MapViewPanel(this.map, this.tileSet,
-        this.rgbPalette);
-
-    // this.dosGraphics = new DosGraphics(192, 320, this.scale); //this will
-    // change if I add a zoom factor
-    // this.dosGraphics.setRGBPalette(this.RGBPalette);
-
-    // this.graphicsPanel.add(dosGraphics, BorderLayout.SOUTH);
-
+    this.mapViewPanel = new MapViewPanel(this.map, this.tileSet, rgbPalette);
     this.add(mapViewPanel, BorderLayout.NORTH);
 
-    // / map status bar
-    this.add(myStatusBar, BorderLayout.SOUTH);
+    this.add(statusBar, BorderLayout.SOUTH);
     this.pack();
 
     // Clicking, dragging on map to get / set tiles
@@ -327,7 +263,7 @@ public class MapEditorWindow extends JFrame {
       }
 
       public void mouseMoved(MouseEvent event) {
-        myStatusBar.update(
+        statusBar.update(
             mapViewPanel.vlr
                 + (int) (event.getX() / (MapEditorWindow.TILE_SIZE * mapViewPanel.scale)),
             mapViewPanel.vud
@@ -341,29 +277,21 @@ public class MapEditorWindow extends JFrame {
     this.mapViewPanel.addMouseListener(new MouseListener() {
 
       @Override
-      public void mouseClicked(MouseEvent arg0) {
-        // do nothing
+      public void mousePressed(MouseEvent me) {
+        handleClicks(me);
       }
-
+      
       @Override
-      public void mouseEntered(MouseEvent arg0) {
-         // do nothing
-      }
-
+      public void mouseClicked(MouseEvent me) {}
+      
       @Override
-      public void mouseExited(MouseEvent arg0) {
-        // do nothing
-      }
-
+      public void mouseEntered(MouseEvent me) {}
+      
       @Override
-      public void mousePressed(MouseEvent ae) {
-        handleClicks(ae);
-      }
-
+      public void mouseExited(MouseEvent me) {}
+      
       @Override
-      public void mouseReleased(MouseEvent ae) {
-        // do nothing
-      }
+      public void mouseReleased(MouseEvent me) {}
 
     });
 
@@ -380,10 +308,8 @@ public class MapEditorWindow extends JFrame {
     });
 
     // ////////////////////////////////
-
-    this.mapViewPanel.repaint();
-    this.repaint();
     setVisible(true);
+    repaint();
 
   }
 
@@ -430,6 +356,59 @@ public class MapEditorWindow extends JFrame {
       }
     }
   }
+  
+  
+  private void handleKeys(KeyEvent ae) {
+    
+    if (ae.getKeyCode() == KeyEvent.VK_UP) {
+      if (!ae.isAltDown()) {
+        mapViewPanel.vud -= 1;
+      } else {
+        for (int i = mapViewPanel.vud; i < 127; i++) {
+          for (int j = 0; j < 128; j++) {
+            map.map[i][j] = map.map[i + 1][j];
+            map.overMap[i][j] = map.overMap[i + 1][j];
+          }
+        }
+      }
+    } else if (ae.getKeyCode() == KeyEvent.VK_DOWN) {
+      if (!ae.isAltDown()) {
+        mapViewPanel.vud += 1;
+      } else {
+        for (int i = 127; i >= (mapViewPanel.vud + 1); i--) {
+          for (int j = 0; j < 128; j++) {
+            map.map[i][j] = map.map[i - 1][j];
+            map.overMap[i][j] = map.overMap[i - 1][j];
+          }
+        }
+      }
+    } else if (ae.getKeyCode() == KeyEvent.VK_LEFT) {
+      if (!ae.isAltDown()) {
+        mapViewPanel.vlr -= 1;
+      } else {
+        for (int i = 0; i < 128; i++) {
+          for (int j = mapViewPanel.vlr; j < 127; j++) {
+            map.map[i][j] = map.map[i][j + 1];
+            map.overMap[i][j] = map.overMap[i][j + 1];
+          }
+        }
+      }
+    } else if (ae.getKeyCode() == KeyEvent.VK_RIGHT) {
+      if (!ae.isAltDown()) {
+        mapViewPanel.vlr += 1;
+      } else {
+        for (int i = 0; i < 128; i++) {
+          for (int j = 127; j >= mapViewPanel.vlr + 1; j--) {
+            map.map[i][j] = map.map[i][j - 1];
+            map.overMap[i][j] = map.overMap[i][j - 1];
+          }
+        }
+      }
+    }
+
+    repaint();
+    
+  }
 
   // //// loading and saving maps
   // ---------------------------------------------------------
@@ -450,7 +429,7 @@ public class MapEditorWindow extends JFrame {
         map = new Map(selFile);
         jmHasParallax.setSelected(map.hasParallax);
         mapFileName = selFile.getAbsolutePath();
-        setTitle(map.mapDesc + " " + map.tileFileName);
+        setTitle(generateTitle());
 
         System.out.println("Map file name: " + mapFileName);
         mapViewPanel.setMap(map);
@@ -458,6 +437,7 @@ public class MapEditorWindow extends JFrame {
         mapViewPanel.vlr = 0;
         mapViewPanel.updateGraphics();
         mapViewPanel.repaint();
+        repaint();
         
       } catch (NullPointerException e) {
         System.err.println(e);
@@ -482,41 +462,39 @@ public class MapEditorWindow extends JFrame {
       File mapFile = jfc.getSelectedFile();
       try {
         map.save(mapFile); // getSelectedFile returns the file that was selected
-
-        // TODO: Is there still a problem with repainting after saving?
-        // this.drawMap();
-        // this.mapViewPanel.updateGraphics();
-
-        this.mapViewPanel.repaint();
+        repaint();
       } catch (NullPointerException e) {
         System.err.println(e);
         return;
       }
     }
   }
+  
+  
+  // generate a title
+  private String generateTitle() {
+    return map.mapDesc.trim() + " (" + map.tileFileName + ") - " + this.mapFileName;  
+  }
+  
+  
 
-  // /// updating graphics
+  // updating graphics
   // --------------------------------------------------------
 
   private void updateGraphics() {
-
     this.mapViewPanel.updateGraphics();
-
     this.pack();
-    this.repaint();
-  
+    this.repaint(); 
   }
 
-  /*
-   * 
-   * public void paint(Graphics g) { super.paint(g);
-   * 
-   * this.mapViewPanel.repaint();
-   * 
-   * }
-   */
+ 
+  public void paint(Graphics gr) {
+    super.paint(gr);
+    this.mapViewPanel.repaint();  
+  }
+ 
 
-  // /// basic getters
+  // basic getters
   // ----------------------------------------------------------------
 
   public int[][][] getTiles() {
