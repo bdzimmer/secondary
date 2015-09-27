@@ -103,25 +103,14 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
                   listGroup(x._2.map(text => listItem(NotesParser.processLine(text)))))))
     }
 
-
-    // get task strings from a WorldItem's notes
-    // original prefix needed colon and space, ie "THOUGHT: "
-    // def getTask(item: WorldItem)(prefix: String): List[String] = {
-    //   item.notes.split("\n").filter(_.startsWith(prefix)).map(_.substring(prefix.length)).toList
-    // }
-
     // get task strings
     def getTask(item: WorldItem)(prefix: String): List[String] = {
       item.tags.filter(_.kind.equals(prefix)).map(_.value)
-      // item.notes.split("\n").filter(_.startsWith(prefix)).map(_.substring(prefix.length)).toList
     }
 
     PageTemplates.createArticlePage(
-
         location + File.separator + relFilePath,
-
         "Tasks", "",
-
         None,
 
        // Todos and thoughts
@@ -129,7 +118,6 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
        // Thoughts
        column(Column6, "<h3>Thoughts</h3>\n" + taskList(getTask(_)("thought"))) +
-
 
        // Empty notes
        column(Column6,
@@ -140,7 +128,6 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
        ),
 
        license)
-
 
     relFilePath
   }

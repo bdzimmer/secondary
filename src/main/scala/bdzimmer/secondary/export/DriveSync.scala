@@ -13,15 +13,13 @@ import com.google.api.services.drive.model.{File => DriveFile}
 
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 
-// validates and holds references to Drive files for nonlocal projects.
-// functions for syncing to and from Google Drive
-class DriveSync(projConf: ProjectConfig, drive: Drive) {
 
-  // get Drive files
-  // TODO: use pattern matching and sys.exit on to find project drive files rather than get
-  val driveRootFile = DriveUtils.getRoot(drive)
-  val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveInputPathList).get
-  val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveOutputPathList).get
+// functions for syncing to and from Google Drive
+class DriveSync(
+    projConf: ProjectConfig,
+    drive: Drive,
+    val driveInputFile: DriveFile,
+    val driveOutputFile: DriveFile) {
 
   // create local project directories if they don't already exist
   projConf.localContentPathFile.mkdirs

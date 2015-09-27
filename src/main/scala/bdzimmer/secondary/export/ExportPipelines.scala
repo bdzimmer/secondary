@@ -13,6 +13,8 @@ import scala.collection.{immutable => sci}
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
 
+import bdzimmer.gdrivescala.DriveUtils
+
 
 // pipelines for local and synced exports
 object ExportPipelines {
@@ -96,12 +98,9 @@ object ExportPipelines {
 
 
   // Drive -> content, content -> web, web -> Drive
-  def exportDriveSync(projConf: ProjectConfig): Unit = {
+  def exportDriveSync(projConf: ProjectConfig, ds: DriveSync): Unit = {
 
     // TODO: think about how to handle duplicate code between the different pipelines
-
-    val drive = DriveSync.createDrive(projConf)
-    val ds = new DriveSync(projConf, drive)
 
     // download the metadata, update status
     val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveMetaStatusFile

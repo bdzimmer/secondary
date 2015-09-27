@@ -22,32 +22,26 @@ import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.view.Main
 
 
-object Driver {
+class Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.09.18"
+  // project directory is current working directory
+  val projectDir = System.getProperty("user.dir")
+  val projConf = ProjectConfig(projectDir)
+  val driveSync = Driver.createDriveSync(projConf)
 
-  def main(args: Array[String]): Unit = {
-
-    val defaultCommand = DriverCommands.Interactive
-
-    // project directory is current working directory
-    val projectDir = System.getProperty("user.dir")
-    val projConf = ProjectConfig(projectDir)
-
-    val command = args.headOption.getOrElse(defaultCommand)
-
+  def run(args: Array[String]): Unit = {
+    val command = args.headOption.getOrElse(Driver.defaultCommand)
     command match {
-      case DriverCommands.Interactive => runInteractive(projConf)
-      case DriverCommands.Help => showUsage
-      case _ => runCommand(command, projConf)
+      case DriverCommands.Interactive => runInteractive
+      case DriverCommands.Help => Driver.showUsage
+      case _ => runCommand(command)
     }
-
   }
 
 
   // start the interactive shell
-  def runInteractive(projConf: ProjectConfig): Unit = {
-    println(Title)
+  def runInteractive(): Unit = {
+    println(Driver.Title)
     val br = new BufferedReader(new InputStreamReader(System.in))
     while (true) {
       print("> ")
@@ -56,14 +50,14 @@ object Driver {
       command match {
         case "" => () // do nothing
         case "exit" | "quit" | "q" => sys.exit(0)
-        case _ => runCommand(command, projConf)
+        case _ => runCommand(command)
       }
     }
   }
 
 
   // run a command
-  def runCommand(command: String, projConf: ProjectConfig): Unit = command match {
+  def runCommand(command: String): Unit = command match {
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(prop).startup(Array())
@@ -74,40 +68,57 @@ object Driver {
       ExportPipelines.addStyles(projConf)
     }
     case DriverCommands.ExportLocalSync => ExportPipelines.exportLocalSync(projConf)
-    case DriverCommands.ExportDriveSync => ExportPipelines.exportDriveSync(projConf)
-    case DriverCommands.Browse => browseLocal(projConf)
-    case DriverCommands.BrowseDrive => browseRemote(projConf)
+    case DriverCommands.ExportDriveSync => driveSync match {
+      case Right(ds) => ExportPipelines.exportDriveSync(projConf, ds)
+      case Left(msg) => Driver.driveError(msg)
+    }
+    case DriverCommands.Browse => browseLocal
+    case DriverCommands.BrowseDrive => browseRemote
     case DriverCommands.Editor => new Main(projConf.mappedContentPathActual, "Secondary Editor")
-    case DriverCommands.Help => showCommands
+    case DriverCommands.Help => Driver.showCommands
     case _ => println("Invalid command. Use 'help' for a list of commands.")
   }
 
 
   // open a local file in the default web browser
-  def browseLocal(projConf: ProjectConfig): Try[Unit] = Try({
+  def browseLocal(): Unit = {
     val filename = List(
         projConf.projectDir,
         ProjectStructure.WebDir,
         "index.html").mkString(File.separator)
     val uri = new File(filename).toURI
-    println(uri.getPath)
-    Desktop.getDesktop.browse(uri)
-  })
+    Try(Desktop.getDesktop.browse(uri))
+  }
 
 
   // browse to the project on Google Drive.
-  def browseRemote(conf: ProjectConfig): Try[Unit] = Try({
-    val drive = DriveSync.createDrive(conf)
-    val driveOutputFile = DriveUtils.getFileByPath(
-        drive,
-        DriveUtils.getRoot(drive),
-        conf.driveOutputPathList).get
-    Desktop.getDesktop.browse(new URI("http://www.googledrive.com/host/" + driveOutputFile.getId))
-  })
+  def browseRemote(): Unit = {
+    driveSync match {
+      case Right(ds) => Try {
+        Desktop.getDesktop.browse(
+            new URI("http://www.googledrive.com/host/" + ds.driveOutputFile.getId))
+      }
+      case Left(msg) => Driver.driveError(msg)
+    }
+  }
+
+}
 
 
-  // show help at the command line
-  def showUsage(): Unit = {
+
+object Driver {
+
+  val Title = "Secondary - create worlds from text - v2015.09.27"
+  val defaultCommand = DriverCommands.Interactive
+
+  def main(args: Array[String]): Unit = {
+    val driver = new Driver()
+    driver.run(args)
+  }
+
+
+   // show help at the command line
+  private def showUsage(): Unit = {
     println(Title)
     println()
     println("Usage:")
@@ -120,7 +131,7 @@ object Driver {
 
 
   // print the list of commands / descriptions
-  def showCommands(): Unit = {
+  private def showCommands(): Unit = {
     println()
     val maxLength = DriverCommands.CommandsDescriptions.map(_._1.length).max
     DriverCommands.CommandsDescriptions.foreach(x => {
@@ -129,6 +140,26 @@ object Driver {
       println("  " + command + " " * (maxLength - command.length + 2) + description)
     })
     println()
+  }
+
+
+  private def driveError(msg: String): Unit = {
+    println("Drive problem: " + msg)
+  }
+
+  // safely create a DriveSync object from the project configuration
+  // None if the input or output directories don't exist
+  def createDriveSync(projConf: ProjectConfig): Either[String, DriveSync] = {
+    val drive = DriveSync.createDrive(projConf)
+    val driveRootFile = DriveUtils.getRoot(drive)
+
+    for {
+      driveInputFile <- DriveUtils.getFileByPath(
+          drive, driveRootFile, projConf.driveInputPathList).toRight("input path does not exist").right
+      driveOutputFile <- DriveUtils.getFileByPath(
+          drive, driveRootFile, projConf.driveOutputPathList).toRight("output path does not exist").right
+    } yield (new DriveSync(projConf, drive, driveInputFile, driveOutputFile))
+
   }
 
 }
