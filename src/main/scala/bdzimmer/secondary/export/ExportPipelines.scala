@@ -98,7 +98,6 @@ object ExportPipelines {
   // Drive -> content, content -> web, web -> Drive
   def exportDriveSync(projConf: ProjectConfig): Unit = {
 
-    // TODO: rename variables like exportLocalSync
     // TODO: think about how to handle duplicate code between the different pipelines
 
     val drive = DriveSync.createDrive(projConf)

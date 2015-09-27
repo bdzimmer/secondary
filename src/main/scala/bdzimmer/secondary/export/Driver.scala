@@ -12,7 +12,7 @@
 
 package bdzimmer.secondary.export
 
-import java.awt.Desktop
+import java.awt.Desktop    // scalastyle:ignore illegal.imports
 import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 

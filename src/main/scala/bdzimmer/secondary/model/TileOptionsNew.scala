@@ -14,8 +14,8 @@ package bdzimmer.secondary.model
 import bdzimmer.secondary.view.Main
 
 
-import java.awt.{Dialog, GridLayout}
-import java.awt.event.{ActionListener, ActionEvent}
+import java.awt.{Dialog, GridLayout}                  // scalastyle:ignore illegal.imports
+import java.awt.event.{ActionListener, ActionEvent}   // scalastyle:ignore illegal.imports
 
 
 import javax.swing._

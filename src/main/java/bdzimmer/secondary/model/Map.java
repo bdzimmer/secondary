@@ -1,7 +1,5 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// TODO: refactor.
-
 package bdzimmer.secondary.model;
 
 import java.awt.image.BufferedImage;

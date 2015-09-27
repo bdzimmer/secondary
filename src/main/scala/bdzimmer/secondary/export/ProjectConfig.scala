@@ -53,7 +53,7 @@ class ProjectConfig(
   val localExportPathFile = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
 
-  // TODO: this is awkward
+  // TODO: fix awkward creation of mapped content path
   val mappedContentPathActual = if (mappedContentPath.equals("")) {
     localContentPath
   } else {

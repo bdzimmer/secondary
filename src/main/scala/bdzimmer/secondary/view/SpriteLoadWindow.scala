@@ -11,8 +11,8 @@
 
 package bdzimmer.secondary.view
 
-import java.awt.{Color, Component}
-import java.awt.event.{ActionEvent, ActionListener}
+import java.awt.{Color, Component}                     // scalastyle:ignore illegal.imports
+import java.awt.event.{ActionEvent, ActionListener}    // scalastyle:ignore illegal.imports
 import java.io.File
 import java.util.ArrayList
 
@@ -32,7 +32,7 @@ class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(m
     // load a list from the sprite directory describing the collection
     // of spritesheets and their various types and descriptions
 
-    // TODO: this is incorrect and obsolete
+    // TODO: spritesheet loading with csv is incorrect and obsolete
     val lines = scala.io.Source.fromFile(inputDir + spritesheetList).getLines
 
     val filesAndDescriptions = lines.map(x => {

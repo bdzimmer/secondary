@@ -10,7 +10,7 @@ package bdzimmer.secondary.export
 
 import org.scalatest.FunSuite
 
-import java.awt.Desktop
+import java.awt.Desktop       // scalastyle:ignore illegal.imports
 import java.io.File
 
 

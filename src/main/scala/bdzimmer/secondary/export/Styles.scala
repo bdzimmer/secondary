@@ -4,12 +4,15 @@
 
 // 2015-09-07: Created.
 
+// scalastyle:off magic.number
+
 package bdzimmer.secondary.export
 
 import org.apache.commons.io.{FileUtils, IOUtils}
 import org.apache.commons.compress.archivers.zip.ZipFile
 
 import java.io.{File, FileOutputStream}
+import scala.util.Try
 
 
 object Styles {
@@ -86,14 +89,12 @@ body {
 
   // extract a zip archive
   // http://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files
-  def extractArchive(archive: File, outputDirname: String) {
+  def extractArchive(archive: File, outputDirname: String): Unit = {
 
-    // TODO: idiomatic exception handling
     val zipFile = new ZipFile(archive)
-    try {
+    Try {
       val entries = zipFile.getEntries
       val entriesIterator = Iterator.continually((entries, entries.nextElement)).takeWhile(_._1.hasMoreElements).map(_._2)
-
       entriesIterator.foreach(entry => {
         val extractedEntry = new File(outputDirname, entry.getName)
 
@@ -108,10 +109,9 @@ body {
           out.close
         }
       })
-
-    } finally {
-      zipFile.close
     }
+    zipFile.close
+
   }
 
 

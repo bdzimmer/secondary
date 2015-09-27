@@ -13,13 +13,12 @@ import com.google.api.services.drive.model.{File => DriveFile}
 
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 
-// TODO: rename ContentTransformer to something more meaningful
-// it really just validates and holds references to Drive files for nonlocal projects.
+// validates and holds references to Drive files for nonlocal projects.
 // functions for syncing to and from Google Drive
 class DriveSync(projConf: ProjectConfig, drive: Drive) {
 
   // get Drive files
-  // TODO: use pattern matching and sys.exit on these rather than get
+  // TODO: use pattern matching and sys.exit on to find project drive files rather than get
   val driveRootFile = DriveUtils.getRoot(drive)
   val driveInputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveInputPathList).get
   val driveOutputFile = DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveOutputPathList).get
@@ -95,11 +94,11 @@ class DriveSync(projConf: ProjectConfig, drive: Drive) {
 
       println("downloading: " + filename)
 
-      val localDir = filename.split("/").dropRight(1).mkString("/")
-      val localDirFile = new java.io.File(projConf.localContentPath + "/" + localDir)
+      val localDir = filename.split("/").dropRight(1).mkString(File.separator)
+      val localDirFile = new java.io.File(projConf.localContentPath + File.separator + localDir)
       localDirFile.mkdirs
 
-      DriveUtils.downloadFile(drive, driveFile, projConf.localContentPath + "/" + filename)
+      DriveUtils.downloadFile(drive, driveFile, projConf.localContentPath + File.separator + filename)
 
       (filename, (driveFile.getId, driveFile.getModifiedDate))
 
@@ -128,7 +127,7 @@ class DriveSync(projConf: ProjectConfig, drive: Drive) {
     // parent is returned - produces correct behavior
     // TODO: awkward - empty list for current directory must attempt to be created.
     val parentDirsMap = parentDirs.distinct.map(x => {
-      println("creating drive folder: " + x.mkString("/"))
+      println("creating drive folder: " + x.mkString(File.separator))
       (x, DriveUtils.createFolders(drive, driveOutputFile, x).get)
     }).toMap
 
@@ -138,7 +137,7 @@ class DriveSync(projConf: ProjectConfig, drive: Drive) {
       // val location = DriveUtils.createFolders(drive, driveOutputFile, x.split("/").toList.dropRight(1)).get
 
       val location = parentDirsMap(drivePath)
-      DriveUtils.uploadFile(drive, projConf.localExportPath + "/" + x, location)
+      DriveUtils.uploadFile(drive, projConf.localExportPath + File.separator + x, location)
 
     }})
 

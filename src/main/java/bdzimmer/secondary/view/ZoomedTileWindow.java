@@ -510,7 +510,7 @@ public class ZoomedTileWindow extends JFrame {
     }
   }
 
-  // TODO: Can we get rid of this?
+
   /**
    * Set the tile to view and edit.
    * 

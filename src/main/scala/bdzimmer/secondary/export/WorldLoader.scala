@@ -68,10 +68,7 @@ object WorldLoader {
   }
 
 
-
-
-  // TODO: this should happen when the world is first loaded,
-  // and a list of world items should be passed around rather than the head
+  // create a list of all world items in a hierarchy
   def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
     case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
     case _ => List(worldItem)
@@ -81,7 +78,7 @@ object WorldLoader {
   def loadFile(filename: String, inputDir: String, fileStatus: FileModifiedMap): CollectionItemBean = {
 
     val yamlString = FileUtils.readFileToString(
-        new java.io.File(inputDir + "/" + filename),
+        new java.io.File(inputDir + File.separator + filename),
         "UTF-8")
 
     val collectionBean = loadCollection(yamlString)

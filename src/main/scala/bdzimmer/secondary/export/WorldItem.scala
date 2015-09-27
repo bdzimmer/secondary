@@ -43,11 +43,6 @@ object NonNullString {
 
 trait WorldItemBean {
 
-  // @BeanProperty var id: String = ""             // TODO: enforce provided
-  // @BeanProperty var name: String = ""           // TODO: enforce provided
-  // @BeanProperty var description: String = ""
-  // @BeanProperty var notes: String = ""
-
   var id: String = ""
   def getId(): String = id
   def setId(id: String): Unit = {this.id = NonNullString(id)}
@@ -77,12 +72,12 @@ trait WorldItemBean {
 // represents metadata for a piece of content
 // that exists in its own file.
 trait MetaItemBean extends WorldItemBean {
-  @BeanProperty var filename: String = ""    // TODO: enforce provided
+  @BeanProperty var filename: String = ""
 }
 
 // a piece of content that is a tileset with attributes
 trait TileMetaItemBean extends MetaItemBean {
-  @BeanProperty var tiletype: String = ""    // TODO: enforce provided
+  @BeanProperty var tiletype: String = ""
 }
 
 
@@ -136,7 +131,7 @@ class MapItemBean extends MetaItemBean {
 
 class CharacterItemBean extends WorldItemBean {
 
-  @BeanProperty var image: String = ""    // TODO: enforce provided
+  @BeanProperty var image: String = ""
 
   def getVal(): CharacterItem = CharacterItem(
       id, name, description, notes,
@@ -146,8 +141,8 @@ class CharacterItemBean extends WorldItemBean {
 
 }
 
-// immutable versions ///////////////////////////////////////////////////////////////////
 
+// immutable versions ///////////////////////////////////////////////////////////////////
 
 // all inheritance done with traits; nothing descends from case classes
 
@@ -211,7 +206,6 @@ case class CharacterItem(
 
 object WorldItem {
 
-
   // YAML constructor with descriptions for the various types
 
   val constructor = new Constructor(classOf[CollectionItemBean])
@@ -222,8 +216,6 @@ object WorldItem {
   constructor.addTypeDescription(new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")))
   constructor.addTypeDescription(new TypeDescription(classOf[MapItemBean], new Tag("!map")))
   constructor.addTypeDescription(new TypeDescription(classOf[CharacterItemBean], new Tag("!character")))
-
-  // TODO: filterList may not be necessary.
 
   /**
    * Filter a list of WorldItems by type.

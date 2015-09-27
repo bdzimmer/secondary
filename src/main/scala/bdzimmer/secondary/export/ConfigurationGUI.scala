@@ -24,7 +24,7 @@ class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
 
   def top = new Frame {
 
-    val myBorder = new EmptyBorder(10, 10, 10, 10)
+    val myBorder = new EmptyBorder(10, 10, 10, 10)  // scalastyle:ignore magic.number
 
     val saveStatus = new Label("")
 
@@ -46,7 +46,7 @@ class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
       }
     }
 
-    val savePanel = new GridPanel(1, 4) {
+    val savePanel = new GridPanel(1, 4) {   // scalastyle:ignore magic.number
       contents ++= List(saveStatus, new Label(), save, done)
     }
 
