@@ -13,19 +13,25 @@ import org.scalatest.FunSuite
 import java.awt.Desktop       // scalastyle:ignore illegal.imports
 import java.io.File
 
+import scala.util.Try
+
 
 class ExportLocalTest extends FunSuite {
 
   // test local export by building the documentation
   test("local export integration test") {
 
-    val projConf = ProjectConfig("doc/")
+    val projectDir = System.getProperty("user.dir") + File.separator + "doc"
+    val projConf = ProjectConfig(projectDir)
 
     ExportPipelines.exportLocalAll(projConf)
     ExportPipelines.addStyles(projConf)
 
     val curDir = System.getProperty("user.dir")
-    Desktop.getDesktop.browse(new File(s"${curDir}/${projConf.localExportPath}/index.html").toURI)
+    Try {
+      Desktop.getDesktop.browse(
+          new File(s"${projConf.localExportPath + File.separator}index.html").toURI)
+    }
 
   }
 
