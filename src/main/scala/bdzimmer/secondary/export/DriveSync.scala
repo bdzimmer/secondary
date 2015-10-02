@@ -7,6 +7,7 @@
 package bdzimmer.secondary.export
 
 import java.io.File
+import java.util.regex.Pattern
 
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.{File => DriveFile}
@@ -109,7 +110,10 @@ class DriveSync(
   // new upload function
   def upload(filesToUpload: List[String]): Unit = {
 
-    val filesToUploadSplit = filesToUpload map (_.split("/").toList)
+
+    // TODO: quote file separator string for pattern (fails when file separator is a backslash)
+    val filesToUploadSplit = filesToUpload.map(
+        _.split(Pattern.quote(File.separator)).toList)
 
     // for each file to upload, delete it if it already exists
     val driveFiles = filesToUpload.zip(filesToUploadSplit.map(x => DriveUtils.getFileByPath(drive, driveOutputFile, x)))
