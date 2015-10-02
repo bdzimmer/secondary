@@ -85,14 +85,21 @@ object ExportPipelines {
     val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
     ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
-    // perform exports
-    val (allPageOutputs, allImageOutputs) = export(
-        metaStatusChanges, fileStatusChanges, world, images = true, projConf)
+    // only export / upload if files have changed
+    if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
 
-    allPageOutputs.foreach(x => println("page created: " + x ))
-    allImageOutputs.foreach{case (k, v) => {
-      v foreach(x => println("image created: " + k + " -> " + x))
-    }}
+      // perform exports
+      val (allPageOutputs, allImageOutputs) = export(
+          metaStatusChanges, fileStatusChanges, world, images = true, projConf)
+
+      allPageOutputs.foreach(x => println("page created: " + x ))
+      allImageOutputs.foreach{case (k, v) => {
+        v foreach(x => println("image created: " + k + " -> " + x))
+      }}
+
+    } else {
+      println("Nothing to do.")
+    }
 
   }
 
@@ -125,20 +132,27 @@ object ExportPipelines {
     val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
     ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
-    // perform exports
-    val (allPageOutputs, allImageOutputs) = export(
-        metaStatusChanges, fileStatusChanges, masterCollection, images = true, projConf)
+    // only export / upload if files have changed
+    if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
 
-    allPageOutputs.foreach(x => println("page created: " + x ))
-    allImageOutputs.foreach{case (k, v) => {
-      v foreach(x => println("image created: " + k + " -> " + x))
-    }}
+      // perform exports
+      val (allPageOutputs, allImageOutputs) = export(
+          metaStatusChanges, fileStatusChanges, masterCollection, images = true, projConf)
 
-    // do an upload; only upload files derived from those that were downloaded
-    val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
-    filesToUpload foreach(x => println("to upload: " + x))
+      allPageOutputs.foreach(x => println("page created: " + x ))
+      allImageOutputs.foreach{case (k, v) => {
+        v foreach(x => println("image created: " + k + " -> " + x))
+      }}
 
-    ds.upload(filesToUpload)
+      // do an upload; only upload files derived from those that were downloaded
+      val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
+      filesToUpload foreach(x => println("to upload: " + x))
+
+      ds.upload(filesToUpload)
+
+    } else {
+      println("Nothing to do.")
+    }
 
   }
 

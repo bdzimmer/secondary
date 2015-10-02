@@ -39,14 +39,14 @@ import java.io.File
 
 import javax.imageio.ImageIO
 
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 
 import bdzimmer.secondary.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
 
 
 class ExportImages(world: List[WorldItem], val location: String, license: String) {
 
-  val imagesLocation = location + "/" + ExportImages.imagesDir + "/"
+  val imagesLocation = location + File.separator + ExportImages.imagesDir + File.separator
   new File(imagesLocation).mkdir
 
   val metaItems = WorldItem.filterList[MetaItem](world)
@@ -102,7 +102,9 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   // download or copy image files to the output location
   def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
 
-    val relativeName = ExportPages.imageItemImagePath(imageItem)
+    // val relativeName = ExportPages.imageItemImagePath(imageItem)
+    val relativeName = (ExportImages.imagesDir + File.separator +
+        imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename))
     val absoluteName = location + File.separator + relativeName
 
     imageItem.filename.startsWith("wikimedia:") match {

@@ -30,7 +30,7 @@ class Driver {
   val driveSync = Driver.createDriveSync(projConf)
 
   def run(args: Array[String]): Unit = {
-    val command = args.headOption.getOrElse(Driver.defaultCommand)
+    val command = args.headOption.getOrElse(Driver.DefaultCommand)
     command match {
       case DriverCommands.Interactive => runInteractive
       case DriverCommands.Help => Driver.showUsage
@@ -75,6 +75,7 @@ class Driver {
     case DriverCommands.Browse => browseLocal
     case DriverCommands.BrowseDrive => browseRemote
     case DriverCommands.Editor => new Main(projConf.mappedContentPathActual, "Secondary Editor")
+    case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Help => Driver.showCommands
     case _ => println("Invalid command. Use 'help' for a list of commands.")
   }
@@ -102,14 +103,22 @@ class Driver {
     }
   }
 
+  def serverMode(seconds: Int): Unit = {
+    while(true) {
+      runCommand(DriverCommands.ExportDriveSync)
+      Thread.sleep(seconds * 1000)
+    }
+  }
+
 }
 
 
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.09.27"
-  val defaultCommand = DriverCommands.Interactive
+  val Title = "Secondary - create worlds from text - v2015.10.01"
+  val DefaultCommand = DriverCommands.Interactive
+  val ServerRefreshSeconds = 60
 
   def main(args: Array[String]): Unit = {
     val driver = new Driver()
@@ -175,6 +184,7 @@ object DriverCommands {
   val Browse = "browse-local"
   val BrowseDrive = "browse"
   val Editor = "editor"
+  val Server = "server"
   val Interactive = "interactive"
   val Help = "help"
 
@@ -185,6 +195,7 @@ object DriverCommands {
       (ExportDriveSync, "Drive to content, content to web, web to Drive"),
       (Browse, "browse local project web site"),
       (BrowseDrive, "browse Drive project web site"),
-      (Editor, "start editor (beta)"),
+      (Editor, "start editor (alpha)"),
+      (Server, "server mode"),
       (Help, "show usage / commands"))
 }
