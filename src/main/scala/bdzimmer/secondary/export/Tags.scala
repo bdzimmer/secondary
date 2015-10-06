@@ -88,4 +88,9 @@ object Tags {
   def br(): String = {
     """<br />"""
   }
+
+  def p(text: String): String = {
+    s"<p>${text}</p>"
+  }
+
 }

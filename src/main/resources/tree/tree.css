@@ -1,0 +1,33 @@
+/* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
+
+.link {
+  fill: none;
+  stroke: #000;
+}
+
+.spouse {
+  fill: none;
+  stroke: #00F;
+}
+
+.border {
+  fill: none;
+  shape-rendering: crispEdges;
+  stroke: #AAA;
+}
+
+.node {
+  stroke: #000;
+  fill: #DDD;
+}
+
+.nodetext {
+  font-size: 10px;
+}
+
+.tooltip {
+  background: #AAA;
+  width: 150px;
+  padding: 10px;
+  font: 10px;
+}

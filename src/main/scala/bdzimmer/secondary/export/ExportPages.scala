@@ -29,6 +29,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
   val indexPageFile = "indexpage.html"
   val tasksPageFile = "tasks.html"
+  val familyTreesPageFile = "familytrees.html"
 
   val imagesLocation = location + File.separator + ExportImages.imagesDir + File.separator
   new File(imagesLocation).mkdir
@@ -58,6 +59,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
     val toolbar = Some(List(
             link("Index", indexPageFile),
+            link("Family Trees", familyTreesPageFile),
             link("Tasks", tasksPageFile),
             link("Edit", ExportPages.notepadURL(master))).mkString("&nbsp;&nbsp;&middot;&nbsp;") +
             hr)
@@ -168,6 +170,33 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
     relFilePath
   }
+
+
+
+
+  def createFamilyTreesPage(): String = {
+
+    val relFilePath = familyTreesPageFile
+    val characters = WorldItem.filterList[CharacterItem](world)
+
+
+    PageTemplates.createArticlePage(
+
+        location + File.separator + relFilePath,
+        "Family Trees", "",
+
+        None,
+
+        column(Column12,
+          // for now
+          FamilyTree.getJs(characters)
+        ),
+
+        license)
+
+    relFilePath
+  }
+
 
 
 
