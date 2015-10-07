@@ -4,6 +4,9 @@
 // Based on code from this stackoverflow question:
 // http://stackoverflow.com/questions/31245751/how-do-you-create-a-family-tree-in-d3-js
 
+// 2015-10-3: Created.
+// 2015-10-6: Style fixes.
+
 
 var boxWidth = 100, boxHeight = 50;
 var bendLocation = 0.3;
@@ -41,12 +44,11 @@ function drawTree(root, id, width, height)  {
     }))
     .append("g")
     
-  var allNodes = flatten(root);
+  var flatNodes = flatten(root);
 
   // compute layout
-  var tree = d3.layout.tree().size([width - boxWidth, height - boxHeight]),
-    nodes = tree.nodes(root),
-    links = tree.links(nodes);
+  var tree = d3.layout.tree().size([width - boxWidth, height - boxHeight]);
+  var links = tree.links(tree.nodes(root));
 
   // add link lines
   svg.selectAll(".link")
@@ -56,7 +58,7 @@ function drawTree(root, id, width, height)  {
     .attr("d", elbow);
 
   var nodes = svg.selectAll(".node")
-    .data(nodes)
+    .data(tree.nodes(root))
     .enter();
 
   // add spouse lines
@@ -64,7 +66,9 @@ function drawTree(root, id, width, height)  {
     .data(spouses)
     .enter().append("path")
     .attr("class", "spouse")
-    .attr("d", spouseLine);
+    .attr("d", function(d) {
+    	spouseLine(d, flatNodes);
+    });
 
   
   // probably a better way to do this with groups
@@ -79,15 +83,15 @@ function drawTree(root, id, width, height)  {
     })
     .attr("display", function (d) {
       if (d.hidden) {
-        return "none"
+        return "none";
       } else {
-        return ""
+        return "";
       };
     })
     .attr("x", connectX)
     .attr("y", connectY)
-    .on("mouseenter", mouseover)
-    .on("mouseleave", mouseout)
+    .on("mouseenter", mousenter)
+    .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
 
 
@@ -99,23 +103,23 @@ function drawTree(root, id, width, height)  {
     })
     .attr("x", textX)
     .attr("y", textY)
-    .on("mouseenter", mouseover)
-    .on("mouseleave", mouseout)
+    .on("mouseenter", mousenter)
+    .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
 
 
 }
 
 // draw a spouse line
-function spouseLine(d) {
+function spouseLine(d, flatNodes) {
 
   //start point
-  var startNode = allNodes.filter(function (v) {
-    return (d.srcId == v.id);
+  var startNode = flatNodes.filter(function (v) {
+    return (d.srcId === v.id);
   });
   //end point
-  var endNode = allNodes.filter(function (v) {
-    return (d.dstId == v.id);
+  var endNode = flatNodes.filter(function (v) {
+    return (d.dstId === v.id);
   });
 
   // line start and end
@@ -137,8 +141,12 @@ function flatten(root) {
   var n = [], i = 0;
 
   function recurse(node) {
-    if (node.children) node.children.forEach(recurse);
-    if (!node.id) node.id = ++i;
+    if (node.children) {
+    	node.children.forEach(recurse);
+    }
+    if (!node.id) {
+    	node.id = ++i;
+    }
     n.push(node);
   }
   recurse(root);
@@ -157,9 +165,9 @@ function elbow(d, i) {
   var diff = d.source.y - d.target.y;
   var ny = d.target.y + diff * bendLocation;
 
-  lineData = [{x: d.target.x, y: d.target.y},
-              {x: d.target.x, y: ny},
-              {x: d.source.x, y: d.source.y}]
+  var lineData = [{x: d.target.x, y: d.target.y},
+                  {x: d.target.x, y: ny},
+                  {x: d.source.x, y: d.source.y}]
 
   var fun = d3.svg.line()
   .x(function (d) { return d.x; })
@@ -170,12 +178,12 @@ function elbow(d, i) {
 }
 
 // show / hide tooltip when mousing
-function mouseover(d) {
+function mousenter(d) {
   tooltip.html("Testing " + d.id)
     .style("opacity", 1);
 }
 
-function mouseout(d) {
+function mouseleave(d) {
   tooltip.html("").style("opacity", 0);
 }
 

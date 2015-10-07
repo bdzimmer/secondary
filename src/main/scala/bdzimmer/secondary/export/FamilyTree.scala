@@ -27,11 +27,15 @@ object FamilyTree {
     val rootChars = characters.filter(isRoot)
     val nonRootChars = characters.filter(!isRoot(_))
 
-    val jsObjects = rootChars.map(x => {
+    // build trees for the root characters, but toss the ones that don't have any children
+    val trees = rootChars.map(x => buildTree(x, characters, true)).filter(_.children.length > 0)
+
+    // add a hidden parent to a tree
+    def wrapTree(te: TreeEntry): String = {
       "var root = " +
-      treeToJs(TreeEntry("root", "", true, true, List(buildTree(x, characters, true)))) + ";\n" +
+      treeToJs(TreeEntry("root", "", true, true, List(te))) + ";\n" +
       "var spouses = [];\n"
-    })
+    }
 
     /*
     Tags.p("Root characters: ") + Tags.listGroup(rootChars.map(x => Tags.listItem(x.name))) +
@@ -42,10 +46,10 @@ object FamilyTree {
     """<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>""" +
     """<link href="tree/tree.css" rel="stylesheet">""" +
     """<script src="tree/drawtree.js" charset="utf-8"></script>""" +
-    (rootChars.zip(jsObjects)).map({case (ch, js) => {
-      s"""<div id="${ch.id + "_tree"}"export></div>\n""" +
-      s"""<script>${js}\ndrawTree(root, "#${ch.id + "_tree"}", 800, 640)</script>\n"""
-    }}).mkString("\n" + Tags.hr + "\n")
+    (trees.map(tree => {
+      s"""<div id="${tree.id + "_tree"}"export></div>\n""" +
+      s"""<script>${wrapTree(tree)}\ndrawTree(root, "#${tree.id + "_tree"}", 800, 640)</script>\n"""
+    }).mkString("\n" + Tags.hr + "\n"))
 
   }
 
@@ -86,7 +90,7 @@ object FamilyTree {
     // println("allCharacters: " + allCharacters.map(_.id).mkString(","))
     // println("distinct children: " + distinctChildren.map(_.id).mkString(","))
 
-    // remove the distinct children from the allCharactersList to avoid loops in the tree
+    // remove the current node from the character list to avoid loops in the tree
     val childrenEntries = distinctChildren.map(child => {
       val newAllCharacters = allCharacters.filter(x => !x.id.equals(node.id))
       buildTree(child, newAllCharacters, false)
