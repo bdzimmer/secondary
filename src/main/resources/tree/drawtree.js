@@ -4,8 +4,8 @@
 // Based on code from this stackoverflow question:
 // http://stackoverflow.com/questions/31245751/how-do-you-create-a-family-tree-in-d3-js
 
-// 2015-10-3: Created.
-// 2015-10-6: Style fixes.
+// 2015-10-03: Created.
+// 2015-10-06: Style fixes. Better mouseovers and links to character pages.
 
 
 var boxWidth = 100, boxHeight = 50;
@@ -74,13 +74,15 @@ function drawTree(root, id, width, height)  {
   // probably a better way to do this with groups
   
   // add node rectangles
-  nodes.append("rect")
+  var groups = nodes.append("a")
+  	.attr("xlink:href", function(d){return d.id + ".html";});
+ 
+  	
+  groups.append("rect")
     .attr("class", "node")
     .attr("height", boxHeight)
     .attr("width", boxWidth)
-    .attr("id", function (d) {
-      return d.id;
-    })
+    .attr("id", function (d){return d.id;})
     .attr("display", function (d) {
       if (d.hidden) {
         return "none";
@@ -90,22 +92,20 @@ function drawTree(root, id, width, height)  {
     })
     .attr("x", connectX)
     .attr("y", connectY)
-    .on("mouseenter", mousenter)
+  	.on("mouseenter", mousenter)
     .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
-
-
-  // add node labels (names)
-  nodes.append("text")
+    
+  
+  groups.append("text")
     .attr("class", "nodetext")
-    .text(function (d) {
-      return d.name;
-    })
+    .text(function (d){return d.name;})
     .attr("x", textX)
     .attr("y", textY)
     .on("mouseenter", mousenter)
     .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
+    
 
 
 }
@@ -179,7 +179,7 @@ function elbow(d, i) {
 
 // show / hide tooltip when mousing
 function mousenter(d) {
-  tooltip.html("Testing " + d.id)
+  tooltip.html("<h4>" + d.name + "</h4><p>Testing</p>")
     .style("opacity", 1);
 }
 
@@ -189,8 +189,8 @@ function mouseleave(d) {
 
 function mousemove(d) {
   tooltip
-    .style("left", d3.event.pageX + "px")
-    .style("top",  d3.event.pageY + "px");
+    .style("left", d3.event.pageX + 10 + "px")
+    .style("top",  d3.event.pageY + 10 + "px");
 }
 
 
