@@ -3,11 +3,18 @@
 // Generate family trees using tags in characters.
 
 // 2015-10-05: Created. Spouse lines not supported yet.
+// 2015-10-07: Updates for previous and ancestor vs. parent relationships.
 
 package bdzimmer.secondary.export
 
 
-case class TreeEntry(id: String, name: String, hidden: Boolean, noparent: Boolean, children: List[TreeEntry])
+case class TreeEntry(
+    id: String,
+    name: String,
+    description: String,
+    hidden: Boolean,
+    parentType: String,
+    children: List[TreeEntry])
 
 
 object FamilyTree {
@@ -16,7 +23,7 @@ object FamilyTree {
   val DescendantTags = Set("son", "daughter", "descendant")
 
   // for now, all of the family trees
-  def getJs(characters: List[CharacterItem]): String = {
+  def getJs(characters: List[CharacterItem], np: NotesParser): String = {
 
     def isRoot(char: CharacterItem): Boolean = {
       val charTagKinds = char.tags.map(_.kind).toSet
@@ -28,12 +35,12 @@ object FamilyTree {
     val nonRootChars = characters.filter(!isRoot(_))
 
     // build trees for the root characters, but toss the ones that don't have any children
-    val trees = rootChars.map(x => buildTree(x, characters, true)).filter(_.children.length > 0)
+    val trees = rootChars.map(x => buildTree(x, characters, true, "none", np)).filter(_.children.length > 0)
 
     // add a hidden parent to a tree
     def wrapTree(te: TreeEntry): String = {
       "var root = " +
-      treeToJs(TreeEntry("root", "", true, true, List(te))) + ";\n" +
+      treeToJs(TreeEntry("root", "", "", true, "none", List(te))) + ";\n" +
       "var spouses = [];\n"
     }
 
@@ -56,7 +63,12 @@ object FamilyTree {
 
   // build family tree given a root character and a list of characters to
   // search for descendants.
-  def buildTree(node: CharacterItem, allCharacters: List[CharacterItem], root: Boolean): TreeEntry = {
+  def buildTree(
+      node: CharacterItem,
+      allCharacters: List[CharacterItem],
+      linkHidden: Boolean,
+      parentType: String,
+      np: NotesParser): TreeEntry = {
 
     // println(s"building tree for ${node.id}")
 
@@ -67,36 +79,48 @@ object FamilyTree {
     }
 
     // it's a child if it has an ancestor tag for the current character
-    val childrenReferencingThis = allCharacters.filter(char => {
-      filterTags(char.tags, AncestorTags).map(x => {
+    val children1 = allCharacters.map(char => {
+      val tags = filterTags(char.tags, AncestorTags).filter(x => {
         val matchChar = tagCharacter(x)
-        // println("   " + char.id + " has " + x + " " + matchChar.map(_.id).getOrElse("none"))
         matchChar.map(_.id.equals(node.id)).getOrElse(false)
-      }).exists(identity)
-    })
+      })
+      (char, tags.map(_.kind))
+    }).filter(_._2.length > 0).toMap
 
     // it's a child if the current character has a descendant tag for it
-    val childrenReferencedByThis =  allCharacters.filter(char => {
-      filterTags(node.tags, DescendantTags).map(x => {
+    val children2 =  allCharacters.map(char => {
+      val tags = filterTags(node.tags, DescendantTags).filter(x => {
         val matchChar = tagCharacter(x)
         // println("   " + node.id + " has " + x + " " + matchChar.map(_.id).getOrElse("none"))
         tagCharacter(x).map(_.id.equals(char.id)).getOrElse(false)
-      }).exists(identity)
-    })
+      })
+      (char, tags.map(_.kind))
+    }).filter(_._2.length > 0).toMap
 
-    // distinct children
-    val distinctChildren = (childrenReferencingThis ++ childrenReferencedByThis).distinct
+    // distinct children / tags
+    val distinctChildren = children1 ++ children2.map{
+      case (k, v) => k -> (v ++ children1.getOrElse(k, Nil)).distinct}
 
-    // println("allCharacters: " + allCharacters.map(_.id).mkString(","))
-    // println("distinct children: " + distinctChildren.map(_.id).mkString(","))
 
-    // remove the current node from the character list to avoid loops in the tree
-    val childrenEntries = distinctChildren.map(child => {
+    val childrenEntries = distinctChildren.toList.map({case (child, tagKinds) => {
+
+      // remove the current node from the character list to avoid loops in the tree
       val newAllCharacters = allCharacters.filter(x => !x.id.equals(node.id))
-      buildTree(child, newAllCharacters, false)
-    })
 
-    TreeEntry(node.id, node.name, false, root, childrenEntries)
+      val parentType = if (tagKinds.contains("ancestor") || tagKinds.contains("descendant")) {
+        "ancestor"
+      } else {
+        "parent"
+      }
+
+      buildTree(child, newAllCharacters, false, parentType, np)
+    }})
+
+    // take the first paragraph
+    val description = np.transform(
+        node.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
+
+    TreeEntry(node.id, node.name, description, false, parentType, childrenEntries)
 
   }
 
@@ -113,8 +137,9 @@ object FamilyTree {
 s"""{
   id: "${te.id}",
   name: "${te.name}",
+  description: "${te.description}",
   hidden: ${te.hidden},
-  no_parent: ${te.noparent},
+  parent_type: "${te.parentType}",
   ${childrenString}
 }"""
 

@@ -1,6 +1,12 @@
 /* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
 
-.link {
+.ancestor {
+  fill: none;
+  stroke: #000;
+  stroke-dasharray: 2,2
+}
+
+.parent {
   fill: none;
   stroke: #000;
 }
@@ -25,9 +31,8 @@
   font-size: 10px;
 }
 
-.tooltip {
+.preview {
   background: #AAA;
   width: 300px;
   padding: 10px;
-  font: 10px;
 }

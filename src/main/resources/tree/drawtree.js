@@ -6,10 +6,11 @@
 
 // 2015-10-03: Created.
 // 2015-10-06: Style fixes. Better mouseovers and links to character pages.
+// 2015-10-07: Further updates for preview text. Needs initial zoom / scale based on layout.
 
 
 var boxWidth = 100, boxHeight = 50;
-var bendLocation = 0.3;
+var bendLocation = 0.4;
 
 var connectX = function (d) {
     return d.x - boxWidth / 2;
@@ -27,13 +28,16 @@ var textY = function (d) {
     return d.y - 10;
 };
 
-var tooltip = d3.select("body").append("div")
-  .attr("class", "tooltip")
+var preview = d3.select("body").append("div")
+  .attr("class", "preview")
   .style("position", "absolute")
   .style("opacity", 0);
 
 function drawTree(root, id, width, height)  {
 
+	
+  // TODO: calculate layout first and set initial zoom
+	
   // zoomable SVG
   var svg = d3.select(id)
     .append("svg")
@@ -47,14 +51,16 @@ function drawTree(root, id, width, height)  {
   var flatNodes = flatten(root);
 
   // compute layout
-  var tree = d3.layout.tree().size([width - boxWidth, height - boxHeight]);
+  var tree = d3.layout.tree().nodeSize([boxWidth * 1.1, boxHeight * 2])  //.size([width - boxWidth, height - boxHeight]);
   var links = tree.links(tree.nodes(root));
 
   // add link lines
   svg.selectAll(".link")
     .data(links)
     .enter().append("path")
-    .attr("class", "link")
+    .attr("class", function(d) {
+      return d.target.parent_type;
+    })
     .attr("d", elbow);
 
   var nodes = svg.selectAll(".node")
@@ -106,8 +112,6 @@ function drawTree(root, id, width, height)  {
     .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
     
-
-
 }
 
 // draw a spouse line
@@ -138,15 +142,17 @@ function spouseLine(d, flatNodes) {
 // flatten the node list
 // I think I can get rid of the stuff to add node ids.
 function flatten(root) {
-  var n = [], i = 0;
+  var n = [];
+  
+  // var i = 0;
 
   function recurse(node) {
     if (node.children) {
     	node.children.forEach(recurse);
     }
-    if (!node.id) {
-    	node.id = ++i;
-    }
+    // if (!node.id) {
+    // 	node.id = ++i;
+    // }
     n.push(node);
   }
   recurse(root);
@@ -158,7 +164,7 @@ function flatten(root) {
 // draw right angle lines
 function elbow(d, i) {
 
-  if (d.target.no_parent) {
+  if (d.target.parent_type === "none") {
       return "M0,0L0,0";
   }
 
@@ -177,18 +183,18 @@ function elbow(d, i) {
   return fun(lineData);
 }
 
-// show / hide tooltip when mousing
+// show / hide preview when mousing
 function mousenter(d) {
-  tooltip.html("<h4>" + d.name + "</h4><p>Testing</p>")
+  preview.html("<h4>" + d.name + "</h4>" + d.description)
     .style("opacity", 1);
 }
 
 function mouseleave(d) {
-  tooltip.html("").style("opacity", 0);
+  preview.html("").style("opacity", 0);
 }
 
 function mousemove(d) {
-  tooltip
+  preview
     .style("left", d3.event.pageX + 10 + "px")
     .style("top",  d3.event.pageY + 10 + "px");
 }

@@ -189,7 +189,7 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
         column(Column12,
           // for now
-          FamilyTree.getJs(characters)
+          FamilyTree.getJs(characters, np)
         ),
 
         license)
