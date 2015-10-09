@@ -13,18 +13,18 @@
 
 .spouse {
   fill: none;
-  stroke: #00F;
+  stroke: #00f;
 }
 
 .border {
   fill: none;
   shape-rendering: crispEdges;
-  stroke: #AAA;
+  stroke: #aaa;
 }
 
 .node {
   stroke: #000;
-  fill: #DDD;
+  fill: #eee;
 }
 
 .nodetext {
@@ -32,7 +32,7 @@
 }
 
 .preview {
-  background: #AAA;
+  background: #eee;
   width: 300px;
   padding: 10px;
 }

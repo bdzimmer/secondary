@@ -7,7 +7,9 @@
 // 2015-10-03: Created.
 // 2015-10-06: Style fixes. Better mouseovers and links to character pages.
 // 2015-10-07: Further updates for preview text. Needs initial zoom / scale based on layout.
+// 2015-10-08: Initial zoom / scale.
 
+// TODO: consistent variable names; spouse lines and marriage nodes
 
 var boxWidth = 100, boxHeight = 50;
 var bendLocation = 0.4;
@@ -33,26 +35,49 @@ var preview = d3.select("body").append("div")
   .style("position", "absolute")
   .style("opacity", 0);
 
+
 function drawTree(root, id, width, height)  {
 
-	
-  // TODO: calculate layout first and set initial zoom
-	
-  // zoomable SVG
+  // define layout; compute node and link positions
+  var layout = d3.layout.tree().nodeSize([boxWidth * 1.1, boxHeight * 2]);
+  var nodes = layout.nodes(root);
+  var links = layout.links(nodes);
+  
+  // figure out initial translation and scale
+  // it appears that the translation and scale have to be applied to both
+  // the main svg group and the zoom listener for consistent results.
+  
+  var min_x = d3.min(nodes, function(d) {return d.x;}) - boxWidth / 2;
+  var max_x = d3.max(nodes, function(d) {return d.x;}) + boxWidth / 2;
+  var min_y = d3.min(nodes, function(d) {return d.y;}) - boxHeight / 2;
+  var max_y = d3.max(nodes, function(d) {return d.y;}) + boxHeight / 2;
+  
+  // TODO: consider height in start_scale
+  var start_scale = (max_x - min_x) / width
+  var trans_x = 0 - min_x / start_scale
+  var trans_y = 0 - min_y / start_scale
+  
+  console.log(trans_x + " " + trans_y + " " + start_scale);
+  
+  // create zoom object for initial layout that allows scaling and translation
+  var zoom = d3.behavior.zoom()
+    .on("zoom", function () {
+      svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+  	})
+  	.translate([trans_x, trans_y])
+  	.scale(start_scale);
+
+  // create SVG using zoom object
   var svg = d3.select(id)
     .append("svg")
     .attr("width", width + "px")
     .attr("height", height + "px")
-    .call(d3.behavior.zoom().on("zoom", function () {
-      svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-    }))
+    .call(zoom)
     .append("g")
+    .attr("transform", "translate(" + [trans_x, trans_y] + ") scale(" + start_scale + ")");
     
+  
   var flatNodes = flatten(root);
-
-  // compute layout
-  var tree = d3.layout.tree().nodeSize([boxWidth * 1.1, boxHeight * 2])  //.size([width - boxWidth, height - boxHeight]);
-  var links = tree.links(tree.nodes(root));
 
   // add link lines
   svg.selectAll(".link")
@@ -63,9 +88,6 @@ function drawTree(root, id, width, height)  {
     })
     .attr("d", elbow);
 
-  var nodes = svg.selectAll(".node")
-    .data(tree.nodes(root))
-    .enter();
 
   // add spouse lines
   svg.selectAll(".spouse")
@@ -77,13 +99,12 @@ function drawTree(root, id, width, height)  {
     });
 
   
-  // probably a better way to do this with groups
-  
   // add node rectangles
-  var groups = nodes.append("a")
-  	.attr("xlink:href", function(d){return d.id + ".html";});
- 
-  	
+  var groups = svg.selectAll(".node")
+	.data(nodes)
+	.enter().append("a")
+	.attr("xlink:href", function(d){return d.id + ".html";});
+
   groups.append("rect")
     .attr("class", "node")
     .attr("height", boxHeight)
@@ -112,6 +133,10 @@ function drawTree(root, id, width, height)  {
     .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
     
+  
+  
+
+  
 }
 
 // draw a spouse line
