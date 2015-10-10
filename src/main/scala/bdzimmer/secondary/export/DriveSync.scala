@@ -59,6 +59,7 @@ class DriveSync(
 
 
   // download only files that are not present in fileStatus or are newer
+  // 2015-10-10: modified so it won't attempt to download files that don't exist
   def downloadFilesIntelligent(files: List[String], fileStatus: FileModifiedMap): FileModifiedMap = {
 
     // find just the files that are newer those in fileStatus or not present in it
@@ -68,9 +69,9 @@ class DriveSync(
 
     val uniqueFilesDrive = files.map(filename => {
       val filePath = filename.split("/").toList
-      val driveFile = DriveUtils.getFileByPath(drive, driveInputFile, filePath).get
-      (filename, driveFile)
-    })
+      val driveFile = DriveUtils.getFileByPath(drive, driveInputFile, filePath)
+      driveFile.map((filename, _))
+    }).flatten
 
     val filesToDownload = uniqueFilesDrive.filter({case (filename, driveFile) => {
       fileStatus.get(filename) match {
