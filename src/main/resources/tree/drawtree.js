@@ -7,7 +7,8 @@
 // 2015-10-03: Created.
 // 2015-10-06: Style fixes. Better mouseovers and links to character pages.
 // 2015-10-07: Further updates for preview text. Needs initial zoom / scale based on layout.
-// 2015-10-08: Initial zoom / scale.
+// 2015-10-08: Finds initial zoom and scale.
+// 2015-10-10: Fixed bugs with initial zoom and scale finding.
 
 // TODO: consistent variable names; spouse lines and marriage nodes
 
@@ -47,25 +48,25 @@ function drawTree(root, id, width, height)  {
   // it appears that the translation and scale have to be applied to both
   // the main svg group and the zoom listener for consistent results.
   
-  var min_x = d3.min(nodes, function(d) {return d.x;}) - boxWidth / 2;
-  var max_x = d3.max(nodes, function(d) {return d.x;}) + boxWidth / 2;
-  var min_y = d3.min(nodes, function(d) {return d.y;}) - boxHeight / 2;
-  var max_y = d3.max(nodes, function(d) {return d.y;}) + boxHeight / 2;
+  var minX = d3.min(nodes, function(d) {return d.x;}) - boxWidth;
+  var maxX = d3.max(nodes, function(d) {return d.x;}) + boxWidth;
+  var minY = d3.min(nodes, function(d) {return d.y;}) - boxHeight;
+  var maxY = d3.max(nodes, function(d) {return d.y;}) + boxHeight;
+
+  var startScale = Math.min(width / (maxX - minX), height / (maxY - minY), 1)
+  var transX = 0 - minX * startScale
+  var transY = 0 - minY * startScale
   
-  // TODO: consider height in start_scale
-  var start_scale = (max_x - min_x) / width
-  var trans_x = 0 - min_x / start_scale
-  var trans_y = 0 - min_y / start_scale
-  
-  console.log(trans_x + " " + trans_y + " " + start_scale);
+  console.log(minX + " " + maxX + " "  + minY + " " + maxY)
+  console.log(transX + " " + transY + " " + startScale);
   
   // create zoom object for initial layout that allows scaling and translation
   var zoom = d3.behavior.zoom()
     .on("zoom", function () {
       svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
   	})
-  	.translate([trans_x, trans_y])
-  	.scale(start_scale);
+  	.translate([transX, transY])
+  	.scale(startScale);
 
   // create SVG using zoom object
   var svg = d3.select(id)
@@ -74,21 +75,19 @@ function drawTree(root, id, width, height)  {
     .attr("height", height + "px")
     .call(zoom)
     .append("g")
-    .attr("transform", "translate(" + [trans_x, trans_y] + ") scale(" + start_scale + ")");
-    
-  
-  var flatNodes = flatten(root);
+    .attr("transform", "translate(" + [transX, transY] + ") scale(" + startScale + ")");
 
   // add link lines
   svg.selectAll(".link")
     .data(links)
     .enter().append("path")
     .attr("class", function(d) {
-      return d.target.parent_type;
+      return d.target.parentType;
     })
     .attr("d", elbow);
-
-
+  
+  var flatNodes = flatten(root);
+  
   // add spouse lines
   svg.selectAll(".spouse")
     .data(spouses)
@@ -111,10 +110,10 @@ function drawTree(root, id, width, height)  {
     .attr("width", boxWidth)
     .attr("id", function (d){return d.id;})
     .attr("display", function (d) {
-      if (d.hidden) {
-        return "none";
-      } else {
+      if (d.nodeType === "character") {
         return "";
+      } else {
+        return "none";
       };
     })
     .attr("x", connectX)
@@ -132,12 +131,8 @@ function drawTree(root, id, width, height)  {
     .on("mouseenter", mousenter)
     .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
-    
-  
-  
-
-  
 }
+
 
 // draw a spouse line
 function spouseLine(d, flatNodes) {
@@ -169,15 +164,10 @@ function spouseLine(d, flatNodes) {
 function flatten(root) {
   var n = [];
   
-  // var i = 0;
-
   function recurse(node) {
     if (node.children) {
     	node.children.forEach(recurse);
     }
-    // if (!node.id) {
-    // 	node.id = ++i;
-    // }
     n.push(node);
   }
   recurse(root);
@@ -189,7 +179,7 @@ function flatten(root) {
 // draw right angle lines
 function elbow(d, i) {
 
-  if (d.target.parent_type === "none") {
+  if (d.target.parentType === "none") {
       return "M0,0L0,0";
   }
 
@@ -208,7 +198,9 @@ function elbow(d, i) {
   return fun(lineData);
 }
 
-// show / hide preview when mousing
+
+// mouse event functions
+
 function mousenter(d) {
   preview.html("<h4>" + d.name + "</h4>" + d.description)
     .style("opacity", 1);
@@ -223,23 +215,3 @@ function mousemove(d) {
     .style("left", d3.event.pageX + 10 + "px")
     .style("top",  d3.event.pageY + 10 + "px");
 }
-
-
-
-// Currently not using
-/*
-d3.selection.prototype.moveToFront = function() {
-  return this.each(function(){
-    this.parentNode.appendChild(this);
-  });
-};
-
-d3.selection.prototype.moveToBack = function() { 
-    return this.each(function() { 
-        var firstChild = this.parentNode.firstChild; 
-        if (firstChild) { 
-            this.parentNode.insertBefore(this, firstChild); 
-        } 
-    }); 
-};
-*/	
