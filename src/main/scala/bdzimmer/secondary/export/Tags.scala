@@ -56,12 +56,12 @@ object Tags {
   }
 
   def listItem(item: String): String = {
-    """  <li>%s</li>""".format(item)
+    """<li>%s</li>""".format(item)
   }
 
 
   def link(text: String, link: String): String = {
-    """  <a href="%s">%s</a>""".format(link, text)
+    """<a href="%s">%s</a>""".format(link, text)
   }
 
   def image(file: String, responsive: Boolean = false, maxWidth: Int = ImageMaxWidthDefault): String = {

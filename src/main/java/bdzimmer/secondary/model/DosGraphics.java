@@ -15,18 +15,17 @@ import javax.swing.JPanel;
 public class DosGraphics extends JPanel {
   private static final long serialVersionUID = 1; // Meaningless junk.
 
-  private int scale;
-  private int sud;
-  private int slr; // size
-
-  // public static int[] palette = new int[256];
-  // public static int[][] RGBPalette = new int[256][3];
-
-  private int[] palette = new int[256];
-  private int[][] rgbPalette = new int[256][3];
-
   private final BufferedImage screenBuffer;
   private final int[] buffer;
+  
+  private final int scale;
+  private final int sud;
+  private final int slr; // size
+
+  private final int[] palette = new int[256];
+  private int[][] rgbPalette = new int[256][3];
+
+
 
   /**
    * Create a new DosGraphics instance.
@@ -36,6 +35,7 @@ public class DosGraphics extends JPanel {
    * @param scale   pixel scaling
    */
   public DosGraphics(int ud, int lr, int scale) {
+    
     this.sud = ud;
     this.slr = lr;
     this.scale = scale;
@@ -43,11 +43,9 @@ public class DosGraphics extends JPanel {
     setPreferredSize(new Dimension(this.slr * this.scale, this.sud * this.scale));
     setVisible(true);
     setIgnoreRepaint(false);
-    // Buffers...finally...
+   
     screenBuffer = new BufferedImage(slr * this.scale, sud * this.scale,
         BufferedImage.TYPE_INT_RGB); // Created image buffer
-    // I don't fully understand this, but I think it is somehow linking the
-    // pixels in the BufferedImage with an array.
     buffer = ((DataBufferInt) screenBuffer.getRaster().getDataBuffer())
         .getData();
   }
@@ -105,33 +103,33 @@ public class DosGraphics extends JPanel {
    * @param lr        horizontal position
    * @param myColor   color to set
    */
-  public void setPixel(int ud, int lr, int myColor) {
-    int rowLength = this.slr * this.scale;
-    int upperleft = ud * this.scale * rowLength + lr * this.scale;
-    int curColor = palette[myColor];
+  public void setPixel(int ud, int lr, int colorIndex) {
+    int rowLength = slr * scale;
+    int upperleft = ud * scale * rowLength + lr * scale;
+    int curColor = palette[colorIndex];
 
     if (this.scale == 2) {
 
-      this.buffer[upperleft] = curColor;
-      this.buffer[upperleft + 1] = curColor;
-      this.buffer[upperleft + rowLength] = curColor;
-      this.buffer[upperleft + rowLength + 1] = curColor;
+      buffer[upperleft] = curColor;
+      buffer[upperleft + 1] = curColor;
+      buffer[upperleft + rowLength] = curColor;
+      buffer[upperleft + rowLength + 1] = curColor;
 
     } else if (this.scale == 3) {
 
-      this.buffer[upperleft] = curColor;
-      this.buffer[upperleft + 1] = curColor;
-      this.buffer[upperleft + 2] = curColor;
+      buffer[upperleft] = curColor;
+      buffer[upperleft + 1] = curColor;
+      buffer[upperleft + 2] = curColor;
 
-      this.buffer[upperleft + rowLength] = curColor;
-      this.buffer[upperleft + rowLength + 1] = curColor;
-      this.buffer[upperleft + rowLength + 2] = curColor;
+      buffer[upperleft + rowLength] = curColor;
+      buffer[upperleft + rowLength + 1] = curColor;
+      buffer[upperleft + rowLength + 2] = curColor;
 
       rowLength *= 2;
 
-      this.buffer[upperleft + rowLength] = curColor;
-      this.buffer[upperleft + rowLength + 1] = curColor;
-      this.buffer[upperleft + rowLength + 2] = curColor;
+      buffer[upperleft + rowLength] = curColor;
+      buffer[upperleft + rowLength + 1] = curColor;
+      buffer[upperleft + rowLength + 2] = curColor;
 
     } else {
 

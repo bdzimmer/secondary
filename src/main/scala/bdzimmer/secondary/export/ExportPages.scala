@@ -41,12 +41,13 @@ class ExportPages(
   val metaItems = WorldItem.filterList[MetaItem](world)
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
+
     items map(item => item match {
       case x: CharacterItem => createCharacterPage(x)
       case x: MapItem => createMapPage(x)
       case x: CollectionItem => createCollectionPage(x)
       case x: ImageItem => createImagePage(x)
-      case x: WorldItem => createItemPage(x)
+      case _ => createItemPage(item)
     }) filter (!_.equals(""))
 
   }
@@ -331,21 +332,21 @@ object ExportPages {
   val Slash = "/"
 
   // recursively generate nested lists of links from a CollectionItem
-  def getCollectionLinks(worldItem: WorldItem): String =  worldItem match {
+  def getCollectionLinks(item: WorldItem): String =  item match {
     case x: CollectionItem => listItem(textLinkPage(x) + listGroup(x.children.map(x => getCollectionLinks(x))))
-    case x: WorldItem => listItem(textLinkPage(x))
+    case _ => listItem(textLinkPage(item))
   }
 
 
   // recursively generated nested lists of links with descriptions from a CollectionItem
-  def getCollectionLinksWithDescription(worldItem: WorldItem): String =  worldItem match {
+  def getCollectionLinksWithDescription(item: WorldItem): String =  item match {
     case x: CollectionItem => listItem(
         textLinkPage(x) +
         (if (x.description.length > 0 ) " - " + NotesParser.processLine(x.description) else "") +
         listGroup(x.children.map(x => getCollectionLinksWithDescription(x))))
-    case x: WorldItem => listItem(
-        textLinkPage(x) +
-        (if (x.description.length > 0 ) " - " + NotesParser.processLine(x.description) else ""))
+    case _ => listItem(
+        textLinkPage(item) +
+        (if (item.description.length > 0 ) " - " + NotesParser.processLine(item.description) else ""))
   }
 
 

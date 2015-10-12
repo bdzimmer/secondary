@@ -113,8 +113,6 @@ object ExportPipelines {
   // Drive -> content, content -> web, web -> Drive
   def exportDriveSync(projConf: ProjectConfig, ds: DriveSync): Unit = {
 
-    // TODO: think about how to handle duplicate code between the different pipelines
-
     // download the metadata, update status
     val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveMetaStatusFile
     val oldMetaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
@@ -149,13 +147,12 @@ object ExportPipelines {
 
       allPageOutputs.foreach(x => println("page created: " + x ))
       allImageOutputs.foreach{case (k, v) => {
-        v foreach(x => println("image created: " + k + " -> " + x))
+        v.foreach(x => println("image created: " + k + " -> " + x))
       }}
 
       // do an upload; only upload files derived from those that were downloaded
       val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
       filesToUpload foreach(x => println("to upload: " + x))
-
       ds.upload(filesToUpload)
 
     } else {

@@ -281,7 +281,7 @@ public class TilesEditorWindow extends JFrame {
               * this.tileSet.attrs.height, 16 * this.tileSet.attrs.width,
           this.scale);
     } else {
-      dosGraphics = new DosGraphics((this.tileSet.attrs.height),
+      dosGraphics = new DosGraphics(this.tileSet.attrs.height,
           this.tileSet.attrs.count * this.tileSet.attrs.width, this.scale);
     }
     dosGraphics.setRgbPalette(rgbPalette);

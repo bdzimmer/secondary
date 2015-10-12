@@ -28,15 +28,12 @@ object PageTemplates {
     <meta name="description" content="">
     <meta name="author" content="">
 
-
     <title>${title}</title>
 
     <!-- Fonts -->
     <link href='https://fonts.googleapis.com/css?family=${Styles.FontFace.replace(' ', '+')}:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
-
     <!-- Bootstrap core CSS -->
     <link href="styles/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Custom styles for Secondary -->
     <link href="styles/secondary.css" rel="stylesheet">
 
@@ -49,11 +46,9 @@ object PageTemplates {
     <style>
       ${styles}
     </style>
-
   </head>
 
   <body>
-
     ${body}
 
     <!-- Bootstrap core JavaScript
@@ -61,7 +56,6 @@ object PageTemplates {
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="styles/bootstrap/js/bootstrap.min.js"></script>
-
   </body>
 </html>
   """
@@ -69,7 +63,6 @@ object PageTemplates {
     val fileWriter = new java.io.FileWriter(outputFile, false)
     fileWriter.write(pageText)
     fileWriter.close
-
   }
 
 
