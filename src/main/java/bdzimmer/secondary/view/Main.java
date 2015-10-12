@@ -118,7 +118,7 @@ public class Main extends JFrame {
     Main.paletteWindow.setLocationRelativeTo(null);
 
     setAlwaysOnTop(true);
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     setTitle(title);
 
     // Menubar
@@ -131,7 +131,7 @@ public class Main extends JFrame {
     JMenuItem jmExit = new JMenuItem("Exit");
     jmExit.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        System.exit(0);
+        dispose();
       }
     });
     fileMenu.add(jmExit);

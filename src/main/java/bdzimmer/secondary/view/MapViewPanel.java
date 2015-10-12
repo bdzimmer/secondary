@@ -124,8 +124,8 @@ public class MapViewPanel extends JPanel {
           for (int i = 0; i < 12; i++) {
             for (int j = 0; j < 20; j++) {
               int curTile;
-              if (((vud + i) <= 127) && ((vud + i) >= 0) && ((vlr + j) <= 127)
-                  && ((vlr + j) >= 0)) {
+              if ((vud + i <= 127) && (vud + i >= 0)
+                  && (vlr + j <= 127) && (vlr + j >= 0)) {
                 curTile = map.overMap[i + vud][j + vlr];
               } else {
                 curTile = 0;
