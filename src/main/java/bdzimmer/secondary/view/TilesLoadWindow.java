@@ -80,7 +80,7 @@ public class TilesLoadWindow extends WorldObjectWindow {
       DosGraphics dosGraphics = new DosGraphics();
       
       Tiles tiles = new Tiles(
-          TileOptions.get("Tiles"),
+          TileOptions.getOrQuit("Tiles"),
           new File(this.tilesFile),
           dosGraphics.getRgbPalette());
       

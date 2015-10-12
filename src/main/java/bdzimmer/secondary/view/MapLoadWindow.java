@@ -62,7 +62,7 @@ public class MapLoadWindow extends WorldObjectWindow {
       DosGraphics dg = new DosGraphics();
       
       Tiles mapTiles = new Tiles(
-          TileOptions.get("Tiles"),
+          TileOptions.getOrQuit("Tiles"),
           new File(this.tilesFile), dg.getRgbPalette());
       dg.updateClut();
       this.mapImage = curMap.getMapImage(mapTiles, dg);

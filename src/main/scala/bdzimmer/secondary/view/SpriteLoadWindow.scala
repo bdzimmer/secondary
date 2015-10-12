@@ -38,7 +38,8 @@ class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(m
     val filesAndDescriptions = lines.map(x => {
       val items = x.split(",\\s*").map(_.trim)
 
-      (items(0), items(1), TileOptions.get(items(2)))
+      // TODO: do something else here to deal with the Option
+      (items(0), items(1), TileOptions.getOrQuit(items(2)))
 
     }).toList
 

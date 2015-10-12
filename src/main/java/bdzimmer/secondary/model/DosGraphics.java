@@ -25,8 +25,8 @@ public class DosGraphics extends JPanel {
   private int[] palette = new int[256];
   private int[][] rgbPalette = new int[256][3];
 
-  private BufferedImage screenBuffer;
-  private int[] myBuffer;
+  private final BufferedImage screenBuffer;
+  private final int[] buffer;
 
   /**
    * Create a new DosGraphics instance.
@@ -48,7 +48,7 @@ public class DosGraphics extends JPanel {
         BufferedImage.TYPE_INT_RGB); // Created image buffer
     // I don't fully understand this, but I think it is somehow linking the
     // pixels in the BufferedImage with an array.
-    myBuffer = ((DataBufferInt) screenBuffer.getRaster().getDataBuffer())
+    buffer = ((DataBufferInt) screenBuffer.getRaster().getDataBuffer())
         .getData();
   }
 
@@ -112,33 +112,33 @@ public class DosGraphics extends JPanel {
 
     if (this.scale == 2) {
 
-      this.myBuffer[upperleft] = curColor;
-      this.myBuffer[upperleft + 1] = curColor;
-      this.myBuffer[upperleft + rowLength] = curColor;
-      this.myBuffer[upperleft + rowLength + 1] = curColor;
+      this.buffer[upperleft] = curColor;
+      this.buffer[upperleft + 1] = curColor;
+      this.buffer[upperleft + rowLength] = curColor;
+      this.buffer[upperleft + rowLength + 1] = curColor;
 
     } else if (this.scale == 3) {
 
-      this.myBuffer[upperleft] = curColor;
-      this.myBuffer[upperleft + 1] = curColor;
-      this.myBuffer[upperleft + 2] = curColor;
+      this.buffer[upperleft] = curColor;
+      this.buffer[upperleft + 1] = curColor;
+      this.buffer[upperleft + 2] = curColor;
 
-      this.myBuffer[upperleft + rowLength] = curColor;
-      this.myBuffer[upperleft + rowLength + 1] = curColor;
-      this.myBuffer[upperleft + rowLength + 2] = curColor;
+      this.buffer[upperleft + rowLength] = curColor;
+      this.buffer[upperleft + rowLength + 1] = curColor;
+      this.buffer[upperleft + rowLength + 2] = curColor;
 
       rowLength *= 2;
 
-      this.myBuffer[upperleft + rowLength] = curColor;
-      this.myBuffer[upperleft + rowLength + 1] = curColor;
-      this.myBuffer[upperleft + rowLength + 2] = curColor;
+      this.buffer[upperleft + rowLength] = curColor;
+      this.buffer[upperleft + rowLength + 1] = curColor;
+      this.buffer[upperleft + rowLength + 2] = curColor;
 
     } else {
 
       for (int i = 0; i < scale; i++) {
         int curRowOffset = rowLength * i;
         for (int j = 0; j < scale; j++) {
-          this.myBuffer[upperleft + curRowOffset + j] = curColor;
+          this.buffer[upperleft + curRowOffset + j] = curColor;
         }
       }
     }

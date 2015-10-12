@@ -153,7 +153,7 @@ public class Main extends JFrame {
 
         // Tiles t = new Tiles(TileOptions.NPC);
 
-        Tiles spriteTiles = new Tiles(TileOptions.get("NPC"));
+        Tiles spriteTiles = new Tiles(TileOptions.getOrQuit("NPC"));
 
         TilesEditorWindow spriteWindow = new TilesEditorWindow(
             Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
@@ -212,7 +212,7 @@ public class Main extends JFrame {
     
     // Tiles t = new Tiles(TileOptions.TILES);
     Tiles tiles = new Tiles(
-        TileOptions.get("Tiles"),
+        TileOptions.getOrQuit("Tiles"),
         new File(tileFileName),
         Main.globalPalette);
     

@@ -76,7 +76,7 @@ public class ScriptFileWindow extends WorldObjectWindow {
             + curMapName + ".map"));
         
         Tiles curTiles = new Tiles(    
-            TileOptions.get("Tiles"),
+            TileOptions.getOrQuit("Tiles"),
             new File(
               main.contentDir + File.separator
               + ContentStructure.TileDir() + File.separator

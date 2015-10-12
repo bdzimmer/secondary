@@ -161,7 +161,9 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
       case Some(ss: SpritesheetItem) => {
 
-        val spritesheetType = TileOptions.get(ss.tiletype)
+        // TODO: use TileOptions.tiles.get here and deal with the option
+        val spritesheetType = TileOptions.getOrQuit(ss.tiletype)
+
         val outputImageFiles = ExportImages.outputScales map (scale => {
           val offset = 3
           val inputFile = (imagesLocation + File.separator
@@ -247,40 +249,41 @@ object ExportImages {
   // Export individual images of tiles in a tile set.
   def exportIndividualTileImages(tilesetItem: TileMetaItem, inputDir: String, outputDir: String): List[String] = {
 
-    // println(tilesetItem.name)
-
     val inputName = tilesetItem.filename
-    val tileType = TileOptions.types.get(tilesetItem.tiletype).get
 
-    val outputDirRelative = ExportImages.imagesDir + File.separator + tilesetItem.id + "_tiles"
-    new File(outputDir + File.separator + outputDirRelative).mkdir
+    TileOptions.types.get(tilesetItem.tiletype) match {
 
-    val image = getTilesetImage(inputDir + File.separator + inputName, tileType)
+      case Some(tileType) => {
 
-    // extract buffered images from the tile image.
-    val images = (0 until tileType.count).flatMap(curTile => {
+        val outputDirRelative = ExportImages.imagesDir + File.separator + tilesetItem.id + "_tiles"
+        new File(outputDir + File.separator + outputDirRelative).mkdir
 
-      val xoff = (curTile % tileType.tilesPerRow) * tileType.width
-      val yoff = (curTile / tileType.tilesPerRow) * tileType.height
+        val image = getTilesetImage(inputDir + File.separator + inputName, tileType)
 
-      val curTileImage = image.getSubimage(xoff, yoff, tileType.width, tileType.height)
+        // extract buffered images from the tile image.
+        val images = (0 until tileType.count).flatMap(curTile => {
 
+          val xoff = (curTile % tileType.tilesPerRow) * tileType.width
+          val yoff = (curTile / tileType.tilesPerRow) * tileType.height
 
-      // val outputName = outputNewDir + File.separator + curTile + ".png"
-      // ImageIO.write(curTileImage, "png", new File(outputName))
+          val curTileImage = image.getSubimage(xoff, yoff, tileType.width, tileType.height)
 
-      // various scales to output
-      outputScales map (scaleFactor => {
-        val relativeName = outputDirRelative + File.separator + curTile + scalePostfix(scaleFactor) + ".png"
-        val absoluteName = outputDir + File.separator + relativeName
-        ImageIO.write(rescaleImage(curTileImage, scaleFactor), "png", new File(absoluteName))
-        relativeName
-      })
+          // various scales to output
+          outputScales map (scaleFactor => {
+            val relativeName = outputDirRelative + File.separator + curTile + scalePostfix(scaleFactor) + ".png"
+            val absoluteName = outputDir + File.separator + relativeName
+            ImageIO.write(rescaleImage(curTileImage, scaleFactor), "png", new File(absoluteName))
+            relativeName
+          })
 
+        }).toList
 
-    }).toList
+        images
 
-    images
+      }
+      case None => List()
+    }
+
   }
 
 
@@ -336,8 +339,9 @@ object ExportImages {
 
     val map = new Map(new File(inputFile))
 
+    // TODO: add a hard-coded TileAttributes to Map for Tiles
     val tiles = new Tiles(
-        TileOptions.get("Tiles"),
+        TileOptions.getOrQuit("Tiles"),
         new File(tilesDir + File.separator + map.tileFileName + ".til"),
         dg.getRgbPalette)
 

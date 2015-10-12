@@ -8,7 +8,7 @@
 // 2015-09-01: More on above.
 // 2015-09-02: More image functions for jumbotron functionality (needs cleaning up).
 //             Master page and article pages all use the same template.
-// 2015-09-08: Tasks page uses
+// 2015-09-08: Tasks page uses tags.
 
 package bdzimmer.secondary.export
 
@@ -23,7 +23,11 @@ import org.apache.commons.io.FilenameUtils
 import bdzimmer.secondary.export.Tags._
 
 
-class ExportPages(world: List[WorldItem], val location: String, license: String) {
+class ExportPages(
+    master: CollectionItem,
+    world: List[WorldItem],
+    val location: String,
+    license: String) {
 
   val np = new NotesParser(world)
 
@@ -37,7 +41,6 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
   val metaItems = WorldItem.filterList[MetaItem](world)
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
-
     items map(item => item match {
       case x: CharacterItem => createCharacterPage(x)
       case x: MapItem => createMapPage(x)
@@ -51,9 +54,6 @@ class ExportPages(world: List[WorldItem], val location: String, license: String)
 
 
   def createMasterPage(): String = {
-
-    // TODO: fix getting head of world in createMasterPage
-    val master = world.head.asInstanceOf[CollectionItem]
 
     val relFilePath = "index.html"
 

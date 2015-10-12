@@ -25,13 +25,16 @@ object ExportPipelines {
     FileUtils.deleteDirectory(projConf.localExportPathFile)
     projConf.localExportPathFile.mkdirs
 
-    val world = WorldLoader.loadWorld(
+    val master = WorldLoader.loadWorld(
         projConf.localContentPath,
         projConf.masterName,
         projConf.mainCollections,
         ExportPages.getEmptyFileModifiedMap)
 
+    val world = WorldLoader.collectionToList(master)
+
     val exportPages = new ExportPages(
+        master,
         world,
         projConf.localExportPath,
         projConf.license)
@@ -73,11 +76,13 @@ object ExportPipelines {
     ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
-    val world = WorldLoader.loadWorld(
+    val master = WorldLoader.loadWorld(
         projConf.localContentPath,
         projConf.masterName,
         projConf.mainCollections,
         newMetaStatus)
+
+    val world = WorldLoader.collectionToList(master)
 
     // download referenced files, update status
     val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
@@ -91,7 +96,7 @@ object ExportPipelines {
 
       // perform exports
       val (allPageOutputs, allImageOutputs) = export(
-          metaStatusChanges, fileStatusChanges, world, images = true, projConf)
+          metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
 
       allPageOutputs.foreach(x => println("page created: " + x ))
       allImageOutputs.foreach{case (k, v) => {
@@ -118,18 +123,20 @@ object ExportPipelines {
     ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
-    val masterCollection = WorldLoader.loadWorld(
+    val master = WorldLoader.loadWorld(
         projConf.localContentPath,
         projConf.masterName,
         projConf.mainCollections,
         newMetaStatus)
+
+    val world = WorldLoader.collectionToList(master)
 
     println("--created collection")
 
     // download referenced files, update status
     val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile
     val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
-    val fileStatusChanges = ds.downloadImages(masterCollection, oldFileStatus)
+    val fileStatusChanges = ds.downloadImages(world, oldFileStatus)
     val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
     ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
@@ -138,7 +145,7 @@ object ExportPipelines {
 
       // perform exports
       val (allPageOutputs, allImageOutputs) = export(
-          metaStatusChanges, fileStatusChanges, masterCollection, images = true, projConf)
+          metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
 
       allPageOutputs.foreach(x => println("page created: " + x ))
       allImageOutputs.foreach{case (k, v) => {
@@ -161,7 +168,8 @@ object ExportPipelines {
   // export content from download location to export location
   // using file timestamps to only process content that has changed
   def export(metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
-             world: List[WorldItem], images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
+             master: CollectionItem, world: List[WorldItem],
+             images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
 
     // get only the world items that are described in the subset of the
     // meta we just downloaded
@@ -185,21 +193,17 @@ object ExportPipelines {
     filesToExport foreach(x => println("file to export: " + x.id))
     imagesToExport foreach(x => println("image to export: " + x.id))
 
-    val exportImages = new ExportImages(world, projConf.localExportPath, projConf.license)
-    val exportPages = new ExportPages(world, projConf.localExportPath, projConf.license)
-
-    val localContentDir = projConf.localContentPath
-
     println("--exporting pages")
+    val exportPages = new ExportPages(master, world, projConf.localExportPath, projConf.license)
     val allPageOutputs = List(
         exportPages.createMasterPage,
         exportPages.createTasksPage,
         exportPages.createIndexPage,
         exportPages.createFamilyTreesPage) ++ exportPages.exportPagesList(metaToExport)
 
-
     val allImageOutputs = if (images) {
       println("--exporting images")
+      val exportImages = new ExportImages(world, projConf.localExportPath, projConf.license)
       exportImages.exportAllImages(
           filesToExport ++ imagesToExport ++ charsToExport, projConf.localContentPath)
     } else {

@@ -91,7 +91,7 @@ object TileOptions {
 
 
   // for Java compatibility
-  def get(key: String): TileAttributes = {
+  def getOrQuit(key: String): TileAttributes = {
     types.get(key).getOrElse({
       println("Tile type does not exist!")
       sys.exit(1)
