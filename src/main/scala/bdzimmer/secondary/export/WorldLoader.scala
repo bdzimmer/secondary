@@ -31,20 +31,17 @@ object WorldLoader {
       masterName: String, mainCollectionNames: List[String],
       fileStatus: FileModifiedMap): CollectionItem = {
 
-
     val masterYamlName = masterName + ".yml"
     val masterCollection = loadFile(masterYamlName, inputDir, fileStatus)
 
     val mainCollections = mainCollectionNames.map(collectionName => {
 
       // println(collectionName)
-
       val fileName = collectionName + ".yml"
       val collection = loadFile(fileName, inputDir, fileStatus)
 
       val prefix = collectionName + "_"
       val matchingFiles = new File(inputDir).listFiles.map(_.getName).filter(_.startsWith(prefix))
-
       // println("matching: " + matchingFiles.mkString(","))
 
       val childCollections = matchingFiles.map(loadFile(_, inputDir, fileStatus))
@@ -55,11 +52,22 @@ object WorldLoader {
 
     })
 
-
     masterCollection.children = mainCollections.asJava.asInstanceOf[java.util.List[WorldItemBean]]
 
     masterCollection.getVal
 
+  }
+
+  def loadWorld(projConf: ProjectConfig, fileStatus: FileModifiedMap): CollectionItem = {
+    WorldLoader.loadWorld(
+        projConf.localContentPath,
+        projConf.masterName,
+        projConf.mainCollections,
+        fileStatus)
+  }
+
+  def loadWorld(projConf: ProjectConfig): CollectionItem = {
+    WorldLoader.loadWorld(projConf, ExportPages.getEmptyFileModifiedMap)
   }
 
 

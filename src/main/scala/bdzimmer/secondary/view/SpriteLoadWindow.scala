@@ -23,8 +23,6 @@ import javax.swing.{ImageIcon, JButton}
 
 class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(main, inputDir, "Load Sprites") {
 
-  val serialVersionUID: Long = 1L
-
   val spritesheetList = "list.csv"
 
   def populateObjects(inputDir: String): ArrayList[WorldObject] = {
@@ -43,23 +41,18 @@ class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(m
 
     }).toList
 
-
     val iconsList = filesAndDescriptions.map(x => new SpriteIcon(inputDir + x._1, x._3, 320, 200, x._2))
-
 
     // this isn't so great
     val iconsArrayList = new java.util.ArrayList[WorldObject]
     iconsList.map(iconsArrayList.add(_))
-
     iconsArrayList
   }
 
 
 
 
-  class SpriteIcon(spriteFileName: String, attrs: TileAttributes, width: Int, height: Int, description: String) extends WorldObject  {
-
-    val serialVersionUID: Long = 1L
+  class SpriteIcon(spriteFileName: String, attrs: TileAttributes, width: Int, height: Int, description: String) extends WorldObject {
 
     val dg = new DosGraphics
 
@@ -72,24 +65,24 @@ class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(m
 
     setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-     val loader = new JButton();
-     loader.setSize(width, height);
-     loader.setIcon(new ImageIcon(spriteSheetImage));
-     loader.setBackground(Color.BLACK);
-     loader.setForeground(Color.WHITE);
-     loader.setText("\n\n\n" + description + " -  " + new File(spriteFileName).getName());
+    val loader = new JButton();
+    loader.setSize(width, height);
+    loader.setIcon(new ImageIcon(spriteSheetImage));
+    loader.setBackground(Color.BLACK);
+    loader.setForeground(Color.WHITE);
+    loader.setText("\n\n\n" + description + " -  " + new File(spriteFileName).getName());
 
-     // don't know why this doesn't work
-     // loader.setHorizontalTextPosition(JButton.CENTER)
-     // loader.setVerticalTextPosition(JButton.CENTER)
+    // don't know why this doesn't work
+    // loader.setHorizontalTextPosition(JButton.CENTER)
+    // loader.setVerticalTextPosition(JButton.CENTER)
 
-     loader.addActionListener(new ActionListener() {
-       def actionPerformed(e: ActionEvent): Unit = {
-         // do nothing
-       }
-     })
+    loader.addActionListener(new ActionListener() {
+      def actionPerformed(e: ActionEvent): Unit = {
+        // do nothing
+      }
+    })
 
-     this.add(loader);
+    this.add(loader);
 
   }
 

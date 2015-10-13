@@ -16,6 +16,7 @@ public abstract class WorldObjectWindow extends JFrame {
 
   private static final long serialVersionUID = 1L;
   
+  // TODO: does this need to hold Main?
   protected final Main main;
 
   private ArrayList<WorldObject> worldObjects = new ArrayList<WorldObject>();

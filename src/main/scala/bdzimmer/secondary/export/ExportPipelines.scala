@@ -25,12 +25,7 @@ object ExportPipelines {
     FileUtils.deleteDirectory(projConf.localExportPathFile)
     projConf.localExportPathFile.mkdirs
 
-    val master = WorldLoader.loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        projConf.mainCollections,
-        ExportPages.getEmptyFileModifiedMap)
-
+    val master = WorldLoader.loadWorld(projConf)
     val world = WorldLoader.collectionToList(master)
 
     val exportPages = new ExportPages(
@@ -76,12 +71,7 @@ object ExportPipelines {
     ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
-    val master = WorldLoader.loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        projConf.mainCollections,
-        newMetaStatus)
-
+    val master = WorldLoader.loadWorld(projConf, newMetaStatus)
     val world = WorldLoader.collectionToList(master)
 
     // download referenced files, update status
@@ -121,12 +111,7 @@ object ExportPipelines {
     ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
-    val master = WorldLoader.loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        projConf.mainCollections,
-        newMetaStatus)
-
+    val master = WorldLoader.loadWorld(projConf, newMetaStatus)
     val world = WorldLoader.collectionToList(master)
 
     println("--created collection")

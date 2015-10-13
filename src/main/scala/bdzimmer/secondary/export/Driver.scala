@@ -74,7 +74,10 @@ class Driver {
     }
     case DriverCommands.Browse => browseLocal
     case DriverCommands.BrowseDrive => browseRemote
-    case DriverCommands.Editor => new Main(projConf.mappedContentPathActual, "Secondary Editor")
+    case DriverCommands.Editor => {
+      val master = WorldLoader.loadWorld(projConf)
+      new Main(projConf.mappedContentPathActual, "Secondary Editor", master)
+    }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Help => Driver.showCommands
     case _ => println("Invalid command. Use 'help' for a list of commands.")
@@ -116,7 +119,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.10.06"
+  val Title = "Secondary - create worlds from text - v2015.10.12"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

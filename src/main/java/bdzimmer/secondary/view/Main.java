@@ -72,6 +72,7 @@ import bdzimmer.secondary.model.ContentStructure;
 import bdzimmer.secondary.model.Map;
 import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.export.CollectionItem;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -95,6 +96,7 @@ public class Main extends JFrame {
   public static final PaletteWindow paletteWindow = new PaletteWindow(globalPalette);
   
   public final String contentDir;
+  public final CollectionItem master;
 
   
   public static int[][] currentTileBitmap;
@@ -109,11 +111,12 @@ public class Main extends JFrame {
    * @param contentDir  Content directory
    * @param title       Title of the Main window
    */
-  public Main(String contentDir, String title) {
+  public Main(String contentDir, String title, CollectionItem master) {
     
     System.out.println("content directory: " + contentDir);
     
     this.contentDir = contentDir;
+    this.master = master;
  
     Main.paletteWindow.setLocationRelativeTo(null);
 
@@ -178,8 +181,7 @@ public class Main extends JFrame {
     JButton addTilesetListWindow = new JButton("Load Map Tiles");
     addTilesetListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new TilesLoadWindow(Main.this, Main.this.contentDir + File.separator + "tile")
-            .setLocationRelativeTo(null);
+        new TilesLoadWindow(Main.this).setLocationRelativeTo(null);
       }
     });
     this.add(addTilesetListWindow);
@@ -203,20 +205,27 @@ public class Main extends JFrame {
   /**
    * Create a TileWindow / MapWindow pair that share the same tile set.
    * 
-   * @param tileFileName  name of tiles file
-   * @param mapFileName   name of map file
+   * @param tileFileName  absolute path of tiles file
+   * @param mapFileName   absolute path of map file
    */
   public void createLinkedTileAndMapWindows(String tileFileName, String mapFileName) {
 
-    // these names seem to be absolute paths.
-    
-    // Tiles t = new Tiles(TileOptions.TILES);
-    Tiles tiles = new Tiles(
+    Tiles tiles;
+    if (!"".equals(tileFileName)) {
+      tiles = new Tiles(
         TileOptions.getOrQuit("Tiles"),
         new File(tileFileName),
         Main.globalPalette);
+    } else {
+      tiles = new Tiles(TileOptions.getOrQuit("Tiles"));
+    }
     
-    Map map = new Map(new File(mapFileName));
+    Map map;
+    if (!"".equals(mapFileName)) {
+      map = new Map(new File(mapFileName));
+    } else {
+      map = new Map();
+    }
     
     TilesEditorWindow tileWindow = new TilesEditorWindow(
         Main.this.contentDir + File.separator + ContentStructure.TileDir(),
@@ -240,9 +249,7 @@ public class Main extends JFrame {
    * @param args  command line arguments
    */
   public static void main(String[] args) {
-    // MetalLookAndFeel.setCurrentTheme(new DefaultMetalTheme());
-
-    new Main(System.getProperty("user.dir"), "Secondary Editor");
+    // new Main(System.getProperty("user.dir"), "Secondary Editor");
   }
 
 }
