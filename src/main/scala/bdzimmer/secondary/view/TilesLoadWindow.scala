@@ -2,15 +2,19 @@
 
 package bdzimmer.secondary.view;
 
-import java.awt.{Color, Component}                     // scalastyle:ignore illegal.imports
-import java.awt.event.{ActionEvent, ActionListener}    // scalastyle:ignore illegal.imports
+// scalastyle:ignore illegal.imports
+import java.awt.{Color, Component, BorderLayout, Dimension, GridLayout, Graphics, Font}
+// scalastyle:ignore illegal.imports
+import java.awt.event.{ActionEvent, ActionListener}
 import java.io.File
 import java.util.ArrayList
 
 import bdzimmer.secondary.export.{CollectionItem, TilesetItem, WorldItem, WorldLoader}
 import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
-import javax.swing.{ImageIcon, JButton, SwingConstants}
+import javax.swing.{ImageIcon, JButton, JPanel, SwingConstants}
+import javax.swing.border.EmptyBorder
+
 
 class TilesLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDir, "Load Tiles") {
 
@@ -31,7 +35,7 @@ class TilesLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDi
   }
 
 
-  class TilesIcon(tilesFilename: String, name: String) extends WorldObject {
+  class TilesIcon(tilesFilename: String, val name: String) extends WorldObject(320, 256) {
 
     val tilesFile = new File(tilesFilename)
 
@@ -44,24 +48,33 @@ class TilesLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDi
 
     val tilesImage = tiles.getTilesImage(16, 16, dosGraphics.getPalette)
 
-    width = tilesImage.getWidth
-    height = tilesImage.getHeight + 32
+    setLayout(new BorderLayout())
 
-    val loader = new JButton(
-        this.name,
-        new ImageIcon(this.tilesImage))
-    loader.setSize(width, height)
-    loader.setForeground(Color.WHITE)
-    loader.setBackground(Color.BLACK)
-    loader.setHorizontalTextPosition(SwingConstants.CENTER)
-    loader.setVerticalTextPosition(SwingConstants.TOP)
-    loader.setToolTipText(tilesFilename)
+    val buttonPanel = new JPanel()
+    buttonPanel.setPreferredSize(new Dimension(64, 256))
+    buttonPanel.setLayout(new GridLayout(5, 1, 0, 0))
+    buttonPanel.setBackground(Color.black)
+    val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {
       def actionPerformed(event: ActionEvent): Unit = {
         main.createLinkedTileAndMapWindows(tilesFilename, "")
       }
     })
-    add(loader)
+    buttonPanel.add(loader)
+    add(buttonPanel, BorderLayout.EAST)
+
+
+    override def paintComponent(graphics: Graphics): Unit = {
+      super.paintComponent(graphics)
+
+      graphics.setColor(Color.black)
+      graphics.fillRect(0, 0, this.getWidth, this.getHeight)
+      graphics.drawImage(tilesImage, 0, 0, null)
+
+      graphics.setFont(new Font("Monospace", Font.BOLD, 16))
+      graphics.setColor(Color.white)
+      graphics.drawString(name, 10, 20)
+    }
 
   }
 
