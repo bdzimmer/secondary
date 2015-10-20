@@ -2,6 +2,7 @@
 
 // 2015-09-12: Refactoring.
 // 2015-09-17: WIP further refactoring.
+// 2015-10-20: Changes for YAML parse error handling.
 
 package bdzimmer.secondary.export
 
@@ -9,6 +10,7 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
+import scala.util.{Try, Success, Failure}
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
@@ -25,33 +27,42 @@ object ExportPipelines {
     FileUtils.deleteDirectory(projConf.localExportPathFile)
     projConf.localExportPathFile.mkdirs
 
-    val master = WorldLoader.loadWorld(projConf)
-    val world = WorldLoader.collectionToList(master)
+    WorldLoader.loadWorld(projConf) match {
 
-    val exportPages = new ExportPages(
-        master,
-        world,
-        projConf.localExportPath,
-        projConf.license)
+      case Success(master) => {
 
-    val allPageOutputs = List(
-        exportPages.createMasterPage,
-        exportPages.createTasksPage,
-        exportPages.createIndexPage,
-        exportPages.createFamilyTreesPage) ++ exportPages.exportPagesList(world)
+        val world = WorldLoader.collectionToList(master)
 
-    val exportImages = new ExportImages(
-        world,
-        projConf.localExportPath,
-        projConf.license)
+        val exportPages = new ExportPages(
+            master,
+            world,
+            projConf.localExportPath,
+            projConf.license)
 
-    val imageOutputs = exportImages.exportAllImages(world, projConf.localContentPath)
+        val allPageOutputs = List(
+            exportPages.createMasterPage,
+            exportPages.createTasksPage,
+            exportPages.createIndexPage,
+            exportPages.createFamilyTreesPage) ++ exportPages.exportPagesList(world)
+
+        val exportImages = new ExportImages(
+            world,
+            projConf.localExportPath,
+            projConf.license)
+
+        val imageOutputs = exportImages.exportAllImages(world, projConf.localContentPath)
+
+      }
+
+      case Failure(e) => println("Invalid YAML in master.")
+    }
+
 
   }
 
 
   // content -> web; use local file time stamps
-  // this is untested!
+  // TODO: test after 2015-10-20 changes
   def exportLocalSync(projConf: ProjectConfig): Unit = {
 
     def localMetaStatusChanges(oldMetaStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
@@ -60,7 +71,7 @@ object ExportPipelines {
     }
 
     def localFileStatusChanges(world: List[WorldItem], oldFileStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
-      val imageFiles =  getReferencedImages(world)
+      val imageFiles = getReferencedImages(world)
       localFileUpdates(imageFiles, oldFileStatus, projConf)
     }
 
@@ -71,32 +82,33 @@ object ExportPipelines {
     ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
-    val master = WorldLoader.loadWorld(projConf, newMetaStatus)
-    val world = WorldLoader.collectionToList(master)
 
-    // download referenced files, update status
-    val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
-    val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
-    val fileStatusChanges = localFileStatusChanges(world, oldFileStatus, projConf)
-    val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
-    ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+    WorldLoader.loadWorld(projConf, newMetaStatus) match {
+      case Success(master) => {
 
-    // only export / upload if files have changed
-    if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
+        val world = WorldLoader.collectionToList(master)
 
-      // perform exports
-      val (allPageOutputs, allImageOutputs) = export(
-          metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
+        // download referenced files, update status
+        val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
+        val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+        val fileStatusChanges = localFileStatusChanges(world, oldFileStatus, projConf)
+        val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
+        ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
-      allPageOutputs.foreach(x => println("page created: " + x ))
-      allImageOutputs.foreach{case (k, v) => {
-        v foreach(x => println("image created: " + k + " -> " + x))
-      }}
+        // only export / upload if files have changed
+        if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
 
-    } else {
-      println("Nothing to do.")
+          val (allPageOutputs, allImageOutputs) = export(
+              metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
+
+        } else {
+          println("Nothing to do.")
+        }
+      }
+
+      case Failure(e) => println("Invalid YAML in master.")
+
     }
-
   }
 
 
@@ -111,39 +123,37 @@ object ExportPipelines {
     ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
-    val master = WorldLoader.loadWorld(projConf, newMetaStatus)
-    val world = WorldLoader.collectionToList(master)
 
-    println("--created collection")
+    WorldLoader.loadWorld(projConf, newMetaStatus) match {
+      case Success(master) => {
 
-    // download referenced files, update status
-    val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile
-    val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
-    val fileStatusChanges = ds.downloadImages(world, oldFileStatus)
-    val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
-    ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+        val world = WorldLoader.collectionToList(master)
 
-    // only export / upload if files have changed
-    if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
+        // download referenced files, update status
+        val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile
+        val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+        val fileStatusChanges = ds.downloadImages(world, oldFileStatus)
+        val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
+        ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
-      // perform exports
-      val (allPageOutputs, allImageOutputs) = export(
-          metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
+        // only export / upload if files have changed
+        if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
 
-      allPageOutputs.foreach(x => println("page created: " + x ))
-      allImageOutputs.foreach{case (k, v) => {
-        v.foreach(x => println("image created: " + k + " -> " + x))
-      }}
+          val (allPageOutputs, allImageOutputs) = export(
+              metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
 
-      // do an upload; only upload files derived from those that were downloaded
-      val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
-      filesToUpload foreach(x => println("to upload: " + x))
-      ds.upload(filesToUpload)
+          // do an upload; only upload files derived from those that were downloaded
+          val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
+          filesToUpload foreach(x => println("to upload: " + x))
+          ds.upload(filesToUpload)
 
-    } else {
-      println("Nothing to do.")
+        } else {
+          println("Nothing to do.")
+        }
+      }
+
+      case Failure(e) => println("Invalid YAML in master.")
     }
-
   }
 
 
@@ -193,6 +203,8 @@ object ExportPipelines {
     }
 
     println("--export finished")
+
+    logCreated(allPageOutputs, allImageOutputs)
 
     (allPageOutputs, allImageOutputs)
 
@@ -255,5 +267,15 @@ object ExportPipelines {
 
   }
 
+
+  def logCreated(allPageOutputs: List[String], allImageOutputs: FileOutputsMap): Unit = {
+    allPageOutputs.foreach(x => println("page created: " + x ))
+    allImageOutputs.foreach{case (k, v) => {
+      v.foreach(x => println("image created: " + k + " -> " + x))
+    }}
+  }
+
+
+  // TODO: method for logging lists of strings with a prefix
 
 }

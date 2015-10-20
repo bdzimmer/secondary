@@ -16,7 +16,7 @@ import java.awt.Desktop    // scalastyle:ignore illegal.imports
 import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
-import scala.util.Try
+import scala.util.{Try, Success, Failure}
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.view.Main
@@ -75,8 +75,10 @@ class Driver {
     case DriverCommands.Browse => browseLocal
     case DriverCommands.BrowseDrive => browseRemote
     case DriverCommands.Editor => {
-      val master = WorldLoader.loadWorld(projConf)
-      new Main(projConf.mappedContentPathActual, "Secondary Editor", master)
+      val master = WorldLoader.loadWorld(projConf) match {
+        case Success(x) => new Main(projConf.mappedContentPathActual, "Secondary Editor", x)
+        case Failure(e) => println("Invalid YAML in master.")
+      }
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Help => Driver.showCommands
@@ -119,7 +121,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.10.12"
+  val Title = "Secondary - create worlds from text - v2015.10.20"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

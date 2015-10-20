@@ -45,7 +45,7 @@ class DriveSync(
     val downloadFileStatus = downloadFilesIntelligent(driveYamlFilenames, fileStatus)
     // val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
 
-    println("--downloaded YAML metadata")
+    println("--refreshed YAML metadata")
 
     downloadFileStatus
 
