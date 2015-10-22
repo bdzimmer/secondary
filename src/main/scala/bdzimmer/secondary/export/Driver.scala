@@ -76,8 +76,8 @@ class Driver {
     case DriverCommands.BrowseDrive => browseRemote
     case DriverCommands.Editor => {
       val master = WorldLoader.loadWorld(projConf) match {
-        case Success(x) => new Main(projConf.mappedContentPathActual, "Secondary Editor", x)
-        case Failure(e) => println("Invalid YAML in master.")
+        case Right(master) => new Main(projConf.mappedContentPathActual, "Secondary Editor", master)
+        case Left(msg) => println(msg)
       }
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)

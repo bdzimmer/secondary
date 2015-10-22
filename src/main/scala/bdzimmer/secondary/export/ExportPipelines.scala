@@ -29,7 +29,7 @@ object ExportPipelines {
 
     WorldLoader.loadWorld(projConf) match {
 
-      case Success(master) => {
+      case Right(master) => {
 
         val world = WorldLoader.collectionToList(master)
 
@@ -54,7 +54,7 @@ object ExportPipelines {
 
       }
 
-      case Failure(e) => println("Invalid YAML in master.")
+      case Left(msg) => println(msg)
     }
 
 
@@ -79,12 +79,11 @@ object ExportPipelines {
     val oldMetaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
     val newMetaStatus = ExportPages.mergeDateTimes(oldMetaStatus, metaStatusChanges)
-    ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
 
     WorldLoader.loadWorld(projConf, newMetaStatus) match {
-      case Success(master) => {
+      case Right(master) => {
 
         val world = WorldLoader.collectionToList(master)
 
@@ -93,7 +92,7 @@ object ExportPipelines {
         val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
         val fileStatusChanges = localFileStatusChanges(world, oldFileStatus, projConf)
         val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
-        ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+
 
         // only export / upload if files have changed
         if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
@@ -101,12 +100,16 @@ object ExportPipelines {
           val (allPageOutputs, allImageOutputs) = export(
               metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
 
+          // only record updated file status if export succeeds
+          ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
+          ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+
         } else {
           println("Nothing to do.")
         }
       }
 
-      case Failure(e) => println("Invalid YAML in master.")
+      case Left(msg) => println(msg)
 
     }
   }
@@ -120,12 +123,11 @@ object ExportPipelines {
     val oldMetaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = ds.downloadMetadata(oldMetaStatus)
     val newMetaStatus = ExportPages.mergeDateTimes(oldMetaStatus, metaStatusChanges)
-    ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
 
     // build the collection
 
     WorldLoader.loadWorld(projConf, newMetaStatus) match {
-      case Success(master) => {
+      case Right(master) => {
 
         val world = WorldLoader.collectionToList(master)
 
@@ -134,7 +136,6 @@ object ExportPipelines {
         val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
         val fileStatusChanges = ds.downloadImages(world, oldFileStatus)
         val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
-        ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
         // only export / upload if files have changed
         if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
@@ -144,15 +145,19 @@ object ExportPipelines {
 
           // do an upload; only upload files derived from those that were downloaded
           val filesToUpload = allPageOutputs ++ allImageOutputs.values.toList.flatten
-          filesToUpload foreach(x => println("to upload: " + x))
+          logList("file to upload", filesToUpload)
           ds.upload(filesToUpload)
+
+          // only record updated file status if export succeeds
+          ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
+          ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
 
         } else {
           println("Nothing to do.")
         }
       }
 
-      case Failure(e) => println("Invalid YAML in master.")
+      case Left(msg) => println(msg)
     }
   }
 
@@ -165,12 +170,7 @@ object ExportPipelines {
 
     // get only the world items that are described in the subset of the
     // meta we just downloaded
-    // val world = WorldLoader.collectionToList(masterCollection)
-
-    world foreach(x => println("world item: " + x.srcyml + " -- " + x.id))
-
     val metaToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))
-    metaToExport foreach(x => println("meta to export: " + x.id))
 
     // the file items to export are:
     // 1) the metaitems in the whole collection whose files were refreshed
@@ -182,8 +182,10 @@ object ExportPipelines {
     val charsToExport = WorldItem.filterList[CharacterItem](metaToExport)
     val imagesToExport = WorldItem.filterList[ImageItem](metaToExport).filter(x => x.filename.startsWith("wikimedia:"))
 
-    filesToExport foreach(x => println("file to export: " + x.id))
-    imagesToExport foreach(x => println("image to export: " + x.id))
+    // logList("world item", world.map(x => x.srcyml + " -- " + x.id))
+    logList("meta to export", metaToExport.map(_.id))
+    logList("file to export", filesToExport.map(_.id))
+    logList("image to export", imagesToExport.map(_.id))
 
     println("--exporting pages")
     val exportPages = new ExportPages(master, world, projConf.localExportPath, projConf.license)
@@ -204,7 +206,10 @@ object ExportPipelines {
 
     println("--export finished")
 
-    logCreated(allPageOutputs, allImageOutputs)
+    logList("page created", allPageOutputs)
+    allImageOutputs.foreach{case (k, v) => {
+      logList("image created", v.map(k + " -> " + _))
+    }}
 
     (allPageOutputs, allImageOutputs)
 
@@ -237,7 +242,6 @@ object ExportPipelines {
   }
 
 
-
   // get all of the local image files referenced by a world
   def getReferencedImages(world: List[WorldItem]): List[String] = {
 
@@ -268,14 +272,8 @@ object ExportPipelines {
   }
 
 
-  def logCreated(allPageOutputs: List[String], allImageOutputs: FileOutputsMap): Unit = {
-    allPageOutputs.foreach(x => println("page created: " + x ))
-    allImageOutputs.foreach{case (k, v) => {
-      v.foreach(x => println("image created: " + k + " -> " + x))
-    }}
+  def logList(prefix: String, list: List[String]): Unit = {
+    list.foreach(x => println(prefix + ": " + x))
   }
-
-
-  // TODO: method for logging lists of strings with a prefix
 
 }
