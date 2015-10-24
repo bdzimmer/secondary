@@ -72,7 +72,7 @@ import bdzimmer.secondary.model.ContentStructure;
 import bdzimmer.secondary.model.Map;
 import bdzimmer.secondary.model.TileOptions;
 import bdzimmer.secondary.model.Tiles;
-import bdzimmer.secondary.export.CollectionItem;
+import bdzimmer.secondary.export.model.CollectionItem;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;

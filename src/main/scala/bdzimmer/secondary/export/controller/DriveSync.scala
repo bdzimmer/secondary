@@ -4,7 +4,7 @@
 
 // 2015-09-17: Created from refactoring ContentTransformer.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import java.io.File
 import java.util.regex.Pattern
@@ -13,9 +13,10 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.{File => DriveFile}
 
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
+import bdzimmer.secondary.export.model.{ProjectConfig, WorldItem}
 
 
-// functions for syncing to and from Google Drive
+// functions for syncing to and from Google Drive1
 class DriveSync(
     projConf: ProjectConfig,
     drive: Drive,

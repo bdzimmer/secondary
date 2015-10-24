@@ -7,9 +7,12 @@
 // 2015-09-02: All pages use jumbotron.
 // 2015-09-06: Google Fonts and link to custom stylesheet in main page template.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.view
 
-import bdzimmer.secondary.export.Tags._
+import bdzimmer.secondary.export.view.Tags._
+
+// TODO: should figure out a way to refactor so I'm not importing NotesParser
+import bdzimmer.secondary.export.model.NotesParser
 
 // Static class for generating Bootstrap HTML.
 object PageTemplates {

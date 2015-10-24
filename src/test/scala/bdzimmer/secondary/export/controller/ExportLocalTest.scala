@@ -6,7 +6,7 @@
 // 2015-09-03: Created. This will eventually become a test suite.
 // 2015-09-05: Moved to test suite.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import org.scalatest.FunSuite
 
@@ -15,6 +15,7 @@ import java.io.File
 
 import scala.util.Try
 
+import bdzimmer.secondary.export.model.ProjectConfig
 
 class ExportLocalTest extends FunSuite {
 

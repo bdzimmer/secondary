@@ -7,7 +7,7 @@
 // 2015-09-04: Switched to FileUtils instead of Source.
 // 2015-10-21: Error handling for YAML parsing.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import java.io.File
 
@@ -21,7 +21,7 @@ import org.apache.commons.io.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
-
+import bdzimmer.secondary.export.model._
 
 object WorldLoader {
 

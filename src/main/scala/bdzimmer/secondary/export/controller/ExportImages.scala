@@ -31,7 +31,7 @@
 // 2015-08-31: Enhanced character image functionality.
 // 2015-09-03: Only download wikimedia images if they don't already exist in scratch directory.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import scala.util.Try
 
@@ -44,7 +44,10 @@ import javax.imageio.ImageIO
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
 import bdzimmer.secondary.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
-import bdzimmer.secondary.export.Tags._
+
+import bdzimmer.secondary.export.model._
+import bdzimmer.secondary.export.view.Tags._
+
 
 
 class ExportImages(world: List[WorldItem], val location: String, license: String) {

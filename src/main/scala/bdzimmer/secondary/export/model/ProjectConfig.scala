@@ -5,7 +5,7 @@
 // 2015-08-30: Created in refactor from Driver.
 // 2015-09-12: Changes for per-project configs.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.model
 
 import java.io.{File, FileInputStream}
 import java.util.Properties

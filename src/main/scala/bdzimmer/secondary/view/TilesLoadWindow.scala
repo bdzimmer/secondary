@@ -9,7 +9,8 @@ import java.awt.event.{ActionEvent, ActionListener}
 import java.io.File
 import java.util.ArrayList
 
-import bdzimmer.secondary.export.{CollectionItem, TilesetItem, WorldItem, WorldLoader}
+import bdzimmer.secondary.export.model.{CollectionItem, TilesetItem, WorldItem}
+import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 import javax.swing.{ImageIcon, JButton, JPanel, SwingConstants}

@@ -7,7 +7,7 @@
 // 2015-08-24: Extension awareness in image downloader. JSON parsing fixes.
 // 2015-09-02: JSON parsing fixes.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import java.net.URL
 

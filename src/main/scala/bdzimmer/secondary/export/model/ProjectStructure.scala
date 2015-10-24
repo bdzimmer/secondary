@@ -4,7 +4,7 @@
 
 // 2015-09-12: Created.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.model
 
 object ProjectStructure {
 

@@ -6,13 +6,16 @@
 // 2015-09-01: Image tags.
 // 2015-09-02: Tags for jumbotron background image and text color.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.model
 
 import org.pegdown.PegDownProcessor
 import scala.util.matching.Regex
 import org.apache.commons.io.FileUtils
 
-// TODO: change id to value
+// TODO: this is not so good. see TODO item below
+import bdzimmer.secondary.export.controller.{ExportPages, ExportImages}
+import bdzimmer.secondary.export.view.Tags
+
 case class SecTag(kind: String, value: String)
 
 
@@ -52,6 +55,8 @@ class NotesParser(world: List[WorldItem]) {
 
   }
 
+
+  // TODO: move the stuff that processes SecTags into a class in controller
 
   // generate text for tags that reference WorldItems
   def processItemTag(tag: SecTag, item: WorldItem): String = tag.kind match {

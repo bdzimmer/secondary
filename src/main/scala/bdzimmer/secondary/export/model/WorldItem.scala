@@ -17,7 +17,7 @@
 // 2015-09-21: Manually implemented getters / setters to avoid null strings for missing
 //             attributes.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.model
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters.asScalaBufferConverter
@@ -27,7 +27,7 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
 
-import bdzimmer.secondary.export.{NotesParser => np}
+import bdzimmer.secondary.export.model.{NotesParser => np}
 
 
 // convert null strings to empty

@@ -5,8 +5,10 @@
 // 2015-10-05: Created. Spouse lines not supported yet.
 // 2015-10-07: Updates for previous and ancestor vs. parent relationships.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
+import bdzimmer.secondary.export.model.{CharacterItem, NotesParser, SecTag}
+import bdzimmer.secondary.export.view.Tags
 
 case class TreeEntry(
     id: String,

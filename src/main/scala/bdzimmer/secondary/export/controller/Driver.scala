@@ -10,7 +10,7 @@
 
 // scalastyle:off regex
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import java.awt.Desktop    // scalastyle:ignore illegal.imports
 import java.net.URI
@@ -19,7 +19,10 @@ import java.io.{BufferedReader, File, InputStreamReader}
 import scala.util.{Try, Success, Failure}
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
+import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure}
+import bdzimmer.secondary.export.view.ConfigurationGUI
 import bdzimmer.secondary.view.Main
+
 
 
 class Driver {

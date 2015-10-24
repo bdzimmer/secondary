@@ -8,4 +8,4 @@ secondary_dir=`cd $secondary_dir; pwd`
 # uncomment the next line if running on Cygwin
 # secondary_dir=`cygpath -wp $secondary_dir`
 
-java -cp $secondary_dir/secondary.jar bdzimmer.secondary.export.Driver $@
+java -cp $secondary_dir/secondary.jar bdzimmer.secondary.export.controller.Driver $@

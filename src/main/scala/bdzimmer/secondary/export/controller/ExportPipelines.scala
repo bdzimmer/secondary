@@ -4,7 +4,7 @@
 // 2015-09-17: WIP further refactoring.
 // 2015-10-20: Changes for YAML parse error handling.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import java.io.File
 
@@ -16,6 +16,8 @@ import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
 
 import bdzimmer.gdrivescala.DriveUtils
+import bdzimmer.secondary.export.model._
+import bdzimmer.secondary.export.view.Styles
 
 
 // pipelines for local and synced exports

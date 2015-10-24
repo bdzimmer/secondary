@@ -10,7 +10,7 @@
 //             Master page and article pages all use the same template.
 // 2015-09-08: Tasks page uses tags.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.controller
 
 import java.io.File
 
@@ -19,7 +19,10 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import com.google.api.client.util.DateTime
 import org.apache.commons.io.FilenameUtils
 
-import bdzimmer.secondary.export.Tags._
+import bdzimmer.secondary.export.model._
+import bdzimmer.secondary.export.view.Tags._
+import bdzimmer.secondary.export.view.PageTemplates
+
 
 
 class ExportPages(

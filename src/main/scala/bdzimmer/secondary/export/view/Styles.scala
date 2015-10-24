@@ -6,7 +6,7 @@
 
 // scalastyle:off magic.number
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.view
 
 import org.apache.commons.io.{FileUtils, IOUtils}
 import org.apache.commons.compress.archivers.zip.ZipFile

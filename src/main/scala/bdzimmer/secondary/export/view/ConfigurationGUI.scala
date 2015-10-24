@@ -4,7 +4,7 @@
 
 // 2015-08-24: Created.
 
-package bdzimmer.secondary.export
+package bdzimmer.secondary.export.view
 
 import scala.swing._
 import scala.swing.event._
@@ -16,7 +16,7 @@ import java.awt.Font                    // scalastyle:ignore illegal.imports
 import javax.swing.border.EmptyBorder
 import javax.swing.SwingConstants
 
-
+import bdzimmer.secondary.export.model.{ProjectConfig, PropertiesWrapper}
 
 class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
 
