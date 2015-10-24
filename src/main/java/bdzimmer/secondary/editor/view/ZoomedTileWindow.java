@@ -2,10 +2,10 @@
 
 //Class for drawing a tile or sprite zoomed.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.controller.FloodFill;
-import bdzimmer.secondary.model.DosGraphics;
+import bdzimmer.secondary.editor.controller.FloodFill;
+import bdzimmer.secondary.editor.model.DosGraphics;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

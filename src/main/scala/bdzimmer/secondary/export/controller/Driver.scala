@@ -21,7 +21,7 @@ import scala.util.{Try, Success, Failure}
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure}
 import bdzimmer.secondary.export.view.ConfigurationGUI
-import bdzimmer.secondary.view.Main
+import bdzimmer.secondary.editor.view.Main
 
 
 

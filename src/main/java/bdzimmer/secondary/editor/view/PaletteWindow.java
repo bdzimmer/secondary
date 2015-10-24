@@ -1,9 +1,9 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
 
-import bdzimmer.secondary.model.DosGraphics;
+import bdzimmer.secondary.editor.model.DosGraphics;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;

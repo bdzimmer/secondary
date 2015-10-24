@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.model;
+package bdzimmer.secondary.editor.model;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

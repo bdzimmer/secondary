@@ -66,18 +66,17 @@
 
 // 2015-01-10: converting to use new TileOptions class. 
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.model.ContentStructure;
-import bdzimmer.secondary.model.Map;
-import bdzimmer.secondary.model.TileOptions;
-import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.editor.model.ContentStructure;
+import bdzimmer.secondary.editor.model.Map;
+import bdzimmer.secondary.editor.model.TileOptions;
+import bdzimmer.secondary.editor.model.Tiles;
 import bdzimmer.secondary.export.model.CollectionItem;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import java.io.File;
 
 import javax.swing.JButton;

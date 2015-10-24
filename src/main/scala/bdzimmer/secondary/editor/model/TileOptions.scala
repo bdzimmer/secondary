@@ -9,21 +9,13 @@
 
 // TODO: redo with Scala Swing
 
-package bdzimmer.secondary.model
-
-import bdzimmer.secondary.view.Main
-
+package bdzimmer.secondary.editor.model
 
 import java.awt.{Dialog, GridLayout}                  // scalastyle:ignore illegal.imports
 import java.awt.event.{ActionListener, ActionEvent}   // scalastyle:ignore illegal.imports
-
+import java.util.Properties
 
 import javax.swing._
-
-import scala.io.Source
-
-
-import java.util.Properties
 
 import scala.collection.JavaConverters._
 

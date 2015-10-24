@@ -5,7 +5,7 @@
 
 // 2015-09-12: Created.
 
-package bdzimmer.secondary.model
+package bdzimmer.secondary.editor.model
 
 object ContentStructure {
 

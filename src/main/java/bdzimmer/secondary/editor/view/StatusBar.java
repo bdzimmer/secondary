@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -51,19 +51,4 @@ public class StatusBar extends JPanel {
     this.repaint();
   }
 
-  /**
-   * Main function for a status bar test (old).
-   * 
-   * @param args    command line arguments.
-   */
-  public static void main(String[] args) {
-    JFrame myJFrame = new JFrame("Status Bar Test");
-    StatusBar myStatus;
-    myJFrame.add(myStatus = new StatusBar(), BorderLayout.SOUTH);
-    myJFrame.pack();
-    myJFrame.setVisible(true);
-
-    myStatus.update(0, 0, "Current Sprite: ");
-
-  }
 }

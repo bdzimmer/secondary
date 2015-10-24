@@ -8,15 +8,14 @@
 
 // TODO: redo with Scala Swing
 
-
-package bdzimmer.secondary.view
+package bdzimmer.secondary.editor.view
 
 import java.awt.{Color, Component}                     // scalastyle:ignore illegal.imports
 import java.awt.event.{ActionEvent, ActionListener}    // scalastyle:ignore illegal.imports
 import java.io.File
 import java.util.ArrayList
 
-import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 import javax.swing.{ImageIcon, JButton}
 

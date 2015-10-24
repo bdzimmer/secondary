@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
 // scalastyle:ignore illegal.imports
 import java.awt.{Color, Component, BorderLayout, Dimension, GridLayout, Graphics, Font}
@@ -11,7 +11,7 @@ import java.util.ArrayList
 
 import bdzimmer.secondary.export.model.{CollectionItem, TilesetItem, WorldItem}
 import bdzimmer.secondary.export.controller.WorldLoader
-import bdzimmer.secondary.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 import javax.swing.{ImageIcon, JButton, JPanel, SwingConstants}
 import javax.swing.border.EmptyBorder

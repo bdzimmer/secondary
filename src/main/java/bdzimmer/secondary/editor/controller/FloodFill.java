@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.controller;
+package bdzimmer.secondary.editor.controller;
 
 // Class for Flood Fill -- Adapted from Java code found at Code Codex
 

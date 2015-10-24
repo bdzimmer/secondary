@@ -43,7 +43,7 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
-import bdzimmer.secondary.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
 
 import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Tags._

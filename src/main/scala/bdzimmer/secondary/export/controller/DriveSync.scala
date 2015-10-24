@@ -16,7 +16,7 @@ import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, WorldItem}
 
 
-// functions for syncing to and from Google Drive1
+// functions for syncing to and from Google Drive
 class DriveSync(
     projConf: ProjectConfig,
     drive: Drive,

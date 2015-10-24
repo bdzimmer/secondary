@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.model;
+package bdzimmer.secondary.editor.model;
 
 // 11-20-12: Modifying to allow different scale factors (at least on creation).
 

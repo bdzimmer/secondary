@@ -2,11 +2,11 @@
 
 // 1-8-13: Separated tileset model data fields into TileSet class.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.model.DosGraphics;
-import bdzimmer.secondary.model.TileOptions;
-import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.editor.model.DosGraphics;
+import bdzimmer.secondary.editor.model.TileOptions;
+import bdzimmer.secondary.editor.model.Tiles;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;

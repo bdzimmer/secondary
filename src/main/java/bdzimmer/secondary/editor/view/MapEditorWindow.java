@@ -5,11 +5,11 @@
 // 2014-08-14: Refactored to sepearate out map view panel from functionality
 //              specific to editing.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.model.Map;
-import bdzimmer.secondary.model.Tiles;
-import bdzimmer.secondary.view.MapViewPanel;
+import bdzimmer.secondary.editor.model.Map;
+import bdzimmer.secondary.editor.model.Tiles;
+import bdzimmer.secondary.editor.view.MapViewPanel;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;

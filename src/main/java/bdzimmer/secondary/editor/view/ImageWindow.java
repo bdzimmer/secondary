@@ -1,6 +1,6 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

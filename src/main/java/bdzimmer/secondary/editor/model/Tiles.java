@@ -2,7 +2,7 @@
 
 // 1-8-13: Separated out from TilesetWindow.
 
-package bdzimmer.secondary.model;
+package bdzimmer.secondary.editor.model;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

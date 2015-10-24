@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.model;
+package bdzimmer.secondary.editor.model;
 
-import bdzimmer.secondary.model.ContentStructure;
+import bdzimmer.secondary.editor.model.ContentStructure;
 
 import java.io.BufferedReader;
 import java.io.File;

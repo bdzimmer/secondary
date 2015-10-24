@@ -3,11 +3,11 @@
 // Separating out map view so that I can use the map view for other things
 // 2014-08-16
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.model.DosGraphics;
-import bdzimmer.secondary.model.Map;
-import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.editor.model.DosGraphics;
+import bdzimmer.secondary.editor.model.Map;
+import bdzimmer.secondary.editor.model.Tiles;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

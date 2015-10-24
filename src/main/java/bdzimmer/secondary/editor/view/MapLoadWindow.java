@@ -1,12 +1,12 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.view;
+package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.model.ContentStructure;
-import bdzimmer.secondary.model.DosGraphics;
-import bdzimmer.secondary.model.Map;
-import bdzimmer.secondary.model.TileOptions;
-import bdzimmer.secondary.model.Tiles;
+import bdzimmer.secondary.editor.model.ContentStructure;
+import bdzimmer.secondary.editor.model.DosGraphics;
+import bdzimmer.secondary.editor.model.Map;
+import bdzimmer.secondary.editor.model.TileOptions;
+import bdzimmer.secondary.editor.model.Tiles;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
