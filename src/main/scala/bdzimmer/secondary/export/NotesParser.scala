@@ -57,8 +57,8 @@ class NotesParser(world: List[WorldItem]) {
   def processItemTag(tag: SecTag, item: WorldItem): String = tag.kind match {
 
     case NotesParser.LinkKind => ExportPages.textLinkPage(item)
-    case NotesParser.ImageKind => ExportPages.panel(ExportPages.imageLinkPage(item, metaItems, false, 320), true)
-    case NotesParser.ImageResponsiveKind => ExportPages.panel(ExportPages.imageLinkPage(item, metaItems, true), false)
+    case NotesParser.ImageKind => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
+    case NotesParser.ImageResponsiveKind => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case NotesParser.JumbotronBackgroundKind => jumbotronBackground(item, metaItems)
 
     // tags that aren't recognized are displayed along with links
@@ -80,7 +80,7 @@ class NotesParser(world: List[WorldItem]) {
 
   def jumbotronBackground(item: WorldItem, metaItems: List[MetaItem]): String = {
 
-    val imagePath = ExportPages.itemImagePath(item, metaItems)
+    val imagePath = ExportImages.itemImagePath(item, metaItems)
 
     s"""<style>
   .jumbotron {

@@ -76,9 +76,9 @@ object ExportPipelines {
     }
 
     val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalMetaStatusFile
-    val oldMetaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
+    val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
-    val newMetaStatus = ExportPages.mergeDateTimes(oldMetaStatus, metaStatusChanges)
+    val newMetaStatus = WorldLoader.mergeModifiedMaps(oldMetaStatus, metaStatusChanges)
 
     // build the collection
 
@@ -89,10 +89,9 @@ object ExportPipelines {
 
         // download referenced files, update status
         val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
-        val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+        val oldFileStatus = WorldLoader.loadOrEmptyModifiedMap(fileStatusFile)
         val fileStatusChanges = localFileStatusChanges(world, oldFileStatus, projConf)
-        val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
-
+        val newFileStatus = WorldLoader.mergeModifiedMaps(oldFileStatus, fileStatusChanges)
 
         // only export / upload if files have changed
         if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
@@ -101,8 +100,8 @@ object ExportPipelines {
               metaStatusChanges, fileStatusChanges, master, world, images = true, projConf)
 
           // only record updated file status if export succeeds
-          ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
-          ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+          WorldLoader.saveModifiedMap(metaStatusFile, newMetaStatus)
+          WorldLoader.saveModifiedMap(fileStatusFile, newFileStatus)
 
         } else {
           println("Nothing to do.")
@@ -120,9 +119,9 @@ object ExportPipelines {
 
     // download the metadata, update status
     val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveMetaStatusFile
-    val oldMetaStatus = ExportPages.loadOrEmptyModifiedMap(metaStatusFile)
+    val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = ds.downloadMetadata(oldMetaStatus)
-    val newMetaStatus = ExportPages.mergeDateTimes(oldMetaStatus, metaStatusChanges)
+    val newMetaStatus = WorldLoader.mergeModifiedMaps(oldMetaStatus, metaStatusChanges)
 
     // build the collection
 
@@ -133,9 +132,9 @@ object ExportPipelines {
 
         // download referenced files, update status
         val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile
-        val oldFileStatus = ExportPages.loadOrEmptyModifiedMap(fileStatusFile)
+        val oldFileStatus = WorldLoader.loadOrEmptyModifiedMap(fileStatusFile)
         val fileStatusChanges = ds.downloadImages(world, oldFileStatus)
-        val newFileStatus = ExportPages.mergeDateTimes(oldFileStatus, fileStatusChanges)
+        val newFileStatus = WorldLoader.mergeModifiedMaps(oldFileStatus, fileStatusChanges)
 
         // only export / upload if files have changed
         if (metaStatusChanges.size > 0 || fileStatusChanges.size > 0) {
@@ -149,8 +148,8 @@ object ExportPipelines {
           ds.upload(filesToUpload)
 
           // only record updated file status if export succeeds
-          ExportPages.saveModifiedMap(metaStatusFile, newMetaStatus)
-          ExportPages.saveModifiedMap(fileStatusFile, newFileStatus)
+          WorldLoader.saveModifiedMap(metaStatusFile, newMetaStatus)
+          WorldLoader.saveModifiedMap(fileStatusFile, newFileStatus)
 
         } else {
           println("Nothing to do.")
@@ -201,7 +200,7 @@ object ExportPipelines {
       exportImages.exportAllImages(
           filesToExport ++ imagesToExport ++ charsToExport, projConf.localContentPath)
     } else {
-      ExportPages.getEmptyFileOutputsMap()
+      ExportImages.getEmptyFileOutputsMap
     }
 
     println("--export finished")
@@ -275,5 +274,6 @@ object ExportPipelines {
   def logList(prefix: String, list: List[String]): Unit = {
     list.foreach(x => println(prefix + ": " + x))
   }
+
 
 }

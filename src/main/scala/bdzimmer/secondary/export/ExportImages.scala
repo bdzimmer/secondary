@@ -33,6 +33,8 @@
 
 package bdzimmer.secondary.export
 
+import scala.util.Try
+
 import java.awt.RenderingHints          // scalastyle:ignore illegal.imports
 import java.awt.image.BufferedImage     // scalastyle:ignore illegal.imports
 import java.io.File
@@ -42,11 +44,12 @@ import javax.imageio.ImageIO
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
 import bdzimmer.secondary.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.export.Tags._
 
 
 class ExportImages(world: List[WorldItem], val location: String, license: String) {
 
-  val imagesLocation = location + File.separator + ExportImages.imagesDir + File.separator
+  val imagesLocation = location + File.separator + ExportImages.ImagesDir + File.separator
   new File(imagesLocation).mkdir
 
   val metaItems = WorldItem.filterList[MetaItem](world)
@@ -92,7 +95,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
     val allImageOutputs = (allImageOutputsList
         .map(x => List(x).toMap)
-        .foldLeft(ExportPages.getEmptyFileOutputsMap)(ExportPages.mergeFileOutputsMaps(_, _)))
+        .foldLeft(ExportImages.getEmptyFileOutputsMap)(ExportImages.mergeFileOutputsMaps(_, _)))
 
     allImageOutputs
 
@@ -102,8 +105,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   // download or copy image files to the output location
   def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
 
-    // val relativeName = ExportPages.imageItemImagePath(imageItem)
-    val relativeName = (ExportImages.imagesDir + File.separator +
+    val relativeName = (ExportImages.ImagesDir + File.separator +
         imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename))
     val absoluteName = location + File.separator + relativeName
 
@@ -155,7 +157,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
   def prepareCharacterItemOutputs(ci: CharacterItem, contentDir: String): (String, List[String]) = {
 
-    val (cm, sheetRow) = ExportPages.getCharacterImageInfo(ci, metaItems)
+    val (cm, sheetRow) = ExportImages.getCharacterImageInfo(ci, metaItems)
 
     val outputPairs = cm match {
 
@@ -169,7 +171,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
           val inputFile = (imagesLocation + File.separator
               + ss.id + "_tiles" + File.separator
               + (sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png")
-          val relativeName = ExportImages.imagesDir + File.separator + ci.id + ExportImages.scalePostfix(scale) + ".png"
+          val relativeName = ExportImages.ImagesDir + File.separator + ci.id + ExportImages.scalePostfix(scale) + ".png"
           val absoluteName = location + File.separator + relativeName
           FileUtils.copyFile(new File(inputFile), new File(absoluteName))
 
@@ -196,9 +198,12 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
 object ExportImages {
 
-  val imagesDir = "images"
+  // constants
 
-  val transparentColor: (Int, Int, Int) = (255, 255, 255)
+  val ImagesDir = "images"
+  val Slash = "/"
+
+  val TransparentColor: (Int, Int, Int) = (255, 255, 255)
   // val transparentColor: (Int, Int, Int) = (51, 153, 102)
 
   val outputScales = List(1, 4, 12)    // scalastyle:ignore magic.number
@@ -236,7 +241,7 @@ object ExportImages {
 
     // various scales to output
     outputScales map (scaleFactor => {
-       val relativeName = ExportImages.imagesDir + File.separator + worldItem.id + scalePostfix(scaleFactor) + ".png"
+       val relativeName = ImagesDir + File.separator + worldItem.id + scalePostfix(scaleFactor) + ".png"
        val absoluteName = outputDir + File.separator + relativeName
        ImageIO.write(rescaleImage(image, scaleFactor), "png", new File(absoluteName))
        relativeName
@@ -255,7 +260,7 @@ object ExportImages {
 
       case Some(tileType) => {
 
-        val outputDirRelative = ExportImages.imagesDir + File.separator + tilesetItem.id + "_tiles"
+        val outputDirRelative = ImagesDir + File.separator + tilesetItem.id + "_tiles"
         new File(outputDir + File.separator + outputDirRelative).mkdir
 
         val image = getTilesetImage(inputDir + File.separator + inputName, tileType)
@@ -298,7 +303,7 @@ object ExportImages {
    */
   def getTilesetImage(inputFile: String,
                       tileAttributes: TileAttributes,
-                      transparentColor: (Int, Int, Int) = ExportImages.transparentColor): BufferedImage = {
+                      transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
 
     val dg = new DosGraphics()
     val tiles = new Tiles(
@@ -384,6 +389,138 @@ object ExportImages {
     result.getGraphics.drawString(message, 0, 20)
     result
   }
+
+   ///
+
+
+  def getCharacterImageInfo(ci: CharacterItem, metaItems: List[MetaItem]): (Option[MetaItem], Int) = {
+
+    // split spritesheet attribute by comma
+    // first part is item id, second part spritesheet row (if exists)
+    val spriteSplit = ci.image.split(",\\s+")
+    val (metaId, sheetRow) = spriteSplit.toList match {
+      case x :: xs => {
+        (x, xs.headOption.flatMap(s => Try(s.toInt).toOption).getOrElse(0))
+      }
+    }
+
+    // there may not be a matching MetaItem in the collection
+    // if it doesn't exist yet
+    val metaOption = metaItems.filter(_.id.equals(metaId)).headOption
+    (metaOption, sheetRow)
+
+  }
+
+  // produce HTML for the image of a character
+  def characterImage(
+      ci: CharacterItem, metaItems: List[MetaItem],
+      scale: Int = 4,
+      responsive: Boolean = true,
+      maxWidth: Int = 480): String = {
+
+    val metaOption = getCharacterImageInfo(ci, metaItems)._1
+    val path = characterItemImagePath(ci, metaItems, scale)
+
+    metaOption.map(meta => meta match {
+      case ss: SpritesheetItem => image(path)
+      case im: ImageItem => image(path, responsive, maxWidth)
+      case _ => ""
+    }).getOrElse("")
+
+  }
+
+
+  def characterItemImagePath(
+      ci: CharacterItem,
+      metaItems: List[MetaItem],
+      scale: Int = 4): String = {
+
+    val (metaOption, sheetRow) = getCharacterImageInfo(ci, metaItems)
+
+    metaOption.map(meta => meta match {
+      case ss: SpritesheetItem => {
+        val imageFile = ImagesDir + Slash + ci.id + "%s.png"
+        imageFile.format(scalePostfix(scale))
+      }
+      case im: ImageItem => imageItemImagePath(im)
+      case _ => ""
+    }).getOrElse("")
+
+  }
+
+
+  // generate HTML for an item's 1x image, with a link to the 4x version
+  def imageLinkUpscale(item: WorldItem): String = {
+    link(
+        image(ImagesDir + Slash + item.id + ".png"),
+        ImagesDir + Slash + item.id + "_4x.png")
+  }
+
+
+  def imageItemImagePath(imageItem: ImageItem): String = {
+    ImagesDir + Slash + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
+  }
+
+
+  // generate HTML for a smaller image, with a link to the page
+  // the attributes are kind of piling up on this function because of the many
+  // different kinds of images and contexts where this is used.
+  def imageLinkPage(
+      item: WorldItem,
+      metaItems: List[MetaItem],
+      responsive: Boolean = true,
+      maxWidth: Int = 480,
+      showName: Boolean = true,
+      scale: Int = 4): String = {
+
+    val imageTag = item match {
+      case x: MapItem => {
+        val imageFile = ImagesDir + Slash + item.id + "%s" + ".png"
+        imageSprite(imageFile.format(scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number}
+      }
+      case x: CharacterItem => characterImage(x, metaItems, scale, responsive, maxWidth) // scalastyle:ignore magic.number
+      case x: ImageItem => image(imageItemImagePath(x), responsive, maxWidth)
+      case _ => ""
+    }
+
+    val imageName = showName match {
+      case true => (if (!responsive ) "<br>" else "" ) + NotesParser.processLine(item.name)
+      case false => ""
+    }
+
+    link(imageTag + imageName, item.id + ".html")
+  }
+
+
+  // can this be combined with the above somehow?
+  def itemImagePath(
+      item: WorldItem,
+      metaItems: List[MetaItem]): String = item match {
+
+    case x: MapItem => ImagesDir + Slash + item.id + "_4x" + ".png"
+    case x: CharacterItem => characterItemImagePath(x, metaItems)
+    case x: ImageItem => imageItemImagePath(x)
+    case _ => ""
+  }
+
+
+
+  /// /// ///
+
+
+  // functions for working with FileOutputsMaps
+
+  def getEmptyFileOutputsMap(): FileOutputsMap = {
+    List.empty[(String, List[String])].toMap
+  }
+
+  // combine two dictionaries of (String -> List[String], merging the values of
+  // corresponding keys
+  def mergeFileOutputsMaps(map1: FileOutputsMap, map2: FileOutputsMap): FileOutputsMap = {
+    // TODO: add a distinct here?
+    map1 ++ map2.map{case (k, v) => k -> (v ++ map1.getOrElse(k, Nil))}
+  }
+
 
 }
 

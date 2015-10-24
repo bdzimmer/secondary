@@ -16,9 +16,11 @@ import scala.ref
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
+import com.google.api.client.util.DateTime
 import org.apache.commons.io.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
+
 
 
 object WorldLoader {
@@ -101,7 +103,7 @@ object WorldLoader {
 
 
   def loadWorld(projConf: ProjectConfig): Either[String, CollectionItem] = {
-    WorldLoader.loadWorld(projConf, ExportPages.getEmptyFileModifiedMap)
+    WorldLoader.loadWorld(projConf, getEmptyModifiedMap)
   }
 
 
@@ -156,5 +158,48 @@ object WorldLoader {
       wi.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
     }
    }
+
+
+  //////////////////////
+
+  // functions for loading and saving FileModifiedMaps
+
+  // save a FileModifiedMap to a text file
+  def saveModifiedMap(outputFile: String, map: FileModifiedMap): Unit = {
+    val pw = new java.io.PrintWriter(new java.io.File(outputFile))
+    // scalastyle:ignore regex
+    map foreach (x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2.getValue))
+    pw.close
+  }
+
+  // load a FileModifiedMap from a text file
+  def loadModifiedMap(inputFile: String): FileModifiedMap = {
+    val lines = scala.io.Source.fromFile(inputFile).getLines
+    lines.map(x => x.split("\t")).map(x => (x(0), (x(1), new DateTime(x(2).toLong)))).toMap
+  }
+
+  // load a FileModifiedMap from a text file, returning an empty map
+  // if the file doesn't exist.
+  def loadOrEmptyModifiedMap(inputFile: String): FileModifiedMap = {
+    (new java.io.File(inputFile).exists) match {
+      case true => loadModifiedMap(inputFile)
+      case false => getEmptyModifiedMap
+    }
+  }
+
+  // get an empty FileModifiedMap
+  def getEmptyModifiedMap(): FileModifiedMap = {
+    List.empty[(String, (String, DateTime))].toMap
+  }
+
+  // merge FileModifiedMaps keeping newer dates / ids.
+  def mergeModifiedMaps(map1: FileModifiedMap, map2: FileModifiedMap): FileModifiedMap = {
+    map1 ++ map2.map{case (k, v) => k -> {
+      map1.get(k) match {
+        case Some(x) => if (x._2.getValue > v._2.getValue) x else v
+        case None => v
+      }
+    }}
+  }
 
 }

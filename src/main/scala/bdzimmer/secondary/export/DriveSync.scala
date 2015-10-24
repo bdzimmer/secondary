@@ -43,7 +43,6 @@ class DriveSync(
 
     // download / update the drive files to local with the download function
     val downloadFileStatus = downloadFilesIntelligent(driveYamlFilenames, fileStatus)
-    // val updatedFileStatus = ExportPages.mergeDateTimes(fileStatus, downloadFileStatus)
 
     println("--refreshed YAML metadata")
 
