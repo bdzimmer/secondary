@@ -155,11 +155,44 @@ object DriveSync {
   // TODO: does AppName matter?
   val AppName = "DriveTesting"
 
-  def createDrive(projConf: ProjectConfig): Drive = {
-     val keys = GoogleDriveKeys(
-         id = DriveBuilder.getClientIdFromJsonFile(new File(projConf.driveClientIdFile)),
-         token = DriveBuilder.getAccessTokenFromJsonFile(new File(projConf.driveAccessTokenFile)))
-    DriveBuilder.getDrive(keys, AppName)
+  // safely create a DriveSync object from the project configuration
+  // failure messages if input or output directories don't exist
+  def apply(projConf: ProjectConfig): Either[String, DriveSync] = for {
+
+    drive <- DriveSync.createDrive(projConf).right
+
+    // this is a little awkward
+    driveRootFile <- Right(DriveUtils.getRoot(drive)).right
+
+    driveInputFile <- DriveUtils.getFileByPath(
+        drive, driveRootFile, projConf.driveInputPathList).toRight("input path does not exist").right
+    driveOutputFile <- DriveUtils.getFileByPath(
+        drive, driveRootFile, projConf.driveOutputPathList).toRight("output path does not exist").right
+
+  } yield (new DriveSync(projConf, drive, driveInputFile, driveOutputFile))
+
+
+  def createDrive(projConf: ProjectConfig): Either[String, Drive] = {
+    val clientIdFile = eitherFile(projConf.driveClientIdFile)
+    val accessTokenFile = eitherFile(projConf.driveAccessTokenFile)
+
+    for {
+      id <- clientIdFile.right.map(x => DriveBuilder.getClientIdFromJsonFile(x)).right
+      token <- accessTokenFile.right.map(x => DriveBuilder.getAccessTokenFromJsonFile(x)).right
+    } yield {
+      val keys = GoogleDriveKeys(id, token)
+      DriveBuilder.getDrive(keys, AppName)
+    }
+  }
+
+  // helper method to get an Either representing a file or doesn't exist message
+  private def eitherFile(filename: String): Either[String, File] = {
+    val file = new File(filename)
+    if (file.exists) {
+      Right(file)
+    } else {
+      Left(s"'${file.getPath}' does not exist")
+    }
   }
 
 }

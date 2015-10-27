@@ -30,7 +30,7 @@ class Driver {
   // project directory is current working directory
   val projectDir = System.getProperty("user.dir")
   val projConf = ProjectConfig(projectDir)
-  val driveSync = Driver.createDriveSync(projConf)
+  val driveSync = DriveSync(projConf)
 
   def run(args: Array[String]): Unit = {
     val command = args.headOption.getOrElse(Driver.DefaultCommand)
@@ -124,7 +124,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.10.20"
+  val Title = "Secondary - create worlds from text - v2015.10.26"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
@@ -164,20 +164,6 @@ object Driver {
     println("Drive problem: " + msg)
   }
 
-  // safely create a DriveSync object from the project configuration
-  // None if the input or output directories don't exist
-  def createDriveSync(projConf: ProjectConfig): Either[String, DriveSync] = {
-    val drive = DriveSync.createDrive(projConf)
-    val driveRootFile = DriveUtils.getRoot(drive)
-
-    for {
-      driveInputFile <- DriveUtils.getFileByPath(
-          drive, driveRootFile, projConf.driveInputPathList).toRight("input path does not exist").right
-      driveOutputFile <- DriveUtils.getFileByPath(
-          drive, driveRootFile, projConf.driveOutputPathList).toRight("output path does not exist").right
-    } yield (new DriveSync(projConf, drive, driveInputFile, driveOutputFile))
-
-  }
 
 }
 
