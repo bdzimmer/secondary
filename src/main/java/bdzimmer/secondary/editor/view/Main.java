@@ -68,11 +68,11 @@
 
 package bdzimmer.secondary.editor.view;
 
+import bdzimmer.secondary.export.model.CollectionItem;
 import bdzimmer.secondary.editor.model.ContentStructure;
 import bdzimmer.secondary.editor.model.Map;
 import bdzimmer.secondary.editor.model.TileOptions;
 import bdzimmer.secondary.editor.model.Tiles;
-import bdzimmer.secondary.export.model.CollectionItem;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -139,44 +139,26 @@ public class Main extends JFrame {
     fileMenu.add(jmExit);
 
     // Add buttons for spawning new windows.
-    this.setLayout(new GridLayout(5, 1, 5, 5));
+    this.setLayout(new GridLayout(7, 1, 5, 5));
 
-    JButton addTileMapWindow = new JButton("Add Tileset / Map Windows");
+    JButton addTileMapWindow = new JButton("Tileset / Map Editor");
     addTileMapWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        createLinkedTileAndMapWindows(null, null);
+        createLinkedTileAndMapWindows("", "");
       }
     });
     this.add(addTileMapWindow);
     
-    JButton addSpriteWindow = new JButton("Add Sprite Window");
+    JButton addSpriteWindow = new JButton("Sprite Editor");
     addSpriteWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-
-        // Tiles t = new Tiles(TileOptions.NPC);
-
-        Tiles spriteTiles = new Tiles(TileOptions.getOrQuit("NPC"));
-
-        TilesEditorWindow spriteWindow = new TilesEditorWindow(
-            Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
-            spriteTiles, "Sprites",
-            "", Main.paletteWindow);
-        spriteWindow.dosGraphics.setRgbPalette(globalPalette);
-
-        spriteWindow.setLocationRelativeTo(null);
-
+        createSpriteWindow("", "NPC");
       }
     });
     this.add(addSpriteWindow);
 
-    JButton addWorldWindow = new JButton("Load Script Files");
-    addWorldWindow.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent arg0) {
-        new ScriptFileWindow(Main.this, "").setLocationRelativeTo(null);
-      }
-    });
-    this.add(addWorldWindow);
-
+    /// /// ///
+    
     JButton addTilesetListWindow = new JButton("Load Map Tiles");
     addTilesetListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
@@ -184,18 +166,31 @@ public class Main extends JFrame {
       }
     });
     this.add(addTilesetListWindow);
-
+    
+    JButton addSpritesheetListWindow = new JButton("Load Spritesheets");
+    addSpritesheetListWindow.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent arg0) {
+        new SpriteLoadWindow(Main.this).setLocationRelativeTo(null);
+      }
+    });
+    this.add(addSpritesheetListWindow);
+    
     JButton addMapListWindow = new JButton("Load Maps");
     addMapListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new MapLoadWindow(
-            Main.this,
-            Main.this.contentDir + File.separator
-            + ContentStructure.MapDir()).setLocationRelativeTo(null);
+        new MapLoadWindow(Main.this).setLocationRelativeTo(null);
       }
     });
     this.add(addMapListWindow);
-
+    
+    JButton addWorldWindow = new JButton("Load Script Files");
+    addWorldWindow.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent arg0) {
+        new ScriptFileWindow(Main.this, "").setLocationRelativeTo(null);
+      }
+    });
+    this.add(addWorldWindow);
+    
     this.pack();
     setVisible(true);
 
@@ -241,7 +236,39 @@ public class Main extends JFrame {
     tileWindow.toFront();
 
   }
+  
+  
+  /**
+   * Create a TileWindow for editing sprites.
+   * 
+   * @param spritesFileName  absolute path of spritesheet tiles file
+   * @param tiletype         name of spritesheet attributes
+   */
+  public void createSpriteWindow(String spritesFileName, String tiletype) {
+    
+    Tiles spriteTiles;
+    
+    if (!"".equals(spritesFileName)) {
+      spriteTiles = new Tiles(
+        TileOptions.getOrQuit(tiletype),
+        new File(spritesFileName),
+        Main.globalPalette);
+    } else {
+      spriteTiles = new Tiles(TileOptions.getOrQuit(tiletype));
+    }
+    
+    TilesEditorWindow spriteWindow = new TilesEditorWindow(
+        Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
+        spriteTiles, "Sprites",
+        spritesFileName, Main.paletteWindow);
+    spriteWindow.dosGraphics.setRgbPalette(globalPalette);
 
+    spriteWindow.setLocationRelativeTo(null);
+    
+  }
+
+  
+  
   /**
    * Program entry point.
    * 

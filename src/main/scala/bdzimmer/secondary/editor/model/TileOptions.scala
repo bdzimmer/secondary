@@ -21,6 +21,8 @@ import scala.collection.JavaConverters._
 
 object TileOptions {
 
+  val Default = new TileAttributes(16, 16, 256, 128, 255, true, 16)
+
   val types = getTileTypes
 
   def getOptions(): TileAttributes = {

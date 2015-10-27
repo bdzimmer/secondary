@@ -7,9 +7,11 @@ import java.awt.Dimension;
 import javax.swing.JComponent;
 
 class WorldObject extends JComponent {
+  
   private static final long serialVersionUID = 1L;
-  protected int width;
-  protected int height;
+  
+  protected final int width;
+  protected final int height;
 
   public WorldObject() {
     this(320, 200);

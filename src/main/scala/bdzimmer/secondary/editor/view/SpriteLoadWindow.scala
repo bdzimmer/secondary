@@ -1,87 +1,66 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Window and functions for the world's collection of sprite sheets.
-
-// Ben Zimmer
-
-// 2015-01-10
-
-// TODO: redo with Scala Swing
-
 package bdzimmer.secondary.editor.view
 
-import java.awt.{Color, Component}                     // scalastyle:ignore illegal.imports
-import java.awt.event.{ActionEvent, ActionListener}    // scalastyle:ignore illegal.imports
+import java.awt.image.BufferedImage                   // scalastyle:ignore illegal.imports
+import java.awt.event.{ActionEvent, ActionListener}   // scalastyle:ignore illegal.imports
 import java.io.File
 import java.util.ArrayList
 
+import bdzimmer.secondary.export.model.{CollectionItem, SpritesheetItem, WorldItem}
+import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
-import javax.swing.{ImageIcon, JButton}
+import javax.swing.JButton
 
 
-class SpriteLoadWindow(main: Main, inputDir: String) extends WorldObjectWindow(main, inputDir, "Load Sprites") {
-
-  val spritesheetList = "list.csv"
+class SpriteLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDir, "Load Sprites") {
 
   def populateObjects(inputDir: String): ArrayList[WorldObject] = {
 
-    // load a list from the sprite directory describing the collection
-    // of spritesheets and their various types and descriptions
+    val spriteItems = WorldItem.filterList[SpritesheetItem](WorldLoader.collectionToList(main.master))
+    val widgets = spriteItems.map(x => {
+      println(inputDir + File.separator + x.filename)
+      spritesWidget(inputDir + File.separator + x.filename, x.name, x.tiletype)
+    })
 
-    // TODO: spritesheet loading with csv is incorrect and obsolete
-    val lines = scala.io.Source.fromFile(inputDir + spritesheetList).getLines
-
-    val filesAndDescriptions = lines.map(x => {
-      val items = x.split(",\\s*").map(_.trim)
-
-      // TODO: do something else here to deal with the Option
-      (items(0), items(1), TileOptions.getOrQuit(items(2)))
-
-    }).toList
-
-    val iconsList = filesAndDescriptions.map(x => new SpriteIcon(inputDir + x._1, x._3, 320, 200, x._2))
-
-    // this isn't so great
-    val iconsArrayList = new java.util.ArrayList[WorldObject]
-    iconsList.map(iconsArrayList.add(_))
-    iconsArrayList
+    val widgetsArrayList = new java.util.ArrayList[WorldObject]
+    widgets.map(widgetsArrayList.add(_))
+    widgetsArrayList
   }
 
 
+  private def spritesWidget(spritesFilename: String, title: String, tiletype: String): ImageWidget = {
 
+    val tilesFile = new File(spritesFilename)
 
-  class SpriteIcon(spriteFileName: String, attrs: TileAttributes, width: Int, height: Int, description: String) extends WorldObject {
+    val tileAttributes = TileOptions.types.get(tiletype).getOrElse(TileOptions.Default)
 
-    val dg = new DosGraphics
+    val dosGraphics = new DosGraphics()
+    val tiles = tilesFile.exists match {
+      case true => new Tiles(tileAttributes, tilesFile, dosGraphics.getRgbPalette)
+      case false => new Tiles(tileAttributes)
+    }
+    dosGraphics.updateClut()
 
-    val spriteSheet = new Tiles(
-        attrs, new File(spriteFileName), dg.getRgbPalette)
-    dg.updateClut()
+    val tilesImage = tiles.getTilesImage(
+        tileAttributes.tilesPerRow,
+        math.ceil(tileAttributes.count.toFloat / tileAttributes.tilesPerRow).toInt,
+        dosGraphics.getPalette())
 
-    val spriteSheetImage = spriteSheet.getTilesImage(spriteSheet.attrs.count / 16, 16, dg.getPalette)
+    val subsetImage = new BufferedImage(320, 200, BufferedImage.TYPE_INT_RGB)
+    subsetImage.getGraphics.drawImage(tilesImage, 0, 0, null)
 
-
-    setAlignmentX(Component.RIGHT_ALIGNMENT);
-
-    val loader = new JButton();
-    loader.setSize(width, height);
-    loader.setIcon(new ImageIcon(spriteSheetImage));
-    loader.setBackground(Color.BLACK);
-    loader.setForeground(Color.WHITE);
-    loader.setText("\n\n\n" + description + " -  " + new File(spriteFileName).getName());
-
-    // don't know why this doesn't work
-    // loader.setHorizontalTextPosition(JButton.CENTER)
-    // loader.setVerticalTextPosition(JButton.CENTER)
-
+    val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {
-      def actionPerformed(e: ActionEvent): Unit = {
-        // do nothing
+      def actionPerformed(event: ActionEvent): Unit = {
+        main.createSpriteWindow(spritesFilename, tiletype)
       }
     })
 
-    this.add(loader);
+    val buttons = List(loader)
+
+    new ImageWidget(title, subsetImage, buttons)
 
   }
 
