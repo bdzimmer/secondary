@@ -43,11 +43,7 @@ class SpriteLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentD
     }
     dosGraphics.updateClut()
 
-    val tilesImage = tiles.getTilesImage(
-        tileAttributes.tilesPerRow,
-        math.ceil(tileAttributes.count.toFloat / tileAttributes.tilesPerRow).toInt,
-        dosGraphics.getPalette())
-
+    val tilesImage = tiles.getTilesImage(dosGraphics.getPalette())
     val subsetImage = new BufferedImage(320, 200, BufferedImage.TYPE_INT_RGB)
     subsetImage.getGraphics.drawImage(tilesImage, 0, 0, null)
 

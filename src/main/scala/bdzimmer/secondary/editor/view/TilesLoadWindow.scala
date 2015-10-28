@@ -41,7 +41,7 @@ class TilesLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDi
     }
     dosGraphics.updateClut()
 
-    val tilesImage = tiles.getTilesImage(16, 16, dosGraphics.getPalette)
+    val tilesImage = tiles.getTilesImage(dosGraphics.getPalette)
 
     val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {

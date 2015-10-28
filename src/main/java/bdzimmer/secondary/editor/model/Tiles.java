@@ -5,11 +5,13 @@
 package bdzimmer.secondary.editor.model;
 
 import java.awt.image.BufferedImage;
+import java.lang.Math;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
 
 public class Tiles {
 
@@ -175,8 +177,6 @@ public class Tiles {
     BufferedImage tilesImage = new BufferedImage(tilesWide * this.attrs.width,
         tilesHigh * this.attrs.height, BufferedImage.TYPE_INT_RGB);
 
-    // System.out.println(tilesImage.getWidth() + " " + tilesImage.getHeight());
-
     for (int whichTile = 0; whichTile < this.tiles.length; whichTile++) {
 
       int xoff = (whichTile % tilesWide) * this.attrs.width;
@@ -190,35 +190,22 @@ public class Tiles {
 
         }
       }
-
     }
 
-    /*
-     * for (int i = 0; i < tilesHigh; i++) { for (int j = 0; j < tilesWide; j++)
-     * {
-     * 
-     * for (int y = 0; y < this.attrs.height; y++) { for (int x = 0; x <
-     * this.attrs.width; x++) {
-     * 
-     * // System.out.println(j * this.attrs.width + x + " " + i *
-     * this.attrs.height + y);
-     * 
-     * //System.out.println("--" + i * tilesHigh + j); //System.out.println(x +
-     * " " + y); //System.out.println(j * this.attrs.width + x + " " + i *
-     * this.attrs.height + y);
-     * 
-     * tilesImage.setRGB(j * this.attrs.width + x, i * this.attrs.height + y,
-     * palette[this.tiles[i * tilesHigh + j][y][x]]);
-     * 
-     * } }
-     * 
-     * 
-     * 
-     * } }
-     */
-
     return tilesImage;
-
+  }
+  
+  /**
+   * Get an image of the tile set, using TileAttributes to draw.
+   * 
+   * @param palette       integer rgb palette to draw with
+   * @return              image of tile set
+   */
+  public BufferedImage getTilesImage(int[] palette) {
+    return getTilesImage(
+        attrs.tilesPerRow,
+        (int)Math.ceil((float)attrs.count / attrs.tilesPerRow),
+        palette); 
   }
 
   public int[][][] getTiles() {

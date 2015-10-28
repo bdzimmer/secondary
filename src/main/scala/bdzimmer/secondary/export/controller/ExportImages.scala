@@ -309,8 +309,7 @@ object ExportImages {
                       transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
 
     val dg = new DosGraphics()
-    val tiles = new Tiles(
-        tileAttributes, new File(inputFile), dg.getRgbPalette)
+    val tiles = new Tiles(tileAttributes, new File(inputFile), dg.getRgbPalette)
     dg.updateClut()
 
     val tc: Int =  255 << 24 | transparentColor._1 << 16 |  transparentColor._2 << 8 | transparentColor._3
@@ -322,10 +321,7 @@ object ExportImages {
 
     dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
 
-    // TODO: Better logic for determining spritesheet image attributes
-    val image = tiles.getTilesImage(
-        tileAttributes.tilesPerRow,
-        math.ceil(tileAttributes.count.toFloat / tileAttributes.tilesPerRow).toInt, dg.getPalette())
+    val image = tiles.getTilesImage(dg.getPalette())
 
     image
 
