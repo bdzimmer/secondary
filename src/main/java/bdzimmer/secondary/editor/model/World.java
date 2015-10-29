@@ -27,7 +27,7 @@ public class World {
 
   }
 
-  // recursive sub to populate list of scripts
+  // recursive method to populate list of scripts
   private ScriptFile addScriptFile(String filename) {
     ScriptFile curScriptFile = new ScriptFile(contentDir, filename);
 
@@ -35,20 +35,6 @@ public class World {
     if (!this.scriptFiles.contains(curScriptFile)) {
 
       this.scriptFiles.add(curScriptFile);
-
-      /*
-       * 
-       * //get the scriptfile...now populate its links for (String cLine :
-       * cScriptFile.getLines()) { String tempLine = cLine.trim(); String[]
-       * cWords = tempLine.split("\\s+");
-       * 
-       * if (cWords[0].toLowerCase().equals("scriptfile")) {
-       * cScriptFile.getLinks().add(addScriptFile(cWords[2] + ".spt"));
-       * 
-       * }
-       * 
-       * }
-       */
 
       for (String link : curScriptFile.getLinks()) {
         this.addScriptFile(link);

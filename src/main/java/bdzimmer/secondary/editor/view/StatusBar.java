@@ -2,18 +2,15 @@
 
 package bdzimmer.secondary.editor.view;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-
 import javax.swing.BorderFactory;
-import javax.swing.JFrame;
+import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.BevelBorder;
 
 
-
 public class StatusBar extends JPanel {
+  
   private static final long serialVersionUID = 1L;
   private JLabel xcoordLabel;
   private JLabel tilesWindowTiles;

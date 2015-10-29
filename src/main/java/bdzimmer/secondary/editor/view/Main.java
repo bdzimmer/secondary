@@ -167,7 +167,7 @@ public class Main extends JFrame {
     });
     this.add(addTilesetListWindow);
     
-    JButton addSpritesheetListWindow = new JButton("Load Spritesheets");
+    JButton addSpritesheetListWindow = new JButton("Load Sprites");
     addSpritesheetListWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
         new SpriteLoadWindow(Main.this).setLocationRelativeTo(null);
@@ -186,7 +186,7 @@ public class Main extends JFrame {
     JButton addWorldWindow = new JButton("Load Script Files");
     addWorldWindow.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent arg0) {
-        new ScriptFileWindow(Main.this, "").setLocationRelativeTo(null);
+        new ScriptLoadWindow(Main.this).setLocationRelativeTo(null);
       }
     });
     this.add(addWorldWindow);
@@ -265,17 +265,6 @@ public class Main extends JFrame {
 
     spriteWindow.setLocationRelativeTo(null);
     
-  }
-
-  
-  
-  /**
-   * Program entry point.
-   * 
-   * @param args  command line arguments
-   */
-  public static void main(String[] args) {
-    // new Main(System.getProperty("user.dir"), "Secondary Editor");
   }
 
 }

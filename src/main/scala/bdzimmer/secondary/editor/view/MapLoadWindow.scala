@@ -6,17 +6,16 @@ import java.awt.image.BufferedImage                   // scalastyle:ignore illeg
 import java.awt.event.{ActionEvent, ActionListener}   // scalastyle:ignore illegal.imports
 import java.io.File
 import java.util.ArrayList
+import javax.swing.JButton
 
 import bdzimmer.secondary.export.model.{CollectionItem, MapItem, WorldItem}
 import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
 
-import javax.swing.JButton
 
+class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, "Load Maps") {
 
-class MapLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDir, "Load Maps") {
-
-  def populateObjects(inputDir: String): ArrayList[WorldObject] = {
+  def populateObjects(inputDir: String): ArrayList[ImageWidget] = {
 
     val mapItems = WorldItem.filterList[MapItem](WorldLoader.collectionToList(main.master))
     val widgets = mapItems.map(x => {
@@ -24,8 +23,8 @@ class MapLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDir,
       mapWidget(inputDir + File.separator + x.filename, x.name)
     })
 
-    val widgetsArrayList = new java.util.ArrayList[WorldObject]
-    widgets.map(widgetsArrayList.add(_))
+    val widgetsArrayList = new java.util.ArrayList[ImageWidget]
+    widgets.foreach(widgetsArrayList.add(_))
     widgetsArrayList
   }
 
@@ -49,7 +48,8 @@ class MapLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDir,
     val mapImage = map.getMapImage(mapTiles, dosGraphics)
 
     val subsetImage = new BufferedImage(320, 200, BufferedImage.TYPE_INT_RGB)
-    subsetImage.getGraphics.drawImage(mapImage, 0, 0, null)
+    subsetImage.getGraphics.drawImage(
+        mapImage, (320 - mapImage.getWidth) / 2, (200 - mapImage.getHeight) / 2, null)
 
     val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {

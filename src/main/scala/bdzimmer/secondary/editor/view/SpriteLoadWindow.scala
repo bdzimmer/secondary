@@ -6,17 +6,17 @@ import java.awt.image.BufferedImage                   // scalastyle:ignore illeg
 import java.awt.event.{ActionEvent, ActionListener}   // scalastyle:ignore illegal.imports
 import java.io.File
 import java.util.ArrayList
+import javax.swing.JButton
 
 import bdzimmer.secondary.export.model.{CollectionItem, SpritesheetItem, WorldItem}
 import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
-import javax.swing.JButton
 
 
-class SpriteLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentDir, "Load Sprites") {
+class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, "Load Sprites") {
 
-  def populateObjects(inputDir: String): ArrayList[WorldObject] = {
+  def populateObjects(inputDir: String): ArrayList[ImageWidget] = {
 
     val spriteItems = WorldItem.filterList[SpritesheetItem](WorldLoader.collectionToList(main.master))
     val widgets = spriteItems.map(x => {
@@ -24,7 +24,7 @@ class SpriteLoadWindow(main: Main) extends WorldObjectWindow(main, main.contentD
       spritesWidget(inputDir + File.separator + x.filename, x.name, x.tiletype)
     })
 
-    val widgetsArrayList = new java.util.ArrayList[WorldObject]
+    val widgetsArrayList = new java.util.ArrayList[ImageWidget]
     widgets.map(widgetsArrayList.add(_))
     widgetsArrayList
   }

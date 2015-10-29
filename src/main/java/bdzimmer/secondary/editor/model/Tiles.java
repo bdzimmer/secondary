@@ -5,7 +5,6 @@
 package bdzimmer.secondary.editor.model;
 
 import java.awt.image.BufferedImage;
-import java.lang.Math;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

@@ -14,7 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
 
 
-public abstract class WorldObjectWindow extends JFrame {
+public abstract class LoadWidgetWindow extends JFrame {
 
   private static final long serialVersionUID = 1L;
   
@@ -22,7 +22,7 @@ public abstract class WorldObjectWindow extends JFrame {
   private static final int margin = 20;
   
   protected final Main main;
-  private final ArrayList<WorldObject> worldObjects;
+  private final ArrayList<ImageWidget> worldObjects;
 
   private JPanel scrollingSurface = new JPanel();
 
@@ -32,7 +32,7 @@ public abstract class WorldObjectWindow extends JFrame {
    * @param inputDir      input directory for world data
    * @param title         title for window
    */
-  public WorldObjectWindow(Main main, String inputDir, String title) {
+  public LoadWidgetWindow(Main main, String inputDir, String title) {
     
     this.main = main;
     this.setTitle(title);
@@ -44,11 +44,11 @@ public abstract class WorldObjectWindow extends JFrame {
     this.scrollingSurface.setLayout(
         new GridLayout(numRows, numColumns, margin, margin));
        
-    WorldObject wo = this.worldObjects.get(0);
+    ImageWidget wo = this.worldObjects.get(0);
     
-    int surfaceWidth = wo.width * numColumns + margin * (numColumns - 1);
-    int surfaceHeight = wo.height * numRows + margin * (numRows - 1);
-    int panelHeight = wo.height * 3 + margin * 2;
+    int surfaceWidth = wo.wx() * numColumns + margin * (numColumns - 1);
+    int surfaceHeight = wo.wy() * numRows + margin * (numRows - 1);
+    int panelHeight = wo.wy() * 3 + margin * 2;
     
     this.scrollingSurface.setPreferredSize(
         new Dimension(surfaceWidth, surfaceHeight));
@@ -79,11 +79,11 @@ public abstract class WorldObjectWindow extends JFrame {
     
   }
 
-  public abstract ArrayList<WorldObject> populateObjects(String inputDir);
+  public abstract ArrayList<ImageWidget> populateObjects(String inputDir);
 
   private void refresh() {
     scrollingSurface.removeAll();
-    for (WorldObject wo : worldObjects) {
+    for (ImageWidget wo : worldObjects) {
       scrollingSurface.add(wo);
     }
     scrollingSurface.repaint();

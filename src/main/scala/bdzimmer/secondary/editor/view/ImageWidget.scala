@@ -3,13 +3,12 @@
 package bdzimmer.secondary.editor.view
 
 // scalastyle:ignore illegal.imports
-import java.awt.{Color, BorderLayout, Dimension, GridLayout, Graphics, Font}
+import java.awt.{BorderLayout, Color, Component, Dimension, GridLayout, Graphics, Font}
 import java.awt.event.{ActionEvent, ActionListener}   // scalastyle:ignore illegal.imports
 import java.awt.image.BufferedImage                   // scalastyle:ignore illegal.imports
-
 import java.io.File
 
-import javax.swing.{JButton, JPanel, SwingConstants}
+import javax.swing.{JButton, JComponent, JPanel, SwingConstants}
 import javax.swing.border.EmptyBorder
 
 
@@ -17,7 +16,12 @@ class ImageWidget(
     title: String,
     image: BufferedImage,
     buttons: List[JButton],
-    buttonWidth: Int = 64) extends WorldObject(image.getWidth + buttonWidth, image.getHeight) {
+    buttonWidth: Int = 100) extends JComponent {
+
+  val wx = image.getWidth + buttonWidth
+  val wy = image.getHeight
+
+  setAlignmentX(Component.RIGHT_ALIGNMENT);
 
   setLayout(new BorderLayout())
 
@@ -28,6 +32,10 @@ class ImageWidget(
 
   buttons.foreach(buttonPanel.add(_))
   add(buttonPanel, BorderLayout.EAST)
+
+  override def getPreferredSize(): Dimension = new Dimension(wx, wy)
+
+  override def getSize(): Dimension =  new Dimension(wx, wy)
 
   override def paintComponent(graphics: Graphics): Unit = {
     super.paintComponent(graphics)
