@@ -32,6 +32,7 @@ public class TilesEditorWindow extends JFrame {
   private final String tilesDir;
   private Tiles tileSet;
   public String tileFileName;
+  private final String title;
 
   public DosGraphics dosGraphics;
   private PaletteWindow paletteWindow;
@@ -63,8 +64,9 @@ public class TilesEditorWindow extends JFrame {
     this.tilesDir = tilesDir;    
     this.tileSet = tiles;
     this.tileFileName = fileName;
+    this.title = title;
 
-    setTitle(title);
+    setTitle(generateTitle());
     this.paletteWindow = paletteWindow;
 
     ////// UI stuff
@@ -120,8 +122,7 @@ public class TilesEditorWindow extends JFrame {
 
     jmSave.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileSet.save(new File(tileFileName), dosGraphics); // just save the
-                                                           // tileset...
+        tileSet.save(new File(tileFileName), dosGraphics); 
       }
     });
 
@@ -139,19 +140,7 @@ public class TilesEditorWindow extends JFrame {
 
     jmSwap.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        for (int i = 0; i < tileSet.tiles.length; i++) {
-          for (int j = 0; j < tileSet.tiles[0].length; j++) {
-            for (int k = 0; k < tileSet.tiles[0][0].length; k++) {
-              int tempColor = tileSet.tiles[i][j][k];
-              if (tempColor == 0) {
-                tileSet.tiles[i][j][k] = 255;
-              }
-              if (tempColor == 255) {
-                tileSet.tiles[i][j][k] = 0;
-              }
-            }
-          }
-        }
+        swapTransparency();
         repaint();
       }
     });
@@ -167,11 +156,10 @@ public class TilesEditorWindow extends JFrame {
     // Set the layout manager.
 
     // setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
+    
 
-    dosGraphics = new DosGraphics(
-        this.tileSet.attrs.count / 16 * this.tileSet.attrs.height,
-        16 * this.tileSet.attrs.width,
-        this.scale);
+    dosGraphics = createDosGraphics();
+    
     dosGraphics.setRgbPalette(paletteWindow.getDosGraphics().getRgbPalette());
     graphicsPanel.add(dosGraphics);
 
@@ -184,12 +172,29 @@ public class TilesEditorWindow extends JFrame {
 
   }
 
+  // create an appropriately sized scaled DosGraphics for the tileset
+  private DosGraphics createDosGraphics() {
+    return new DosGraphics(
+        (int)Math.ceil((float)tileSet.attrs.count / tileSet.attrs.tilesPerRow) * this.tileSet.attrs.height,
+        this.tileSet.attrs.tilesPerRow * this.tileSet.attrs.width,
+        this.scale);
+  }
+  
+  
+  
   private void handleClicks(MouseEvent event) {
+    
+    int selectedTile = 
+        (int)(event.getY() / (tileSet.attrs.height * scale)) * tileSet.attrs.tilesPerRow
+        + (int)(event.getX() / (tileSet.attrs.width * scale));
 
+    if (selectedTile > tileSet.attrs.count) {
+      selectedTile = tileSet.attrs.count;
+    }
+    
     if (event.isMetaDown()) {
       // left click -- set tile in window
-      this.currentTile = (int) (event.getY() / (this.tileSet.attrs.height * this.scale)) * 16
-          + (int) (event.getX() / (this.tileSet.attrs.width * this.scale));
+      this.currentTile = selectedTile;
       
       Main.currentTile = this.currentTile;
       Main.currentTileBitmap = this.tileSet.getTiles()[this.currentTile];
@@ -208,8 +213,7 @@ public class TilesEditorWindow extends JFrame {
 
     } else {
       
-      int newTile = ((int) (event.getY() / (this.tileSet.attrs.height * this.scale)) * 16 
-          + (int) (event.getX() / (this.tileSet.attrs.width * this.scale)));
+      int newTile = selectedTile;
 
       // Calculate maximum size we can copy...
       int udlength;
@@ -263,6 +267,23 @@ public class TilesEditorWindow extends JFrame {
     }
 
   }
+  
+  // swap colors 0 and 255
+  private void swapTransparency() {
+    for (int i = 0; i < tileSet.tiles.length; i++) {
+      for (int j = 0; j < tileSet.tiles[0].length; j++) {
+        for (int k = 0; k < tileSet.tiles[0][0].length; k++) {
+          int tempColor = tileSet.tiles[i][j][k];
+          if (tempColor == 0) {
+            tileSet.tiles[i][j][k] = 255;
+          }
+          if (tempColor == 255) {
+            tileSet.tiles[i][j][k] = 0;
+          }
+        }
+      }
+    }
+  }
 
   /**
    * Show a tile attributes chooser, change the tile set type,
@@ -275,15 +296,7 @@ public class TilesEditorWindow extends JFrame {
     int[][] rgbPalette = this.dosGraphics.getRgbPalette();
 
     graphicsPanel.remove(dosGraphics);
-    if (this.tileSet.attrs.count >= 16) {
-      dosGraphics = new DosGraphics(
-          (int)Math.ceil(this.tileSet.attrs.count / 16.0)
-              * this.tileSet.attrs.height, 16 * this.tileSet.attrs.width,
-          this.scale);
-    } else {
-      dosGraphics = new DosGraphics(this.tileSet.attrs.height,
-          this.tileSet.attrs.count * this.tileSet.attrs.width, this.scale);
-    }
+    dosGraphics = createDosGraphics();
     dosGraphics.setRgbPalette(rgbPalette);
 
     graphicsPanel.add(dosGraphics);
@@ -311,6 +324,7 @@ public class TilesEditorWindow extends JFrame {
       File tilesFile = jfc.getSelectedFile();
       try {
         tileSet = new Tiles(this.tileSet.attrs, tilesFile, this.dosGraphics.getRgbPalette());
+        setTitle(generateTitle());
         dosGraphics.updateClut();
         tileFileName = tilesFile.getAbsolutePath(); 
         paletteWindow.refreshPalette();
@@ -333,9 +347,8 @@ public class TilesEditorWindow extends JFrame {
       
       File tilesFile = jfc.getSelectedFile();
       try {
-        this.tileSet.save(tilesFile, this.dosGraphics); // getSelectedFile returns
-                                                    // the file that was
-                                                    // selected
+        // getSelectedFile returns the file that was selected
+        this.tileSet.save(tilesFile, this.dosGraphics); 
         repaint();
       } catch (NullPointerException e) {
         System.err.println(e);
@@ -350,6 +363,11 @@ public class TilesEditorWindow extends JFrame {
 
   public DosGraphics getDosGraphics() {
     return this.dosGraphics;
+  }
+  
+  // generate a title
+  private String generateTitle() {
+    return title + " - " + this.tileFileName;  
   }
 
   /**

@@ -144,24 +144,22 @@ public class Tiles {
    */
   public void drawTileset(DosGraphics dg) {
     if (this.tiles != null) {
-
-      if (this.attrs.count > 16) {
-        for (int i = 0; i < (this.attrs.count / 16); i++) { // this will get a
-                                                            // little more
-                                                            // complicated
-          for (int j = 0; j < 16; j++) {
-            dg.drawTile(tiles[i * 16 + j], i * this.attrs.height, j
-                * this.attrs.width);
+      int numRows = (int)Math.ceil((float)attrs.count / attrs.tilesPerRow);
+      for (int i = 0; i < numRows; i++) { 
+        for (int j = 0; j < attrs.tilesPerRow; j++) {
+          int curTile = i * attrs.tilesPerRow + j;
+          if (curTile < attrs.count) {
+            dg.drawTile(
+                tiles[curTile],
+                i * this.attrs.height,
+                j * this.attrs.width);
           }
-        }
-      } else {
-        for (int i = 0; i < this.attrs.count; i++) { // this will get a little
-                                                     // more complicated
-          dg.drawTile(tiles[i], 0, i * this.attrs.width);
         }
       }
     }
   }
+  
+  
 
   /**
    * Get an image of the tile set.
