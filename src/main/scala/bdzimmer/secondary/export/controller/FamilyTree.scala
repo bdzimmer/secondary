@@ -7,7 +7,8 @@
 
 package bdzimmer.secondary.export.controller
 
-import bdzimmer.secondary.export.model.{CharacterItem, NotesParser, SecTag}
+import bdzimmer.secondary.export.model.{CharacterItem, SecTag}
+import bdzimmer.secondary.export.controller.RenderSecTags
 import bdzimmer.secondary.export.view.Tags
 
 case class TreeEntry(
@@ -25,7 +26,7 @@ object FamilyTree {
   val DescendantTags = Set("son", "daughter", "descendant")
 
   // for now, all of the family trees
-  def getJs(characters: List[CharacterItem], np: NotesParser): String = {
+  def getJs(characters: List[CharacterItem], np: RenderSecTags): String = {
 
     def isRoot(char: CharacterItem): Boolean = {
       val charTagKinds = char.tags.map(_.kind).toSet
@@ -69,7 +70,7 @@ object FamilyTree {
       node: CharacterItem,
       allCharacters: List[CharacterItem],
       parentType: String,
-      np: NotesParser): TreeEntry = {
+      np: RenderSecTags): TreeEntry = {
 
     def tagCharacter(tag: SecTag) = allCharacters.filter(_.id.equals(tag.value)).headOption
 

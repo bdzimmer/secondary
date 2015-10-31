@@ -483,7 +483,7 @@ object ExportImages {
     }
 
     val imageName = showName match {
-      case true => (if (!responsive ) "<br>" else "" ) + NotesParser.processLine(item.name)
+      case true => (if (!responsive ) "<br>" else "" ) + ParseSecTags.processLine(item.name)
       case false => ""
     }
 

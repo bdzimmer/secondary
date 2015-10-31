@@ -31,7 +31,7 @@ class ExportPages(
     val location: String,
     license: String) {
 
-  val np = new NotesParser(world)
+  val np = new RenderSecTags(world)
 
   val metaItems = WorldItem.filterList[MetaItem](world)
 
@@ -99,7 +99,7 @@ class ExportPages(
               .map(x => (x, todoFunc(x)))
               .filter(_._2.length > 0)
               .map(x => listItem(ExportPages.notepadLink(x._1) + ExportPages.textLinkPage(x._1) +
-                  listGroup(x._2.map(text => listItem(NotesParser.processLine(text)))))))
+                  listGroup(x._2.map(text => listItem(ParseSecTags.processLine(text)))))))
     }
 
     // get task strings
@@ -334,11 +334,11 @@ object ExportPages {
   def getCollectionLinksWithDescription(item: WorldItem): String =  item match {
     case x: CollectionItem => listItem(
         textLinkPage(x) +
-        (if (x.description.length > 0 ) " - " + NotesParser.processLine(x.description) else "") +
+        (if (x.description.length > 0 ) " - " + ParseSecTags.processLine(x.description) else "") +
         listGroup(x.children.map(x => getCollectionLinksWithDescription(x))))
     case _ => listItem(
         textLinkPage(item) +
-        (if (item.description.length > 0 ) " - " + NotesParser.processLine(item.description) else ""))
+        (if (item.description.length > 0 ) " - " + ParseSecTags.processLine(item.description) else ""))
   }
 
 
@@ -372,7 +372,7 @@ object ExportPages {
 
   // generate HTML for a text link to an item's page
   def textLinkPage(item: WorldItem): String = {
-    link(NotesParser.processLine(item.name), itemPageName(item))
+    link(ParseSecTags.processLine(item.name), itemPageName(item))
   }
 
 

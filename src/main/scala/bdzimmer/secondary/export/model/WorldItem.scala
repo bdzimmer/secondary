@@ -27,7 +27,7 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
 
-import bdzimmer.secondary.export.model.{NotesParser => np}
+import bdzimmer.secondary.export.model.{ParseSecTags => pst}
 
 
 // convert null strings to empty
@@ -84,7 +84,7 @@ trait TileMetaItemBean extends MetaItemBean {
 class BareWorldItemBean extends WorldItemBean {
   def getVal(): BareWorldItem = BareWorldItem(
       id, name, description, notes,
-      srcyml, remoteid, np.getAllTags(notes))
+      srcyml, remoteid, pst.getAllTags(notes))
 }
 
 class CollectionItemBean extends WorldItemBean {
@@ -93,7 +93,7 @@ class CollectionItemBean extends WorldItemBean {
    def getVal(): CollectionItem = CollectionItem (
        id, name, description, notes,
        srcyml, remoteid,
-       np.getAllTags(notes),
+       pst.getAllTags(notes),
        children.asScala.map(_.getVal).toList)
 }
 
@@ -101,7 +101,7 @@ class ImageItemBean extends MetaItemBean {
   def getVal(): ImageItem = ImageItem(
       id, name, description, notes,
       srcyml, remoteid,
-      np.getAllTags(notes),
+      pst.getAllTags(notes),
       filename)
 }
 
@@ -109,7 +109,7 @@ class TilesetItemBean extends TileMetaItemBean {
   def getVal(): TilesetItem = TilesetItem(
       id, name, description, notes,
       srcyml, remoteid,
-      np.getAllTags(notes),
+      pst.getAllTags(notes),
       filename, tiletype)
 }
 
@@ -117,7 +117,7 @@ class SpritesheetItemBean extends TileMetaItemBean {
   def getVal(): SpritesheetItem = SpritesheetItem(
       id, name, description, notes,
       srcyml, remoteid,
-      np.getAllTags(notes),
+      pst.getAllTags(notes),
       filename, tiletype)
 }
 
@@ -125,7 +125,7 @@ class MapItemBean extends MetaItemBean {
   def getVal(): MapItem = MapItem(
       id, name, description, notes,
       srcyml, remoteid,
-      np.getAllTags(notes),
+      pst.getAllTags(notes),
       filename)
 }
 
@@ -136,7 +136,7 @@ class CharacterItemBean extends WorldItemBean {
   def getVal(): CharacterItem = CharacterItem(
       id, name, description, notes,
       srcyml, remoteid,
-      np.getAllTags(notes),
+      pst.getAllTags(notes),
       image) // sheetrow
 
 }

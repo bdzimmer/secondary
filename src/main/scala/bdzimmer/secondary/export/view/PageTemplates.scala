@@ -12,7 +12,7 @@ package bdzimmer.secondary.export.view
 import bdzimmer.secondary.export.view.Tags._
 
 // TODO: should figure out a way to refactor so I'm not importing NotesParser
-import bdzimmer.secondary.export.model.NotesParser
+import bdzimmer.secondary.export.model.ParseSecTags
 
 // Static class for generating Bootstrap HTML.
 object PageTemplates {
@@ -85,8 +85,8 @@ object PageTemplates {
           container(
               column(Column12,
                   "<h1>%s</h1><h3>%s</h3>".format(
-                      NotesParser.processLine(title),
-                      NotesParser.processLine(description))))) +
+                      ParseSecTags.processLine(title),
+                      ParseSecTags.processLine(description))))) +
 
       container(
         column(Column12,
