@@ -2,9 +2,8 @@
 
 package bdzimmer.secondary.export.controller
 
-// TODO: this is not so good. see TODO item below
 import bdzimmer.secondary.export.model.{MetaItem, WorldItem, ParseSecTags, SecTag}
-import bdzimmer.secondary.export.view.Tags
+import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 
 class RenderSecTags(world: List[WorldItem]) {
@@ -20,14 +19,14 @@ class RenderSecTags(world: List[WorldItem]) {
       processTag(tag)
     })
 
-    val pp = ParseSecTags.getPegDown
+    val pp = Markdown.getPegDown
     pp.markdownToHtml(updatedText)
   }
 
   // validate that a tag can be processed
   def processTag(tag: SecTag): String = {
 
-    if (ParseSecTags.otherTagKinds.contains(tag.kind)) {
+    if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
       processOtherTag(tag)
     } else {
       val tagItemOption = world filter(_.id.equals(tag.value)) headOption

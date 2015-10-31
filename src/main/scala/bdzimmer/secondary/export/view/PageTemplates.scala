@@ -85,8 +85,8 @@ object PageTemplates {
           container(
               column(Column12,
                   "<h1>%s</h1><h3>%s</h3>".format(
-                      ParseSecTags.processLine(title),
-                      ParseSecTags.processLine(description))))) +
+                      Markdown.processLine(title),
+                      Markdown.processLine(description))))) +
 
       container(
         column(Column12,

@@ -8,7 +8,6 @@
 package bdzimmer.secondary.export.controller
 
 import bdzimmer.secondary.export.model.{CharacterItem, SecTag}
-import bdzimmer.secondary.export.controller.RenderSecTags
 import bdzimmer.secondary.export.view.Tags
 
 case class TreeEntry(

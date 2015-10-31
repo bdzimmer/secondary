@@ -8,12 +8,10 @@
 
 package bdzimmer.secondary.export.model
 
-import org.pegdown.PegDownProcessor
 import scala.util.matching.Regex
 import org.apache.commons.io.FileUtils
 
 case class SecTag(kind: String, value: String)
-
 
 
 object ParseSecTags {
@@ -33,8 +31,8 @@ object ParseSecTags {
   val TodoKind = "todo"
   val ThoughtKind = "thought"
 
-  val itemTagKinds = List(LinkKind, ImageKind, ImageResponsiveKind, JumbotronBackgroundKind)
-  val otherTagKinds = List(EmbedPreKind, JumbotronForegroundKind, TodoKind, ThoughtKind)
+  val ItemTagKinds = List(LinkKind, ImageKind, ImageResponsiveKind, JumbotronBackgroundKind)
+  val OtherTagKinds = List(EmbedPreKind, JumbotronForegroundKind, TodoKind, ThoughtKind)
 
 
   def getAllTags(text: String): List[SecTag] = {
@@ -59,23 +57,6 @@ object ParseSecTags {
       case false => SecTag("link", tagText)
     }
 
-  }
-
-
-  // process a line of text (like a description or title) with PegDown
-  // eliminating beginning and ending paragraph tags
-  def processLine(line: String): String = {
-    // TODO: not sure if creating the pegdown processor every time here
-    // will be performant or not.
-    val pp = getPegDown
-    val html = pp.markdownToHtml(line)
-    html.stripPrefix("<p>").stripSuffix("</p>")
-  }
-
-
-  def getPegDown(): PegDownProcessor = {
-    // new PegDownProcessor(Extensions.HARDWRAPS)
-    new PegDownProcessor
   }
 
 
