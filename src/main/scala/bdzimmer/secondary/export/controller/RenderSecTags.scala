@@ -23,7 +23,7 @@ class RenderSecTags(world: List[WorldItem]) {
     pp.markdownToHtml(updatedText)
   }
 
-  // validate that a tag can be processed
+  // validate that a tag can be processed and process it
   def processTag(tag: SecTag): String = {
 
     if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
@@ -42,16 +42,13 @@ class RenderSecTags(world: List[WorldItem]) {
 
   }
 
-
-  // TODO: move the stuff that processes SecTags into a class in controller
-
   // generate text for tags that reference WorldItems
   def processItemTag(tag: SecTag, item: WorldItem): String = tag.kind match {
 
-    case ParseSecTags.LinkKind => ExportPages.textLinkPage(item)
-    case ParseSecTags.ImageKind => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
-    case ParseSecTags.ImageResponsiveKind => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
-    case ParseSecTags.JumbotronBackgroundKind => jumbotronBackground(item, metaItems)
+    case ParseSecTags.Link => ExportPages.textLinkPage(item)
+    case ParseSecTags.Image => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
+    case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
+    case ParseSecTags.JumbotronBackground => jumbotronBackground(item, metaItems)
 
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${tag.kind.capitalize}: </b>"""
@@ -62,7 +59,7 @@ class RenderSecTags(world: List[WorldItem]) {
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {
-    case ParseSecTags.JumbotronForegroundKind => jumbotronForeground(tag.value)
+    case ParseSecTags.JumbotronForeground => jumbotronForeground(tag.value)
     case _ => tagString(tag)
   }
 
@@ -97,7 +94,6 @@ class RenderSecTags(world: List[WorldItem]) {
 
 
   def tagString(tag: SecTag): String = {
-    // "{{" + tag.kind + ":" + tag.value + "}}"
     s"""<b>${tag.kind.capitalize}: </b>""" + tag.value + Tags.br
   }
 

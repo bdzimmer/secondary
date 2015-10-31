@@ -33,7 +33,7 @@ object ExportPipelines {
 
       case Right(master) => {
 
-        val world = WorldLoader.collectionToList(master)
+        val world = WorldItem.collectionToList(master)
 
         val exportPages = new ExportPages(
             master,
@@ -87,7 +87,7 @@ object ExportPipelines {
     WorldLoader.loadWorld(projConf, newMetaStatus) match {
       case Right(master) => {
 
-        val world = WorldLoader.collectionToList(master)
+        val world = WorldItem.collectionToList(master)
 
         // download referenced files, update status
         val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
@@ -130,7 +130,7 @@ object ExportPipelines {
     WorldLoader.loadWorld(projConf, newMetaStatus) match {
       case Right(master) => {
 
-        val world = WorldLoader.collectionToList(master)
+        val world = WorldItem.collectionToList(master)
 
         // download referenced files, update status
         val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile

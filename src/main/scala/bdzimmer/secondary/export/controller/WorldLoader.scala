@@ -107,12 +107,6 @@ object WorldLoader {
   }
 
 
-  // create a list of all world items in a hierarchy
-  def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
-    case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
-    case _ => List(worldItem)
-  }
-
 
   def loadFile(
       filename: String,

@@ -11,9 +11,6 @@ package bdzimmer.secondary.export.view
 
 import bdzimmer.secondary.export.view.Tags._
 
-// TODO: should figure out a way to refactor so I'm not importing NotesParser
-import bdzimmer.secondary.export.model.ParseSecTags
-
 // Static class for generating Bootstrap HTML.
 object PageTemplates {
 

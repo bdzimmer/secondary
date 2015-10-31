@@ -9,7 +9,6 @@ import java.util.ArrayList
 import javax.swing.JButton
 
 import bdzimmer.secondary.export.model.{CollectionItem, MapItem, WorldItem}
-import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
 
 
@@ -17,7 +16,7 @@ class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, 
 
   def populateObjects(inputDir: String): ArrayList[ImageWidget] = {
 
-    val mapItems = WorldItem.filterList[MapItem](WorldLoader.collectionToList(main.master))
+    val mapItems = WorldItem.filterList[MapItem](WorldItem.collectionToList(main.master))
     val widgets = mapItems.map(x => {
       println(inputDir + File.separator + x.filename)
       mapWidget(inputDir + File.separator + x.filename, x.name)

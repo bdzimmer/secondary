@@ -9,7 +9,6 @@ import java.util.ArrayList
 import javax.swing.JButton
 
 import bdzimmer.secondary.export.model.{CollectionItem, SpritesheetItem, WorldItem}
-import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 
@@ -18,7 +17,7 @@ class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
   def populateObjects(inputDir: String): ArrayList[ImageWidget] = {
 
-    val spriteItems = WorldItem.filterList[SpritesheetItem](WorldLoader.collectionToList(main.master))
+    val spriteItems = WorldItem.filterList[SpritesheetItem](WorldItem.collectionToList(main.master))
     val widgets = spriteItems.map(x => {
       println(inputDir + File.separator + x.filename)
       spritesWidget(inputDir + File.separator + x.filename, x.name, x.tiletype)

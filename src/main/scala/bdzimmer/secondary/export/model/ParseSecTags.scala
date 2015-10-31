@@ -21,18 +21,18 @@ object ParseSecTags {
   // upper camelcase looks wierd, but I guess it's convention
   // http://docs.scala-lang.org/style/naming-conventions.html
 
-  val LinkKind = "link"
-  val ImageKind = "image"
-  val ImageResponsiveKind = "image-responsive"
-  val JumbotronBackgroundKind = "jumbotron-bg"
+  val Link = "link"
+  val Image = "image"
+  val ImageResponsive = "image-responsive"
+  val JumbotronBackground = "jumbotron-bg"
 
-  val EmbedPreKind = "embed-pre"
-  val JumbotronForegroundKind = "jumbotron-fg"
-  val TodoKind = "todo"
-  val ThoughtKind = "thought"
+  val EmbedPre = "embed-pre"
+  val JumbotronForeground = "jumbotron-fg"
+  val Todo = "todo"
+  val Thought = "thought"
 
-  val ItemTagKinds = List(LinkKind, ImageKind, ImageResponsiveKind, JumbotronBackgroundKind)
-  val OtherTagKinds = List(EmbedPreKind, JumbotronForegroundKind, TodoKind, ThoughtKind)
+  val ItemTagKinds = List(Link, Image, ImageResponsive, JumbotronBackground)
+  val OtherTagKinds = List(EmbedPre, JumbotronForeground, Todo, Thought)
 
 
   def getAllTags(text: String): List[SecTag] = {

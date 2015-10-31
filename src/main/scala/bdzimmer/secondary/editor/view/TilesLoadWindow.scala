@@ -9,7 +9,6 @@ import java.util.ArrayList
 import javax.swing.JButton
 
 import bdzimmer.secondary.export.model.{CollectionItem, TilesetItem, WorldItem}
-import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 
@@ -18,7 +17,7 @@ class TilesLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir
 
   def populateObjects(inputDir: String): ArrayList[ImageWidget] = {
 
-    val tilesetItems = WorldItem.filterList[TilesetItem](WorldLoader.collectionToList(main.master))
+    val tilesetItems = WorldItem.filterList[TilesetItem](WorldItem.collectionToList(main.master))
     val widgets = tilesetItems.map(x => {
       println(inputDir + File.separator + x.filename)
       tilesWidget(inputDir + File.separator + x.filename, x.name)
