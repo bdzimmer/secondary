@@ -8,7 +8,6 @@ import java.io.File
 import java.util.ArrayList
 import javax.swing.JButton
 
-import bdzimmer.secondary.export.model.{CollectionItem, SpritesheetItem, WorldItem}
 import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 
 
@@ -17,10 +16,10 @@ class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
   def populateObjects(inputDir: String): ArrayList[ImageWidget] = {
 
-    val spriteItems = WorldItem.filterList[SpritesheetItem](WorldItem.collectionToList(main.master))
+    val spriteItems = main.metadata.filter(_.assetType.equals("Spritesheet"))
     val widgets = spriteItems.map(x => {
       println(inputDir + File.separator + x.filename)
-      spritesWidget(inputDir + File.separator + x.filename, x.name, x.tiletype)
+      spritesWidget(inputDir + File.separator + x.filename, x.name, x.info)
     })
 
     val widgetsArrayList = new java.util.ArrayList[ImageWidget]
@@ -43,7 +42,8 @@ class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
     dosGraphics.updateClut()
 
     val tilesImage = tiles.getTilesImage(dosGraphics.getPalette())
-    val subsetImage = new BufferedImage(320, 200, BufferedImage.TYPE_INT_RGB)
+    val subsetImage = new BufferedImage(
+        ImageWidget.DefaultWidth, ImageWidget.DefaultHeight, BufferedImage.TYPE_INT_RGB)
     subsetImage.getGraphics.drawImage(tilesImage, 0, 0, null)
 
     val loader = new JButton("Edit")
@@ -53,9 +53,7 @@ class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
       }
     })
 
-    val buttons = List(loader)
-
-    new ImageWidget(title, subsetImage, buttons)
+    new ImageWidget(title, subsetImage, List(loader))
 
   }
 

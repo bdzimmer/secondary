@@ -54,10 +54,14 @@ class ScriptLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
     })
 
 
-    val subsetImage = new BufferedImage(320, 200, BufferedImage.TYPE_INT_RGB)
+    val subsetImage = new BufferedImage(
+        ImageWidget.DefaultWidth, ImageWidget.DefaultHeight, BufferedImage.TYPE_INT_RGB)
     mapImages.headOption.foreach(x => {
       subsetImage.getGraphics.drawImage(
-          x, (320 - x.getWidth) / 2, (200 - x.getHeight) / 2, null)
+          x,
+          (ImageWidget.DefaultWidth - x.getWidth) / 2,
+          (ImageWidget.DefaultHeight - x.getHeight) / 2,
+          null)
     })
 
     val viewer = new JButton("View Maps")

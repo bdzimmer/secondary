@@ -28,7 +28,7 @@ import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
 
 import bdzimmer.secondary.export.model.{ParseSecTags => pst}
-
+import bdzimmer.secondary.editor.model.AssetMetadata
 
 // convert null strings to empty
 object NonNullString {
@@ -236,6 +236,17 @@ object WorldItem {
   def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
     case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
     case _ => List(worldItem)
+  }
+
+
+  // convert the world to a list of AssetMetadata items for use by the editor
+  def assetMetadata(worldItem: WorldItem): List[AssetMetadata] = {
+    collectionToList(worldItem).map(item => item match {
+      case x: MapItem => Some(AssetMetadata(x.id, "Map", x.name, x.filename, "unused"))
+      case x: TilesetItem => Some(AssetMetadata(x.id, "Tileset", x.name, x.filename, x.tiletype))
+      case x: SpritesheetItem => Some(AssetMetadata(x.id, "Spritesheet", x.name, x.filename, x.tiletype))
+      case _ => None
+    }).flatten
   }
 
 

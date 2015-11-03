@@ -19,9 +19,10 @@ import java.io.{BufferedReader, File, InputStreamReader}
 import scala.util.{Try, Success, Failure}
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
-import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure}
+import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItem}
 import bdzimmer.secondary.export.view.ConfigurationGUI
 import bdzimmer.secondary.editor.view.Main
+import bdzimmer.secondary.editor.model.AssetMetadataUtils
 
 
 
@@ -79,7 +80,11 @@ class Driver {
     case DriverCommands.BrowseDrive => browseRemote
     case DriverCommands.Editor => {
       val master = WorldLoader.loadWorld(projConf) match {
-        case Right(master) => new Main(projConf.mappedContentPathActual, "Secondary Editor", master)
+        case Right(master) => {
+          val outputFilename = "assetmetadata.txt"
+          AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
+          new Main(projConf.mappedContentPathActual, "Secondary Editor", outputFilename)
+        }
         case Left(msg) => println(msg)
       }
     }

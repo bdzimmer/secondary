@@ -50,3 +50,9 @@ class ImageWidget(
   }
 
 }
+
+
+object ImageWidget {
+  val DefaultWidth = 320
+  val DefaultHeight = 200
+}

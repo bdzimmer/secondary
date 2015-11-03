@@ -68,8 +68,9 @@
 
 package bdzimmer.secondary.editor.view;
 
-import bdzimmer.secondary.export.model.CollectionItem;
+import bdzimmer.secondary.editor.model.AssetMetadataUtils;
 import bdzimmer.secondary.editor.model.ContentStructure;
+import bdzimmer.secondary.editor.model.AssetMetadata;
 import bdzimmer.secondary.editor.model.Map;
 import bdzimmer.secondary.editor.model.TileOptions;
 import bdzimmer.secondary.editor.model.Tiles;
@@ -78,6 +79,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import scala.collection.immutable.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -95,7 +97,7 @@ public class Main extends JFrame {
   public static final PaletteWindow paletteWindow = new PaletteWindow(globalPalette);
   
   public final String contentDir;
-  public final CollectionItem master;
+  public final List<AssetMetadata> metadata;
 
   
   public static int[][] currentTileBitmap;
@@ -110,12 +112,12 @@ public class Main extends JFrame {
    * @param contentDir  Content directory
    * @param title       Title of the Main window
    */
-  public Main(String contentDir, String title, CollectionItem master) {
+  public Main(String contentDir, String title, String metadataFilename) {
     
     System.out.println("content directory: " + contentDir);
     
     this.contentDir = contentDir;
-    this.master = master;
+    this.metadata = AssetMetadataUtils.loadAssetMetadata(metadataFilename);
  
     Main.paletteWindow.setLocationRelativeTo(null);
 

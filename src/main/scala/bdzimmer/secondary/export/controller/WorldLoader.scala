@@ -159,24 +159,24 @@ object WorldLoader {
   // functions for loading and saving FileModifiedMaps
 
   // save a FileModifiedMap to a text file
-  def saveModifiedMap(outputFile: String, map: FileModifiedMap): Unit = {
-    val pw = new java.io.PrintWriter(new java.io.File(outputFile))
+  def saveModifiedMap(filename: String, map: FileModifiedMap): Unit = {
+    val pw = new java.io.PrintWriter(new java.io.File(filename))
     // scalastyle:ignore regex
-    map foreach (x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2.getValue))
+    map.foreach(x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2.getValue))
     pw.close
   }
 
   // load a FileModifiedMap from a text file
-  def loadModifiedMap(inputFile: String): FileModifiedMap = {
-    val lines = scala.io.Source.fromFile(inputFile).getLines
+  def loadModifiedMap(filename: String): FileModifiedMap = {
+    val lines = FileUtils.readLines(new File(filename), "UTF-8").asScala
     lines.map(x => x.split("\t")).map(x => (x(0), (x(1), new DateTime(x(2).toLong)))).toMap
   }
 
   // load a FileModifiedMap from a text file, returning an empty map
   // if the file doesn't exist.
-  def loadOrEmptyModifiedMap(inputFile: String): FileModifiedMap = {
-    (new java.io.File(inputFile).exists) match {
-      case true => loadModifiedMap(inputFile)
+  def loadOrEmptyModifiedMap(filename: String): FileModifiedMap = {
+    (new java.io.File(filename).exists) match {
+      case true => loadModifiedMap(filename)
       case false => getEmptyModifiedMap
     }
   }
