@@ -48,9 +48,7 @@ class TilesLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir
       }
     })
 
-    val buttons = List(loader)
-
-    new ImageWidget(title, tilesImage, buttons)
+    new ImageWidget(title, tilesImage, List(loader))
 
   }
 

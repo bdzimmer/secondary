@@ -56,6 +56,7 @@ class ScriptLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
     val subsetImage = new BufferedImage(
         ImageWidget.DefaultWidth, ImageWidget.DefaultHeight, BufferedImage.TYPE_INT_RGB)
+
     mapImages.headOption.foreach(x => {
       subsetImage.getGraphics.drawImage(
           x,

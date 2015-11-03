@@ -45,9 +45,14 @@ class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, 
     dosGraphics.updateClut()
     val mapImage = map.getMapImage(mapTiles, dosGraphics)
 
-    val subsetImage = new BufferedImage(320, 200, BufferedImage.TYPE_INT_RGB)
+    val subsetImage = new BufferedImage(
+        ImageWidget.DefaultWidth, ImageWidget.DefaultHeight, BufferedImage.TYPE_INT_RGB)
+
     subsetImage.getGraphics.drawImage(
-        mapImage, (320 - mapImage.getWidth) / 2, (200 - mapImage.getHeight) / 2, null)
+        mapImage,
+        (ImageWidget.DefaultWidth - mapImage.getWidth) / 2,
+        (ImageWidget.DefaultHeight - mapImage.getHeight) / 2,
+        null)
 
     val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {
@@ -56,9 +61,7 @@ class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, 
       }
     })
 
-    val buttons = List(loader)
-
-    new ImageWidget(title, subsetImage, buttons)
+    new ImageWidget(title, subsetImage, List(loader))
 
   }
 
