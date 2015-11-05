@@ -55,8 +55,15 @@ object Tags {
     """<ul>""" + "\n" + items.mkString("\n") +  """</ul>"""
   }
 
-  def listItem(item: String): String = {
-    """<li>%s</li>""".format(item)
+  def listItem(item: String, className: String = ""): String = {
+    val classAttr = if (className.equals("")) {
+      className
+    } else {
+      s""" class="${className}""""
+    }
+
+    s"""<li${classAttr}>${item}</li>"""
+
   }
 
 

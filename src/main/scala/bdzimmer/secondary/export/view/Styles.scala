@@ -38,8 +38,8 @@ object Styles {
     }}).mkString("\n")
 
 
-    val sheetText = s"""
-/* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
+    val sheetText = s"""/* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
+
 /* Set a custom font and increase the font size for everything. */
 
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
@@ -64,6 +64,23 @@ p {
 body {
   line-height: ${BodyLineHeight};
 }
+""" +
+"""
+/* swiveling arrow checkboxes and collapsible lists */
+
+input.swivel[type=checkbox] { display:none; }
+input.swivel[type=checkbox] ~ label:after {
+  font-family: 'Glyphicons Halflings';
+  font-size: 12px;
+  display: inline-block;
+  margin-left: 10px;
+}
+input.swivel[type=checkbox] ~ label:after { content: "\e258"; }
+input.swivel[type=checkbox]:checked ~ label:after { content: "\e259"; }
+
+li.swivel > input ~ ul { display: none; }
+li.swivel > input:checked ~ ul { display: block; }
+li.swivel label { margin-bottom: 0px; }
 """
 
     val fileWriter = new java.io.FileWriter(outputFile, false)

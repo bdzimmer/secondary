@@ -79,7 +79,8 @@ class ExportPages(
             column(Column6,
               "<h3>" + curCollection.name + "</h3>\n" +
               listGroup(curCollection.children
-                  .map(x => ExportPages.getCollectionLinksWithDescription(x))))
+              //   .map(x => ExportPages.getCollectionLinksWithDescription(x))))
+                .map(x => ExportPages.getCollectionLinksCollapsible(x))))
 
           }).grouped(2).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n")),
 
@@ -341,6 +342,23 @@ object ExportPages {
         textLinkPage(item) +
         (if (item.description.length > 0 ) " - " + Markdown.processLine(item.description) else ""))
   }
+
+
+  // recursively generated collapsible lists
+  def getCollectionLinksCollapsible(item: WorldItem): String =  item match {
+    case x: CollectionItem => {
+
+      val collapsibleLink = s"""<input type="checkbox" id="${x.id}" class="swivel" />""" +
+         "\n" + textLinkPage(x) + s"""<label for="${x.id}"></label>"""
+
+      listItem(
+          collapsibleLink + listGroup(x.children.map(x => getCollectionLinksCollapsible(x))),
+          className = "swivel")
+
+    }
+    case _ => listItem(textLinkPage(item))
+  }
+
 
 
   // panel that can be pulled right
