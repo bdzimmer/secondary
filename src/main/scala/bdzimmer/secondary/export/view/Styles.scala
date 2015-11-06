@@ -30,7 +30,7 @@ object Styles {
   val BootstrapFilename = "bootstrap-3.3.5-dist.zip"
   val BootstrapUrl = "https://github.com/twbs/bootstrap/releases/download/v3.3.5/" + BootstrapFilename
 
-
+  // TODO: separate collapsible list stuff into a constant
   def createStyleSheet(outputFile: String): Unit = {
 
     val headingSizeStyle = HeadingSizes.map({case (level, size) => {

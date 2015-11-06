@@ -80,12 +80,12 @@ trait TileMetaItemBean extends MetaItemBean {
   @BeanProperty var tiletype: String = ""
 }
 
-
 class BareWorldItemBean extends WorldItemBean {
   def getVal(): BareWorldItem = BareWorldItem(
       id, name, description, notes,
       srcyml, remoteid, pst.getAllTags(notes))
 }
+
 
 class CollectionItemBean extends WorldItemBean {
    @BeanProperty var children: java.util.List[WorldItemBean] = new java.util.LinkedList[WorldItemBean]()
@@ -95,6 +95,14 @@ class CollectionItemBean extends WorldItemBean {
        srcyml, remoteid,
        pst.getAllTags(notes),
        children.asScala.map(_.getVal).toList)
+}
+
+// reference to another YML file
+// as far as I know, the getVal function here will never be called.
+class YamlIncludeBean extends MetaItemBean {
+  def getVal(): BareWorldItem = BareWorldItem(
+      id, name, description, notes,
+      srcyml, remoteid, pst.getAllTags(notes))
 }
 
 class ImageItemBean extends MetaItemBean {
@@ -211,6 +219,7 @@ object WorldItem {
   val constructor = new Constructor(classOf[CollectionItemBean])
   constructor.addTypeDescription(new TypeDescription(classOf[BareWorldItemBean], new Tag("!item")))
   constructor.addTypeDescription(new TypeDescription(classOf[CollectionItemBean], new Tag("!collection")))
+  constructor.addTypeDescription(new TypeDescription(classOf[YamlIncludeBean], new Tag("!include")))
   constructor.addTypeDescription(new TypeDescription(classOf[ImageItemBean], new Tag("!image")))
   constructor.addTypeDescription(new TypeDescription(classOf[TilesetItemBean], new Tag("!tileset")))
   constructor.addTypeDescription(new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")))

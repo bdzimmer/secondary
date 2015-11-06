@@ -117,10 +117,53 @@ object WorldLoader {
         new java.io.File(inputDir + File.separator + filename),
         "UTF-8")
 
-    val bean = tryToEither(Try(loadCollection(yamlString)))
+    val bean = tryToEither(Try(loadCollection(yamlString))).left.map(logParseError(filename, _))
+
+    // set srcyml before getting new children
     bean.right.foreach(assignSrcYml(_, filename, fileStatus))
-    bean.left.map(logParseError(filename, _))
+
+    for {
+      coll <- bean.right
+      newChildren <- getNewChildren(coll, inputDir, fileStatus).right
+    } yield {
+      coll.children = new java.util.LinkedList
+      coll.children.addAll(newChildren.asJava)
+      coll
+    }
+
   }
+
+
+  // TODO: prevent reference loops
+  def getNewChildren(
+      bean: CollectionItemBean,
+      inputDir: String,
+      fileStatus: FileModifiedMap): Either[String, List[WorldItemBean]] = {
+
+    val newChildrenLoads = bean.children.asScala.map(child => {
+        child match {
+          case x: YamlIncludeBean => loadFile(x.filename, inputDir, fileStatus)
+          case _ => Right(child)
+        }
+    })
+
+    // gather error messages from children into a list
+    val parseErrors = newChildrenLoads.collect({case Left(x) => x})
+
+    // get the child items that loaded into a list
+    val newChildren = newChildrenLoads.collect({case Right(x) => x}).toList
+
+    val result: Either[String, List[WorldItemBean]] = if (parseErrors.length > 0) {
+      Left(parseErrors.mkString("\n"))
+    } else {
+      Right(newChildren)
+    }
+
+    result
+
+  }
+
+
 
   def logParseError(filename: String, message: String): String = {
     s"***\nParsing error in ${filename}:\n\n${message}\n***\n"
