@@ -24,8 +24,14 @@ object FamilyTree {
   val AncestorTags = Set("father", "mother", "parent", "ancestor")
   val DescendantTags = Set("son", "daughter", "descendant")
 
+  val TreeStyles =
+    """<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>""" + "\n" +
+    """<link href="tree/tree.css" rel="stylesheet">""" + "\n" +
+    """<script src="tree/drawtree.js" charset="utf-8"></script>""" + "\n"
+
+
   // for now, all of the family trees
-  def getJs(characters: List[CharacterItem], np: RenderSecTags): String = {
+  def getAllTreesJs(characters: List[CharacterItem], np: RenderSecTags): String = {
 
     def isRoot(char: CharacterItem): Boolean = {
       val charTagKinds = char.tags.map(_.kind).toSet
@@ -36,8 +42,13 @@ object FamilyTree {
     val rootChars = characters.filter(isRoot)
     val nonRootChars = characters.filter(!isRoot(_))
 
-    // build trees for the root characters, but toss the ones that don't have any children
-    val trees = rootChars.map(x => buildTree(x, characters, "none", np)).filter(_.children.length > 0)
+    val trees = rootChars.map(x => getTreeJs(x, characters, np))
+    TreeStyles + trees.mkString("\n" + Tags.hr + "\n")
+
+  }
+
+
+  def getTreeJs(character: CharacterItem, characters: List[CharacterItem], np: RenderSecTags): String = {
 
     // add a hidden parent to a tree
     def wrapTree(te: TreeEntry): String = {
@@ -46,20 +57,14 @@ object FamilyTree {
       "var spouses = [];\n"
     }
 
-    /*
-    Tags.p("Root characters: ") + Tags.listGroup(rootChars.map(x => Tags.listItem(x.name))) +
-    Tags.p("Non-root characters: ") + Tags.listGroup(nonRootChars.map(x => Tags.listItem(x.name))) +
-    ("<pre>" + jsObjects.mkString("\n\n------\n\n") + "</pre>")
-    */
+    val tree = buildTree(character, characters, "none", np)
 
-    """<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>""" +
-    """<link href="tree/tree.css" rel="stylesheet">""" +
-    """<script src="tree/drawtree.js" charset="utf-8"></script>""" +
-    (trees.map(tree => {
-      s"""<div id="${tree.id + "_tree"}"export></div>\n""" +
-      s"""<script>${wrapTree(tree)}\ndrawTree(root, "#${tree.id + "_tree"}", 800, 640)</script>\n"""
-    }).mkString("\n" + Tags.hr + "\n"))
+    val treeDiv =
+      "\n\n" + s"""<div id="${tree.id + "_tree"}">""" + "\n" +
+      "<script>\n" + s"""${wrapTree(tree)}""" + "\n" + s"""drawTree(root, "#${tree.id + "_tree"}", 800, 640)""" +
+      "\n</script>\n</div>\n\n"
 
+    treeDiv
   }
 
 
@@ -110,7 +115,6 @@ object FamilyTree {
       buildTree(child, newAllCharacters, parentType, np)
     }})
 
-    // take the first paragraph
     val description = np.transform(
         node.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
 

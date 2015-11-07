@@ -59,10 +59,10 @@ class ExportPages(
 
     val toolbar = Some(List(
             link("Index", ExportPages.IndexPageFile),
-            link("Family Trees", ExportPages.FamilyTreesPageFile),
+            // link("Family Trees", ExportPages.FamilyTreesPageFile),
             link("Tasks", ExportPages.TasksPageFile),
             link("Edit",
-                ExportPages.notepadURL(master))).mkString("&nbsp;&nbsp;&middot;&nbsp;") + hr)
+                ExportPages.notepadURL(master))).mkString("&nbsp;&nbsp;&middot;&nbsp;&nbsp;") + hr)
 
     PageTemplates.createArticlePage(
         location + File.separator + relFilePath,
@@ -100,7 +100,7 @@ class ExportPages(
       listGroup(world
               .map(x => (x, todoFunc(x)))
               .filter(_._2.length > 0)
-              .map(x => listItem(ExportPages.notepadLink(x._1) + ExportPages.textLinkPage(x._1) +
+              .map(x => listItem(ExportPages.notepadLink(x._1) + "&nbsp;" + ExportPages.textLinkPage(x._1) +
                   listGroup(x._2.map(text => listItem(Markdown.processLine(text)))))))
     }
 
@@ -125,7 +125,7 @@ class ExportPages(
          "<h3>Empty Notes</h3>\n" +
          listGroup(world
            .filter(_.notes.equals(""))
-           .map(x => listItem(ExportPages.notepadLink(x) + ExportPages.textLinkPage(x))))
+           .map(x => listItem(ExportPages.notepadLink(x) + "&nbsp;" + ExportPages.textLinkPage(x))))
        ),
 
        license)
@@ -168,7 +168,7 @@ class ExportPages(
   }
 
 
-
+  /*
   def createFamilyTreesPage(): String = {
 
     val relFilePath = ExportPages.FamilyTreesPageFile
@@ -183,13 +183,15 @@ class ExportPages(
 
         column(Column12,
           // for now
-          FamilyTree.getJs(characters, np)
+          FamilyTree.getAllTreesJs(characters, new RenderSecTags(world, true))
         ),
 
         license)
 
     relFilePath
   }
+  */
+
 
   ///
 
@@ -323,7 +325,7 @@ object ExportPages {
   val MasterPageFile = "index.html"
   val IndexPageFile = "indexpage.html"
   val TasksPageFile = "tasks.html"
-  val FamilyTreesPageFile = "familytrees.html"
+  // val FamilyTreesPageFile = "familytrees.html"
 
   // recursively generate nested lists of links from a CollectionItem
   def getCollectionLinks(item: WorldItem): String =  item match {

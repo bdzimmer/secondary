@@ -5,6 +5,7 @@
 // 2015-08-30: Created. Link and general tags.
 // 2015-09-01: Image tags.
 // 2015-09-02: Tags for jumbotron background image and text color.
+// 2015-11-06: Family tree tags.
 
 package bdzimmer.secondary.export.model
 
@@ -18,20 +19,21 @@ object ParseSecTags {
 
   val matcher = "\\{\\{(.*?)\\}\\}".r
 
-  // upper camelcase looks wierd, but I guess it's convention
+  // upper CamelCase looks weird, but it's convention for constants
   // http://docs.scala-lang.org/style/naming-conventions.html
 
   val Link = "link"
   val Image = "image"
   val ImageResponsive = "image-responsive"
   val JumbotronBackground = "jumbotron-bg"
+  val FamilyTree = "familytree"
 
   val EmbedPre = "embed-pre"
   val JumbotronForeground = "jumbotron-fg"
   val Todo = "todo"
   val Thought = "thought"
 
-  val ItemTagKinds = List(Link, Image, ImageResponsive, JumbotronBackground)
+  val ItemTagKinds = List(Link, Image, ImageResponsive, JumbotronBackground, FamilyTree)
   val OtherTagKinds = List(EmbedPre, JumbotronForeground, Todo, Thought)
 
 
@@ -44,10 +46,6 @@ object ParseSecTags {
 
   // generate a tag from text
   def getTag(tagText: String): SecTag = {
-
-    // println("\tgetTag")
-    // TODO: find a way to return error messages
-    // println(s"\t\t$tagText")
 
     tagText.contains(":") match {
       case true => {

@@ -111,8 +111,6 @@ class DriveSync(
   // new upload function
   def upload(filesToUpload: List[String]): Unit = {
 
-
-    // TODO: quote file separator string for pattern (fails when file separator is a backslash)
     val filesToUploadSplit = filesToUpload.map(
         _.split(Pattern.quote(File.separator)).toList)
 

@@ -2,11 +2,13 @@
 
 package bdzimmer.secondary.export.controller
 
-import bdzimmer.secondary.export.model.{MetaItem, WorldItem, ParseSecTags, SecTag}
+import scala.util.matching.Regex
+
+import bdzimmer.secondary.export.model.{CharacterItem, MetaItem, WorldItem, ParseSecTags, SecTag}
 import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 
-class RenderSecTags(world: List[WorldItem]) {
+class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
 
   val metaItems = WorldItem.filterList[MetaItem](world)
 
@@ -16,7 +18,11 @@ class RenderSecTags(world: List[WorldItem]) {
     // process special tags
     val updatedText = ParseSecTags.matcher.replaceAllIn(text, m => {
       val tag = ParseSecTags.getTag(m.group(1))
-      processTag(tag)
+
+      // $ and \ have special meaning in replacement strings, this quotes them
+      // it may be desirable for performance to only apply below to results of certain tags
+      // that are more likely to include slashes
+      Regex.quoteReplacement(processTag(tag))
     })
 
     val pp = Markdown.getPegDown
@@ -43,12 +49,34 @@ class RenderSecTags(world: List[WorldItem]) {
   }
 
   // generate text for tags that reference WorldItems
+  // TODO: version that replaces tags with pure text or nothing
   def processItemTag(tag: SecTag, item: WorldItem): String = tag.kind match {
 
     case ParseSecTags.Link => ExportPages.textLinkPage(item)
     case ParseSecTags.Image => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
     case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case ParseSecTags.JumbotronBackground => jumbotronBackground(item, metaItems)
+    case ParseSecTags.FamilyTree => {
+
+      // transform is called to prepare mouseover text for family trees. We don't want
+      // family trees to be rendered in those results.
+      if (disableTrees) {
+        ""
+      } else {
+        item match {
+          case character: CharacterItem => {
+            val safeRender = new RenderSecTags(this.world, true)
+            val characters = WorldItem.filterList[CharacterItem](world)
+            val result = FamilyTree.TreeStyles + FamilyTree.getTreeJs(
+                character, characters, safeRender)
+
+            result
+          }
+          case _ => ""
+        }
+
+      }
+    }
 
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${tag.kind.capitalize}: </b>"""
@@ -64,8 +92,8 @@ class RenderSecTags(world: List[WorldItem]) {
   }
 
   // helper methods
-  // TODO: put these helper methods in the companion object?
-
+  // TODO: put these helper methods in a companion object?
+  // TODO: move HTML code generation to Tags
 
   def jumbotronBackground(item: WorldItem, metaItems: List[MetaItem]): String = {
 
