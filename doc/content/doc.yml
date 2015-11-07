@@ -21,7 +21,7 @@ children:
   name: Objects
   notes: |-
     {{TODO: objects content}}
- 
+
 - !item
   id: tags
   name: Tags
@@ -38,5 +38,5 @@ children:
   id: faq
   name: Frequently Asked Questions
   notes: |-
-    {{TODO: faq content}}  
- 
+    {{TODO: faq content}}
+

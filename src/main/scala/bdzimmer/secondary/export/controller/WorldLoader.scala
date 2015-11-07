@@ -6,6 +6,7 @@
 // 2015-08-16: Reads beans, converts to immutable case classes.
 // 2015-09-04: Switched to FileUtils instead of Source.
 // 2015-10-21: Error handling for YAML parsing.
+// 2015-11-06: YAML includes instead of main collections.
 
 package bdzimmer.secondary.export.controller
 
@@ -23,95 +24,37 @@ import org.yaml.snakeyaml.constructor.Constructor
 
 import bdzimmer.secondary.export.model._
 
+
 object WorldLoader {
 
 
-  // load a world from YAML files in the file system
   def loadWorld(
       inputDir: String,
-      masterName: String, mainCollectionNames: List[String],
+      masterName: String,
       fileStatus: FileModifiedMap): Either[String, CollectionItem] = {
 
-    // load all of the main collections
-    val mainCollections = mainCollectionNames.map(collectionName => {
-
-      val filename = collectionName + ".yml"
-      val collection = loadFile(filename, inputDir, fileStatus)
-
-      val prefix = collectionName + "_"
-      val matchingFiles = new File(inputDir).listFiles.map(_.getName).filter(_.startsWith(prefix))
-      val childCollections = matchingFiles.map(x => {
-       loadFile(x, inputDir, fileStatus)
-      }).toList
-
-      addChildCollections(collection, childCollections)
-
-    })
-
     val masterFilename = masterName + ".yml"
-    val masterCollection = loadFile(masterFilename, inputDir, fileStatus)
-
-    addChildCollections(masterCollection, mainCollections).right.map(_.getVal)
-  }
-
-
-  // combine possibly loaded main collection / sub collections, returning only
-  // error messages if anything failed to load.
-  def addChildCollections(
-        collection: Either[String, CollectionItemBean],
-        childCollections: List[Either[String, CollectionItemBean]]): Either[String, CollectionItemBean] = {
-
-    // collapse errors from collections into a single string
-    val parseErrors = (collection :: childCollections).collect({
-      case Left(msg) => msg
-    }).mkString("\n")
-
-    // get child collections that loaded successfully as a Java list
-    val childCollectionsJava = childCollections.collect({
-      case Right(collection) => collection
-    }).asJava
-
-    // build the result
-    val result: Either[String, CollectionItemBean] = collection.fold(
-      x => Left(parseErrors),
-      x => {
-        x.children.addAll(childCollectionsJava)
-        Right(x)
-      }
-    )
-
-    // This will return just the messages if anything failed to parse.
-    // To get behavior where you get the subset of the world that
-    // parsed correctly, don't perform the conditional and always return
-    // "result"
-    if (result.isRight && childCollections.count(_.isLeft) == 0) {
-      result
-    } else {
-      Left(parseErrors)
-    }
+    loadFile(masterFilename, inputDir, fileStatus, List(masterFilename)).right.map(_.getVal)
 
   }
-
 
   def loadWorld(projConf: ProjectConfig, fileStatus: FileModifiedMap): Either[String, CollectionItem] = {
     WorldLoader.loadWorld(
         projConf.localContentPath,
         projConf.masterName,
-        projConf.mainCollections,
         fileStatus)
   }
-
 
   def loadWorld(projConf: ProjectConfig): Either[String, CollectionItem] = {
     WorldLoader.loadWorld(projConf, getEmptyModifiedMap)
   }
 
 
-
   def loadFile(
       filename: String,
       inputDir: String,
-      fileStatus: FileModifiedMap): Either[String, CollectionItemBean] = {
+      fileStatus: FileModifiedMap,
+      loadedFiles: List[String]): Either[String, CollectionItemBean] = {
 
     val yamlString = FileUtils.readFileToString(
         new java.io.File(inputDir + File.separator + filename),
@@ -124,7 +67,7 @@ object WorldLoader {
 
     for {
       coll <- bean.right
-      newChildren <- getNewChildren(coll, inputDir, fileStatus).right
+      newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles).right
     } yield {
       coll.children = new java.util.LinkedList
       coll.children.addAll(newChildren.asJava)
@@ -133,16 +76,19 @@ object WorldLoader {
 
   }
 
-
-  // TODO: prevent reference loops
   def getNewChildren(
       bean: CollectionItemBean,
       inputDir: String,
-      fileStatus: FileModifiedMap): Either[String, List[WorldItemBean]] = {
+      fileStatus: FileModifiedMap,
+      loadedFiles: List[String]): Either[String, List[WorldItemBean]] = {
 
     val newChildrenLoads = bean.children.asScala.map(child => {
         child match {
-          case x: YamlIncludeBean => loadFile(x.filename, inputDir, fileStatus)
+          case x: YamlIncludeBean => if (loadedFiles.contains(x.filename)) {
+            Left(s"""***\nitem "${bean.id}" contains circular reference to file "${x.filename}"\n***""")
+          } else {
+            loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
+          }
           case _ => Right(child)
         }
     })

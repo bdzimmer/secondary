@@ -39,12 +39,10 @@ class ProjectConfig(
   val driveOutputPath: String,
   val mappedContentPath: String,
   val masterName: String,
-  val mainCollectionNames: String,
   val license: String) {
 
 
   // attributes derived from the above
-  val mainCollections = mainCollectionNames.split(",").toList.map(_.trim)
   val driveInputPathList = driveInputPath.split("/").toList
   val driveOutputPathList = driveOutputPath.split("/").toList
 
@@ -73,7 +71,6 @@ object ProjectConfig {
   val driveOutputPath = ConfigField("driveOutputPath", "secondary/web", "Drive output path")
   val mappedContentPath = ConfigField("mappedContentPath", "", "Mapped content path")
   val masterName = ConfigField("masterName", "master", "Master name")
-  val mainCollectionNames = ConfigField("mainCollectionNames", "characters,locations,lore,images,tilesets,sprites", "Main collection names")
   val license = ConfigField("license", "", "License text")
 
 
@@ -84,7 +81,6 @@ object ProjectConfig {
       driveOutputPath,
       mappedContentPath,
       masterName,
-      mainCollectionNames,
       license)
 
 
@@ -119,7 +115,6 @@ object ProjectConfig {
         driveOutputPath = getProp(ProjectConfig.driveOutputPath),
         mappedContentPath = getProp(ProjectConfig.mappedContentPath),
         masterName = getProp(ProjectConfig.masterName),
-        mainCollectionNames = getProp(ProjectConfig.mainCollectionNames),
         license = getProp(ProjectConfig.license))
 
 
