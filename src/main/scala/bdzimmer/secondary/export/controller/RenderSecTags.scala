@@ -35,15 +35,25 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
       processOtherTag(tag)
     } else {
-      val tagItemOption = world filter(_.id.equals(tag.value)) headOption
 
-      tagItemOption match {
-        case Some(x) => processItemTag(tag, x)
-        case None => {
-          println("\t\tinvalid item tag id: " + tag.value)
-          tagString(tag)
-        }
-      }
+      // if it's an item tag, match the first word in the tag value against world ids
+      // and pass the remaining words as args
+
+      // originally just matched the value
+      // val tagItemOption = world filter(_.id.equals(tag.value)) headOption
+
+      val valueWords = tag.value.split("\\s+").toList
+
+      (for {                           // Option monad
+        id <- valueWords.headOption
+        item  <- world.filter(_.id.equals(id)).headOption
+      } yield {
+        processItemTag(tag, item)
+      }).getOrElse({
+        println("\t\tinvalid item tag: " + tag.kind + " " + tag.value)
+        tagString(tag)
+      })
+
     }
 
   }

@@ -50,6 +50,7 @@ object WorldLoader {
   }
 
 
+  // TODO: catch file doesn't exist
   def loadFile(
       filename: String,
       inputDir: String,

@@ -109,8 +109,10 @@ class Driver {
   def browseRemote(): Unit = {
     driveSync match {
       case Right(ds) => Try {
+        val drivePermaLink = "http://www.googledrive.com/host/" + ds.driveOutputFile.getId
+        println(drivePermaLink)
         Desktop.getDesktop.browse(
-            new URI("http://www.googledrive.com/host/" + ds.driveOutputFile.getId))
+            new URI(drivePermaLink))
       }
       case Left(msg) => Driver.driveError(msg)
     }
