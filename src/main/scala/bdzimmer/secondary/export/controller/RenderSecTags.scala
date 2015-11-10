@@ -29,6 +29,7 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     pp.markdownToHtml(updatedText)
   }
 
+
   // validate that a tag can be processed and process it
   def processTag(tag: SecTag): String = {
 
@@ -36,20 +37,17 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
       RenderSecTags.processOtherTag(tag)
     } else {
 
-      // if it's an item tag, match the first word in the tag value against world ids
-      // and pass the remaining words as args
+      // if it's an item tag, match the tag value against world ids
 
-      val valueWords = tag.value.split("\\s+").toList
+      val itemOption = world.filter(_.id.equals(tag.value)).headOption
 
-      (for {                           // Option monad
-        id <- valueWords.headOption
-        item  <- world.filter(_.id.equals(id)).headOption
-      } yield {
-        processItemTag(tag.kind, item, valueWords.drop(1))
-      }).getOrElse({
-        println("\t\tinvalid item tag: " + tag.kind + " " + tag.value)
-        RenderSecTags.tagString(tag)
-      })
+      itemOption match {
+        case Some(item) => processItemTag(tag.kind, item, tag.args)
+        case None => {
+          println("\t\tinvalid item tag: " + tag.kind + " " + tag.value)
+          RenderSecTags.tagString(tag)
+        }
+      }
 
     }
 
@@ -59,7 +57,8 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   // TODO: version that replaces tags with pure text or nothing
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
-    case ParseSecTags.Link => ExportPages.textLinkPage(item)
+    case ParseSecTags.Link => RenderSecTags.link(item, args)
+    // case ParseSecTags.Link => ExportPages.textLinkPage(item)
     case ParseSecTags.Image => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
     case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case ParseSecTags.FamilyTree => familyTree(item)
@@ -111,6 +110,7 @@ object RenderSecTags {
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {
+    case ParseSecTags.Anchor => Tags.anchor(tag.value)
     case _ => RenderSecTags.tagString(tag)
   }
 
@@ -132,6 +132,18 @@ object RenderSecTags {
     color: ${color};
   }
 </style>"""
+
+  }
+
+  // more flexible link renderer
+  def link(item: WorldItem, args: List[String]): String = {
+
+    (for { // Option monad
+      anchorLabel <- args.headOption
+      anchorTag <- item.tags.filter(x => x.kind.equals("anchor") && x.value.equals(anchorLabel)).headOption
+    } yield {
+      ExportPages.textLinkPage(item, anchorTag.value, anchorTag.args.mkString(" "))
+    }).getOrElse(ExportPages.textLinkPage(item))
 
   }
 

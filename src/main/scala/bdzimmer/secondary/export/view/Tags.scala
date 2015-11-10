@@ -71,6 +71,12 @@ object Tags {
     """<a href="%s">%s</a>""".format(link, text)
   }
 
+
+  def anchor(name: String): String = {
+    s"""<a name="${name}"></a>"""
+  }
+
+
   def image(file: String, responsive: Boolean = false, maxWidth: Int = ImageMaxWidthDefault): String = {
     responsive match {
       // case false => s"""<img src="$file" style="max-width:$maxWidth;height:auto"/>"""

@@ -6,13 +6,14 @@
 // 2015-09-01: Image tags.
 // 2015-09-02: Tags for jumbotron background image and text color.
 // 2015-11-06: Family tree tags.
+// 2015-11-09: Added list of args to SecTags.
 
 package bdzimmer.secondary.export.model
 
 import scala.util.matching.Regex
 import org.apache.commons.io.FileUtils
 
-case class SecTag(kind: String, value: String)
+case class SecTag(kind: String, value: String, args: List[String])
 
 
 object ParseSecTags {
@@ -31,9 +32,10 @@ object ParseSecTags {
   val EmbedPre = "embed-pre"
   val Todo = "todo"
   val Thought = "thought"
+  val Anchor = "anchor"
 
   val ItemTagKinds = List(Link, Image, ImageResponsive, FamilyTree, Jumbotron)
-  val OtherTagKinds = List(EmbedPre, Todo, Thought)
+  val OtherTagKinds = List(EmbedPre, Todo, Thought, Anchor)
 
 
   def getAllTags(text: String): List[SecTag] = {
@@ -44,17 +46,35 @@ object ParseSecTags {
 
 
   // generate a tag from text
+
+  def getTag(tagText: String): SecTag = {
+
+    tagText.split(":\\s+").toList match {
+      case kind :: rest :: extra => rest.split("\\s+").toList match {
+        case value :: args => SecTag(kind, value, args)
+        case _ => SecTag("link", tagText, List())
+      }
+      case _ => SecTag("link", tagText, List())
+    }
+
+  }
+
+
+
+  /*
   def getTag(tagText: String): SecTag = {
 
     tagText.contains(":") match {
       case true => {
         val tagParts = tagText.split(":\\s+")
-        SecTag(tagParts(0).toLowerCase, tagParts(1))
+        SecTag(tagParts(0).toLowerCase, tagParts(1), List())
       }
-      case false => SecTag("link", tagText)
+      case false => SecTag("link", tagText, List())
     }
 
   }
+  *
+  */
 
 
 }

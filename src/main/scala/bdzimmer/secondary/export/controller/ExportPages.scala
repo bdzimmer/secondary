@@ -396,12 +396,16 @@ object ExportPages {
     link(Markdown.processLine(item.name), itemPageName(item))
   }
 
+  // generate HTML for a text link to an item's page with an anchor
+  def textLinkPage(item: WorldItem, anchor: String, name: String): String = {
+    link(Markdown.processLine(name), itemPageName(item) + "#" + anchor)
+  }
 
   // get a toolbar for an article page for a world item
   def getToolbar(item: WorldItem): String = {
     List(// link("Edit Local", localURL(item, localDriveMapDir)),
          link("Home", "index.html"),
-         link("Edit", notepadURL(item))).mkString("&nbsp;&nbsp;&middot;&nbsp;") + hr
+         link("Edit", notepadURL(item))).mkString("&nbsp;&nbsp;&middot;&nbsp;&nbsp;") + hr
   }
 
   def notepadLink(item: WorldItem): String = {
