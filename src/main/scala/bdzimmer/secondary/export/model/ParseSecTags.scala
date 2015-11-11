@@ -13,6 +13,7 @@ package bdzimmer.secondary.export.model
 import scala.util.matching.Regex
 import org.apache.commons.io.FileUtils
 
+// TODO: field for original tag text before splitting into value and args
 case class SecTag(kind: String, value: String, args: List[String])
 
 
@@ -51,7 +52,7 @@ object ParseSecTags {
 
     tagText.split(":\\s+").toList match {
       case kind :: rest :: extra => rest.split("\\s+").toList match {
-        case value :: args => SecTag(kind, value, args)
+        case value :: args => SecTag(kind.toLowerCase(), value, args)
         case _ => SecTag("link", tagText, List())
       }
       case _ => SecTag("link", tagText, List())
