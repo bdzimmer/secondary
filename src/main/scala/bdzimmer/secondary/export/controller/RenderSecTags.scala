@@ -149,7 +149,7 @@ object RenderSecTags {
 
 
   def tagString(tag: SecTag): String = {
-    s"""<b>${tag.kind.capitalize}: </b>""" + tag.value + " " + tag.args.mkString(" ") + Tags.br
+    s"""<b>${tag.kind.capitalize}: </b>""" + tag.text + Tags.br
   }
 
 

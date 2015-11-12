@@ -6,6 +6,8 @@ package bdzimmer.secondary.export.view
 
 import org.pegdown.PegDownProcessor
 
+import org.pegdown.Extensions
+
 object Markdown {
 
   // process a line of text (like a description or title) with PegDown
@@ -17,8 +19,8 @@ object Markdown {
   }
 
   def getPegDown(): PegDownProcessor = {
-    // new PegDownProcessor(Extensions.HARDWRAPS)
-    new PegDownProcessor
+    // new PegDownProcessor
+    new PegDownProcessor(Extensions.SMARTYPANTS | Extensions.ANCHORLINKS)
   }
 
 }

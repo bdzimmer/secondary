@@ -46,9 +46,19 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   font-family: '${FontFace}', ${FontFallback};
 }
 
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a, .h1 a, .h2 a, .h3 a, .h4 a, .h5 a, .h6 a {
+  color: inherit;
+}
+
 ${headingSizeStyle}
 
-.jumbotron h1, .jumbotron h1 {
+h4, .h4 {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.jumbotron h1, .jumbotron .h1 {
   font-size: ${H1JumbotronSize}px;
 }
 

@@ -108,7 +108,7 @@ class ExportPages(
     // TODO: give SecTag an attribute that holds the original text
     // TODO: see also reassembling logic in rendering non-item tags
     def getTask(item: WorldItem)(prefix: String): List[String] = {
-      item.tags.filter(_.kind.equals(prefix)).map(x => x.value + " " + x.args.mkString(" "))
+      item.tags.filter(_.kind.equals(prefix)).map(_.text)
     }
 
     PageTemplates.createArticlePage(

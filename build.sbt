@@ -26,10 +26,9 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "org.apache.commons" % "commons-compress" % "1.10",
-      "org.pegdown" % "pegdown" % "1.4.2",
+      "org.pegdown" % "pegdown" % "1.6.0",
       "org.yaml" % "snakeyaml" % "1.14",
       "com.google.apis" % "google-api-services-drive" % "v2-rev167-1.20.0",
-      "org.scala-lang.modules" %% "scala-pickling" % "0.10.1",
       "org.scala-lang" % "scala-swing" % "2.10+",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "net.liftweb" %% "lift-json" % "2.6"
