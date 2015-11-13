@@ -37,9 +37,8 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
       RenderSecTags.processOtherTag(tag)
     } else {
 
-      // if it's an item tag, match the tag value against world ids
-
-      val itemOption = world.filter(_.id.equals(tag.value)).headOption
+      // if it's an item tag, match the tag value against the world
+      val itemOption = matchItemTag(tag)
 
       itemOption match {
         case Some(item) => processItemTag(tag.kind, item, tag.args)
@@ -53,12 +52,36 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
 
   }
 
+
+  def matchItemTag(tag: SecTag): Option[WorldItem] = {
+
+    // original: match tag value against WorldItem id
+    // world.filter(_.id.equals(tag.value)).headOption
+
+    // new: match tag against id first; if no matches match against name
+    val idMatches = world.filter(_.id.equals(tag.value))
+    idMatches.length match {
+      case 1 => idMatches.headOption
+      case _ => {
+
+        val nameMatches = world.filter(_.name.equals(tag.value))
+        nameMatches.length match {
+          case 1 => nameMatches.headOption
+          case _ => None
+        }
+
+      }
+    }
+
+  }
+
+
+
   // generate text for tags that reference WorldItems
   // TODO: version that replaces tags with pure text or nothing
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
     case ParseSecTags.Link => RenderSecTags.link(item, args)
-    // case ParseSecTags.Link => ExportPages.textLinkPage(item)
     case ParseSecTags.Image => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
     case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case ParseSecTags.FamilyTree => familyTree(item)
@@ -149,7 +172,7 @@ object RenderSecTags {
 
 
   def tagString(tag: SecTag): String = {
-    s"""<b>${tag.kind.capitalize}: </b>""" + tag.text + Tags.br
+    s"""<b>${tag.kind.capitalize}: </b>""" + tag.value + Tags.br
   }
 
 

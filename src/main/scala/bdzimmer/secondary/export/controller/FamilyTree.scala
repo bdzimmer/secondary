@@ -76,7 +76,10 @@ object FamilyTree {
       parentType: String,
       np: RenderSecTags): TreeEntry = {
 
-    def tagCharacter(tag: SecTag) = allCharacters.filter(_.id.equals(tag.value)).headOption
+    // TODO: revise this logic
+    def tagCharacter(tag: SecTag) = allCharacters.filter(x => {
+      x.id.equals(tag.value) || x.name.equals(tag.value)
+    }).headOption
 
     def filterTags(tags: List[SecTag], kinds: Set[String]): List[SecTag] = {
       tags.filter(x => kinds.contains(x.kind))

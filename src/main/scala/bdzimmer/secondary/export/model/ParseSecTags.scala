@@ -14,7 +14,7 @@ import scala.util.matching.Regex
 import org.apache.commons.io.FileUtils
 
 
-case class SecTag(kind: String, text: String, value: String, args: List[String])
+case class SecTag(kind: String, value: String, args: List[String])
 
 
 object ParseSecTags {
@@ -50,11 +50,13 @@ object ParseSecTags {
   def getTag(tagText: String): SecTag = {
 
     tagText.split(":\\s+").toList match {
-      case kind :: text :: extra => text.split("\\s+").toList match {
-        case value :: args => SecTag(kind.toLowerCase(), text, value, args)
-        case _ => SecTag(kind.toLowerCase(), text, text, List())
+      case kind :: text :: extra => text.split("\\s*\\|\\s*").toList match {
+        case value :: argsList :: extra => {
+          SecTag(kind.toLowerCase(), value, argsList.split("\\s+").toList)
+        }
+        case _ => SecTag(kind.toLowerCase(), text, List())
       }
-      case _ => SecTag("link", tagText, tagText, List())
+      case _ => SecTag("link", tagText, List())
     }
 
   }

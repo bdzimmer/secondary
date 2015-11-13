@@ -20,9 +20,8 @@ import com.google.api.client.util.DateTime
 import org.apache.commons.io.FilenameUtils
 
 import bdzimmer.secondary.export.model._
-import bdzimmer.secondary.export.view.Markdown
 import bdzimmer.secondary.export.view.Tags._
-import bdzimmer.secondary.export.view.PageTemplates
+import bdzimmer.secondary.export.view.{Markdown, PageTemplates}
 
 
 
@@ -108,7 +107,7 @@ class ExportPages(
     // TODO: give SecTag an attribute that holds the original text
     // TODO: see also reassembling logic in rendering non-item tags
     def getTask(item: WorldItem)(prefix: String): List[String] = {
-      item.tags.filter(_.kind.equals(prefix)).map(_.text)
+      item.tags.filter(_.kind.equals(prefix)).map(_.value)
     }
 
     PageTemplates.createArticlePage(

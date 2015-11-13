@@ -4,9 +4,8 @@
 
 package bdzimmer.secondary.export.view
 
-import org.pegdown.PegDownProcessor
+import org.pegdown.{PegDownProcessor, Extensions}
 
-import org.pegdown.Extensions
 
 object Markdown {
 
