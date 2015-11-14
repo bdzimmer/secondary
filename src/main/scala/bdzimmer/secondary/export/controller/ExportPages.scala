@@ -46,6 +46,7 @@ class ExportPages(
     case x: CharacterItem => createCharacterPage(x)
     case x: ImageItem => createImagePage(x)
     case x: MapItem => createMapPage(x)
+    case x: TileMetaItem => createTilePage(x)
     case _ => createItemPage(item)
   }
 
@@ -169,31 +170,6 @@ class ExportPages(
   }
 
 
-  /*
-  def createFamilyTreesPage(): String = {
-
-    val relFilePath = ExportPages.FamilyTreesPageFile
-    val characters = WorldItem.filterList[CharacterItem](world)
-
-    PageTemplates.createArticlePage(
-
-        location + File.separator + relFilePath,
-        "Family Trees", "",
-
-        None,
-
-        column(Column12,
-          // for now
-          FamilyTree.getAllTreesJs(characters, new RenderSecTags(world, true))
-        ),
-
-        license)
-
-    relFilePath
-  }
-  */
-
-
   ///
 
   private def createCharacterPage(character: CharacterItem): String = {
@@ -229,8 +205,28 @@ class ExportPages(
 
         Some(ExportPages.getToolbar(map)),
 
-        column(Column12, np.transform(map.notes)) +
-        column(Column12, ExportImages.imageLinkUpscale(map)),
+        column(Column12, ExportImages.pixelImageLinkResponsive(map) + hr) +
+        column(Column12, np.transform(map.notes)),
+
+        license)
+
+    relFilePath
+  }
+
+
+
+  private def createTilePage(tileset: TileMetaItem): String = {
+
+    val relFilePath = ExportPages.itemPageName(tileset)
+
+    PageTemplates.createArticlePage(
+        location + File.separator + relFilePath,
+        tileset.name, tileset.description,
+
+        Some(ExportPages.getToolbar(tileset)),
+
+        column(Column12, ExportImages.pixelImageLinkResponsive(tileset) + hr) +
+        column(Column12, np.transform(tileset.notes)),
 
         license)
 

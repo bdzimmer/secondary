@@ -207,8 +207,8 @@ object ExportImages {
   val ImagesDir = "images"
   val Slash = "/"
 
-  val TransparentColor: (Int, Int, Int) = (255, 255, 255)
-  // val transparentColor: (Int, Int, Int) = (51, 153, 102)
+  // val TransparentColor: (Int, Int, Int) = (255, 255, 255)
+  val TransparentColor: (Int, Int, Int) = (51, 153, 102)
 
   val outputScales = List(1, 4, 12)    // scalastyle:ignore magic.number
 
@@ -402,6 +402,7 @@ object ExportImages {
       case x :: xs => {
         (x, xs.headOption.flatMap(s => Try(s.toInt).toOption).getOrElse(0))
       }
+      case Nil => ("", 0)
     }
 
     // there may not be a matching MetaItem in the collection
@@ -438,10 +439,7 @@ object ExportImages {
     val (metaOption, sheetRow) = getCharacterImageInfo(ci, metaItems)
 
     metaOption.map(meta => meta match {
-      case ss: SpritesheetItem => {
-        val imageFile = ImagesDir + Slash + ci.id + "%s.png"
-        imageFile.format(scalePostfix(scale))
-      }
+      case ss: SpritesheetItem => pixelImagePathScale(ci, scale)
       case im: ImageItem => imageItemImagePath(im)
       case _ => ""
     }).getOrElse("")
@@ -449,11 +447,16 @@ object ExportImages {
   }
 
 
-  // generate HTML for an item's 1x image, with a link to the 4x version
-  def imageLinkUpscale(item: WorldItem): String = {
-    link(
-        image(ImagesDir + Slash + item.id + ".png"),
-        ImagesDir + Slash + item.id + "_4x.png")
+  def pixelImagePathScale(item: WorldItem, scale: Int = 4): String = {
+    val imageFile = ImagesDir + Slash + item.id + "%s.png"
+    imageFile.format(scalePostfix(scale))
+  }
+
+
+  // generate HTML for an item's upscaled image with responsive style
+  // that links to the bare image
+  def pixelImageLinkResponsive(item: WorldItem): String = {
+    link(image(pixelImagePathScale(item), true), pixelImagePathScale(item))
   }
 
 
@@ -475,16 +478,16 @@ object ExportImages {
 
     val imageTag = item match {
       case x: MapItem => {
-        val imageFile = ImagesDir + Slash + item.id + "%s" + ".png"
-        imageSprite(imageFile.format(scalePostfix(1)), 0, 0, 192, 192) // scalastyle:ignore magic.number}
+        val imageFile = pixelImagePathScale(x, 1)
+        imageSprite(imageFile, 0, 0, 192, 192)
       }
-      case x: CharacterItem => characterImage(x, metaItems, scale, responsive, maxWidth) // scalastyle:ignore magic.number
+      case x: CharacterItem => characterImage(x, metaItems, scale, responsive, maxWidth)
       case x: ImageItem => image(imageItemImagePath(x), responsive, maxWidth)
       case _ => ""
     }
 
     val imageName = showName match {
-      case true => (if (!responsive ) "<br>" else "" ) + Markdown.processLine(item.name)
+      case true => (if (!responsive) br else "" ) + Markdown.processLine(item.name)
       case false => ""
     }
 
@@ -492,12 +495,14 @@ object ExportImages {
   }
 
 
+
   // can this be combined with the above somehow?
+  // I believe this is only used for jumbotron images.
   def itemImagePath(
       item: WorldItem,
       metaItems: List[MetaItem]): String = item match {
 
-    case x: MapItem => ImagesDir + Slash + item.id + "_4x" + ".png"
+    case x: MapItem => pixelImagePathScale(x, 4)
     case x: CharacterItem => characterItemImagePath(x, metaItems)
     case x: ImageItem => imageItemImagePath(x)
     case _ => ""

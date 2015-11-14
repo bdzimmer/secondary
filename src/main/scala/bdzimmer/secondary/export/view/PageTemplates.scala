@@ -86,12 +86,10 @@ object PageTemplates {
                       Markdown.processLine(description))))) +
 
       container(
-        column(Column12,
-          toolbar.getOrElse("")
-        ) +
-        body
-      ) +
-      container(hr + centered(license))
+        column(Column12, toolbar.getOrElse("")) +
+        body +
+        column(Column12, hr + centered(license))
+      )
     )
 
   }

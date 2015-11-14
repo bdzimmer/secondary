@@ -94,16 +94,12 @@ object Tags {
     """<p class="text-center">%s</p>""".format(text)
   }
 
-  def hr(): String = {
-    """<hr />"""
-  }
-
-  def br(): String = {
-    """<br />"""
-  }
-
   def p(text: String): String = {
     s"<p>${text}</p>"
   }
+
+  val hr = """<hr />"""
+
+  val br = """<br />"""
 
 }

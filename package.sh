@@ -12,7 +12,7 @@ rm -rf dist/doc
 # TODO: figure out how to run sbt from Cygwin.
 # sbt assembly $@
 
-cp target/scala-2.10/secondary-assembly-2015.08.18.jar dist/secondary.jar
+cp target/scala-2.10/secondary-assembly-2015.11.13.jar dist/secondary.jar
 cp -R doc/web dist/doc
 
 chmod -R 755 dist
