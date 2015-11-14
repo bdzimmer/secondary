@@ -10,19 +10,19 @@ val jvmSettings = whichJvmSettings match {
 
 // JVM settings can be verified using the following command:
 // javap -verbose -cp secondary.jar bdzimmer.secondary.export.Driver
-// major version will be 50 for Java 1.6 and 51 for Java 1.7. 
+// major version will be 50 for Java 1.6 and 51 for Java 1.7.
 
 lazy val root = (project in file("."))
   .settings(
-    name := "secondary",
-    version := "2015.08.18",
+    name := "Secondary",
+    version := "2015.11.13",
     organization := "bdzimmer",
-    scalaVersion := "2.10.5",
+    scalaVersion := "2.10.6",
     mainClass in (Compile, run) := Some("bdzimmer.secondary.export.Driver"),
-    
+
     javacOptions ++= Seq("-source", jvmSettings.javacSource, "-target", jvmSettings.javacTarget),
     scalacOptions ++= Seq(s"-target:jvm-${jvmSettings.scalacTarget}"),
-    
+
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "org.apache.commons" % "commons-compress" % "1.10",
@@ -33,17 +33,17 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "net.liftweb" %% "lift-json" % "2.6"
     ))
-    
+
   .dependsOn(gdrivescala)
-  
-    
+
+
 lazy val gdrivescala = RootProject(file("../gdrive-scala"))
-    
-    
+
+
 // import into Eclipse as a Scala project
 EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
 
-// use Java 1.7 in Eclipse    
+// use Java 1.7 in Eclipse
 EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE17)
 
 // use the version of Scala from sbt in Eclipse

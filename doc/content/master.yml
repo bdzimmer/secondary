@@ -26,7 +26,7 @@ notes: |-
   ### Google Drive Integration
   Store your world's source files on Google Drive and edit them from anywhere. Export the website for hosting on Google Drive.<br /><br />
 
-  {{jumbotron: image_alice ypos=50%}}
+  {{jumbotron: image_alice | ypos=50%}}
 
 children:
 
