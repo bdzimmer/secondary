@@ -5,4 +5,4 @@ jdk:
   - oraclejdk7
 
 install: git clone https://github.com/bdzimmer/gdrive-scala ../gdrive-scala
-script: sbt ++$TRAVIS_SCALA_VERSION test
+script: sbt ++$TRAVIS_SCALA_VERSION test it:test
