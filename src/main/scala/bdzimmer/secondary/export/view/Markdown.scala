@@ -19,7 +19,7 @@ object Markdown {
 
   def getPegDown(): PegDownProcessor = {
     // new PegDownProcessor
-    new PegDownProcessor(Extensions.SMARTYPANTS | Extensions.ANCHORLINKS)
+    new PegDownProcessor(Extensions.SMARTYPANTS | Extensions.EXTANCHORLINKS)
   }
 
 }

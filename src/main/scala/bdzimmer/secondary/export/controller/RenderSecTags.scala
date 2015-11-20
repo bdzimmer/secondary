@@ -4,6 +4,8 @@ package bdzimmer.secondary.export.controller
 
 import scala.util.matching.Regex
 
+import org.pegdown.ast.AnchorLinkNode
+
 import bdzimmer.secondary.export.model.{CharacterItem, MetaItem, WorldItem, ParseSecTags, SecTag}
 import bdzimmer.secondary.export.view.{Markdown, Tags}
 
@@ -133,7 +135,6 @@ object RenderSecTags {
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {
-    case ParseSecTags.Anchor => Tags.anchor(tag.value)
     case _ => RenderSecTags.tagString(tag)
   }
 
@@ -161,12 +162,15 @@ object RenderSecTags {
   // more flexible link renderer
   def link(item: WorldItem, args: List[String]): String = {
 
-    (for { // Option monad
-      anchorLabel <- args.headOption
-      anchorTag <- item.tags.filter(x => x.kind.equals("anchor") && x.value.equals(anchorLabel)).headOption
-    } yield {
-      ExportPages.textLinkPage(item, anchorTag.value, anchorTag.args.mkString(" "))
-    }).getOrElse(ExportPages.textLinkPage(item))
+    if (args.length > 0) {
+      // are there some conditions where this won't really work?
+      val anchorText = args.mkString(" ")
+      val anchorName = new AnchorLinkNode(anchorText).getName
+      ExportPages.textLinkPage(item, anchorName, anchorText)
+    } else {
+      ExportPages.textLinkPage(item)
+    }
+
 
   }
 
