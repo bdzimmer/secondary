@@ -84,7 +84,7 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
     case ParseSecTags.Link => RenderSecTags.link(item, args)
-    case ParseSecTags.Image => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
+    case ParseSecTags.Image => RenderSecTags.image(item, RenderSecTags.parseArgs(args), metaItems)
     case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case ParseSecTags.FamilyTree => familyTree(item)
     case ParseSecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
@@ -137,6 +137,19 @@ object RenderSecTags {
   def processOtherTag(tag: SecTag): String = tag.kind match {
     case _ => RenderSecTags.tagString(tag)
   }
+
+
+  // TODO: Image stuff really needs overhauling.
+  def image(item: WorldItem, args: Map[String, String], metaItems: List[MetaItem]): String = {
+
+    if (args.getOrElse("link", "true").equals("true")) {
+      ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
+    } else {
+      ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320, false), true)
+    }
+
+  }
+
 
 
   // more flexible jumbotron tag renderer
