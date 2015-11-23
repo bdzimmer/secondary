@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
+import bdzimmer.util.{Result, Pass, Fail}
+
 import bdzimmer.secondary.export.model._
 
 
@@ -31,44 +33,45 @@ object WorldLoader {
   def loadWorld(
       inputDir: String,
       masterName: String,
-      fileStatus: FileModifiedMap): Either[String, CollectionItem] = {
+      fileStatus: FileModifiedMap): Result[String, CollectionItem] = {
 
     val masterFilename = masterName + ".yml"
-    loadFile(masterFilename, inputDir, fileStatus, List(masterFilename)).right.map(_.getVal)
+    loadFile(masterFilename, inputDir, fileStatus, List(masterFilename)).map(_.getVal)
 
   }
 
-  def loadWorld(projConf: ProjectConfig, fileStatus: FileModifiedMap): Either[String, CollectionItem] = {
+  def loadWorld(projConf: ProjectConfig, fileStatus: FileModifiedMap): Result[String, CollectionItem] = {
     WorldLoader.loadWorld(
         projConf.localContentPath,
         projConf.masterName,
         fileStatus)
   }
 
-  def loadWorld(projConf: ProjectConfig): Either[String, CollectionItem] = {
+  def loadWorld(projConf: ProjectConfig): Result[String, CollectionItem] = {
     WorldLoader.loadWorld(projConf, getEmptyModifiedMap)
   }
 
 
-  // TODO: catch file doesn't exist
   def loadFile(
       filename: String,
       inputDir: String,
       fileStatus: FileModifiedMap,
-      loadedFiles: List[String]): Either[String, CollectionItemBean] = {
+      loadedFiles: List[String]): Result[String, CollectionItemBean] = {
 
-    val yamlString = FileUtils.readFileToString(
-        new java.io.File(inputDir + File.separator + filename),
-        "UTF-8")
-
-    val bean = tryToEither(Try(loadCollection(yamlString))).left.map(logParseError(filename, _))
+    val bean = for {
+      inputFile <- Result.fromFilename(inputDir + File.separator + filename)
+      yamlString <- Result.fromTry(Try(FileUtils.readFileToString(inputFile, "UTF-8")))
+      result <- Result.fromTry(Try(loadCollection(yamlString))).mapLeft(logParseError(filename, _))
+    } yield {
+      result
+    }
 
     // set srcyml before getting new children
-    bean.right.foreach(assignSrcYml(_, filename, fileStatus))
+    bean.foreach(assignSrcYml(_, filename, fileStatus))
 
     for {
-      coll <- bean.right
-      newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles).right
+      coll <- bean
+      newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
     } yield {
       coll.children = new java.util.LinkedList
       coll.children.addAll(newChildren.asJava)
@@ -81,29 +84,29 @@ object WorldLoader {
       bean: CollectionItemBean,
       inputDir: String,
       fileStatus: FileModifiedMap,
-      loadedFiles: List[String]): Either[String, List[WorldItemBean]] = {
+      loadedFiles: List[String]): Result[String, List[WorldItemBean]] = {
 
     val newChildrenLoads = bean.children.asScala.map(child => {
         child match {
           case x: YamlIncludeBean => if (loadedFiles.contains(x.filename)) {
-            Left(s"""***\nitem "${bean.id}" contains circular reference to file "${x.filename}"\n***""")
+            Fail(s"""***\nitem "${bean.id}" contains circular reference to file "${x.filename}"\n***""")
           } else {
             loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
           }
-          case _ => Right(child)
+          case _ => Pass(child)
         }
     })
 
     // gather error messages from children into a list
-    val parseErrors = newChildrenLoads.collect({case Left(x) => x})
+    val parseErrors = newChildrenLoads.collect({case Fail(x) => x})
 
     // get the child items that loaded into a list
-    val newChildren = newChildrenLoads.collect({case Right(x) => x}).toList
+    val newChildren = newChildrenLoads.collect({case Pass(x) => x}).toList
 
-    val result: Either[String, List[WorldItemBean]] = if (parseErrors.length > 0) {
-      Left(parseErrors.mkString("\n"))
+    val result: Result[String, List[WorldItemBean]] = if (parseErrors.length > 0) {
+      Fail(parseErrors.mkString("\n"))
     } else {
-      Right(newChildren)
+      Pass(newChildren)
     }
 
     result
@@ -114,11 +117,6 @@ object WorldLoader {
 
   def logParseError(filename: String, message: String): String = {
     s"***\nParsing error in ${filename}:\n\n${message}\n***\n"
-  }
-
-  def tryToEither(x: Try[CollectionItemBean]): Either[String, CollectionItemBean] = x match {
-    case Success(x) => Right(x)
-    case Failure(e) => Left(e.getMessage)
   }
 
 

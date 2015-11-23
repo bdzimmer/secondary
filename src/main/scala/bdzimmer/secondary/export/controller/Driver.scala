@@ -8,7 +8,6 @@
 // 2015-09-12: Per-project configs. Commands.
 // 2015-09-15: Interactive mode.
 
-// scalastyle:off regex
 
 package bdzimmer.secondary.export.controller
 
@@ -17,6 +16,8 @@ import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
 import scala.util.{Try, Success, Failure}
+
+import bdzimmer.util.{Result, Pass, Fail}
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItem}
@@ -67,25 +68,28 @@ class Driver {
       new ConfigurationGUI(prop).startup(Array())
       println("You must restart Secondary for configuration changes to take effect.")
     }
-    case DriverCommands.ExportLocalAll => {
-      ExportPipelines.exportLocalAll(projConf)
-      ExportPipelines.addStyles(projConf)
+    case DriverCommands.Export => projConf.mode match {
+      case "drive" => {
+        driveSync match {
+          case Pass(ds) => ExportPipelines.exportDriveSync(projConf, ds)
+          case Fail(msg) => Driver.driveError(msg)
+        }
+      }
+      case _ => ExportPipelines.exportLocalSync(projConf)
     }
-    case DriverCommands.ExportLocalSync => ExportPipelines.exportLocalSync(projConf)
-    case DriverCommands.ExportDriveSync => driveSync match {
-      case Right(ds) => ExportPipelines.exportDriveSync(projConf, ds)
-      case Left(msg) => Driver.driveError(msg)
+    case DriverCommands.BrowseLocal => browseLocal
+    case DriverCommands.Browse => projConf.mode match {
+      case "drive" => browseDrive
+      case _ => browseLocal
     }
-    case DriverCommands.Browse => browseLocal
-    case DriverCommands.BrowseDrive => browseRemote
     case DriverCommands.Editor => {
       val master = WorldLoader.loadWorld(projConf) match {
-        case Right(master) => {
+        case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
           new Main(projConf.mappedContentPathActual, "Secondary Editor", outputFilename)
         }
-        case Left(msg) => println(msg)
+        case Fail(msg) => println(msg)
       }
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
@@ -94,7 +98,7 @@ class Driver {
   }
 
 
-  // open a local file in the default web browser
+  // browse to the local copy of the project website
   def browseLocal(): Unit = {
     val filename = List(
         projConf.projectDir,
@@ -105,22 +109,21 @@ class Driver {
   }
 
 
-  // browse to the project on Google Drive.
-  def browseRemote(): Unit = {
+  // browse to the exported website on Google Drive host
+  def browseDrive(): Unit = {
     driveSync match {
-      case Right(ds) => Try {
+      case Pass(ds) => Try {
         val drivePermaLink = "http://www.googledrive.com/host/" + ds.driveOutputFile.getId
         println(drivePermaLink)
-        Desktop.getDesktop.browse(
-            new URI(drivePermaLink))
+        Desktop.getDesktop.browse(new URI(drivePermaLink))
       }
-      case Left(msg) => Driver.driveError(msg)
+      case Fail(msg) => Driver.driveError(msg)
     }
   }
 
   def serverMode(seconds: Int): Unit = {
     while(true) {
-      runCommand(DriverCommands.ExportDriveSync)
+      runCommand(DriverCommands.Export)
       Thread.sleep(seconds * 1000)
     }
   }
@@ -178,12 +181,10 @@ object Driver {
 
 object DriverCommands {
 
-  val Configure = "config"
-  val ExportLocalAll = "export-local-all"
-  val ExportLocalSync = "export-local"
-  val ExportDriveSync = "export"
-  val Browse = "browse-local"
-  val BrowseDrive = "browse"
+  val Configure = "configure"
+  val Export = "export"
+  val BrowseLocal = "browse-local"
+  val Browse = "browse"
   val Editor = "editor"
   val Server = "server"
   val Interactive = "interactive"
@@ -191,11 +192,9 @@ object DriverCommands {
 
   val CommandsDescriptions = List(
       (Configure, "edit project configuration"),
-      (ExportLocalAll, "content to web - all"),
-      (ExportLocalSync, "content to web"),
-      (ExportDriveSync, "Drive to content, content to web, web to Drive"),
-      (Browse, "browse local project web site"),
-      (BrowseDrive, "browse Drive project web site"),
+      (Export, "export"),
+      (BrowseLocal, "browse local copy of project web site"),
+      (Browse, "browse exported project web site"),
       (Editor, "start editor (alpha)"),
       (Server, "server mode"),
       (Help, "show usage / commands"))

@@ -12,6 +12,8 @@ import java.util.regex.Pattern
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.{File => DriveFile}
 
+import bdzimmer.util.{Result, Pass, Fail}
+
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, WorldItem}
 
@@ -155,41 +157,36 @@ object DriveSync {
 
   // safely create a DriveSync object from the project configuration
   // failure messages if input or output directories don't exist
-  def apply(projConf: ProjectConfig): Either[String, DriveSync] = for {
+  // 2015-11-22: Using my own Result class rather than Either
+  def apply(projConf: ProjectConfig): Result[String, DriveSync] = for {
 
-    drive <- DriveSync.createDrive(projConf).right
+    drive <- DriveSync.createDrive(projConf)
+    driveRootFile = DriveUtils.getRoot(drive)
 
-    // this is a little awkward
-    driveRootFile <- Right(DriveUtils.getRoot(drive)).right
+    driveInputFile <- Result.fromOption(
+        DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveInputPathList),
+        "input path does not exist")
 
-    driveInputFile <- DriveUtils.getFileByPath(
-        drive, driveRootFile, projConf.driveInputPathList).toRight("input path does not exist").right
-    driveOutputFile <- DriveUtils.getFileByPath(
-        drive, driveRootFile, projConf.driveOutputPathList).toRight("output path does not exist").right
+    driveOutputFile <- Result.fromOption(
+        DriveUtils.getFileByPath(drive, driveRootFile, projConf.driveOutputPathList),
+        "output path does not exist")
 
   } yield (new DriveSync(projConf, drive, driveInputFile, driveOutputFile))
 
 
-  def createDrive(projConf: ProjectConfig): Either[String, Drive] = {
-    val clientIdFile = eitherFile(projConf.driveClientIdFile)
-    val accessTokenFile = eitherFile(projConf.driveAccessTokenFile)
+  def createDrive(projConf: ProjectConfig): Result[String, Drive] = {
 
     for {
-      id <- clientIdFile.right.map(x => DriveBuilder.getClientIdFromJsonFile(x)).right
-      token <- accessTokenFile.right.map(x => DriveBuilder.getAccessTokenFromJsonFile(x)).right
+
+      clientIdFile <- Result.fromFilename(projConf.driveClientIdFile)
+      accessTokenFile <-  Result.fromFilename(projConf.driveAccessTokenFile)
+
+      id = DriveBuilder.getClientIdFromJsonFile(clientIdFile)
+      token = DriveBuilder.getAccessTokenFromJsonFile(accessTokenFile)
+
     } yield {
       val keys = GoogleDriveKeys(id, token)
       DriveBuilder.getDrive(keys, AppName)
-    }
-  }
-
-  // helper method to get an Either representing a file or doesn't exist message
-  private def eitherFile(filename: String): Either[String, File] = {
-    val file = new File(filename)
-    if (file.exists) {
-      Right(file)
-    } else {
-      Left(s"'${file.getPath}' does not exist")
     }
   }
 

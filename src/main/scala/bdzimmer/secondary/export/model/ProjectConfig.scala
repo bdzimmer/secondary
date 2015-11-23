@@ -14,7 +14,7 @@ import java.util.Properties
 case class ConfigField(key: String, default: String, description: String)
 
 
-// idiomatic Scala for Java Properties
+// idiomatic Scala wrapper for Java Properties
 class PropertiesWrapper(val filename: String) {
 
   val file = new java.io.File(filename)
@@ -33,6 +33,7 @@ class PropertiesWrapper(val filename: String) {
 
 class ProjectConfig(
   val projectDir: String,
+  val mode: String,
   val driveClientIdFile: String,
   val driveAccessTokenFile: String,
   val driveInputPath: String,
@@ -63,6 +64,8 @@ class ProjectConfig(
 
 object ProjectConfig {
 
+  val mode = ConfigField("mode", "drive", "Export mode")
+
   val driveClientIdFile = ConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
   val driveAccessTokenFile = ConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
 
@@ -70,10 +73,11 @@ object ProjectConfig {
   val driveOutputPath = ConfigField("driveOutputPath", "secondary/web", "Drive output path")
   val mappedContentPath = ConfigField("mappedContentPath", "", "Mapped content path")
   val masterName = ConfigField("masterName", "master", "Master name")
-  val license = ConfigField("license", "", "License text")
+  val license = ConfigField("license", "Copyright &copy 2015. All rights reserved.", "License text")
 
 
   val requiredProperties =  List(
+      mode,
       driveClientIdFile,
       driveAccessTokenFile,
       driveInputPath,
@@ -98,8 +102,8 @@ object ProjectConfig {
 
     missing foreach(x => {
       System.err.println(
-          "property " + x.key + " missing from driver configuration\n" +
-          "\tusing default value " + x.default)
+          s"property ${x.key} missing from driver configuration\n" +
+          s"\tusing default value: '${x.default}'")
     })
 
     def getProp(cf: ConfigField): String = {
@@ -108,6 +112,7 @@ object ProjectConfig {
 
     new ProjectConfig(
         projectDir = projectDir,
+        mode = getProp(ProjectConfig.mode),
         driveClientIdFile = getProp(ProjectConfig.driveClientIdFile),
         driveAccessTokenFile = getProp(ProjectConfig.driveAccessTokenFile),
         driveInputPath = getProp(ProjectConfig.driveInputPath),

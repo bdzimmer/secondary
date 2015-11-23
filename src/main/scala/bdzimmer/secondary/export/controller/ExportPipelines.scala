@@ -15,6 +15,8 @@ import scala.util.{Try, Success, Failure}
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
 
+import bdzimmer.util.{Result, Pass, Fail}
+
 import bdzimmer.gdrivescala.DriveUtils
 import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Styles
@@ -31,7 +33,7 @@ object ExportPipelines {
 
     WorldLoader.loadWorld(projConf) match {
 
-      case Right(master) => {
+      case Pass(master) => {
 
         val world = WorldItem.collectionToList(master)
 
@@ -55,7 +57,7 @@ object ExportPipelines {
 
       }
 
-      case Left(msg) => println(msg)
+      case Fail(msg) => println(msg)
     }
 
 
@@ -84,7 +86,7 @@ object ExportPipelines {
     // build the collection
 
     WorldLoader.loadWorld(projConf, newMetaStatus) match {
-      case Right(master) => {
+      case Pass(master) => {
 
         val world = WorldItem.collectionToList(master)
 
@@ -109,7 +111,7 @@ object ExportPipelines {
         }
       }
 
-      case Left(msg) => println(msg)
+      case Fail(msg) => println(msg)
 
     }
   }
@@ -127,7 +129,7 @@ object ExportPipelines {
     // build the collection
 
     WorldLoader.loadWorld(projConf, newMetaStatus) match {
-      case Right(master) => {
+      case Pass(master) => {
 
         val world = WorldItem.collectionToList(master)
 
@@ -157,7 +159,7 @@ object ExportPipelines {
         }
       }
 
-      case Left(msg) => println(msg)
+      case Fail(msg) => println(msg)
     }
   }
 
