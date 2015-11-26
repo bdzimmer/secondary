@@ -88,6 +88,7 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case ParseSecTags.FamilyTree => familyTree(item)
     case ParseSecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
+    case ParseSecTags.Timeline => Timeline.getTimeline(item)
 
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${kind.capitalize}: </b>"""
@@ -135,7 +136,8 @@ object RenderSecTags {
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {
-    case _ => RenderSecTags.tagString(tag)
+    case ParseSecTags.Event => s"""<b>${tag.value}: </b>""" + tag.args.mkString(" ") + Tags.br
+    case _ => tagString(tag)
   }
 
 

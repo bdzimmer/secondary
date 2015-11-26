@@ -39,6 +39,11 @@ final case class Pass[+B](b: B) extends Result[Nothing, B]
 
 object Result {
 
+  // create from a random expression
+  def apply[A](a: => A): Result[String, A] = {
+    fromTry(Try(a))
+  }
+
   // create from Option
   def fromOption[A, B](o: Option[B], default: A): Result[A, B] = o match {
     case Some(x) => Pass(x)

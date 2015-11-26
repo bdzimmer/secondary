@@ -105,8 +105,6 @@ class ExportPages(
     }
 
     // get task strings
-    // TODO: give SecTag an attribute that holds the original text
-    // TODO: see also reassembling logic in rendering non-item tags
     def getTask(item: WorldItem)(prefix: String): List[String] = {
       item.tags.filter(_.kind.equals(prefix)).map(_.value)
     }
@@ -391,6 +389,12 @@ object ExportPages {
   // generate HTML for a text link to an item's page
   def textLinkPage(item: WorldItem): String = {
     link(Markdown.processLine(item.name), itemPageName(item))
+  }
+
+  // glyph link to page
+  def glyphLinkPage(item: WorldItem): String = {
+    link("""<small><span class="glyphicon glyphicon-link"></span></small>""",
+        itemPageName(item))
   }
 
   // generate HTML for a text link to an item's page with an anchor

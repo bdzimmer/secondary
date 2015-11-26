@@ -29,13 +29,14 @@ object ParseSecTags {
   val ImageResponsive = "image-responsive"
   val FamilyTree = "familytree"
   val Jumbotron = "jumbotron"
+  val Timeline = "timeline"
 
-  val EmbedPre = "embed-pre"
+  val Event = "event"
   val Todo = "todo"
   val Thought = "thought"
 
-  val ItemTagKinds = List(Link, Image, ImageResponsive, FamilyTree, Jumbotron)
-  val OtherTagKinds = List(EmbedPre, Todo, Thought)
+  val ItemTagKinds = List(Link, Image, ImageResponsive, FamilyTree, Jumbotron, Timeline)
+  val OtherTagKinds = List(Event, Todo, Thought)
 
 
   def getAllTags(text: String): List[SecTag] = {
