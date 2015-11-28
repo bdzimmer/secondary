@@ -8,23 +8,17 @@ id: master
 name: Secondary
 description: create worlds from text
 notes: |-
-  Secondary is a tool for world building. Use Secondary for planning novels, creating game design documents, and more.
-  <br /><br />
+  Secondary is a static site generator created specifically for world building. Use Secondary for planning novels, creating game design documents, and more.
 
-  ### Edit
-  Describe your world in text files with a combination of YAML and Markdown. Use your favorite text editor; there's no user interface to learn.<br /><br />
+  <br />
 
-  ### Organize
-  Group characters, places, and ideas into collections and hierarchies however you see fit. Add links and relationships between things in your world.<br /><br />
+  * **Edit**: Describe your world in text files with a combination of YAML and Markdown. Use your favorite text editor; there's no user interface to learn.
+  * **Organize**: Group characters, places, and ideas into collections and hierarchies however you see fit. Add links and relationships between things in your world.
+  * **Plan**: Track writing that needs to completed and ideas that need to be developed.
+  * **Export**: Compile your world to a website, integrating your own image content or public domain images from Wikimedia. Browse to review tasks and get ideas, then edit the source files and recompile.
+  * **Google Drive Integration**: Store your world's source files on Google Drive and edit them from anywhere. Export the website for hosting on Google Drive.
 
-  ### Plan
-  Track writing that needs to completed and ideas that need to be developed.<br /><br />
-
-  ### Export
-  Compile your world to a website, integrating your own image content or public domain images from Wikimedia. Browse to review tasks and get ideas, then edit the source files and recompile.<br /><br />
-
-  ### Google Drive Integration
-  Store your world's source files on Google Drive and edit them from anywhere. Export the website for hosting on Google Drive.<br /><br />
+  <br />
 
   {{jumbotron: image_alice | ypos=50%}}
 

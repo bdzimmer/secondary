@@ -87,7 +87,8 @@ object Tags {
   }
 
   def imageSprite(file: String, x: Int, y: Int, width: Int, height: Int): String = {
-    """<div style= "background-image:url('%s');background-repeat:no-repeat;background-position: %d %d;width:%dpx;height:%dpx;"></div>""".format(file, x, y, width, height)
+    val style = s"background-image:url('${file}');background-repeat:no-repeat;background-position: ${x} ${y};width:${width};height:${height};"
+    s"""<div style="${style}"></div>"""
   }
 
   def centered(text: String): String = {
@@ -98,18 +99,30 @@ object Tags {
     s"<p>${text}</p>"
   }
 
+  def b(text: String): String = {
+    s"<b>${text}</b>"
+  }
+
 
   // TODO: probably do something different with styles
   def table(contents: List[List[String]], tdStyle: List[String]): String = {
-    "<table>\r\n" + contents.map(row => {
-      "<tr>\r\n" + row.zip(tdStyle).map({case (cell, style) => {
-        s"""<td style="${style}">${cell}</td>""" + "\r\n"
-      }}).mkString("") + "</tr>\r\n"
-    }).mkString("") + "</table>\r\n"
+
+    val tableTags = s"<table>\n%s\n</table>"
+
+    val tableRowTags = s"<tr>\n%s\n</tr>"
+
+    tableTags.format(contents.map(row => {
+      tableRowTags.format(row.zip(tdStyle).map({case (cell, style) => {
+        s"""<td style="${style}">${cell}</td>"""
+      }}).mkString)
+    }).mkString)
+
   }
 
-  val hr = """<hr />"""
+  val hr = "<hr />"
 
-  val br = """<br />"""
+  val br = "<br />"
+
+  val nbsp = "&nbsp;"
 
 }

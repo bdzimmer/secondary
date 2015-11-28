@@ -88,10 +88,8 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case ParseSecTags.FamilyTree => familyTree(item)
     case ParseSecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
-    case ParseSecTags.Timeline => {
-      val timeline = new Timeline(Timeline.DefaultMonths)
-      timeline.getTimelineHtml(item)
-    }
+    case ParseSecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
+
 
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${kind.capitalize}: </b>"""
@@ -112,7 +110,7 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
         case character: CharacterItem => {
           val safeRender = new RenderSecTags(this.world, true)
           val characters = WorldItem.filterList[CharacterItem](world)
-          val result = FamilyTree.TreeStyles + FamilyTree.getTreeJs(
+          val result = FamilyTree.TreeStyles + FamilyTree.getJs(
               character, characters, safeRender)
 
           result
@@ -139,7 +137,15 @@ object RenderSecTags {
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {
-    case ParseSecTags.Event => s"""<b>${tag.value}: </b>""" + tag.args.mkString(" ") + Tags.br
+    case ParseSecTags.Demo => {
+      val body = tag.args match {
+        case x :: Nil => s"${x}"
+        case x :: xs => s"${x} | ${xs.mkString(" ")}"
+        case _ => "..."
+      }
+      s"{{${tag.value}: ${body}}}"
+    }
+    case ParseSecTags.Event => s"""<b>${tag.value}: </b> """ + tag.args.mkString(" ") + Tags.br
     case _ => tagString(tag)
   }
 
@@ -177,6 +183,13 @@ object RenderSecTags {
 
   }
 
+
+  def timeline(item: WorldItem, args: Map[String, String]): String = {
+    val timeline = new Timeline(Timeline.DefaultMonths)
+    val format = args.getOrElse("format", Timeline.MonthDayParagraphFormat)
+    timeline.getHtml(item, format)
+  }
+
   // more flexible link renderer
   def link(item: WorldItem, args: List[String]): String = {
 
@@ -189,12 +202,11 @@ object RenderSecTags {
       ExportPages.textLinkPage(item)
     }
 
-
   }
 
 
   def tagString(tag: SecTag): String = {
-    s"""<b>${tag.kind.capitalize}: </b>""" + tag.value + Tags.br
+    s"""<b>${tag.kind.capitalize}: </b> """ + tag.value + Tags.br
   }
 
 

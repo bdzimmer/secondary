@@ -1,8 +1,12 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-package bdzimmer.secondary.export.controller
+// Gather event tags from an item and its children, sort them by date,
+// and render a timeline with links back to the original item.
 
-import com.google.api.client.util.DateTime
+// Timeline formatting is loosely based on the timelines found in the
+// appendices of Return of the King.
+
+package bdzimmer.secondary.export.controller
 
 import bdzimmer.util.{Result, Pass, Fail}
 
@@ -14,36 +18,84 @@ class Timeline(months: List[String]) {
 
   type DateTuple = (Int, Option[Int], Option[Int])
 
+  def getHtml(item: WorldItem, format: String): String = {
 
-  def getTimelineHtml(item: WorldItem): String = {
-
-    val events = WorldItem.collectionToList(item).map(x => {
-      x.tags.filter(_.kind.equals(ParseSecTags.Event)).map(y => {
+    val events = WorldItem.collectionToList(item).map(event => {
+      event.tags.filter(_.kind.equals(ParseSecTags.Event)).map(tag => {
         // date, description, originating page
-        (parseDateTuple(y.value), y.args.mkString(" "), x)
+        (parseDateTuple(tag.value), tag.args.mkString(" "), event)
       })
     }).flatten.sortBy(_._1)
 
-    // render the list
-    // renderNaive(events, months)
-    renderByDay(events)
+    format match {
+      case Timeline.DayFormat => renderByDay(events)
+      case Timeline.MonthDayTableFormat => renderByMonthDayTable(events)
+      case _ => renderByMonthDayParagraph(events)
+    }
+
   }
 
 
   // TODO: move timeline table style into Styles object
   private def renderByDay(events: List[(DateTuple, String, WorldItem)]): String = {
     events.groupBy(_._1._1).toList.sortBy(_._1).map({case(year, curYear) => {
-      s"""<h4>${year}</h4>""" + curYear.groupBy(_._1._2).toList.sortBy(_._1).map({case(month, curMonth) => {
 
-        month.map(x => Tags.p(s"""<b>${months(x).capitalize}</b>""")).getOrElse("") +
+      s"<h4>${year}</h4>" +
+      curYear.groupBy(_._1._2).toList.sortBy(_._1).map({case(month, curMonth) => {
+
+        month.map(x => Tags.p(Tags.b(months(x).capitalize))).getOrElse("") +
         Tags.table(curMonth.map({case(date, desc, src) => {
-          List(date._3.map(_ + "&nbsp;-&nbsp;").getOrElse(""),
-               Markdown.processLine(desc) + "&nbsp;" + ExportPages.glyphLinkPage(src))
+          List(date._3.map(_ + Tags.nbsp + "-" + Tags.nbsp).getOrElse(""),
+               Markdown.processLine(desc) + Tags.nbsp + ExportPages.glyphLinkPage(src))
         }}), tdStyle = List("text-align: right; vertical-align: top", "vertical-align: top")) +
         Tags.br
 
-      }}).mkString("")
-    }}).mkString("\n")
+      }}).mkString
+    }}).mkString
+  }
+
+
+  // TODO: indent style, some little formatting fixes
+  // http://stackoverflow.com/questions/2833068/text-indent-after-the-first-line-in-a-paragraph
+
+  private def renderByMonthDayParagraph(events: List[(DateTuple, String, WorldItem)]): String = {
+    events.groupBy(_._1._1).toList.sortBy(_._1).map({case(year, curYear) => {
+
+      s"<h4>${year}</h4>" +
+      curYear.groupBy(_._1._2).toList.sortBy(_._1).map({case(month, curMonth) => {
+
+        Tags.p(month.map(x => Tags.b(months(x).capitalize) + Tags.nbsp).getOrElse("") +
+        curMonth.map({case(date, desc, src) => {
+          date._3.map(x => Tags.b(x + ". ")).getOrElse("") +
+          Markdown.processLine(desc) + Tags.nbsp +
+          ExportPages.glyphLinkPage(src) + Tags.nbsp
+        }}).mkString)
+
+      }}).mkString + Tags.br
+    }}).mkString
+  }
+
+  // not sure if I will use this one
+  private def renderByMonthDayTable(events: List[(DateTuple, String, WorldItem)]): String = {
+    events.groupBy(_._1._1).toList.sortBy(_._1).map({case(year, curYear) => {
+
+      s"<h4>${year}</h4>" +
+      Tags.table(curYear.map({case(date, desc, src) => {
+
+        val dateString = date._2.map(x => months(x).capitalize).getOrElse("") + date._3.map(" " + _).getOrElse("")
+        val dateStringWithSuffix = if (dateString.length > 0) {
+          Tags.b(dateString) + Tags.nbsp + "-" + Tags.nbsp
+        } else {
+          ""
+        }
+
+        List(dateStringWithSuffix,
+             Markdown.processLine(desc) + Tags.nbsp + ExportPages.glyphLinkPage(src))
+
+      }}), tdStyle = List("text-align: right; vertical-align: top; white-space: nowrap", "vertical-align: top")) +
+      Tags.br
+
+    }}).mkString
   }
 
 
@@ -51,7 +103,7 @@ class Timeline(months: List[String]) {
     events.map({case(date, desc, src) => {
       Tags.p(
           renderDateTuple(date) + " - "
-          + Markdown.processLine(desc) + "&nbsp;"
+          + Markdown.processLine(desc) + Tags.nbsp
           + ExportPages.glyphLinkPage(src))
     }}).mkString("")
   }
@@ -99,5 +151,9 @@ object Timeline {
       "january", "february", "march", "april",
       "may", "june", "july", "august",
       "september", "october", "november", "december")
+
+  val DayFormat = "day"
+  val MonthDayParagraphFormat = "monthDayParagraph"
+  val MonthDayTableFormat = "monthDayTable"
 
 }

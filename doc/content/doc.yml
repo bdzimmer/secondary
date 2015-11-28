@@ -17,16 +17,138 @@ children:
 
 
 - !item
-  id: objects
-  name: Objects
+  id: items
+  name: Items
   notes: |-
-    {{TODO: objects content}}
+    {{TODO: items content}}
 
 - !item
   id: tags
   name: Tags
   notes: |-
-    {{TODO: tags content}}
+
+    ### Overview
+    ***
+
+    A key feature of Secondary is a special set of tags that you can use in the notes of any item. Some of these function like tags in wiki markup, while others have purposes that are more specific to worldbuilding. Tags take the following form:
+
+    `{{demo: tag_name | value arg1=value1 arg2=value2 arg3=value3 ...}}`
+
+    For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Other Tags}}, `value` usually a a sentence or two of descriptive text. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
+
+    <br />
+
+
+    ### Item Tags
+    ***
+
+    Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
+
+    <br />
+
+    #### link
+
+    Create a link to an item.
+
+    **Usage**
+
+    `{{demo: link | item anchor}}`
+
+    * **item**: name or id of item
+    * **anchor** (optional): name of anchor within item's notes; anchors are automatically generated for headings
+
+    Since link is the most often used tag, the "link:" is optional if it is being used without an anchor argument.
+
+    **Examples**
+
+    `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
+
+    `{{demo: link | Tags Other Tags}}` &rarr; {{link: Tags | Other Tags}}
+
+    <br />
+
+
+    #### image
+
+    {{image: image_red_riding_hood}}
+
+    Insert an image.
+
+    **Usage**
+
+    `{{demo: image | item link=true}}`
+
+    * **item**: name or id of image or character item
+    * **link**: should the image link link back to its page?
+
+    The image will be right aligned with a maximum width of 320px.
+
+    **Example**
+
+    `{{demo: image | image_red_riding_hood}}`
+
+    <br />
+
+    #### image-responsive
+
+    Insert a responsive image that fills the width of the page.
+
+    `{{demo: image-responsive | item}}`
+
+    See {{link: Tags | image}} for more details.
+
+    <br />
+
+    #### familytree
+    `{{demo: familytree | character}}`
+
+    {{todo: familytree tag documentation}}
+
+    <br />
+
+    #### jumbotron
+    `{{demo: jumbotron | image xPos=0% yPos=0% color=black}}`
+
+    {{todo: jumbotron tag documentation}}
+
+    <br />
+
+    #### timeline
+    `{{demo: timeline | item format=monthDayParagraph}}`
+
+    {{todo: timeline tag documentation}}
+
+    <br />
+
+    ### Other Tags
+    ***
+
+    {{todo: Other Tags description}}
+
+     <br />
+
+    #### event
+    `{{demo: event | date description}}`
+
+    {{todo: event tag documentation}}
+
+    <br />
+
+    #### todo
+    `{{demo: todo | description}}`
+
+    {{todo: todo tag documentation}}
+
+    <br />
+
+    #### thought
+    `{{demo: thought | description}}`
+
+    {{todo: thought tag documentation}}
+
+    <br />
+
+    {{jumbotron: image_alice | ypos=50%}}
 
 - !item
   id: drive

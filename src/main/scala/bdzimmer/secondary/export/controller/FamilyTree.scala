@@ -31,7 +31,7 @@ object FamilyTree {
 
 
   // for now, all of the family trees
-  def getAllTreesJs(characters: List[CharacterItem], np: RenderSecTags): String = {
+  def getAllJs(characters: List[CharacterItem], np: RenderSecTags): String = {
 
     def isRoot(char: CharacterItem): Boolean = {
       val charTagKinds = char.tags.map(_.kind).toSet
@@ -42,13 +42,13 @@ object FamilyTree {
     val rootChars = characters.filter(isRoot)
     val nonRootChars = characters.filter(!isRoot(_))
 
-    val trees = rootChars.map(x => getTreeJs(x, characters, np))
+    val trees = rootChars.map(x => getJs(x, characters, np))
     TreeStyles + trees.mkString("\n" + Tags.hr + "\n")
 
   }
 
 
-  def getTreeJs(character: CharacterItem, characters: List[CharacterItem], np: RenderSecTags): String = {
+  def getJs(character: CharacterItem, characters: List[CharacterItem], np: RenderSecTags): String = {
 
     // add a hidden parent to a tree
     def wrapTree(te: TreeEntry): String = {

@@ -34,9 +34,10 @@ object ParseSecTags {
   val Event = "event"
   val Todo = "todo"
   val Thought = "thought"
+  val Demo = "demo"
 
   val ItemTagKinds = List(Link, Image, ImageResponsive, FamilyTree, Jumbotron, Timeline)
-  val OtherTagKinds = List(Event, Todo, Thought)
+  val OtherTagKinds = List(Event, Todo, Thought, Demo)
 
 
   def getAllTags(text: String): List[SecTag] = {

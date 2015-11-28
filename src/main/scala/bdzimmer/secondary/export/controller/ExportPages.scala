@@ -62,7 +62,7 @@ class ExportPages(
             // link("Family Trees", ExportPages.FamilyTreesPageFile),
             link("Tasks", ExportPages.TasksPageFile),
             link("Edit",
-                ExportPages.notepadURL(master))).mkString("&nbsp;&nbsp;&middot;&nbsp;&nbsp;") + hr)
+                ExportPages.notepadURL(master))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr)
 
     PageTemplates.createArticlePage(
         location + File.separator + relFilePath,
@@ -100,7 +100,7 @@ class ExportPages(
       listGroup(world
               .map(x => (x, todoFunc(x)))
               .filter(_._2.length > 0)
-              .map(x => listItem(ExportPages.notepadLink(x._1) + "&nbsp;" + ExportPages.textLinkPage(x._1) +
+              .map(x => listItem(ExportPages.notepadLink(x._1) + nbsp + ExportPages.textLinkPage(x._1) +
                   listGroup(x._2.map(text => listItem(Markdown.processLine(text)))))))
     }
 
@@ -125,7 +125,7 @@ class ExportPages(
          "<h3>Empty Notes</h3>\n" +
          listGroup(world
            .filter(_.notes.equals(""))
-           .map(x => listItem(ExportPages.notepadLink(x) + "&nbsp;" + ExportPages.textLinkPage(x))))
+           .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
        ),
 
        license)
@@ -406,7 +406,7 @@ object ExportPages {
   def getToolbar(item: WorldItem): String = {
     List(// link("Edit Local", localURL(item, localDriveMapDir)),
          link("Home", "index.html"),
-         link("Edit", notepadURL(item))).mkString("&nbsp;&nbsp;&middot;&nbsp;&nbsp;") + hr
+         link("Edit", notepadURL(item))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr
   }
 
   def notepadLink(item: WorldItem): String = {
