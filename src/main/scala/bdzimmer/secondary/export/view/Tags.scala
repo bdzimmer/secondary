@@ -98,6 +98,16 @@ object Tags {
     s"<p>${text}</p>"
   }
 
+
+  // TODO: probably do something different with styles
+  def table(contents: List[List[String]], tdStyle: List[String]): String = {
+    "<table>\r\n" + contents.map(row => {
+      "<tr>\r\n" + row.zip(tdStyle).map({case (cell, style) => {
+        s"""<td style="${style}">${cell}</td>""" + "\r\n"
+      }}).mkString("") + "</tr>\r\n"
+    }).mkString("") + "</table>\r\n"
+  }
+
   val hr = """<hr />"""
 
   val br = """<br />"""
