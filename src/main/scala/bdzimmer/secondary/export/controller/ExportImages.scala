@@ -67,7 +67,6 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     // to images of various scales which are saved as standard image files. These
     // scaled standard image files become the outputs.
 
-    // TODO: merge these maps.
     val mapImageOutputs = (WorldItem.filterList[MapItem](items)
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 

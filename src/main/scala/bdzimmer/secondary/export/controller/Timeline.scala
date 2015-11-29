@@ -36,7 +36,6 @@ class Timeline(months: List[String]) {
   }
 
 
-  // TODO: move timeline table style into Styles object
   private def renderByDay(events: List[(DateTuple, String, WorldItem)]): String = {
     events.groupBy(_._1._1).toList.sortBy(_._1).map({case(year, curYear) => {
 
@@ -64,12 +63,13 @@ class Timeline(months: List[String]) {
       s"<h4>${year}</h4>" +
       curYear.groupBy(_._1._2).toList.sortBy(_._1).map({case(month, curMonth) => {
 
-        Tags.p(month.map(x => Tags.b(months(x).capitalize) + Tags.nbsp).getOrElse("") +
+        """<p style="text-indent: -1em; padding-left: 1em">""" +
+        month.map(x => Tags.b(months(x).capitalize) + Tags.nbsp).getOrElse("") +
         curMonth.map({case(date, desc, src) => {
           date._3.map(x => Tags.b(x + ". ")).getOrElse("") +
           Markdown.processLine(desc) + Tags.nbsp +
           ExportPages.glyphLinkPage(src) + Tags.nbsp
-        }}).mkString)
+        }}).mkString + "</p>"
 
       }}).mkString + Tags.br
     }}).mkString

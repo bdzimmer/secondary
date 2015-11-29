@@ -31,7 +31,6 @@ class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
     val save = new Button("Save") {
       reactions += {
         case ButtonClicked(save) => {
-          // TODO: verify the configuration
           prop.prop.store(
               new java.io.FileOutputStream(propFile),
               "created with configuration editor")

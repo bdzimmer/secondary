@@ -393,7 +393,7 @@ object ExportPages {
 
   // glyph link to page
   def glyphLinkPage(item: WorldItem): String = {
-    link("""<small><span class="glyphicon glyphicon-link"></span></small>""",
+    link("""<small><span class="glyphicon glyphicon-link" style="display: inline"></span></small>""",
         itemPageName(item))
   }
 
@@ -409,6 +409,7 @@ object ExportPages {
          link("Edit", notepadURL(item))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr
   }
 
+  // TODO: may need to add "display: inline" style as in glyph link
   def notepadLink(item: WorldItem): String = {
     link("""<small><span class="glyphicon glyphicon-pencil"></span></small>""", notepadURL(item))
   }

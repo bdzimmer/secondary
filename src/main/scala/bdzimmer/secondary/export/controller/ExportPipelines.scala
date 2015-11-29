@@ -65,7 +65,6 @@ object ExportPipelines {
 
 
   // content -> web; use local file time stamps
-  // TODO: test after 2015-10-20 changes
   def exportLocalSync(projConf: ProjectConfig): Unit = {
 
     def localMetaStatusChanges(oldMetaStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
@@ -166,9 +165,10 @@ object ExportPipelines {
 
   // export content from download location to export location
   // using file timestamps to only process content that has changed
-  def export(metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
-             master: CollectionItem, world: List[WorldItem],
-             images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
+  def export(
+      metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
+      master: CollectionItem, world: List[WorldItem],
+      images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
 
     // get only the world items that are described in the subset of the
     // meta we just downloaded
@@ -179,7 +179,6 @@ object ExportPipelines {
     // 2) the characteritems in refreshed metadata (need to get new images in case their images changed)
     // 3) the imageitems in refreshed metadata that reference wikimedia instead of local files
 
-    // TODO: better names here
     val filesToExport = WorldItem.filterList[MetaItem](world).filter(x => fileStatus.keySet.contains(x.filename))
     val charsToExport = WorldItem.filterList[CharacterItem](metaToExport)
     val imagesToExport = WorldItem.filterList[ImageItem](metaToExport).filter(x => x.filename.startsWith("wikimedia:"))
