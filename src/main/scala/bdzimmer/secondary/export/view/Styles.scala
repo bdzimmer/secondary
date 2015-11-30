@@ -17,7 +17,6 @@ import scala.util.Try
 
 object Styles {
 
-  // val FontFace = "Lora"
   val FontFace = "Libre Baskerville"
   val FontFallback = "serif"
   val HeadingSizes = (1 to 6) zip List(42, 36, 30, 24, 18, 14)
@@ -27,10 +26,29 @@ object Styles {
   val BodyMarginBottom = 20
 
 
+  val CollapsibleLists = """
+/* swiveling arrow checkboxes and collapsible lists */
+
+input.swivel[type=checkbox] { display:none; }
+input.swivel[type=checkbox] ~ label:after {
+  font-family: 'Glyphicons Halflings';
+  font-size: 12px;
+  display: inline-block;
+  margin-left: 10px;
+}
+input.swivel[type=checkbox] ~ label:after { content: "\e258"; }
+input.swivel[type=checkbox]:checked ~ label:after { content: "\e259"; }
+
+li.swivel > input ~ ul { display: none; }
+li.swivel > input:checked ~ ul { display: block; }
+li.swivel label { margin-bottom: 0px; }
+"""
+
+
   val BootstrapFilename = "bootstrap-3.3.5-dist.zip"
   val BootstrapUrl = "https://github.com/twbs/bootstrap/releases/download/v3.3.5/" + BootstrapFilename
 
-  // TODO: separate collapsible list stuff into a constant
+
   def createStyleSheet(outputFile: String): Unit = {
 
     val headingSizeStyle = HeadingSizes.map({case (level, size) => {
@@ -38,7 +56,8 @@ object Styles {
     }}).mkString("\n")
 
 
-    val sheetText = s"""/* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
+    val sheetText = s"""
+/* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
 
 /* Set a custom font and increase the font size for everything. */
 
@@ -74,29 +93,11 @@ p {
 body {
   line-height: ${BodyLineHeight};
 }
-""" +
-"""
-/* swiveling arrow checkboxes and collapsible lists */
-
-input.swivel[type=checkbox] { display:none; }
-input.swivel[type=checkbox] ~ label:after {
-  font-family: 'Glyphicons Halflings';
-  font-size: 12px;
-  display: inline-block;
-  margin-left: 10px;
-}
-input.swivel[type=checkbox] ~ label:after { content: "\e258"; }
-input.swivel[type=checkbox]:checked ~ label:after { content: "\e259"; }
-
-li.swivel > input ~ ul { display: none; }
-li.swivel > input:checked ~ ul { display: block; }
-li.swivel label { margin-bottom: 0px; }
-"""
+""" + CollapsibleLists
 
     val fileWriter = new java.io.FileWriter(outputFile, false)
     fileWriter.write(sheetText)
     fileWriter.close
-
   }
 
 

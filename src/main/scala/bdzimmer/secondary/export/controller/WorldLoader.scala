@@ -60,8 +60,8 @@ object WorldLoader {
 
     val bean = for {
       inputFile <- Result.fromFilename(inputDir + File.separator + filename)
-      yamlString <- Result.fromTry(Try(FileUtils.readFileToString(inputFile, "UTF-8")))
-      result <- Result.fromTry(Try(loadCollection(yamlString))).mapLeft(logParseError(filename, _))
+      yamlString <- Result(FileUtils.readFileToString(inputFile, "UTF-8"))
+      result <- Result(loadCollection(yamlString)).mapLeft(logParseError(filename, _))
     } yield {
       result
     }

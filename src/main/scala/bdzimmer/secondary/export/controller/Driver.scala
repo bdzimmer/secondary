@@ -15,6 +15,7 @@ import java.awt.Desktop    // scalastyle:ignore illegal.imports
 import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
+import scala.annotation.tailrec
 import scala.util.{Try, Success, Failure}
 
 import bdzimmer.util.{Result, Pass, Fail}
@@ -45,24 +46,32 @@ class Driver {
 
 
   // start the interactive shell
-  def runInteractive(): Unit = {
+  private def runInteractive(): Unit = {
+
     println(Driver.Title)
     val br = new BufferedReader(new InputStreamReader(System.in))
-    while (true) {
+    readEval()
+
+    @tailrec
+    def readEval() {
       print("> ")
       val command = br.readLine()
 
       command match {
-        case "" => () // do nothing
-        case "exit" | "quit" | "q" => sys.exit(0)
-        case _ => runCommand(command)
+        case "exit" | "quit" | "q" => () // quit
+        case "" => readEval() // do nothing
+        case _ => {
+          runCommand(command)
+          readEval()
+        }
       }
     }
+
   }
 
 
   // run a command
-  def runCommand(command: String): Unit = command match {
+  private def runCommand(command: String): Unit = command match {
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(prop).startup(Array())
@@ -99,7 +108,7 @@ class Driver {
 
 
   // browse to the local copy of the project website
-  def browseLocal(): Unit = {
+  private def browseLocal(): Unit = {
     val filename = List(
         projConf.projectDir,
         ProjectStructure.WebDir,
@@ -110,7 +119,7 @@ class Driver {
 
 
   // browse to the exported website on Google Drive host
-  def browseDrive(): Unit = {
+  private def browseDrive(): Unit = {
     driveSync match {
       case Pass(ds) => Try {
         val drivePermaLink = "http://www.googledrive.com/host/" + ds.driveOutputFile.getId
@@ -121,7 +130,7 @@ class Driver {
     }
   }
 
-  def serverMode(seconds: Int): Unit = {
+  private def serverMode(seconds: Int): Unit = {
     while(true) {
       runCommand(DriverCommands.Export)
       Thread.sleep(seconds * 1000)
