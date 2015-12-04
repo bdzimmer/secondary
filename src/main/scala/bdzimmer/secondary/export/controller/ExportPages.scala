@@ -61,6 +61,7 @@ class ExportPages(
             link("Index", ExportPages.IndexPageFile),
             // link("Family Trees", ExportPages.FamilyTreesPageFile),
             link("Tasks", ExportPages.TasksPageFile),
+            link("Stats", ExportPages.StatsPageFile),
             link("Edit",
                 ExportPages.notepadURL(master))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr)
 
@@ -111,18 +112,15 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location + File.separator + relFilePath,
-        "Tasks", "",
-        None,
+        "Tasks", "",  None,
 
        // Todos and thoughts
-       column(Column6, "<h3>To-dos</h3>\n" + taskList(getTask(_)("todo"))) +
-
-       // Thoughts
-       column(Column6, "<h3>Thoughts</h3>\n" + taskList(getTask(_)("thought"))) +
+       column(Column6, h4("To-dos") + taskList(getTask(_)("todo"))) +
+       column(Column6, h4("Thoughts") + taskList(getTask(_)("thought"))) +
 
        // Empty notes
        column(Column6,
-         "<h3>Empty Notes</h3>\n" +
+         h4("Empty Notes") +
          listGroup(world
            .filter(_.notes.equals(""))
            .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
@@ -142,30 +140,55 @@ class ExportPages(
     PageTemplates.createArticlePage(
 
         location + File.separator + relFilePath,
-        "Index", "",
-
-        None,
+        "Index", "", None,
 
         column(Column6, {
-            val groupedItems = (world
-              .drop(1)  // get rid of master collection - assumes master is first in list
-              .filter(!_.isInstanceOf[MetaItem])
-              .groupBy(_.name.replaceAll("""\p{Punct}""", "")(0).toUpper))
+          val groupedItems = (world
+            .drop(1)  // get rid of master collection - assumes master is first in list
+            .filter(!_.isInstanceOf[MetaItem])
+            .groupBy(_.name.replaceAll("""\p{Punct}""", "")(0).toUpper))
 
-            groupedItems.toList.sortBy(_._1).map({case (letter, items) => {
-              "<h4>" + letter + "</h4>\n" +
-              listGroup(
-                items.sortBy(_.name).map(item => listItem(ExportPages.textLinkPage(item)))
-              )
-            }}).mkString("\n")
-          }
-
-        ),
+          groupedItems.toList.sortBy(_._1).map({case (letter, items) => {
+            h4(letter.toString) +
+            listGroup(
+              items.sortBy(_.name).map(item => listItem(ExportPages.textLinkPage(item)))
+            )
+          }}).mkString(br)
+        }),
 
         license)
 
     relFilePath
   }
+
+
+
+  def createStatsPage(): String = {
+
+    val relFilePath = ExportPages.StatsPageFile
+
+    PageTemplates.createArticlePage(
+
+        location + File.separator + relFilePath,
+        "Stats", "",  None,
+
+        column(Column12, {
+
+          val wordCount = world.map(_.notes.split("\\s").length).sum
+          val tagCount = world.map(_.tags.length).sum
+
+          h4("Counts") +
+          p(b("Items: ") + world.length) +
+          p(b("Words: ") + wordCount) +
+          p(b("Tags: ") + tagCount)
+        }),
+
+        license)
+
+    relFilePath
+  }
+
+
 
 
   ///
@@ -320,7 +343,7 @@ object ExportPages {
   val MasterPageFile = "index.html"
   val IndexPageFile = "indexpage.html"
   val TasksPageFile = "tasks.html"
-  // val FamilyTreesPageFile = "familytrees.html"
+  val StatsPageFile = "stats.html"
 
   // recursively generate nested lists of links from a CollectionItem
   def getCollectionLinks(item: WorldItem): String =  item match {

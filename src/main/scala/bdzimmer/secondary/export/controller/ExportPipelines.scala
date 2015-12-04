@@ -44,9 +44,10 @@ object ExportPipelines {
             projConf.license)
 
         val allPageOutputs = List(
-            exportPages.createMasterPage,
-            exportPages.createTasksPage,
-            exportPages.createIndexPage) ++ exportPages.exportPagesList(world)
+            exportPages.createMasterPage(),
+            exportPages.createTasksPage(),
+            exportPages.createIndexPage(),
+            exportPages.createStatsPage()) ++ exportPages.exportPagesList(world)
 
         val exportImages = new ExportImages(
             world,
@@ -191,9 +192,10 @@ object ExportPipelines {
     println("--exporting pages")
     val exportPages = new ExportPages(master, world, projConf.localExportPath, projConf.license)
     val allPageOutputs = List(
-        exportPages.createMasterPage,
-        exportPages.createTasksPage,
-        exportPages.createIndexPage) ++ exportPages.exportPagesList(metaToExport)
+        exportPages.createMasterPage(),
+        exportPages.createTasksPage(),
+        exportPages.createIndexPage(),
+        exportPages.createStatsPage()) ++ exportPages.exportPagesList(metaToExport)
 
     val allImageOutputs = if (images) {
       println("--exporting images")

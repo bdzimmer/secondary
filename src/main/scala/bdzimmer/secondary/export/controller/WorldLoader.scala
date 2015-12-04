@@ -36,7 +36,30 @@ object WorldLoader {
       fileStatus: FileModifiedMap): Result[String, CollectionItem] = {
 
     val masterFilename = masterName + ".yml"
-    loadFile(masterFilename, inputDir, fileStatus, List(masterFilename)).map(_.getVal)
+
+    for {
+
+      // load the world from YAML files
+      world <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename)).map(_.getVal)
+
+      // check for duplicate IDs
+      worldList = WorldItem.collectionToList(world)
+      duplicateIDs = worldList.groupBy(_.id).toList.sortBy(_._1).filter(_._2.length > 1)
+
+      result <- duplicateIDs.length match {
+        case 0 => Pass(world)
+        case _ => Fail({
+          "Duplicate ids found\n" +
+          duplicateIDs.map(x =>
+            "\tid: " + x._1 + "\n" +
+            "\tpresent in files: " + x._2.map(_.srcyml).distinct.mkString(", ")).mkString("\n")
+        })
+      }
+
+    } yield {
+      result
+    }
+
 
   }
 

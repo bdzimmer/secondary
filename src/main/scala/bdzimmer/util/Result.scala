@@ -2,6 +2,11 @@
 
 // Minimal implementaion of a right-biased Either.
 
+// Other salient features:
+// - No "get" method.
+// - Companion object for easy creation from expressions and other types.
+
+
 package bdzimmer.util
 
 import scala.util.{Try, Success, Failure}

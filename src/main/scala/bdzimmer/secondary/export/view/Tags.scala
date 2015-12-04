@@ -103,6 +103,9 @@ object Tags {
     s"<b>${text}</b>"
   }
 
+  def h4(text: String): String = {
+    s"<h4>${text}</h4>\n"
+  }
 
   // TODO: probably do something different with styles
   def table(contents: List[List[String]], tdStyle: List[String]): String = {
