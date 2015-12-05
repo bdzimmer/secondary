@@ -1,9 +1,13 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Page templates. Originally part of the old "Bootstrap" class.
+// Simple functions for generating HTML tags.
+
+// I'm using this in a context where the results will be fed into a markdown
+// renderer, so there's some specific things going on with newline usage.
+
 // Ben Zimmer
 
-// 2015-08-11: Created in refactor.
+
 
 package bdzimmer.secondary.export.view
 
@@ -110,7 +114,7 @@ object Tags {
   // TODO: probably do something different with styles
   def table(contents: List[List[String]], tdStyle: List[String]): String = {
 
-    val tableTags = s"<table>\n%s\n</table>"
+    val tableTags = s"<table>\n%s\n</table>\n"
 
     val tableRowTags = s"<tr>\n%s\n</tr>"
 
@@ -124,7 +128,8 @@ object Tags {
 
   val hr = "<hr />"
 
-  val br = "<br />"
+  val br = "<br />\n"
+  val brInline = "<br />"
 
   val nbsp = "&nbsp;"
 

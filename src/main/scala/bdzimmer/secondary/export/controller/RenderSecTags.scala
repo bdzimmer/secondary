@@ -94,7 +94,7 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${kind.capitalize}: </b>"""
       + ExportPages.textLinkPage(item)
-      + Tags.br)
+      + Tags.brInline)
   }
 
 
@@ -145,7 +145,7 @@ object RenderSecTags {
       }
       s"{{${tag.value}: ${body}}}"
     }
-    case ParseSecTags.Event => s"""<b>${tag.value}: </b> """ + tag.args.mkString(" ") + Tags.br
+    case ParseSecTags.Event => s"""<b>${tag.value}: </b> """ + tag.args.mkString(" ") + Tags.brInline
     case _ => tagString(tag)
   }
 
@@ -206,7 +206,7 @@ object RenderSecTags {
 
 
   def tagString(tag: SecTag): String = {
-    s"""<b>${tag.kind.capitalize}: </b> """ + tag.value + Tags.br
+    s"""<b>${tag.kind.capitalize}: </b> """ + tag.value + Tags.brInline
   }
 
 
