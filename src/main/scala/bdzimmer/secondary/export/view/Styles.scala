@@ -75,6 +75,7 @@ h4, .h4 {
   border-bottom: 1px solid #eee;
   padding-bottom: 20px;
   margin-bottom: 20px;
+  padding-top: 20px;
 }
 
 .jumbotron h1, .jumbotron .h1 {
