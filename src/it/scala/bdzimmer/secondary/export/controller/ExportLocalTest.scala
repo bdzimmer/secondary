@@ -16,13 +16,14 @@ import java.io.File
 import scala.util.Try
 
 import bdzimmer.secondary.export.model.ProjectConfig
+import bdzimmer.util.StringUtils._
 
 class ExportLocalTest extends FunSuite {
 
   // test local export by building the documentation
   test("local export integration test") {
 
-    val projectDir = System.getProperty("user.dir") + File.separator + "doc"
+    val projectDir = System.getProperty("user.dir") / "doc"
     val projConf = ProjectConfig(projectDir)
 
     ExportPipelines.exportLocalAll(projConf)
@@ -31,7 +32,7 @@ class ExportLocalTest extends FunSuite {
     val curDir = System.getProperty("user.dir")
     Try {
       Desktop.getDesktop.browse(
-          new File(s"${projConf.localExportPath + File.separator}index.html").toURI)
+          new File(projConf.localExportPath / "index.html").toURI)
     }
 
   }

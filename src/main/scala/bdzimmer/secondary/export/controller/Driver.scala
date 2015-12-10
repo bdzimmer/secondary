@@ -16,9 +16,10 @@ import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
 import scala.annotation.tailrec
-import scala.util.{Try, Success, Failure}
+import scala.util.Try
 
-import bdzimmer.util.{Result, Pass, Fail}
+import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
+import bdzimmer.util.StringUtils._
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItem}
@@ -112,7 +113,7 @@ class Driver {
     val filename = List(
         projConf.projectDir,
         ProjectStructure.WebDir,
-        "index.html").mkString(File.separator)
+        "index.html").mkString(slash)
     val uri = new File(filename).toURI
     Try(Desktop.getDesktop.browse(uri))
   }

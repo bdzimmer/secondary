@@ -16,7 +16,8 @@ import java.awt.Font                    // scalastyle:ignore illegal.imports
 import javax.swing.border.EmptyBorder
 import javax.swing.SwingConstants
 
-import bdzimmer.secondary.export.model.{ProjectConfig, PropertiesWrapper}
+import bdzimmer.secondary.export.model.ProjectConfig
+import bdzimmer.util.PropertiesWrapper
 
 class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
 

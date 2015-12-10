@@ -13,6 +13,7 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.{File => DriveFile}
 
 import bdzimmer.util.{Result, Pass, Fail}
+import bdzimmer.util.StringUtils._
 
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, WorldItem}
@@ -56,7 +57,11 @@ class DriveSync(
 
   def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
     val imageFiles = ExportPipelines.getReferencedImages(masterCollection)
-    downloadFilesIntelligent(imageFiles, fileStatus)
+    val downloadImageStatus = downloadFilesIntelligent(imageFiles, fileStatus)
+
+    println("--refreshed image files")
+
+    downloadImageStatus
   }
 
 
@@ -70,9 +75,26 @@ class DriveSync(
     // location if they don't already exist
 
     val uniqueFilesDrive = files.map(filename => {
-      val filePath = filename.split("/").toList
-      val driveFile = DriveUtils.getFileByPath(drive, driveInputFile, filePath)
+
+      println("checking status: " + filename)
+
+      val filePath = filename.split(slash).toList
+      val driveFile = {
+
+        // original version
+        // DriveUtils.getFileByPath(drive, driveInputFile, filePath)
+
+        // if it's already in the fileStatus, get it directly by id
+        // otherwise find it
+        fileStatus.get(filename) match {
+          case Some(x) => Option(drive.files.get(x._1).execute) // also need to deal with the possibility that the file doesn't exist
+          case None =>  DriveUtils.getFileByPath(drive, driveInputFile, filePath)
+        }
+
+      }
+
       driveFile.map((filename, _))
+
     }).flatten
 
     val filesToDownload = uniqueFilesDrive.filter({case (filename, driveFile) => {
@@ -96,11 +118,11 @@ class DriveSync(
 
       println("downloading: " + filename)
 
-      val localDir = filename.split("/").dropRight(1).mkString(File.separator)
-      val localDirFile = new java.io.File(projConf.localContentPath + File.separator + localDir)
+      val localDir = filename.split(slash).dropRight(1).mkString(slash)
+      val localDirFile = new java.io.File(projConf.localContentPath /localDir)
       localDirFile.mkdirs
 
-      DriveUtils.downloadFile(drive, driveFile, projConf.localContentPath + File.separator + filename)
+      DriveUtils.downloadFile(drive, driveFile, projConf.localContentPath / filename)
 
       (filename, (driveFile.getId, driveFile.getModifiedDate))
 
@@ -114,7 +136,7 @@ class DriveSync(
   def upload(filesToUpload: List[String]): Unit = {
 
     val filesToUploadSplit = filesToUpload.map(
-        _.split(Pattern.quote(File.separator)).toList)
+        _.split(Pattern.quote(slash)).toList)
 
     // for each file to upload, delete it if it already exists
     val driveFiles = filesToUpload.zip(filesToUploadSplit.map(x => DriveUtils.getFileByPath(drive, driveOutputFile, x)))
@@ -130,17 +152,17 @@ class DriveSync(
     // parent is returned - produces correct behavior
     // TODO: awkward - empty list for current directory must attempt to be created.
     val parentDirsMap = parentDirs.distinct.map(x => {
-      println("creating drive folder: " + x.mkString(File.separator))
+      println("creating drive folder: " + x.mkString(slash))
       (x, DriveUtils.createFolders(drive, driveOutputFile, x).get)
     }).toMap
 
     // then upload the files
     val resultFiles = filesToUpload.zip(parentDirs).map({case (x, drivePath) => {
       println("uploading: " + x)
-      // val location = DriveUtils.createFolders(drive, driveOutputFile, x.split("/").toList.dropRight(1)).get
+      // val location = DriveUtils.createFolders(drive, driveOutputFile, x.split(slash).toList.dropRight(1)).get
 
       val location = parentDirsMap(drivePath)
-      DriveUtils.uploadFile(drive, projConf.localExportPath + File.separator + x, location)
+      DriveUtils.uploadFile(drive, projConf.localExportPath / x, location)
 
     }})
 
@@ -157,7 +179,6 @@ object DriveSync {
 
   // safely create a DriveSync object from the project configuration
   // failure messages if input or output directories don't exist
-  // 2015-11-22: Using my own Result class rather than Either
   def apply(projConf: ProjectConfig): Result[String, DriveSync] = for {
 
     drive <- DriveSync.createDrive(projConf)

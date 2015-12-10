@@ -7,27 +7,13 @@
 
 package bdzimmer.secondary.export.model
 
-import java.io.{File, FileInputStream}
-import java.util.Properties
+import java.io.File
 
+import bdzimmer.util.PropertiesWrapper
+import bdzimmer.util.StringUtils._
 
 case class ConfigField(key: String, default: String, description: String)
 
-
-// idiomatic Scala wrapper for Java Properties
-class PropertiesWrapper(val filename: String) {
-
-  val file = new java.io.File(filename)
-  val prop = new Properties()
-
-  if (file.exists) {
-    prop.load(new FileInputStream(file))
-  }
-
-  def apply(key: String): Option[String] = Option(prop.getProperty(key))
-  def set(k: String, v: String): Unit = prop.setProperty(k, v)
-
-}
 
 
 
@@ -44,11 +30,11 @@ class ProjectConfig(
 
 
   // attributes derived from the above
-  val driveInputPathList = driveInputPath.split("/").toList
-  val driveOutputPathList = driveOutputPath.split("/").toList
+  val driveInputPathList = driveInputPath.split(slash).toList
+  val driveOutputPathList = driveOutputPath.split(slash).toList
 
-  val localExportPath = projectDir  + File.separator + ProjectStructure.WebDir + File.separator
-  val localContentPath = projectDir + File.separator + ProjectStructure.ContentDir + File.separator
+  val localExportPath = projectDir  / ProjectStructure.WebDir
+  val localContentPath = projectDir / ProjectStructure.ContentDir
   val localExportPathFile = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
 
@@ -88,7 +74,7 @@ object ProjectConfig {
 
 
   def getProperties(projectDir: String): PropertiesWrapper = {
-    val propFilename = projectDir + File.separator + ProjectStructure.ConfigurationFile
+    val propFilename = projectDir / ProjectStructure.ConfigurationFile
     new PropertiesWrapper(propFilename)
   }
 
@@ -112,14 +98,14 @@ object ProjectConfig {
 
     new ProjectConfig(
         projectDir = projectDir,
-        mode = getProp(ProjectConfig.mode),
-        driveClientIdFile = getProp(ProjectConfig.driveClientIdFile),
+        mode                 = getProp(ProjectConfig.mode),
+        driveClientIdFile    = getProp(ProjectConfig.driveClientIdFile),
         driveAccessTokenFile = getProp(ProjectConfig.driveAccessTokenFile),
-        driveInputPath = getProp(ProjectConfig.driveInputPath),
-        driveOutputPath = getProp(ProjectConfig.driveOutputPath),
-        mappedContentPath = getProp(ProjectConfig.mappedContentPath),
-        masterName = getProp(ProjectConfig.masterName),
-        license = getProp(ProjectConfig.license))
+        driveInputPath       = getProp(ProjectConfig.driveInputPath),
+        driveOutputPath      = getProp(ProjectConfig.driveOutputPath),
+        mappedContentPath    = getProp(ProjectConfig.mappedContentPath),
+        masterName           = getProp(ProjectConfig.masterName),
+        license              = getProp(ProjectConfig.license))
 
 
   }

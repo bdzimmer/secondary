@@ -16,6 +16,7 @@ import org.apache.commons.io.{FileUtils, FilenameUtils}
 import com.google.api.client.util.DateTime
 
 import bdzimmer.util.{Result, Pass, Fail}
+import bdzimmer.util.StringUtils._
 
 import bdzimmer.gdrivescala.DriveUtils
 import bdzimmer.secondary.export.model._
@@ -78,7 +79,7 @@ object ExportPipelines {
       localFileUpdates(imageFiles, oldFileStatus, projConf)
     }
 
-    val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalMetaStatusFile
+    val metaStatusFile = projConf.projectDir / ProjectStructure.LocalMetaStatusFile
     val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
     val newMetaStatus = WorldLoader.mergeModifiedMaps(oldMetaStatus, metaStatusChanges)
@@ -91,7 +92,7 @@ object ExportPipelines {
         val world = WorldItem.collectionToList(master)
 
         // download referenced files, update status
-        val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.LocalFileStatusFile
+        val fileStatusFile = projConf.projectDir / ProjectStructure.LocalFileStatusFile
         val oldFileStatus = WorldLoader.loadOrEmptyModifiedMap(fileStatusFile)
         val fileStatusChanges = localFileStatusChanges(world, oldFileStatus, projConf)
         val newFileStatus = WorldLoader.mergeModifiedMaps(oldFileStatus, fileStatusChanges)
@@ -121,7 +122,7 @@ object ExportPipelines {
   def exportDriveSync(projConf: ProjectConfig, ds: DriveSync): Unit = {
 
     // download the metadata, update status
-    val metaStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveMetaStatusFile
+    val metaStatusFile = projConf.projectDir / ProjectStructure.DriveMetaStatusFile
     val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = ds.downloadMetadata(oldMetaStatus)
     val newMetaStatus = WorldLoader.mergeModifiedMaps(oldMetaStatus, metaStatusChanges)
@@ -134,7 +135,7 @@ object ExportPipelines {
         val world = WorldItem.collectionToList(master)
 
         // download referenced files, update status
-        val fileStatusFile = projConf.projectDir + File.separator + ProjectStructure.DriveFileStatusFile
+        val fileStatusFile = projConf.projectDir / ProjectStructure.DriveFileStatusFile
         val oldFileStatus = WorldLoader.loadOrEmptyModifiedMap(fileStatusFile)
         val fileStatusChanges = ds.downloadImages(world, oldFileStatus)
         val newFileStatus = WorldLoader.mergeModifiedMaps(oldFileStatus, fileStatusChanges)
@@ -239,7 +240,7 @@ object ExportPipelines {
         new File(stylesDir, "bootstrap"))
 
     // generate secondary.css in styles directory
-    Styles.createStyleSheet(projConf.localExportPath + "/styles/" + "secondary.css")
+    Styles.createStyleSheet(projConf.localExportPath / "styles" / "secondary.css")
 
   }
 
@@ -264,7 +265,7 @@ object ExportPipelines {
       projConf: ProjectConfig): FileModifiedMap = {
 
     val currentStatus = files.map(x =>
-      (x, new File(projConf.localContentPath + File.separator + x).lastModified))
+      (x, new File(projConf.localContentPath / x).lastModified))
 
     currentStatus.filter({case (k, v) => oldFileStatus.get(k) match {
         case Some(x) => v > x._2.getValue

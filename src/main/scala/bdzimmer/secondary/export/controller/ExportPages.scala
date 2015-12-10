@@ -23,6 +23,7 @@ import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Tags._
 import bdzimmer.secondary.export.view.{Markdown, PageTemplates}
 
+import bdzimmer.util.StringUtils._
 
 
 class ExportPages(
@@ -66,7 +67,7 @@ class ExportPages(
                 ExportPages.notepadURL(master))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr)
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         master.name,
         master.description,
 
@@ -111,7 +112,7 @@ class ExportPages(
     }
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         "Tasks", "",  None,
 
        // Todos and thoughts
@@ -139,7 +140,7 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
 
-        location + File.separator + relFilePath,
+        location / relFilePath,
         "Index", "", None,
 
         column(Column6, {
@@ -169,7 +170,7 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
 
-        location + File.separator + relFilePath,
+        location / relFilePath,
         "Stats", "",  None,
 
         column(Column12, {
@@ -198,7 +199,7 @@ class ExportPages(
     val relFilePath = ExportPages.itemPageName(character)
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         character.name, character.description,
 
         Some(ExportPages.getToolbar(character)),
@@ -221,7 +222,7 @@ class ExportPages(
     val relFilePath = ExportPages.itemPageName(map)
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         map.name, map.description,
 
         Some(ExportPages.getToolbar(map)),
@@ -241,7 +242,7 @@ class ExportPages(
     val relFilePath = ExportPages.itemPageName(tileset)
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         tileset.name, tileset.description,
 
         Some(ExportPages.getToolbar(tileset)),
@@ -261,7 +262,7 @@ class ExportPages(
     val relFilePath = ExportPages.itemPageName(collection)
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         collection.name, collection.description,
         Some(ExportPages.getToolbar(collection)),
 
@@ -300,7 +301,7 @@ class ExportPages(
     } yield description).getOrElse("")
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         imageItem.name, imageItem.description,
         Some(ExportPages.getToolbar(imageItem)),
 
@@ -321,7 +322,7 @@ class ExportPages(
     val relFilePath = ExportPages.itemPageName(item)
 
     PageTemplates.createArticlePage(
-        location + File.separator + relFilePath,
+        location / relFilePath,
         item.name, item.description,
         Some(ExportPages.getToolbar(item)),
         column(Column12,

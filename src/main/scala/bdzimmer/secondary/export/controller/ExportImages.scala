@@ -49,11 +49,13 @@ import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Markdown
 import bdzimmer.secondary.export.view.Tags._
 
+import bdzimmer.util.StringUtils._
+
 
 
 class ExportImages(world: List[WorldItem], val location: String, license: String) {
 
-  val imagesLocation = location + File.separator + ExportImages.ImagesDir + File.separator
+  val imagesLocation = location / ExportImages.ImagesDir
   new File(imagesLocation).mkdir
 
   val metaItems = WorldItem.filterList[MetaItem](world)
@@ -108,9 +110,9 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   // download or copy image files to the output location
   def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
 
-    val relativeName = (ExportImages.ImagesDir + File.separator +
+    val relativeName = (ExportImages.ImagesDir /
         imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename))
-    val absoluteName = location + File.separator + relativeName
+    val absoluteName = location / relativeName
 
     imageItem.filename.startsWith("wikimedia:") match {
 
@@ -146,7 +148,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
           val outputName = for {
             json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
             wm <- ImageDownloader.parseWikimediaJson(json)
-            junk = ImageDownloader.downloadImage(wm, imagesLocation + imageItem.id)
+            junk = ImageDownloader.downloadImage(wm, imagesLocation / imageItem.id)
           } yield relativeName
           (srcFilename, outputName.toList)
         }
@@ -171,11 +173,10 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
         val outputImageFiles = ExportImages.outputScales map (scale => {
           val offset = 3
-          val inputFile = (imagesLocation + File.separator
-              + ss.id + "_tiles" + File.separator
-              + (sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png")
-          val relativeName = ExportImages.ImagesDir + File.separator + ci.id + ExportImages.scalePostfix(scale) + ".png"
-          val absoluteName = location + File.separator + relativeName
+          val inputFile = (imagesLocation / ss.id + "_tiles" /
+              ((sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"))
+          val relativeName = ExportImages.ImagesDir / ci.id + ExportImages.scalePostfix(scale) + ".png"
+          val absoluteName = location / relativeName
           FileUtils.copyFile(new File(inputFile), new File(absoluteName))
 
           relativeName
@@ -204,7 +205,6 @@ object ExportImages {
   // constants
 
   val ImagesDir = "images"
-  val Slash = "/"
 
   // val TransparentColor: (Int, Int, Int) = (255, 255, 255)
   val TransparentColor: (Int, Int, Int) = (51, 153, 102)
@@ -231,11 +231,11 @@ object ExportImages {
 
     val image: BufferedImage = worldItem match {
       case x: MapItem => getMapImage(
-          inputDir + File.separator + inputName,
-          inputDir + File.separator + ContentStructure.TileDir + File.separator)
+          inputDir / inputName,
+          inputDir / ContentStructure.TileDir + slash)
       case x: TileMetaItem => {
         TileOptions.types.get(x.tiletype) match {
-          case Some(tiletype) => getTilesetImage(inputDir + File.separator + inputName, tiletype)
+          case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
           case None => ExportImages.imageMessage("Invalid tile type.")
         }
       }
@@ -244,8 +244,8 @@ object ExportImages {
 
     // various scales to output
     outputScales map (scaleFactor => {
-       val relativeName = ImagesDir + File.separator + worldItem.id + scalePostfix(scaleFactor) + ".png"
-       val absoluteName = outputDir + File.separator + relativeName
+       val relativeName = ImagesDir / worldItem.id + scalePostfix(scaleFactor) + ".png"
+       val absoluteName = outputDir / relativeName
        ImageIO.write(rescaleImage(image, scaleFactor), "png", new File(absoluteName))
        relativeName
     })
@@ -263,10 +263,10 @@ object ExportImages {
 
       case Some(tileType) => {
 
-        val outputDirRelative = ImagesDir + File.separator + tilesetItem.id + "_tiles"
-        new File(outputDir + File.separator + outputDirRelative).mkdir
+        val outputDirRelative = ImagesDir / tilesetItem.id + "_tiles"
+        new File(outputDir / outputDirRelative).mkdir
 
-        val image = getTilesetImage(inputDir + File.separator + inputName, tileType)
+        val image = getTilesetImage(inputDir / inputName, tileType)
 
         // extract buffered images from the tile image.
         val images = (0 until tileType.count).flatMap(curTile => {
@@ -278,8 +278,8 @@ object ExportImages {
 
           // various scales to output
           outputScales map (scaleFactor => {
-            val relativeName = outputDirRelative + File.separator + curTile + scalePostfix(scaleFactor) + ".png"
-            val absoluteName = outputDir + File.separator + relativeName
+            val relativeName = outputDirRelative / curTile.toString + scalePostfix(scaleFactor) + ".png"
+            val absoluteName = outputDir / relativeName
             ImageIO.write(rescaleImage(curTileImage, scaleFactor), "png", new File(absoluteName))
             relativeName
           })
@@ -346,7 +346,7 @@ object ExportImages {
     // TODO: add a hard-coded TileAttributes to Map for Tiles
     val tiles = new Tiles(
         TileOptions.getOrQuit("Tiles"),
-        new File(tilesDir + File.separator + map.tileFileName + ".til"),
+        new File(tilesDir / map.tileFileName + ".til"),
         dg.getRgbPalette)
 
     dg.updateClut()
@@ -447,7 +447,7 @@ object ExportImages {
 
 
   def pixelImagePathScale(item: WorldItem, scale: Int = 4): String = {
-    val imageFile = ImagesDir + Slash + item.id + "%s.png"
+    val imageFile = ImagesDir / item.id + "%s.png"
     imageFile.format(scalePostfix(scale))
   }
 
@@ -460,7 +460,7 @@ object ExportImages {
 
 
   def imageItemImagePath(imageItem: ImageItem): String = {
-    ImagesDir + Slash + imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
+    ImagesDir / imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
   }
 
 

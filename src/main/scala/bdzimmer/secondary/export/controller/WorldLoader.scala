@@ -23,6 +23,7 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
 import bdzimmer.util.{Result, Pass, Fail}
+import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.export.model._
 
@@ -82,7 +83,7 @@ object WorldLoader {
       loadedFiles: List[String]): Result[String, CollectionItemBean] = {
 
     val bean = for {
-      inputFile <- Result.fromFilename(inputDir + File.separator + filename)
+      inputFile <- Result.fromFilename(inputDir / filename)
       yamlString <- Result(FileUtils.readFileToString(inputFile, "UTF-8"))
       result <- Result(loadCollection(yamlString)).mapLeft(logParseError(filename, _))
     } yield {

@@ -14,6 +14,8 @@ import org.apache.commons.compress.archivers.zip.ZipFile
 import java.io.{File, FileOutputStream}
 import scala.util.Try
 
+import bdzimmer.util.StringUtils._
+
 
 object Styles {
 
@@ -106,7 +108,7 @@ body {
   // download boostrap archive, extract, and delete
   def getBootstrap(downloadDir: String): Unit = {
 
-    val outputFilename = downloadDir + "/" + BootstrapFilename
+    val outputFilename = downloadDir / BootstrapFilename
     val outputFile = new File(outputFilename)
 
     FileUtils.copyURLToFile(new java.net.URL(BootstrapUrl), outputFile)
