@@ -6,6 +6,8 @@ import scala.util.matching.Regex
 
 import org.pegdown.ast.AnchorLinkNode
 
+import bdzimmer.util.{Result, Pass, Fail}
+
 import bdzimmer.secondary.export.model.{CharacterItem, MetaItem, WorldItem, ParseSecTags, SecTag}
 import bdzimmer.secondary.export.view.{Markdown, Tags}
 
@@ -24,7 +26,10 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
       // $ and \ have special meaning in replacement strings, this quotes them
       // it may be desirable for performance to only apply below to results of certain tags
       // that are more likely to include slashes
-      Regex.quoteReplacement(processTag(tag))
+      Regex.quoteReplacement(processTag(tag) match {
+        case Pass(s) => s
+        case Fail(_) => RenderSecTags.tagString(tag)
+      })
     })
 
     val pp = Markdown.getPegDown
@@ -32,26 +37,32 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   }
 
 
-  // validate that a tag can be processed and process it
-  def processTag(tag: SecTag): String = {
+  // a simpler version of the processTag function
+  // determines whether a tag is valid without rendering it
+  def validateTag(tag: SecTag): Result[String, String] = {
+    if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
+       Pass("valid non-item tag")
+    } else {
+      // if it's an item tag, match the tag value against the world
+      matchItemTag(tag) match {
+        case Some(item) => Pass("valid item tag")
+        case None => Fail(s"""invalid item "${tag.value}" in tag "${tag.kind}"""")
+      }
+    }
+  }
 
+
+  // process a tag
+  def processTag(tag: SecTag): Result[String, String] = {
     if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
       RenderSecTags.processOtherTag(tag)
     } else {
-
       // if it's an item tag, match the tag value against the world
-      val itemOption = matchItemTag(tag)
-
-      itemOption match {
-        case Some(item) => processItemTag(tag.kind, item, tag.args)
-        case None => {
-          println("\t\tinvalid item tag: " + tag.kind + " " + tag.value)
-          RenderSecTags.tagString(tag)
-        }
+      matchItemTag(tag) match {
+        case Some(item) => Pass(processItemTag(tag.kind, item, tag.args))
+        case None => Fail(s"""invalid item "${tag.value}" in tag "${tag.kind}"""")
       }
-
     }
-
   }
 
 
@@ -65,22 +76,17 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     idMatches.length match {
       case 1 => idMatches.headOption
       case _ => {
-
         val nameMatches = world.filter(_.name.equals(tag.value))
         nameMatches.length match {
           case 1 => nameMatches.headOption
           case _ => None
         }
-
       }
     }
-
   }
 
 
-
   // generate text for tags that reference WorldItems
-  // TODO: version that replaces tags with pure text or nothing
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
     case ParseSecTags.Link => RenderSecTags.link(item, args)
@@ -89,7 +95,6 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     case ParseSecTags.FamilyTree => familyTree(item)
     case ParseSecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
     case ParseSecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
-
 
     // tags that aren't recognized are displayed along with links
     case _ => (s"""<b>${kind.capitalize}: </b>"""
@@ -136,17 +141,17 @@ object RenderSecTags {
 
 
   // generate text for tag kinds that don't reference WorldItems
-  def processOtherTag(tag: SecTag): String = tag.kind match {
+  def processOtherTag(tag: SecTag): Result[String, String] = tag.kind match {
     case ParseSecTags.Demo => {
       val body = tag.args match {
-        case x :: Nil => s"${x}"
-        case x :: xs => s"${x} | ${xs.mkString(" ")}"
+        case x :: Nil => x
+        case x :: xs => s"$x | ${xs.mkString(" ")}"
         case _ => "..."
       }
-      s"{{${tag.value}: ${body}}}"
+      Pass(s"{{${tag.value}: ${body}}}")
     }
-    case ParseSecTags.Event => s"""<b>${tag.value}: </b> """ + tag.args.mkString(" ") + Tags.brInline
-    case _ => tagString(tag)
+    case ParseSecTags.Event => Pass(s"""<b>${tag.value}: </b> """ + tag.args.mkString(" ") + Tags.brInline)
+    case _ => Fail(s"unrecognized non-item tag: ${tag.kind}")
   }
 
 
@@ -160,7 +165,6 @@ object RenderSecTags {
     }
 
   }
-
 
 
   // more flexible jumbotron tag renderer

@@ -23,6 +23,7 @@ import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Tags._
 import bdzimmer.secondary.export.view.{Markdown, PageTemplates}
 
+import bdzimmer.util.Fail
 import bdzimmer.util.StringUtils._
 
 
@@ -111,6 +112,11 @@ class ExportPages(
       item.tags.filter(_.kind.equals(prefix)).map(_.value)
     }
 
+    // get invalid tags
+    def getInvalidTags(item: WorldItem): List[String] = {
+      item.tags.map(np.validateTag(_)).collect({case Fail(x) => x})
+    }
+
     PageTemplates.createArticlePage(
         location / relFilePath,
         "Tasks", "",  None,
@@ -120,12 +126,16 @@ class ExportPages(
        column(Column6, h4("Thoughts") + taskList(getTask(_)("thought"))) +
 
        // Empty notes
-       column(Column6,
-         h4("Empty Notes") +
-         listGroup(world
-           .filter(_.notes.equals(""))
-           .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
-       ),
+       column(
+           Column6,
+           h4("Empty Notes") +
+           listGroup(world
+             .filter(_.notes.equals(""))
+             .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
+       ) +
+
+       // Invalid tags
+       column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)),
 
        license)
 
