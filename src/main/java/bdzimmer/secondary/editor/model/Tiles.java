@@ -5,6 +5,8 @@
 package bdzimmer.secondary.editor.model;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.IndexColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -189,8 +191,34 @@ public class Tiles {
       }
     }
 
-    return tilesImage;
+    return tilesImage; 
   }
+  
+  
+  // get an indexed image of the tileset
+  
+  public BufferedImage getTilesImageIndexed(int tilesWide, int tilesHigh, IndexColorModel cm) {
+    
+    BufferedImage tilesImage = new BufferedImage(
+        tilesWide * this.attrs.width,
+        tilesHigh * this.attrs.height,
+        BufferedImage.TYPE_BYTE_INDEXED,
+        cm);
+    
+    WritableRaster wr = tilesImage.getRaster();
+    
+    for (int whichTile = 0; whichTile < this.tiles.length; whichTile++) {
+      int xoff = (whichTile % tilesWide) * this.attrs.width;
+      int yoff = (whichTile / tilesWide) * this.attrs.height;
+      for (int y = 0; y < this.attrs.height; y++) {
+        wr.setPixels(xoff, yoff + y, this.attrs.width, 1, tiles[whichTile][y]);
+      }
+    }
+    
+    return tilesImage;
+     
+  }
+  
   
   /**
    * Get an image of the tile set, using TileAttributes to draw.
@@ -205,6 +233,16 @@ public class Tiles {
         palette); 
   }
 
+  
+  // indexed version
+  public BufferedImage getTilesImageIndexed(IndexColorModel cm) {
+    return getTilesImageIndexed(
+        attrs.tilesPerRow,
+        (int)Math.ceil((float)attrs.count / attrs.tilesPerRow),
+        cm); 
+  }
+
+  
   public int[][][] getTiles() {
     return tiles;
   }

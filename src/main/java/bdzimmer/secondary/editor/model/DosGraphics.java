@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.awt.image.IndexColorModel;
 
 import javax.swing.JPanel;
 
@@ -174,6 +175,25 @@ public class DosGraphics extends JPanel {
 
   public void setRgbPalette(int[][] rgbPalette) {
     this.rgbPalette = rgbPalette;
+  }
+  
+  // get an IndexColorModel for part of the range
+  public IndexColorModel getIndexColorModel(int start, int end) {
+    byte[] r = new byte[256];
+    byte[] g = new byte[256];
+    byte[] b = new byte[256];
+    
+    for (int i = start; i <= end; i++) {
+      r[i] = (byte)((rgbPalette[i][0] * 4) & 0xFF);
+      g[i] = (byte)((rgbPalette[i][1] * 4) & 0xFF);
+      b[i] = (byte)((rgbPalette[i][2] * 4) & 0xFF);
+    }
+    
+    // weird things happen when you try to set a transparent index (extra argument)
+    // it seems that it will always be index 0 in a png, but also strange palette
+    // shifts happen if it is set to 256. Seems best to not set this for now.
+    return new IndexColorModel(8, 256, r, g, b);
+        
   }
 
   /**

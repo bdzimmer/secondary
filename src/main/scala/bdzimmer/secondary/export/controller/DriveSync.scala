@@ -151,6 +151,7 @@ class DriveSync(
     // Note: when createFolders is called with List() for subfolders,
     // parent is returned - produces correct behavior
     // TODO: awkward - empty list for current directory must attempt to be created.
+    // TODO: using get on Option!!!!
     val parentDirsMap = parentDirs.distinct.map(x => {
       println("creating drive folder: " + x.mkString(slash))
       (x, DriveUtils.createFolders(drive, driveOutputFile, x).get)

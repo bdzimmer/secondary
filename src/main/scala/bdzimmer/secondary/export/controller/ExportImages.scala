@@ -235,7 +235,7 @@ object ExportImages {
           inputDir / ContentStructure.TileDir + slash)
       case x: TileMetaItem => {
         TileOptions.types.get(x.tiletype) match {
-          case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
+          case Some(tiletype) => getTilesetImageIndexed(inputDir / inputName, tiletype)
           case None => ExportImages.imageMessage("Invalid tile type.")
         }
       }
@@ -266,7 +266,7 @@ object ExportImages {
         val outputDirRelative = ImagesDir / tilesetItem.id + "_tiles"
         new File(outputDir / outputDirRelative).mkdir
 
-        val image = getTilesetImage(inputDir / inputName, tileType)
+        val image = getTilesetImageIndexed(inputDir / inputName, tileType)
 
         // extract buffered images from the tile image.
         val images = (0 until tileType.count).flatMap(curTile => {
@@ -297,16 +297,17 @@ object ExportImages {
 
 
   /**
-   * Get a BufferedImage representation of a tiles file.
+   * Get a 24-bit BufferedImage representation of a tiles file.
    *
    * @param inputFile       name of file to load
    * @param tileAttributes  attributes of file to load
    * @return 1x scaled BufferedImage of the data in the file
    *
    */
-  def getTilesetImage(inputFile: String,
-                      tileAttributes: TileAttributes,
-                      transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
+  def getTilesetImageOld(
+      inputFile: String,
+      tileAttributes: TileAttributes,
+      transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
 
     val dg = new DosGraphics()
     val tiles = new Tiles(tileAttributes, new File(inputFile), dg.getRgbPalette)
@@ -318,13 +319,40 @@ object ExportImages {
     if ((0 to 255).map(i => dg.getPalette()(i) == tc).contains(true)) {
       throw new Exception("Transparent color collision!")
     }
-
     dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
 
     val image = tiles.getTilesImage(dg.getPalette())
 
     image
 
+  }
+
+
+  /**
+   * Get an 8-bit indexed BufferedImage representation of a tiles file.
+   *
+   * @param inputFile       name of file to load
+   * @param tileAttributes  attributes of file to load
+   * @return 1x scaled BufferedImage of the data in the file
+   *
+   */
+  def getTilesetImageIndexed(
+      inputFile: String,
+      tileAttributes: TileAttributes,
+      transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
+
+    val dg = new DosGraphics()
+    val tiles = new Tiles(tileAttributes, new File(inputFile), dg.getRgbPalette)
+    dg.updateClut()
+
+    val tc: Int =  255 << 24 | transparentColor._1 << 16 |  transparentColor._2 << 8 | transparentColor._3
+    // no collision check is necessary here because we are saving as indexed!
+    dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
+
+    tiles.getTilesImageIndexed(
+        dg.getIndexColorModel(
+            tileAttributes.palStart,
+            tileAttributes.palEnd))
   }
 
 
