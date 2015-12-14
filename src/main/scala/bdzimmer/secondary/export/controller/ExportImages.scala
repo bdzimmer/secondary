@@ -345,9 +345,11 @@ object ExportImages {
     val tiles = new Tiles(tileAttributes, new File(inputFile), dg.getRgbPalette)
     dg.updateClut()
 
-    val tc: Int =  255 << 24 | transparentColor._1 << 16 |  transparentColor._2 << 8 | transparentColor._3
     // no collision check is necessary here because we are saving as indexed!
-    dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
+    dg.getRgbPalette()(255) = Array(
+        transparentColor._1 / 4,
+        transparentColor._2 / 4,
+        transparentColor._3 / 4)
 
     tiles.getTilesImageIndexed(
         dg.getIndexColorModel(
