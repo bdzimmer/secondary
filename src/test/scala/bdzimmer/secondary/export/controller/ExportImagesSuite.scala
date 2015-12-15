@@ -12,23 +12,24 @@ import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.editor.model.TileOptions
 
+
 class ExportImagesSuite extends FunSuite {
 
-    val resourceDir = getClass.getResource("/pixel").getPath
+  val resourceDir = getClass.getResource("/pixel").getPath
 
-    // test new indexed png export
-    test("save tileset to png") {
+  // test new indexed png export
+  test("save tileset to png") {
 
-      val inputFilename = resourceDir / "amex.til"
-      val outputFile = new File("amex.png")
+    val inputFilename = resourceDir / "amex.til"
+    val outputFile = new File("amex.png")
 
-      val tileAttrs = TileOptions.types.get("Tiles").get  // I don't even care
-      val image = ExportImages.getTilesetImageIndexed(inputFilename, tileAttrs)
+    val tileAttrs = TileOptions.types.get("Tiles").get  // I don't even care
+    val image = ExportImages.getTilesetImage(inputFilename, tileAttrs)
 
-      ImageIO.write(image, "png", outputFile)
-      val loadedImage = ImageIO.read(outputFile)
-      assert(loadedImage.getColorModel.getPixelSize == 8)
+    ImageIO.write(image, "png", outputFile)
+    val loadedImage = ImageIO.read(outputFile)
+    assert(loadedImage.getColorModel.getPixelSize == 8)
 
-    }
+  }
 
 }

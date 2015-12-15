@@ -1,36 +1,5 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Sketching out some ideas for out to implement project structure and metadata using YAML.
-// Ben Zimmer
-
-// 2015-01-12
-
-// 2015-01-26: Tileset and map image export working.
-// 2015-01-31: Page export!
-
-// 2015-04-02: Various updates. Map page export. Changed export filenames to use ids rather than deriving
-//             from filename.
-
-// 2015-04-20: Todo list generation. Renamed to "Export". Collection page export. Also changing Export
-//             to a class so some commonly used data can be held. Not sure about this, but we'll see how it works.
-//             Added additional methods for HTML to Bootstrap class to try to eliminate HTML code
-//             from Export class.
-
-// 2015-06-08: Refactored slightly; added export all pages and images methods to Export class.
-
-// 2015-07-07: Images are exported into an images directory. Images for characters are prepared from spritesheets.
-
-// 2015-07-14: Started making functions that create images and pages return the relative paths of the things
-//             that they create.
-// 2015-07-15: More on above.
-// 2015-07-25: Past weeks intelligent image downloading. Intelligent metadata upload / download.
-// 2015-07-26: Refactoring. Improved item image links (shows up in collection pages).
-// 2015-08-08: Generic WorldItem page creation. Simple image link implementation for WorldItems.
-//             Todo list improvements, including "thoughts".
-// 2015-08-26: Wikimedia image exporting.
-// 2015-08-31: Enhanced character image functionality.
-// 2015-09-03: Only download wikimedia images if they don't already exist in scratch directory.
-
 package bdzimmer.secondary.export.controller
 
 import scala.util.Try
@@ -44,6 +13,8 @@ import javax.imageio.ImageIO
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
 import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.Color
+import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
 import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Markdown
@@ -120,7 +91,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
         // local file - copy to images folder
         // source is original local file
 
-        // TODO: test non-wikimedia images!
+        // TODO: fix non-wikimedia images! this doesn't work!
 
         val srcFilename = imageItem.filename
         val srcFile = new java.io.File(srcFilename)
@@ -205,9 +176,7 @@ object ExportImages {
   // constants
 
   val ImagesDir = "images"
-
-  // val TransparentColor: (Int, Int, Int) = (255, 255, 255)
-  val TransparentColor: (Int, Int, Int) = (51, 153, 102)
+  val TransparentColor = Color(51 / 4, 153 / 4, 102 / 4)
 
   val outputScales = List(1, 4, 12)    // scalastyle:ignore magic.number
 
@@ -235,7 +204,7 @@ object ExportImages {
           inputDir / ContentStructure.TileDir + slash)
       case x: TileMetaItem => {
         TileOptions.types.get(x.tiletype) match {
-          case Some(tiletype) => getTilesetImageIndexed(inputDir / inputName, tiletype)
+          case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
           case None => ExportImages.imageMessage("Invalid tile type.")
         }
       }
@@ -266,7 +235,7 @@ object ExportImages {
         val outputDirRelative = ImagesDir / tilesetItem.id + "_tiles"
         new File(outputDir / outputDirRelative).mkdir
 
-        val image = getTilesetImageIndexed(inputDir / inputName, tileType)
+        val image = getTilesetImage(inputDir / inputName, tileType)
 
         // extract buffered images from the tile image.
         val images = (0 until tileType.count).flatMap(curTile => {
@@ -295,66 +264,21 @@ object ExportImages {
   }
 
 
-
-  /**
-   * Get a 24-bit BufferedImage representation of a tiles file.
-   *
-   * @param inputFile       name of file to load
-   * @param tileAttributes  attributes of file to load
-   * @return 1x scaled BufferedImage of the data in the file
-   *
-   */
-  def getTilesetImageOld(
+  // get an image of a tileset
+  def getTilesetImage(
       inputFile: String,
       tileAttributes: TileAttributes,
-      transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
+      transparent: Color = TransparentColor,
+      indexed: Boolean = true): BufferedImage = {
 
-    val dg = new DosGraphics()
-    val tiles = new Tiles(tileAttributes, new File(inputFile), dg.getRgbPalette)
-    dg.updateClut()
+    val tileset = new OldTilesetLoader(inputFile, tileAttributes).load
+    val curPal = tileset.palettes(0)
 
-    val tc: Int =  255 << 24 | transparentColor._1 << 16 |  transparentColor._2 << 8 | transparentColor._3
-
-    // check if the transparent color exists in the tileset.
-    if ((0 to 255).map(i => dg.getPalette()(i) == tc).contains(true)) {
-      throw new Exception("Transparent color collision!")
+    indexed match {
+      case true  => tileset.image(0, transparent)
+      case false => tileset.imageRGB(0, transparent)
     }
-    dg.getPalette()(255) = tc   // scalastyle:ignore magic.number
 
-    val image = tiles.getTilesImage(dg.getPalette())
-
-    image
-
-  }
-
-
-  /**
-   * Get an 8-bit indexed BufferedImage representation of a tiles file.
-   *
-   * @param inputFile       name of file to load
-   * @param tileAttributes  attributes of file to load
-   * @return 1x scaled BufferedImage of the data in the file
-   *
-   */
-  def getTilesetImageIndexed(
-      inputFile: String,
-      tileAttributes: TileAttributes,
-      transparentColor: (Int, Int, Int) = TransparentColor): BufferedImage = {
-
-    val dg = new DosGraphics()
-    val tiles = new Tiles(tileAttributes, new File(inputFile), dg.getRgbPalette)
-    dg.updateClut()
-
-    // no collision check is necessary here because we are saving as indexed!
-    dg.getRgbPalette()(255) = Array(
-        transparentColor._1 / 4,
-        transparentColor._2 / 4,
-        transparentColor._3 / 4)
-
-    tiles.getTilesImageIndexed(
-        dg.getIndexColorModel(
-            tileAttributes.palStart,
-            tileAttributes.palEnd))
   }
 
 
@@ -373,7 +297,7 @@ object ExportImages {
 
     val map = new Map(new File(inputFile))
 
-    // TODO: add a hard-coded TileAttributes to Map for Tiles
+    // TODO: add a hard-coded TileAttributes to Map for Tiles?
     val tiles = new Tiles(
         TileOptions.getOrQuit("Tiles"),
         new File(tilesDir / map.tileFileName + ".til"),

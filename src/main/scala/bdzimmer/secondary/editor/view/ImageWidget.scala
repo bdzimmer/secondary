@@ -2,8 +2,9 @@
 
 package bdzimmer.secondary.editor.view
 
-// scalastyle:ignore illegal.imports
-import java.awt.{BorderLayout, Color, Component, Dimension, GridLayout, Graphics, Font}
+
+import java.awt.{BorderLayout, Component, Dimension, GridLayout} // scalastyle:ignore illegal.imports
+import java.awt.{Color, Graphics, Font}               // scalastyle:ignore illegal.imports
 import java.awt.event.{ActionEvent, ActionListener}   // scalastyle:ignore illegal.imports
 import java.awt.image.BufferedImage                   // scalastyle:ignore illegal.imports
 import java.io.File

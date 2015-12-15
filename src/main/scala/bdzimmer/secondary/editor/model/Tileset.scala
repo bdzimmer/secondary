@@ -4,19 +4,49 @@
 // Trying to separate data from saving / loading operations.
 
 // 2015-12-13: Created.
+// 2015-12-14: Bringing in image generation.
 
 
 package bdzimmer.secondary.editor.model
 
-import java.awt.image.BufferedImage;
+import java.awt.image.{BufferedImage, IndexColorModel}     // scalastyle:ignore illegal.imports
 import java.io.{File, FileInputStream, FileOutputStream}
-import bdzimmer.secondary.editor.model.{QbInputStream, QbOutputStream}
 
 
-case class TileProperties(value: Int) // for now
+case class TileProperties(value: Int)    // for now
+
 case class Tile(pixels: Array[Array[Int]])
-case class Color(val r: Int, val g: Int, val b: Int)
-case class Palette(start: Int, end: Int, colors: Array[Color])
+
+case class Color(val r: Int, val g: Int, val b: Int) {
+  def toInt(): Int = 255 << 24 | (r * 4) << 16 | (g * 4) << 8 | (b * 4)
+}
+
+case class Palette(start: Int, end: Int, colors: Array[Color]) {
+
+  def colorModel(transparent: Color): IndexColorModel = {
+
+    val r = new Array[Byte](256)
+    val g = new Array[Byte](256)
+    val b = new Array[Byte](256)
+
+    for (i <- 0 until colors.length) {
+      r(i + start) = ((colors(i).r * 4) & 0xFF).toByte
+      g(i + start) = ((colors(i).g * 4) & 0xFF).toByte
+      b(i + start) = ((colors(i).b * 4) & 0xFF).toByte
+    }
+
+    r(255) = ((transparent.r * 4) & 0xFF).toByte
+    g(255) = ((transparent.g * 4) & 0xFF).toByte
+    b(255) = ((transparent.b * 4) & 0xFF).toByte
+
+    // weird things happen when you try to set a transparent index (extra argument)
+    // it seems that it will always be index 0 in a png, but also strange palette
+    // shifts happen if it is set to 256. Seems best to not set this for now.
+    new IndexColorModel(8, 256, r, g, b);
+
+  }
+
+}
 
 
 class Tileset (
@@ -30,91 +60,98 @@ class Tileset (
   // We want to be able to assume that the tiles are all the same size
   // and probably that the palettes are also the same size.
 
-  val width  = tiles(0).pixels.size
-  val height = tiles(0).pixels(0).size
-
-  def image(): BufferedImage = ???
-
-}
+  val height  = tiles(0).pixels.size
+  val width = tiles(0).pixels(0).size
 
 
-// a loader stores info about where the tileset came from and
-// how it should be saved
-
-trait TilesetLoader {
-  // TODO: return Result
-  def load(): Tileset            // load a tileset from disk
-  def save(t: Tileset): Unit     // save a tileset to disk
-}
-
-
-
-class OldTilesetLoader(val filename: String, val attrs: TileAttributes) extends TilesetLoader {
-
-  // copied code from the Java Tiles class in here and refactored
-  def load(): Tileset = {
-
-    // probably need to put all of this in a Try
-    val is = new QbInputStream(new FileInputStream(filename))
-
-    // load the tiles
-    val tiles = (0 until attrs.count).map(x => OldTilesetLoader.loadTile(is, attrs.width, attrs.height)).toArray
-
-    // load the palette
-    val palette = Palette(
-        attrs.palStart,
-        attrs.palEnd,
-        (attrs.palStart to attrs.palEnd).map(x => OldTilesetLoader.loadColor(is)).toArray)
-
-    // load tile properties
-    val properties = if (this.attrs.tileProperties) {
-      (0 until attrs.count).map(x => OldTilesetLoader.loadProperties(is)).toArray
-    } else {
-      Array[TileProperties]()
-    }
-
-    is.close()
-
-    new Tileset(tiles, properties, List(palette), attrs.tilesPerRow)
-
+  def imageRGB(paletteIndex: Int, transparent: Color = Tileset.Transparent): BufferedImage = {
+    imageRGB(tilesPerRow, math.ceil(tiles.length.toFloat / tilesPerRow).toInt,
+        paletteIndex, transparent)
   }
 
-  def save(t: Tileset): Unit = ???
+
+  def image(paletteIndex: Int, transparent: Color = Tileset.Transparent): BufferedImage = {
+    image(tilesPerRow, math.ceil(tiles.length.toFloat / tilesPerRow).toInt,
+        paletteIndex, transparent)
+  }
+
+
+  // get a 24-bit image of the tileset
+  def imageRGB(
+      tilesWide: Int,
+      tilesHigh: Int,
+      paletteIndex: Int,
+      transparentColor: Color): BufferedImage = {
+
+    val curPal = palettes(paletteIndex)
+    val fullPal = (0 to 255).map(x => Color(0, 0, 0)).toArray
+    for (x <- curPal.start to curPal.end) {
+      fullPal(x) = curPal.colors(x - curPal.start)
+    }
+    fullPal(255) = transparentColor
+
+    val tilesImage = new BufferedImage(
+        tilesWide * width, tilesHigh * height, BufferedImage.TYPE_INT_RGB)
+
+    for (whichTile <- 0 until tiles.length) {
+      val xoff = (whichTile % tilesWide) * width
+      val yoff = (whichTile / tilesWide) * height
+
+      for (y <- 0 until height) {
+        for (x <- 0 until width) {
+          val color = fullPal(tiles(whichTile).pixels(y)(x))
+          tilesImage.setRGB(xoff + x, yoff + y, color.toInt)
+        }
+      }
+    }
+
+    tilesImage
+  }
+
+  // get a 256-color indexed image of the tileset
+  def image(
+      tilesWide: Int,
+      tilesHigh: Int,
+      paletteIndex: Int,
+      transparentColor: Color): BufferedImage = {
+
+    val curPal = palettes(paletteIndex)
+    val colorModel = curPal.colorModel(transparent = transparentColor)
+
+
+    val tilesImage = new BufferedImage(
+        tilesWide * width, tilesHigh * height,
+        BufferedImage.TYPE_BYTE_INDEXED,
+        colorModel)
+
+    val wr = tilesImage.getRaster
+
+    for (whichTile <- 0 until tiles.length) {
+      val xoff = (whichTile % tilesWide) * width
+      val yoff = (whichTile / tilesWide) * height
+      for (y <- 0 until height) {
+        wr.setPixels(xoff, yoff + y, width, 1, tiles(whichTile).pixels(y))
+      }
+    }
+
+    tilesImage
+  }
+
 
 }
 
 
-object OldTilesetLoader {
+object Tileset {
 
-  // load an m x n tile
-  def loadTile(is: QbInputStream, width: Int, height: Int): Tile = {
+  val Transparent = Color(50, 0, 50)
 
+  def emptyTile(width: Int, height: Int): Tile = {
     val pixels = new Array[Array[Int]](height)
-
     for (y <- 0 until height) {
-      val row = new Array[Int](width)
-      for (x <- 0 until width) {
-        row(x) = is.readQbUnsignedByte()
-      }
-      pixels(y) = row
+      pixels(y) = new Array[Int](width)
     }
-
     Tile(pixels)
   }
 
-
-  // load an rgb triple
-  def loadColor(is: QbInputStream): Color = {
-    val red =   is.readQbUnsignedShortLow()
-    val green = is.readQbUnsignedShortLow()
-    val blue =  is.readQbUnsignedShortLow()
-    Color(red, green, blue)
-  }
-
-
-  // load properties for a single tile
-  def loadProperties(is: QbInputStream): TileProperties = {
-    TileProperties(is.readQbUnsignedShortLow())
-  }
-
 }
+
