@@ -8,6 +8,8 @@ import java.io.File
 import java.util.ArrayList
 import javax.swing.JButton
 
+import bdzimmer.util.StringUtils._
+
 import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
 import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
@@ -19,8 +21,8 @@ class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
     val spriteItems = main.metadata.filter(_.assetType.equals("Spritesheet"))
     val widgets = spriteItems.map(x => {
-      println(inputDir + File.separator + x.filename)
-      spritesWidget(inputDir + File.separator + x.filename, x.name, x.info)
+      println(inputDir / x.filename)
+      spritesWidget(inputDir / x.filename, x.name, x.info)
     })
 
     val widgetsArrayList = new java.util.ArrayList[ImageWidget]

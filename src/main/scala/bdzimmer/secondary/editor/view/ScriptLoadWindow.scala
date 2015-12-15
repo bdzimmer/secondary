@@ -11,6 +11,8 @@ import javax.swing.JButton
 import scala.collection.JavaConverters._
 import scala.sys.process._
 
+import bdzimmer.util.StringUtils._
+
 import bdzimmer.secondary.export.model.{CollectionItem, TilesetItem, WorldItem}
 import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model._
@@ -35,17 +37,12 @@ class ScriptLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
       val dosGraphics = new DosGraphics()
 
-      val curMap = new Map(new File(
-            main.contentDir + File.separator
-            + ContentStructure.MapDir + File.separator
-            + x + ".map"))
+      val curMap = new Map(new File(main.contentDir / ContentStructure.MapDir / x + ".map"))
 
       val curTiles = new Tiles(
           TileOptions.getOrQuit("Tiles"),
-          new File(
-            main.contentDir + File.separator
-            + ContentStructure.TileDir + File.separator
-            + curMap.tileFileName + ".til"), dosGraphics.getRgbPalette())
+          new File(main.contentDir / ContentStructure.TileDir / curMap.tileFileName + ".til"),
+          dosGraphics.getRgbPalette())
 
       dosGraphics.updateClut();
 
@@ -78,15 +75,9 @@ class ScriptLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
       def actionPerformed(event: ActionEvent): Unit = {
 
         scriptFile.getMaps.asScala.map(x => {
-          val mapFilename = (main.contentDir + File.separator
-              + ContentStructure.MapDir + File.separator
-              + x + ".map")
-
+          val mapFilename = (main.contentDir / ContentStructure.MapDir / x + ".map")
           val map = new Map(new File(mapFilename))
-
-          val tileFilename = (main.contentDir + File.separator
-              + ContentStructure.TileDir + File.separator
-              + map.tileFileName + ".til")
+          val tileFilename = (main.contentDir / ContentStructure.TileDir / map.tileFileName + ".til")
 
           main.createLinkedTileAndMapWindows(tileFilename, mapFilename)
 
@@ -97,9 +88,9 @@ class ScriptLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
     val scriptLoader = new JButton("Edit Script")
     scriptLoader.addActionListener(new ActionListener() {
       def actionPerformed(event: ActionEvent): Unit = {
-        val command =  ("notepad.exe " + main.contentDir + File.separator
-            + ContentStructure.ScriptDir + File.separator
-            + scriptFile.getFileName())
+        val command =  ("notepad.exe " + main.contentDir /
+            ContentStructure.ScriptDir /
+            scriptFile.getFileName())
         command.!
       }
     })

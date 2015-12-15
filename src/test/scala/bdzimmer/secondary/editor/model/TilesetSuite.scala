@@ -11,7 +11,6 @@ import javax.imageio.ImageIO
 import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.editor.controller.OldTilesetLoader
-import bdzimmer.secondary.export.controller.ExportImages
 
 
 class TilesetSuite extends FunSuite {
