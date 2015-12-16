@@ -55,6 +55,9 @@ public class DosGraphics extends JPanel {
     this(240, 320, 2);
   }
 
+  
+  // functions for drawing tiles and tilesets
+  
   /**
    * Draw a tile without transparency.
    * 
@@ -94,6 +97,28 @@ public class DosGraphics extends JPanel {
         }
       }
 
+    }
+  }
+  
+  
+  /**
+   * Draw the tileset.
+   * @param tiles    Tiles to draw
+   */
+  public void drawTileset(Tiles tiles) {
+    if (tiles.tiles != null) {
+      int numRows = (int)Math.ceil((float)tiles.attrs.count / tiles.attrs.tilesPerRow);
+      for (int i = 0; i < numRows; i++) { 
+        for (int j = 0; j < tiles.attrs.tilesPerRow; j++) {
+          int curTile = i * tiles.attrs.tilesPerRow + j;
+          if (curTile < tiles.attrs.count) {
+            drawTile(
+                tiles.tiles[curTile],
+                i * tiles.attrs.height,
+                j * tiles.attrs.width);
+          }
+        }
+      }
     }
   }
 

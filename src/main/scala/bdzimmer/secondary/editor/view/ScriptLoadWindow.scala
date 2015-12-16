@@ -11,11 +11,11 @@ import javax.swing.JButton
 import scala.collection.JavaConverters._
 import scala.sys.process._
 
+import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.export.model.{CollectionItem, TilesetItem, WorldItem}
-import bdzimmer.secondary.export.controller.WorldLoader
 import bdzimmer.secondary.editor.model._
+import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
 
 
@@ -35,20 +35,22 @@ class ScriptLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
     val mapImages = scriptFile.getMaps.asScala.map(x => {
 
-      val dosGraphics = new DosGraphics()
+      val image = for {
+        mapFile <- Result.fromFilename(main.contentDir / ContentStructure.MapDir / x + ".map")
+        map = new Map(mapFile)
+        tilesFile <- Result.fromFilename(
+            main.contentDir / ContentStructure.TileDir / map.tileFileName + ".til")
+        tiles = new OldTilesetLoader(tilesFile.getPath, TileOptions.getOrQuit("Tiles")).load()
+      } yield {
+        map.image(tiles, tiles.palettes(0))
+      }
 
-      val curMap = new Map(new File(main.contentDir / ContentStructure.MapDir / x + ".map"))
+      image match {
+        case Pass(x) => Some(x)
+        case Fail(x) => None
+      }
 
-      val curTiles = new Tiles(
-          TileOptions.getOrQuit("Tiles"),
-          new File(main.contentDir / ContentStructure.TileDir / curMap.tileFileName + ".til"),
-          dosGraphics.getRgbPalette())
-
-      dosGraphics.updateClut();
-
-      curMap.getMapImage(curTiles, dosGraphics);
-
-    })
+    }).flatten
 
 
     val subsetImage = new BufferedImage(

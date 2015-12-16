@@ -12,7 +12,7 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
-import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions}
 import bdzimmer.secondary.editor.model.Color
 import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
@@ -293,22 +293,15 @@ object ExportImages {
    */
   def getMapImage(inputFile: String, tilesDir: String): BufferedImage = {
 
-    val dg = new DosGraphics()
-
     val map = new Map(new File(inputFile))
 
-    // TODO: add a hard-coded TileAttributes to Map for Tiles?
-    val tiles = new Tiles(
-        TileOptions.getOrQuit("Tiles"),
-        new File(tilesDir / map.tileFileName + ".til"),
-        dg.getRgbPalette)
+    val tiles = new OldTilesetLoader(
+        tilesDir / map.tileFileName + ".til",
+        TileOptions.getOrQuit("Tiles")).load
 
-    dg.updateClut()
-
-    val image = map.getMapImage(tiles, dg)
+    val image = map.image(tiles, tiles.palettes(0))
 
     image
-
   }
 
 

@@ -377,9 +377,9 @@ public class TilesEditorWindow extends JFrame {
   public void paint(Graphics graphics) {
     super.paint(graphics);
 
-    this.dosGraphics.updateClut();
-    this.tileSet.drawTileset(this.dosGraphics);
-    this.dosGraphics.repaint();
+    dosGraphics.updateClut();
+    dosGraphics.drawTileset(tileSet);
+    dosGraphics.repaint();
 
   }
 

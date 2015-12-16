@@ -10,7 +10,8 @@ import javax.swing.JButton
 
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions}
+import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
 
 class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, "Load Maps") {
@@ -31,21 +32,17 @@ class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, 
 
   private def mapWidget(mapFilename: String, title: String): ImageWidget = {
 
-    val mapFile = new File(mapFilename)
+    // TODO: deal with tiles file doesn't exist
 
-    val dosGraphics = new DosGraphics()
+    val mapFile = new File(mapFilename)
     val map = mapFile.exists match {
       case true => new Map(mapFile)
       case false => new Map()
     }
 
     val tilesFilename =  main.contentDir / ContentStructure.TileDir / map.tileFileName + ".til"
-
-    val mapTiles = new Tiles(
-        TileOptions.getOrQuit("Tiles"),
-        new File(tilesFilename), dosGraphics.getRgbPalette())
-    dosGraphics.updateClut()
-    val mapImage = map.getMapImage(mapTiles, dosGraphics)
+    val mapTiles = new OldTilesetLoader(tilesFilename, TileOptions.getOrQuit("Tiles")).load()
+    val mapImage = map.image(mapTiles, mapTiles.palettes(0))
 
     val subsetImage = new BufferedImage(
         ImageWidget.DefaultWidth, ImageWidget.DefaultHeight, BufferedImage.TYPE_INT_RGB)

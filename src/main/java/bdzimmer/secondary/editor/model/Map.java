@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.awt.image.WritableRaster;
 
 public class Map {
 
@@ -241,33 +242,37 @@ public class Map {
    * Get an image of the map. 
    * 
    * @param tiles         Tiles object to use
-   * @param dosGraphics   DosGraphics instance to use for palette
+   * @param palette       palette to use
    * @return  image representation of the map
    */
-  public BufferedImage getMapImage(Tiles tiles, DosGraphics dosGraphics) {
+  public BufferedImage image(Tileset tiles, Palette palette) {
+    
+    BufferedImage mapImage = Tileset.indexedImage(
+        (mlr + 1) * tiles.width(),
+        (mud + 1) * tiles.height(),
+        palette, new Color(50, 0, 50));
 
-    // render image
+    WritableRaster wr = mapImage.getRaster();
 
-    BufferedImage mapImage = new BufferedImage((this.mlr + 1) * 16,
-        (this.mud + 1) * 16, BufferedImage.TYPE_INT_RGB);
-
-    for (int i = 0; i <= this.mud; i++) {
-      for (int j = 0; j <= this.mlr; j++) {
-
-        for (int k = 0; k < 16; k++) {
-          for (int l = 0; l < 16; l++) {
-            int curColor = tiles.getTiles()[this.map[i][j]][k][l];
-            mapImage.setRGB(j * 16 + l, i * 16 + k, dosGraphics.getPalette()[curColor]);
-          }
+    for (int i = 0; i <= mud; i++) {
+      for (int j = 0; j <= mlr; j++) {
+        
+        for (int k = 0; k < tiles.height(); k++) {    
+          wr.setPixels(
+              j * tiles.width(), i * tiles.height() + k,
+              tiles.width(), 1,
+              tiles.tiles()[this.map[i][j]].pixels()[k]);
         }
-
+        
         if (this.overMap[i][j] > 0) {
-          for (int k = 0; k < 16; k++) {
-            for (int l = 0; l < 16; l++) {
-              int curColor = tiles.getTiles()[this.overMap[i][j]][k][l];
+          for (int k = 0; k < tiles.height(); k++) {
+            for (int l = 0; l < tiles.width(); l++) {
+              int curColor = tiles.tiles()[this.overMap[i][j]].pixels()[k][l];
               if (curColor != 255) {
-                mapImage
-                    .setRGB(j * 16 + l, i * 16 + k, dosGraphics.getPalette()[curColor]);
+                wr.setPixels(
+                    j * tiles.width() + l, i * tiles.height() + k,
+                    1, 1,
+                    new int[]{curColor});
               }
             }
           }
@@ -277,9 +282,11 @@ public class Map {
     }
 
     return mapImage;
-
+    
   }
-
+  
+  
+  
   
   /**
    * Wipe out the contents of the Map.

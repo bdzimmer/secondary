@@ -15,18 +15,31 @@ public class Tiles {
   public final int[] tileProps;
   public final TileAttributes attrs;
 
+  
   /**
-   * Create a new tile set.
+   * Create a new tileset from the constituent pieces.
+   * @param tiles       tiles
+   * @param tileProps   tile properties
+   * @param attrs       tile attributes
+   */
+  public Tiles(int[][][] tiles, int[] tileProps, TileAttributes attrs) {
+    this.tiles = tiles;
+    this.tileProps = tileProps;
+    this.attrs = attrs;
+  }
+  
+  
+  /**
+   * Create an empty tile set.
    * @param ta      tile attributes to use.
    */
   public Tiles(TileAttributes ta) {
-
-    this.attrs = ta;
-    tiles = new int[ta.count][ta.height][ta.width];
-    tileProps = new int[ta.count];
-
+    this(new int[ta.count][ta.height][ta.width], new int[ta.count], ta);
   }
-
+  
+  
+  //TODO: ELIMINATE these save and load functions.
+  
   /**
    * Load the tile set from a file.
    * 
@@ -40,17 +53,9 @@ public class Tiles {
     
     // open file for input
     try {
-      QbInputStream graphicsIn = new QbInputStream(
-          new FileInputStream(tilesFile));
-
-      // System.out.println("Loading pixel data");
+      QbInputStream graphicsIn = new QbInputStream(new FileInputStream(tilesFile));
 
       int numThings = this.attrs.count;
-
-      // load small member files into a large member file.
-      // if (nTiles == 128) {
-      // nThings = 64;
-      // }
 
       for (int i = 0; i < numThings; i++) {
         for (int j = 0; j < this.attrs.height; j++) {
@@ -135,27 +140,6 @@ public class Tiles {
 
   }
 
-  /**
-   * Draw the tile set to a DosGraphics instance.
-   * @param dg    DosGraphics to draw to.
-   */
-  public void drawTileset(DosGraphics dg) {
-    if (this.tiles != null) {
-      int numRows = (int)Math.ceil((float)attrs.count / attrs.tilesPerRow);
-      for (int i = 0; i < numRows; i++) { 
-        for (int j = 0; j < attrs.tilesPerRow; j++) {
-          int curTile = i * attrs.tilesPerRow + j;
-          if (curTile < attrs.count) {
-            dg.drawTile(
-                tiles[curTile],
-                i * this.attrs.height,
-                j * this.attrs.width);
-          }
-        }
-      }
-    }
-  }
-  
   
   public int[][][] getTiles() {
     return tiles;
