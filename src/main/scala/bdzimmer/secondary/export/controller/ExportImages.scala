@@ -271,7 +271,7 @@ object ExportImages {
       transparent: Color = TransparentColor,
       indexed: Boolean = true): BufferedImage = {
 
-    val tileset = new OldTilesetLoader(inputFile, tileAttributes).load
+    val tileset = new OldTilesetLoader(inputFile, tileAttributes).load()
     val curPal = tileset.palettes(0)
 
     indexed match {
@@ -297,7 +297,7 @@ object ExportImages {
 
     val tiles = new OldTilesetLoader(
         tilesDir / map.tileFileName + ".til",
-        TileOptions.getOrQuit("Tiles")).load
+        TileOptions.getOrQuit("Tiles")).load()
 
     val image = map.image(tiles, tiles.palettes(0))
 

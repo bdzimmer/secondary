@@ -8,8 +8,9 @@
 package bdzimmer.secondary.editor.view;
 
 import bdzimmer.secondary.editor.model.Map;
-import bdzimmer.secondary.editor.model.Tiles;
+import bdzimmer.secondary.editor.model.Tileset;
 import bdzimmer.secondary.editor.view.MapViewPanel;
+import bdzimmer.secondary.editor.view.TilesEditorWindow;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
@@ -46,7 +47,8 @@ public class MapEditorWindow extends JFrame {
   
   private Map map;
   public String mapFileName;
-  private Tiles tileSet;
+  // private Tileset tileset;
+  private final TilesEditorWindow tilesEditorWindow;
   
   private final JCheckBoxMenuItem jmHasParallax = new JCheckBoxMenuItem("Parallax Layer");
   private MapViewPanel mapViewPanel;
@@ -68,13 +70,13 @@ public class MapEditorWindow extends JFrame {
       String mapsDir,
       Map map,
       String fileName,
-      Tiles tileSet,
-      int[][] rgbPalette) { // constructor
+      TilesEditorWindow tilesEditorWindow) { // constructor
 
     this.mapsDir = mapsDir;
     this.map = map;
     this.mapFileName = fileName;
-    this.tileSet = tileSet;
+    // this.tileset = tileset;
+    this.tilesEditorWindow = tilesEditorWindow;
     
     setTitle(generateTitle());
 
@@ -248,7 +250,10 @@ public class MapEditorWindow extends JFrame {
     // Set the layout manager.
     this.setLayout(new BorderLayout());
 
-    this.mapViewPanel = new MapViewPanel(this.map, this.tileSet, rgbPalette);
+    this.mapViewPanel = new MapViewPanel(
+        this.map,
+        this.tilesEditorWindow.getTileSet(),
+        this.tilesEditorWindow.getDosGraphics().getRgbPalette());
     this.add(mapViewPanel, BorderLayout.NORTH);
 
     this.add(statusBar, BorderLayout.SOUTH);
@@ -337,6 +342,9 @@ public class MapEditorWindow extends JFrame {
     if (ctlr < 0 || ctlr > 127) {
       return;
     }
+    
+
+    
     if (!ae.isMetaDown()) {
       if (this.overlayEdit == 0) {
         this.map.map[ctud][ctlr] = Main.currentTile; // setting tile
@@ -347,6 +355,7 @@ public class MapEditorWindow extends JFrame {
       }
       repaint();
     } else {
+      
       if (overlayEdit == 0) {
         Main.currentTile = this.map.map[ctud][ctlr]; // getting tile
       } else if (overlayEdit == 1) {
@@ -355,6 +364,7 @@ public class MapEditorWindow extends JFrame {
         Main.currentTile = this.map.paraMap[ctud][ctlr];
       }
     }
+ 
   }
   
   
@@ -482,6 +492,7 @@ public class MapEditorWindow extends JFrame {
   // --------------------------------------------------------
 
   private void updateGraphics() {
+    this.mapViewPanel.setTileset(tilesEditorWindow.getTileSet());
     this.mapViewPanel.updateGraphics();
     this.pack();
     this.repaint(); 
@@ -493,16 +504,5 @@ public class MapEditorWindow extends JFrame {
     this.mapViewPanel.repaint();  
   }
  
-
-  // basic getters
-  // ----------------------------------------------------------------
-
-  public int[][][] getTiles() {
-    return this.tileSet.getTiles();
-  }
-
-  public int[] getTileProps() {
-    return this.tileSet.getTileProps();
-  }
 
 }

@@ -10,7 +10,7 @@ import javax.swing.JButton
 
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions}
 import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
 
@@ -35,7 +35,7 @@ class TilesLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir
 
     val tilesFile = new File(tilesFilename)
     val tileAttrs = TileOptions.getOrQuit("Tiles")
-    val tilesImage = new OldTilesetLoader(tilesFilename, tileAttrs).load.image(0)
+    val tilesImage = new OldTilesetLoader(tilesFilename, tileAttrs).load().image(0)
 
     val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {

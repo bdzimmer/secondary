@@ -22,7 +22,7 @@ trait TilesetLoader {
 
 
 
-class OldTilesetLoader(val filename: String, val attrs: TileAttributes) extends TilesetLoader {
+class OldTilesetLoader(val filename: String, attrs: TileAttributes) extends TilesetLoader {
 
   // copied code from the Java Tiles class in here and refactored
   def load(): Tileset = {
@@ -39,7 +39,7 @@ class OldTilesetLoader(val filename: String, val attrs: TileAttributes) extends 
         (attrs.palStart to attrs.palEnd).map(x => OldTilesetLoader.loadColor(is)).toArray)
 
     // load tile properties
-    val properties = if (this.attrs.tileProperties) {
+    val properties = if (attrs.tileProperties) {
       (0 until attrs.count).map(x => OldTilesetLoader.loadProperties(is)).toArray
     } else {
       Array[TileProperties]()
@@ -53,12 +53,11 @@ class OldTilesetLoader(val filename: String, val attrs: TileAttributes) extends 
 
   def save(t: Tileset): Unit = {
     val os = new QbOutputStream(new FileOutputStream(filename))
+
     t.tiles.foreach(x => OldTilesetLoader.saveTile(os, x))
     t.palettes(0).colors.foreach(x => OldTilesetLoader.saveColor(os, x))
+    t.properties.foreach(x => OldTilesetLoader.saveProperties(os, x))
 
-    if (attrs.tileProperties) {
-      t.properties.foreach(x => OldTilesetLoader.saveProperties(os, x))
-    }
     os.close()
   }
 
@@ -119,5 +118,30 @@ object OldTilesetLoader {
   def saveProperties(os: QbOutputStream, properties: TileProperties): Unit = {
     os.writeQbUnsignedShortLow(properties.value)
   }
+
+  /////////////////
+
+
+  def fromAttributes(attrs: TileAttributes): Tileset = {
+
+    // empty tiles
+    val tiles = (0 until attrs.count).map(x => Tileset.emptyTile(attrs.width, attrs.height)).toArray
+
+    // empty palette
+    val palette = Palette(
+        attrs.palStart, attrs.palEnd,
+        (attrs.palStart to attrs.palEnd).map(x => Color(0, 0, 0)).toArray)
+
+    // empty tile properties
+    val properties = if (attrs.tileProperties) {
+      (0 until attrs.count).map(x => TileProperties(0)).toArray
+    } else {
+      Array[TileProperties]()
+    }
+
+    new Tileset(tiles, properties, List(palette), attrs.tilesPerRow)
+
+  }
+
 
 }

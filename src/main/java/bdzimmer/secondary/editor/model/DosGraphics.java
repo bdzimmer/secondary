@@ -105,17 +105,17 @@ public class DosGraphics extends JPanel {
    * Draw the tileset.
    * @param tiles    Tiles to draw
    */
-  public void drawTileset(Tiles tiles) {
-    if (tiles.tiles != null) {
-      int numRows = (int)Math.ceil((float)tiles.attrs.count / tiles.attrs.tilesPerRow);
+  public void drawTileset(Tileset tileset) {
+    if (tileset.tiles() != null) {
+      int numRows = (int)Math.ceil((float)tileset.tiles().length / tileset.tilesPerRow());
       for (int i = 0; i < numRows; i++) { 
-        for (int j = 0; j < tiles.attrs.tilesPerRow; j++) {
-          int curTile = i * tiles.attrs.tilesPerRow + j;
-          if (curTile < tiles.attrs.count) {
+        for (int j = 0; j < tileset.tilesPerRow(); j++) {
+          int curTile = i * tileset.tilesPerRow() + j;
+          if (curTile < tileset.tiles().length) {
             drawTile(
-                tiles.tiles[curTile],
-                i * tiles.attrs.height,
-                j * tiles.attrs.width);
+                tileset.tiles()[curTile].pixels(),
+                i * tileset.height(),
+                j * tileset.width());
           }
         }
       }

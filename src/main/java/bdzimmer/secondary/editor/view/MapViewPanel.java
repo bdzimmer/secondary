@@ -7,7 +7,7 @@ package bdzimmer.secondary.editor.view;
 
 import bdzimmer.secondary.editor.model.DosGraphics;
 import bdzimmer.secondary.editor.model.Map;
-import bdzimmer.secondary.editor.model.Tiles;
+import bdzimmer.secondary.editor.model.Tileset;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -22,7 +22,7 @@ public class MapViewPanel extends JPanel {
 
   private DosGraphics dosGraphics;
 
-  private Tiles tileSet;
+  private Tileset tileset;
   private int[][] rgbPalette;
 
   private boolean parallaxEdit = false;
@@ -47,10 +47,10 @@ public class MapViewPanel extends JPanel {
    * @param tileSet       tiles to use when displaying the map
    * @param rgbPalette    palette for displaying the map
    */
-  public MapViewPanel(Map map, Tiles tileSet, int[][] rgbPalette) {
+  public MapViewPanel(Map map, Tileset tileset, int[][] rgbPalette) {
 
     this.map = map;
-    this.tileSet = tileSet;
+    this.tileset = tileset;
     this.rgbPalette = rgbPalette;
 
     this.dosGraphics = new DosGraphics(192, 320, this.scale); 
@@ -78,7 +78,7 @@ public class MapViewPanel extends JPanel {
   }
 
   private void drawMap() {
-    if (this.tileSet != null) {
+    if (this.tileset != null) {
       // Draw map on screen.
   
       if (this.parallaxEdit) {
@@ -92,8 +92,9 @@ public class MapViewPanel extends JPanel {
             } else {
               curTile = 0;
             }
-            this.dosGraphics.drawTile(this.tileSet.getTiles()[curTile], i
-                * this.tileSet.attrs.height, j * this.tileSet.attrs.width);
+            this.dosGraphics.drawTile(
+                tileset.tiles()[curTile].pixels(),
+                i* tileset.height(), j * tileset.width());
 
           }
         }
@@ -110,12 +111,13 @@ public class MapViewPanel extends JPanel {
               } else {
                 curTile = 0;
               }
-              this.dosGraphics.drawTile(this.tileSet.getTiles()[curTile], i
-                  * this.tileSet.attrs.height, j * this.tileSet.attrs.width);
+              this.dosGraphics.drawTile(
+                  tileset.tiles()[curTile].pixels(),
+                  i * this.tileset.height(), j * tileset.width());
             } else {
               this.dosGraphics.drawTile(
-                  new int[this.tileSet.attrs.height][this.tileSet.attrs.width],
-                  i * this.tileSet.attrs.height, j * this.tileSet.attrs.width);
+                  new int[tileset.height()][tileset.width()],
+                  i * tileset.height(), j * tileset.width());
             }
           }
         }
@@ -131,10 +133,10 @@ public class MapViewPanel extends JPanel {
                 curTile = 0;
               } 
               if (curTile > 0) {
-                this.dosGraphics
-                    .drawTileTrans(this.tileSet.getTiles()[curTile], i
-                        * this.tileSet.attrs.height, j
-                        * this.tileSet.attrs.width);
+                this.dosGraphics.drawTileTrans(
+                    tileset.tiles()[curTile].pixels(),
+                    i * tileset.height(),
+                    j * tileset.width());
               }
             }
           }
@@ -169,7 +171,7 @@ public class MapViewPanel extends JPanel {
     System.out.println("got graphics");
 
     // Bounds drawing...
-    if (this.dispBounds && this.tileSet != null) {
+    if (this.dispBounds && this.tileset != null) {
         
       dgGraphics.setColor(new Color(dosGraphics.getPalette()[255]));
       for (int i = 0; i < 12; i++) {
@@ -183,45 +185,41 @@ public class MapViewPanel extends JPanel {
             } else {
               curTile = 0;
             }
-            if ((this.tileSet.getTileProps()[curTile] & 1) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            
+            if ((tileset.properties()[curTile].value() & 1) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale + tileset.height() * scale - 1,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 2) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 2) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 4) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 4) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 8) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale);
+            if ((tileset.properties()[curTile].value() & 8) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 16) != 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 16) != 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
 
           }
@@ -230,7 +228,7 @@ public class MapViewPanel extends JPanel {
           
       dgGraphics.setColor(new Color(dosGraphics.getPalette()[10]));
       
-      if (this.dispOver) {
+      if (dispOver) {
         for (int i = 0; i < 12; i++) {
           for (int j = 0; j < 20; j++) {
             int curTile;
@@ -240,47 +238,41 @@ public class MapViewPanel extends JPanel {
             } else {
               curTile = 0;
             }
-            if ((this.tileSet.getTileProps()[curTile] & 1) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 1) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale + tileset.height() * scale - 1,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 2) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 2) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 4) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 4) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 8) == 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale);
+            if ((tileset.properties()[curTile].value() & 8) == 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale);
             }
-            if ((this.tileSet.getTileProps()[curTile] & 16) != 0) {
-              dgGraphics.drawLine(j * this.tileSet.attrs.width * this.scale, i
-                  * this.tileSet.attrs.height * this.scale, j
-                  * this.tileSet.attrs.width * this.scale
-                  + this.tileSet.attrs.width * this.scale - 1, i
-                  * this.tileSet.attrs.height * this.scale
-                  + this.tileSet.attrs.height * this.scale - 1);
+            if ((tileset.properties()[curTile].value() & 16) != 0) {
+              dgGraphics.drawLine(
+                  j * tileset.width()  * scale,
+                  i * tileset.height() * scale,
+                  j * tileset.width()  * scale + tileset.width()  * scale - 1,
+                  i * tileset.height() * scale + tileset.height() * scale - 1);
             }
-
           }
         }
       }
@@ -346,6 +338,10 @@ public class MapViewPanel extends JPanel {
 
   public void setParallaxEdit(boolean parallaxEdit) {
     this.parallaxEdit = parallaxEdit;
+  }
+  
+  public void setTileset(Tileset tileset) {
+    this.tileset = tileset;
   }
 
 }

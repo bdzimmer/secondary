@@ -6,6 +6,7 @@ package bdzimmer.secondary.editor.view;
 
 import bdzimmer.secondary.editor.controller.FloodFill;
 import bdzimmer.secondary.editor.model.DosGraphics;
+import bdzimmer.secondary.editor.model.TileProperties;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -275,8 +276,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpBottom.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 1;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 1);
         updateTileProps();
       }
 
@@ -284,8 +285,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpRight.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 2;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 2);
         updateTileProps();
       }
 
@@ -293,8 +294,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpLeft.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 4;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 4);
         updateTileProps();
       }
 
@@ -302,8 +303,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpTop.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 8;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 8);
         updateTileProps();
       }
 
@@ -311,8 +312,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpOverlay.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 16;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 16);
         updateTileProps();
       }
 
@@ -320,8 +321,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpLeftStair.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 32;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 32);
         updateTileProps();
       }
 
@@ -329,8 +330,8 @@ public class ZoomedTileWindow extends JFrame {
 
     tpRightStair.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        tileWindow.getTileSet().getTileProps()[currentTile] = tileWindow
-            .getTileSet().getTileProps()[currentTile] ^ 64;
+        int prop = tileWindow.getTileSet().properties()[currentTile].value();
+        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 64);
         updateTileProps();
       }
 
@@ -459,10 +460,7 @@ public class ZoomedTileWindow extends JFrame {
     // evidently this is more proper than a switch thingy
 
     if (whichWindow == 3) { // zoom window(
-      int tud = (int) ((event.getY() - dosGraphics.getY()) / zoomFactor / 2); // Painting
-                                                                            // in
-                                                                            // zoom
-                                                                            // window.
+      int tud = (int) ((event.getY() - dosGraphics.getY()) / zoomFactor / 2);
       int tlr = (int) ((event.getX() - dosGraphics.getX()) / zoomFactor / 2);
 
       // System.out.println("In ZoomWindow -- " + tud + " " + tlr);
@@ -500,8 +498,7 @@ public class ZoomedTileWindow extends JFrame {
         for (int j = 0; j < tile[0].length; j++) {
           for (int k = 0; k < zoomFactor; k++) {
             for (int l = 0; l < zoomFactor; l++) {
-              dosGraphics.setPixel(i * zoomFactor + k, j * zoomFactor + l,
-                  tile[i][j]);
+              dosGraphics.setPixel(i * zoomFactor + k, j * zoomFactor + l, tile[i][j]);
             }
           }
         }
@@ -517,8 +514,8 @@ public class ZoomedTileWindow extends JFrame {
    * @param tileSet       array describing tile set
    * @param whichTile     which tile in the tile set
    */
-  public void setTile(int[][][] tileSet, int whichTile) {
-    tile = tileSet[whichTile]; // this may or may not work
+  public void setTile(int[][] tile, int whichTile) {
+    this.tile = tile;
     currentTile = whichTile;
     this.tileHeight = tile.length;
     this.tileWidth = tile[0].length;
@@ -576,46 +573,47 @@ public class ZoomedTileWindow extends JFrame {
 
   private void updateTileProps() {
     int tpb = 0;
-    if (this.tileWindow.getTileSet().getTileProps() != null) {
-      tpb = this.tileWindow.getTileSet().getTileProps()[currentTile];
+    if (this.tileWindow.getTileSet().properties().length > 0) {
+      tpb = this.tileWindow.getTileSet().properties()[currentTile].value();
     }
-    // System.out.println((tpb & 1) + " " + (tpb & 2) + " " + (tpb & 4) + " " +
-    // (tpb & 8) + " " + (tpb & 16));
 
+    Color onColor = new Color(128, 0, 128);
+    Color offColor = new Color(0, 0, 0);
+    
     if ((tpb & 1) == 0) {
-      tpBottom.setBackground(new Color(128, 0, 128));
+      tpBottom.setBackground(onColor);
     } else {
-      tpBottom.setBackground(new Color(0, 0, 0));
+      tpBottom.setBackground(offColor);
     }
     if ((tpb & 2) == 0) {
-      tpRight.setBackground(new Color(128, 0, 128));
+      tpRight.setBackground(onColor);
     } else {
-      tpRight.setBackground(new Color(0, 0, 0));
+      tpRight.setBackground(offColor);
     }
     if ((tpb & 4) == 0) {
-      tpLeft.setBackground(new Color(128, 0, 128));
+      tpLeft.setBackground(onColor);
     } else {
-      tpLeft.setBackground(new Color(0, 0, 0));
+      tpLeft.setBackground(offColor);
     }
     if ((tpb & 8) == 0) {
-      tpTop.setBackground(new Color(128, 0, 128));
+      tpTop.setBackground(onColor);
     } else {
-      tpTop.setBackground(new Color(0, 0, 0));
+      tpTop.setBackground(offColor);
     }
     if ((tpb & 16) > 0) {
-      tpOverlay.setBackground(new Color(128, 0, 128));
+      tpOverlay.setBackground(onColor);
     } else {
-      tpOverlay.setBackground(new Color(0, 0, 0));
+      tpOverlay.setBackground(offColor);
     }
     if ((tpb & 32) > 0) {
-      tpLeftStair.setBackground(new Color(128, 0, 128));
+      tpLeftStair.setBackground(onColor);
     } else {
-      tpLeftStair.setBackground(new Color(0, 0, 0));
+      tpLeftStair.setBackground(offColor);
     }
     if ((tpb & 64) > 0) {
-      tpRightStair.setBackground(new Color(128, 0, 128));
+      tpRightStair.setBackground(onColor);
     } else {
-      tpRightStair.setBackground(new Color(0, 0, 0));
+      tpRightStair.setBackground(offColor);
     }
 
   }

@@ -10,7 +10,7 @@ import javax.swing.JButton
 
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions, Tiles}
+import bdzimmer.secondary.editor.model.{DosGraphics, TileAttributes, TileOptions}
 import bdzimmer.secondary.editor.controller.OldTilesetLoader
 
 
@@ -35,7 +35,7 @@ class SpriteLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDi
 
     val tilesFile = new File(spritesFilename)
     val tileAttrs = TileOptions.types.get(tiletype).getOrElse(TileOptions.Default)
-    val tilesImage = new OldTilesetLoader(spritesFilename, tileAttrs).load.image(0)
+    val tilesImage = new OldTilesetLoader(spritesFilename, tileAttrs).load().image(0)
 
     val subsetImage = new BufferedImage(
         ImageWidget.DefaultWidth, ImageWidget.DefaultHeight, BufferedImage.TYPE_INT_RGB)

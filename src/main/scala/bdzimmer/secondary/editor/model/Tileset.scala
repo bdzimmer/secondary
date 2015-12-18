@@ -60,7 +60,7 @@ class Tileset (
   // We want to be able to assume that the tiles are all the same size
   // and probably that the palettes are also the same size.
 
-  val height  = tiles(0).pixels.size
+  val height = tiles(0).pixels.size
   val width = tiles(0).pixels(0).size
 
 
@@ -162,11 +162,29 @@ object Tileset {
 
   }
 
+  // modify an int[][] with a Palette object
+  def modPalette(pal: Palette, fulPal: Array[Array[Int]]): Unit = {
+    (pal.start to pal.end).foreach(i => {
+      val color = pal.colors(i - pal.start)
+      fulPal(i)(0) = color.r
+      fulPal(i)(1) = color.g
+      fulPal(i)(2) = color.b
+    })
+  }
+
+  // extract a new Palette object fom an int[][]
+  def extractPalette(pal: Palette, fulPal: Array[Array[Int]]): Palette = {
+     pal.copy(colors = (pal.start to pal.end).map(i => {
+       new Color(fulPal(i)(0), fulPal(i)(1), fulPal(i)(2))
+     }).toArray)
+  }
+
+
   // untested temporary functions for converting to and from the old Tiles class,
   // with palette modification side effects. This will allow the next step of eliminating
   // the tile saving and loading code from the old Tiles class.
 
-  // TODO: ELIMINATE save and load functions in the old Tiles class.
+  /*
 
   // convert to old Tiles class; modify palette array
   def toTiles(tileset: Tileset, fulPal: Array[Array[Int]]): Tiles = {
@@ -204,6 +222,9 @@ object Tileset {
         List(pal),
         tiles.attrs.tilesPerRow)
   }
+  *
+  *
+  */
 
 }
 

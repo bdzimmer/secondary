@@ -95,7 +95,7 @@ class PaletteWindow extends JFrame {
 
         int clickedColor = (int) ((event.getY() / 16) * 16) + (int) (event.getX() / 16);
         if (clickedColor < 256 && clickedColor >= 0) {
-          if (!event.isMetaDown()) { // left click
+          if (event.isMetaDown()) { // right click
 
             // get a new current color
             Main.currentColor = clickedColor;
@@ -107,7 +107,7 @@ class PaletteWindow extends JFrame {
             repaint();
 
           } else {
-            // replace the color in the palette
+            // left click -  replace the color in the palette
 
             dosGraphics.getPalette()[clickedColor] = dosGraphics.getPalette()[Main.currentColor];
             dosGraphics.getRgbPalette()[clickedColor][0] = dosGraphics
@@ -219,6 +219,11 @@ class PaletteWindow extends JFrame {
   }
 
   public void refreshPalette() {
+    
+    dosGraphics.updateClut();
+    
+    System.out.println("refreshed palette");
+    
     for (int i = 0; i < 16; i++) {
       for (int j = 0; j < 16; j++) {
         for (int k = 0; k < 8; k++) {
@@ -256,5 +261,7 @@ class PaletteWindow extends JFrame {
     gr.drawRect((Main.currentColor % 16) * 16,
         (int) (Main.currentColor / 16) * 16, 16, 16);
 
+    System.out.println("painted");
+  
   }
 }

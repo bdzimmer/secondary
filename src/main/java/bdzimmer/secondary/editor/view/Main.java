@@ -73,7 +73,9 @@ import bdzimmer.secondary.editor.model.ContentStructure;
 import bdzimmer.secondary.editor.model.AssetMetadata;
 import bdzimmer.secondary.editor.model.Map;
 import bdzimmer.secondary.editor.model.TileOptions;
-import bdzimmer.secondary.editor.model.Tiles;
+import bdzimmer.secondary.editor.model.Tileset;
+import bdzimmer.secondary.editor.model.TileAttributes;
+import bdzimmer.secondary.editor.controller.OldTilesetLoader;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -205,15 +207,17 @@ public class Main extends JFrame {
    * @param mapFileName   absolute path of map file
    */
   public void createLinkedTileAndMapWindows(String tileFileName, String mapFileName) {
-
-    Tiles tiles;
+    
+    TileAttributes tileAttrs = TileOptions.getOrQuit("Tiles");
+    
+    Tileset tiles;
+    
     if (!"".equals(tileFileName)) {
-      tiles = new Tiles(
-        TileOptions.getOrQuit("Tiles"),
-        new File(tileFileName),
-        Main.globalPalette);
+      tiles = new OldTilesetLoader(tileFileName, tileAttrs).load();    
+      Tileset.modPalette(tiles.palettes().apply(0), Main.globalPalette);
+      Main.paletteWindow.repaint();
     } else {
-      tiles = new Tiles(TileOptions.getOrQuit("Tiles"));
+      tiles = OldTilesetLoader.fromAttributes(tileAttrs);
     }
     
     Map map;
@@ -225,15 +229,14 @@ public class Main extends JFrame {
     
     TilesEditorWindow tileWindow = new TilesEditorWindow(
         Main.this.contentDir + File.separator + ContentStructure.TileDir(),
-        tiles, "Tileset",
+        tiles, tileAttrs, "Tileset",
         tileFileName, Main.paletteWindow);
     
     new MapEditorWindow(
         contentDir + File.separator + ContentStructure.MapDir(),
         map,
         mapFileName,
-        tileWindow.getTileSet(),
-        Main.globalPalette);
+        tileWindow);
     
     tileWindow.toFront();
 
@@ -248,22 +251,24 @@ public class Main extends JFrame {
    */
   public void createSpriteWindow(String spritesFileName, String tiletype) {
     
-    Tiles spriteTiles;
+    TileAttributes spriteAttributes = TileOptions.getOrQuit(tiletype);
+    
+    Tileset spriteTiles;
     
     if (!"".equals(spritesFileName)) {
-      spriteTiles = new Tiles(
-        TileOptions.getOrQuit(tiletype),
-        new File(spritesFileName),
-        Main.globalPalette);
+      spriteTiles = new OldTilesetLoader(spritesFileName, spriteAttributes).load();
+      Tileset.modPalette(spriteTiles.palettes().apply(0), Main.globalPalette);
+      Main.paletteWindow.repaint();
+      
     } else {
-      spriteTiles = new Tiles(TileOptions.getOrQuit(tiletype));
+      spriteTiles = OldTilesetLoader.fromAttributes(TileOptions.getOrQuit(tiletype));
     }
     
     TilesEditorWindow spriteWindow = new TilesEditorWindow(
         Main.this.contentDir + File.separator + ContentStructure.SpriteDir(),
-        spriteTiles, "Sprites",
+        spriteTiles, spriteAttributes, "Sprites",
         spritesFileName, Main.paletteWindow);
-    spriteWindow.dosGraphics.setRgbPalette(globalPalette);
+    spriteWindow.getDosGraphics().setRgbPalette(globalPalette);
 
     spriteWindow.setLocationRelativeTo(null);
     
