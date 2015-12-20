@@ -68,8 +68,7 @@ public class ZoomedTileWindow extends JFrame {
           * zoomFactor, 2);
       tileTile = new DosGraphics(tileHeight * 3, tileWidth * 3, 2);
     } else {
-      dosGraphics = new DosGraphics(64, 64, 2); // call normal DosGraphics
-                                                  // constructor
+      dosGraphics = new DosGraphics(64, 64, 2); 
       tileTile = new DosGraphics(64, 64, 2);
     }
 
@@ -99,19 +98,16 @@ public class ZoomedTileWindow extends JFrame {
       @Override
       public void mouseClicked(MouseEvent event) {
         // Do nothing.
-
       }
 
       @Override
       public void mouseEntered(MouseEvent event) {
         // Do nothing.
-
       }
 
       @Override
       public void mouseExited(MouseEvent event) {
         // Do nothing.
-
       }
 
       @Override
@@ -275,89 +271,52 @@ public class ZoomedTileWindow extends JFrame {
     this.add(layoutPanel, BorderLayout.SOUTH);
 
     tpBottom.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 1);
-        updateTileProps();
-      }
-
+      public void actionPerformed(ActionEvent event) { xorProperyBits(1); }
     });
 
     tpRight.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 2);
-        updateTileProps();
-      }
-
+      public void actionPerformed(ActionEvent event) { xorProperyBits(2); }
     });
 
     tpLeft.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 4);
-        updateTileProps();
-      }
-
+      public void actionPerformed(ActionEvent event) { xorProperyBits(4); }
     });
 
     tpTop.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 8);
-        updateTileProps();
-      }
-
+      public void actionPerformed(ActionEvent event) { xorProperyBits(8); }
     });
 
     tpOverlay.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 16);
-        updateTileProps();
-      }
-
+      public void actionPerformed(ActionEvent event) { xorProperyBits(16); }
     });
 
     tpLeftStair.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 32);
-        updateTileProps();
-      }
+      public void actionPerformed(ActionEvent event) { xorProperyBits(32); }
 
     });
 
     tpRightStair.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        int prop = tileWindow.getTileSet().properties()[currentTile].value();
-        tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ 64);
-        updateTileProps();
-      }
-
+      public void actionPerformed(ActionEvent event) { xorProperyBits(64); }
     });
 
+    zoomIn.addActionListener(new ActionListener() { // Anonymous Listener.
+      public void actionPerformed(ActionEvent event) {
+        System.out.println("Zooming in.");
+        setZoomFactor(zoomFactor + 1);
+      }
+    });
+
+    zoomOut.addActionListener(new ActionListener() { // Anonymous Listener.
+      public void actionPerformed(ActionEvent event) {
+        System.out.println("Zooming out.");
+        setZoomFactor(zoomFactor - 1);
+      }
+    });
+    
     this.pack();
     this.setTitle(title);
     this.setVisible(true);
     this.repaint();
-
-    zoomIn.addActionListener(new ActionListener() { // Anonymous Listener.
-          public void actionPerformed(ActionEvent event) {
-            System.out.println("Zooming in.");
-            setZoomFactor(zoomFactor + 1);
-
-          }
-
-        });
-
-    zoomOut.addActionListener(new ActionListener() { // Anonymous Listener.
-          public void actionPerformed(ActionEvent event) {
-            System.out.println("Zooming out.");
-            setZoomFactor(zoomFactor - 1);
-          }
-
-        });
 
     this.setResizable(false);
     this.updateGraphics();
@@ -445,6 +404,18 @@ public class ZoomedTileWindow extends JFrame {
     this.tileWindow.repaint();
   }
 
+  
+  private void xorProperyBits(int bits) {
+    if (tileWindow.getTileSet().properties().length > 0) {
+      int prop = tileWindow.getTileSet().properties()[currentTile].value();
+      tileWindow.getTileSet().properties()[currentTile] = new TileProperties(prop ^ bits);
+      updateTileProps();
+      System.out.println("toggled tile property");   
+    } else {
+      System.out.println("no tile properties!");
+    }
+  }
+  
   
   private int[][] copyTile() {
     int[][] tempTile = new int[this.tile.length][this.tile[0].length];

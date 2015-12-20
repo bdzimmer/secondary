@@ -138,9 +138,11 @@ class Tileset (
 }
 
 
+
 object Tileset {
 
   val Transparent = Color(50, 0, 50)
+
 
   // create an empty (zeroed) tile of the specified width and height
   def emptyTile(width: Int, height: Int): Tile = {
@@ -150,6 +152,7 @@ object Tileset {
     }
     Tile(pixels)
   }
+
 
   // create an indexed BufferedImage with a palette
   def indexedImage(
@@ -162,6 +165,7 @@ object Tileset {
 
   }
 
+
   // modify an int[][] with a Palette object
   def modPalette(pal: Palette, fulPal: Array[Array[Int]]): Unit = {
     (pal.start to pal.end).foreach(i => {
@@ -172,59 +176,13 @@ object Tileset {
     })
   }
 
+
   // extract a new Palette object fom an int[][]
   def extractPalette(pal: Palette, fulPal: Array[Array[Int]]): Palette = {
      pal.copy(colors = (pal.start to pal.end).map(i => {
        new Color(fulPal(i)(0), fulPal(i)(1), fulPal(i)(2))
      }).toArray)
   }
-
-
-  // untested temporary functions for converting to and from the old Tiles class,
-  // with palette modification side effects. This will allow the next step of eliminating
-  // the tile saving and loading code from the old Tiles class.
-
-  /*
-
-  // convert to old Tiles class; modify palette array
-  def toTiles(tileset: Tileset, fulPal: Array[Array[Int]]): Tiles = {
-
-    val pal = tileset.palettes(0)
-
-    // modify palette
-    (pal.start to pal.end).foreach(i => {
-      val color = pal.colors(i - pal.start)
-      fulPal(i)(0) = color.r
-      fulPal(i)(1) = color.g
-      fulPal(i)(2) = color.b
-    })
-
-    val attrs = new TileAttributes(
-        tileset.height, tileset.width, tileset.tiles.length,
-        pal.start, pal.end,
-        tileset.properties.length > 0, tileset.tilesPerRow)
-
-    new Tiles(tileset.tiles.map(_.pixels), tileset.properties.map(_.value), attrs)
-  }
-
-  // convert from old Tiles class and palette array
-  def fromTiles(tiles: Tiles, fulPal: Array[Array[Int]]): Tileset = {
-
-    val pal = new Palette(
-        tiles.attrs.palStart, tiles.attrs.palEnd,
-        (tiles.attrs.palStart to tiles.attrs.palEnd).map(i => {
-          new Color(fulPal(i)(0), fulPal(i)(1), fulPal(i)(2))
-        }).toArray)
-
-    new Tileset(
-        tiles.tiles.map(Tile(_)),
-        tiles.tileProps.map(TileProperties(_)),
-        List(pal),
-        tiles.attrs.tilesPerRow)
-  }
-  *
-  *
-  */
 
 }
 

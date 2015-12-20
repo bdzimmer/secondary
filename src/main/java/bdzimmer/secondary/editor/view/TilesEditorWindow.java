@@ -29,25 +29,29 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+
+
 public class TilesEditorWindow extends JFrame {
   
-  private static final long serialVersionUID = 0; // Meaningless junk.
+  private static final long serialVersionUID = 0;
   
   private final String tilesDir;
+  private final String title;
+  
+  private final StatusBar statusBar = new StatusBar();
+  private final int scale = 3;
+  
   private Tileset tileset;
   private TileAttributes attrs;
-  public String tileFileName;
-  private final String title;
+  private String tileFilename;
 
   private DosGraphics dosGraphics;
   private PaletteWindow paletteWindow;
   private ZoomedTileWindow zoomWindow;
 
   private JPanel graphicsPanel = new JPanel();
-  private StatusBar myStatusBar = new StatusBar();
 
   private int currentTile;
-  private int scale = 3;
 
   
   /**
@@ -55,6 +59,7 @@ public class TilesEditorWindow extends JFrame {
    * 
    * @param tilesDir            tiles directory
    * @param tiles               tile set to edit in the window
+   * @param attribute           TileAttributes for the tileset
    * @param title               general title for window
    * @param fileName            file name of tiles (for save menu option)
    * @param paletteWindow       palette window to edit 
@@ -64,119 +69,54 @@ public class TilesEditorWindow extends JFrame {
       Tileset tiles,
       TileAttributes attributes,
       String title,
-      String fileName,
+      String filename,
       PaletteWindow paletteWindow) { 
     
     this.tilesDir = tilesDir;    
     this.tileset = tiles;
     this.attrs = attributes;
     
-    this.tileFileName = fileName;
+    this.tileFilename = filename;
     this.title = title;
-    setTitle(generateTitle());
+    updateTitle();
     
     this.paletteWindow = paletteWindow;
-
-    ////// UI stuff
+  
+    // UI stuff
     
+    // redraw on focus gained
     addFocusListener(new FocusAdapter() {
-      public void focusGained(FocusEvent event) {
-        repaint();
-        // System.out.println("Focus gained!");
-      }
+      public void focusGained(FocusEvent event) { repaint(); }
     });
-
-    JMenuBar mainMenu = new JMenuBar();
-    setJMenuBar(mainMenu);
-
-    // file menu
-    JMenu fileMenu = new JMenu("File");
-
-    JMenuItem jmOpen = new JMenuItem("Open");
-    JMenuItem jmSave = new JMenuItem("Save");
-    JMenuItem jmSaveAs = new JMenuItem("Save As..");
-    JMenuItem jmChange = new JMenuItem("Change settings...");
-
-    fileMenu.add(jmOpen);
-    fileMenu.add(jmSave);
-    fileMenu.add(jmSaveAs);
-    fileMenu.addSeparator();
-    fileMenu.add(jmChange);
-    mainMenu.add(fileMenu);
-
-    // tools menu 6-17-10
-
-    JMenu toolsMenu = new JMenu("Tools");
-
-    JMenuItem jmSwap = new JMenuItem("Swap transparency");
-    JMenuItem jmBlacken = new JMenuItem("Blacken");
-
-    toolsMenu.add(jmSwap);
-    toolsMenu.add(jmBlacken);
-    mainMenu.add(toolsMenu);
-
+    
+    // main menu
+    setJMenuBar(mainMenu());
+    
+    // clicking to select and manipulate tiles
     this.getContentPane().addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent event) {
-        System.out.println("Clicked -- " + event.getX() + " " + event.getY());
+        // System.out.println("Clicked -- " + event.getX() + " " + event.getY());
         handleClicks(event);
       }
     });
 
-    jmOpen.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        chooseLoadTileset();
-      }
-    });
-
-    jmSave.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {        
-        saveTileset(tileFileName);
-      }
-    });
-
-    jmSaveAs.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        chooseSaveTileset();
-      }
-    });
-
-    jmChange.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        changeTiles();
-      }
-    });
-
-    jmSwap.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        swapTransparency();
-        repaint();
-      }
-    });
-
-    jmBlacken.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        blacken();
-        repaint();
-      }
-    });
-
-    // Set the layout manager.
-    // setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
-   
+    // tileset visualization
     dosGraphics = createDosGraphics();
-    
     dosGraphics.setRgbPalette(paletteWindow.getDosGraphics().getRgbPalette());
     graphicsPanel.add(dosGraphics);
-
     this.add(graphicsPanel, BorderLayout.NORTH);
-    this.add(myStatusBar, BorderLayout.SOUTH);
+    
+    // status bar
+    this.add(statusBar, BorderLayout.SOUTH);
 
     pack();
     this.setResizable(false);
+    
     setVisible(true);
 
   }
 
+  
   // create an appropriately sized scaled DosGraphics for the tileset
   private DosGraphics createDosGraphics() {
     return new DosGraphics(
@@ -184,7 +124,6 @@ public class TilesEditorWindow extends JFrame {
         tileset.tilesPerRow() * tileset.width(),
         this.scale);
   }
-  
   
   
   private void handleClicks(MouseEvent event) {
@@ -201,51 +140,45 @@ public class TilesEditorWindow extends JFrame {
       // left click -- set tile in window
       this.currentTile = selectedTile;
       
-      Main.currentTile = this.currentTile;
+      Main.currentTile = currentTile;
       Main.currentTileBitmap = tileset.tiles()[currentTile].pixels();
 
-      if (this.zoomWindow == null || !this.zoomWindow.isVisible()) {
-        this.zoomWindow = new ZoomedTileWindow(
+      if (zoomWindow == null || !zoomWindow.isVisible()) {
+        zoomWindow = new ZoomedTileWindow(
             "Zoom",
             tileset.tiles()[currentTile].pixels(),
-            this.dosGraphics.getRgbPalette());
-        this.zoomWindow.setTileWindow(this);
-        this.zoomWindow.setLocationRelativeTo(this);
-
+            dosGraphics.getRgbPalette());
+        
+        zoomWindow.setTileWindow(this);
+        zoomWindow.setLocationRelativeTo(this);
       } else {
-        this.zoomWindow.setTile(this.tileset.tiles()[currentTile].pixels(), currentTile);
+        zoomWindow.setTile(tileset.tiles()[currentTile].pixels(), currentTile);
       }
 
     } else {
       
       int newTile = selectedTile;
 
-      // Calculate maximum size we can copy...
-      int udlength;
-      int lrlength;
-      if (tileset.height() > Main.currentTileBitmap.length) {
-        udlength = Main.currentTileBitmap.length;
-      } else {
-        udlength = tileset.height();
-      }
-      if (tileset.width() > Main.currentTileBitmap[0].length) {
-        lrlength = Main.currentTileBitmap[0].length;
-      } else {
-        lrlength = tileset.width();
-      }
-
+      // Calculate maximum size we can copy
+      // The global tile bitmap here seems kind of dumb, but it's there to allow
+      // copying tiles across tileset -- important functionality. 
+      int udlength = Math.min(tileset.height(), Main.currentTileBitmap.length);
+      int lrlength = Math.min(tileset.width(), Main.currentTileBitmap[0].length);
+      
       for (int i = 0; i < udlength; i++) {
         for (int j = 0; j < lrlength; j++) {
           tileset.tiles()[newTile].pixels()[i][j] = Main.currentTileBitmap[i][j];
         }
       }
 
-      this.repaint();
+      repaint();
     }
-    this.myStatusBar.update(0, 0, "" + currentTile);
+    
+    statusBar.update(0, 0, "" + currentTile);
 
   }
 
+  
   // convert all color indices that are RGB(0, 0, 0) to 0
   private void blacken() {
 
@@ -273,6 +206,7 @@ public class TilesEditorWindow extends JFrame {
 
   }
   
+  
   // swap colors 0 and 255
   private void swapTransparency() {
     for (int i = 0; i < tileset.tiles().length; i++) {
@@ -296,26 +230,29 @@ public class TilesEditorWindow extends JFrame {
    */
   public void changeTiles() {
 
-    this.tileset = OldTilesetLoader.fromAttributes(TileOptions.getOptions());
+    // mutate the TileAttributes and create a new tileset.
+    this.attrs = TileOptions.getOptions();
+    this.tileset = OldTilesetLoader.fromAttributes(this.attrs);
 
+    // create a new DosGraphics instance, but keep the old palette
     int[][] rgbPalette = this.dosGraphics.getRgbPalette();
-
     graphicsPanel.remove(dosGraphics);
     dosGraphics = createDosGraphics();
     dosGraphics.setRgbPalette(rgbPalette);
-
     graphicsPanel.add(dosGraphics);
-    this.pack();
-    this.repaint();
-    this.dosGraphics.repaint();
+    
+    pack();
+    repaint();
 
   }
 
-  public void setTilePropsFlag(boolean tilePropsFlag) {
-    // TODO: tile properties flag!!!
-    // this.tileSet.attrs.tileProperties = tilePropsFlag;
+  
+  // update the title of the window
+  private void updateTitle() {
+    setTitle(title + " - " + tileFilename);  
   }
-
+ 
+  
   /**
    * Select a tiles file to load with a file chooser, then load it
    * and redraw.
@@ -325,27 +262,15 @@ public class TilesEditorWindow extends JFrame {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.OPEN_DIALOG);
     jfc.setCurrentDirectory(new File(tilesDir));     
-    if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) { 
-      
-      File tilesFile = jfc.getSelectedFile();
-      try {
-        
-        // TODO: this could go in its own function like saveTileset if I implement "reload"
-        tileset = new OldTilesetLoader(tilesFile.getPath(), attrs).load();
-        Tileset.modPalette(tileset.palettes().apply(0), dosGraphics.getRgbPalette());
-        tileFileName = tilesFile.getAbsolutePath();
-        setTitle(generateTitle());
-        dosGraphics.updateClut();
-        paletteWindow.repaint();
-        repaint();
-        
-      } catch (NullPointerException e) {
-        System.err.println(e);
-        return;
+    if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {      
+      File tilesFile = jfc.getSelectedFile();     
+      if (tilesFile != null) {
+        loadTileset(tilesFile.getPath());
       }
     }
   }
 
+  
   /**
    * Select a tiles file to save with a file chooser, then save it.
    */
@@ -353,45 +278,44 @@ public class TilesEditorWindow extends JFrame {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.SAVE_DIALOG);
     jfc.setCurrentDirectory(new File(tilesDir));
-    if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) { 
-      
+    if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {     
       File tilesFile = jfc.getSelectedFile();
-      try {
+      if (tilesFile != null) {
         saveTileset(tilesFile.getPath()); 
-        repaint();
-      } catch (NullPointerException e) {
-        System.err.println(e);
-        return;
       }
     }
   }
-
-  public Tileset getTileSet() {
-    return this.tileset;
-  }
-
-  public DosGraphics getDosGraphics() {
-    return this.dosGraphics;
-  }
   
-  // generate a title
-  private String generateTitle() {
-    return title + " - " + this.tileFileName;  
+
+  // load the tileset and update the palette
+  private void loadTileset(String filename) {
+    tileset = new OldTilesetLoader(filename, attrs).load();
+    Tileset.modPalette(tileset.palettes().apply(0), dosGraphics.getRgbPalette());
+    tileFilename = filename;
+    paletteWindow.repaint();
+    updateTitle();
+    repaint();
   }
-  
+ 
+ 
   // grab the palette, update the tileset, and save it
   private void saveTileset(String filename) {
-    
-    // mutate the default palette before saving!!!
+   
+    // mutate the tileset's default palette before saving!!!
     Palette newPal = Tileset.extractPalette(tileset.palettes().apply(0), dosGraphics.getRgbPalette());
     Palette pal = tileset.palettes().apply(0);
     for (int i = 0; i < pal.colors().length; i++) {
       pal.colors()[i] = newPal.colors()[i];
     }       
     new OldTilesetLoader(filename, attrs).save(tileset);
-    
+   
+    tileFilename = filename;
+    updateTitle();
+    repaint();
+   
   }
-
+  
+  
   /**
    * Draw the component.
    */
@@ -404,5 +328,103 @@ public class TilesEditorWindow extends JFrame {
     dosGraphics.repaint();
 
   }
+  
+  
+  private JMenuBar mainMenu() {
+    
+    JMenuBar mainMenu = new JMenuBar();
 
+    JMenu fileMenu = new JMenu("File");
+
+    JMenuItem jmOpen = new JMenuItem("Open");
+    JMenuItem jmSave = new JMenuItem("Save");
+    JMenuItem jmSaveAs = new JMenuItem("Save As..");
+    JMenuItem jmReload = new JMenuItem("Reload");
+    JMenuItem jmChange = new JMenuItem("Change settings...");
+
+   
+    JMenu toolsMenu = new JMenu("Tools");
+
+    JMenuItem jmSwap = new JMenuItem("Swap transparency");
+    JMenuItem jmBlacken = new JMenuItem("Blacken");
+
+    jmOpen.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        chooseLoadTileset();
+      }
+    });
+
+    jmSave.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        if (!tileFilename.equals("")) {
+          saveTileset(tileFilename);
+        } else {
+          chooseSaveTileset();
+        }  
+      }
+    });
+
+    jmSaveAs.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        chooseSaveTileset();
+      }
+    });
+
+    jmReload.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        if (!tileFilename.equals("")) {
+          loadTileset(tileFilename);
+        } else {
+          chooseLoadTileset();
+        }
+      }
+    });
+    
+    jmChange.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        changeTiles();
+      }
+    });
+
+    jmSwap.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        swapTransparency();
+        repaint();
+      }
+    });
+
+    jmBlacken.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        blacken();
+        repaint();
+      }
+    });
+    
+    fileMenu.add(jmOpen);
+    fileMenu.add(jmSave);
+    fileMenu.add(jmSaveAs);
+    fileMenu.add(jmReload);
+    fileMenu.addSeparator();
+    fileMenu.add(jmChange);
+    
+    mainMenu.add(fileMenu);
+    
+    toolsMenu.add(jmSwap);
+    toolsMenu.add(jmBlacken);
+    
+    mainMenu.add(toolsMenu);
+       
+    return mainMenu;
+    
+  }
+  
+  
+  public Tileset getTileSet() {
+    return this.tileset;
+  }
+
+  public DosGraphics getDosGraphics() {
+    return this.dosGraphics;
+  }
+  
 }
