@@ -102,7 +102,7 @@ public class Main extends JFrame {
   public final List<AssetMetadata> metadata;
 
   
-  public static int[][] currentTileBitmap;
+  public static int[][] currentTileBitmap = new int[16][16];
   public static int currentTile;
   public static int currentColor; // for now
 

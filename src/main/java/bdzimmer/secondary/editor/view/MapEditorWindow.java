@@ -8,7 +8,6 @@
 package bdzimmer.secondary.editor.view;
 
 import bdzimmer.secondary.editor.model.Map;
-import bdzimmer.secondary.editor.model.Tileset;
 import bdzimmer.secondary.editor.view.MapViewPanel;
 import bdzimmer.secondary.editor.view.TilesEditorWindow;
 
@@ -16,12 +15,10 @@ import java.awt.BorderLayout;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -75,10 +72,9 @@ public class MapEditorWindow extends JFrame {
     this.mapsDir = mapsDir;
     this.map = map;
     this.mapFileName = fileName;
-    // this.tileset = tileset;
     this.tilesEditorWindow = tilesEditorWindow;
     
-    setTitle(generateTitle());
+    updateTitle();
 
     // ///////////// menu stuff ///////////////////////
 
@@ -165,7 +161,7 @@ public class MapEditorWindow extends JFrame {
         MapEditorWindow.this.map.mapDesc = JOptionPane.showInputDialog("Enter new title:");
         MapEditorWindow.this.map.tileFileName = JOptionPane
             .showInputDialog("Enter new tile file name:");
-        setTitle(generateTitle());
+        updateTitle();
       }
     });
 
@@ -219,49 +215,37 @@ public class MapEditorWindow extends JFrame {
     });
 
     // listener for scrolling with arrow keys
-    this.setFocusable(true);
-    this.addKeyListener(new KeyListener() {
-
-      @Override
-      public void keyPressed(KeyEvent ae) {
-        handleKeys(ae);
-      }
-
-      @Override
-      public void keyReleased(KeyEvent ae) {}
-      
-      @Override
-      public void keyTyped(KeyEvent ae) {}
-
+    setFocusable(true);
+    addKeyListener(new KeyAdapter() {
+      public void keyPressed(KeyEvent ae) { handleKeys(ae); }
     });
 
-    this.addMouseWheelListener(new MouseWheelListener() {
+    addMouseWheelListener(new MouseWheelListener() {
 
       @Override
       public void mouseWheelMoved(MouseWheelEvent ae) {
         int notches = ae.getWheelRotation();
         notches = Integer.signum(notches);
         zoom(notches);
-
       }
 
     });
 
     // Set the layout manager.
-    this.setLayout(new BorderLayout());
+    setLayout(new BorderLayout());
 
     this.mapViewPanel = new MapViewPanel(
         this.map,
         this.tilesEditorWindow.getTileSet(),
         this.tilesEditorWindow.getDosGraphics().getRgbPalette());
-    this.add(mapViewPanel, BorderLayout.NORTH);
+    add(mapViewPanel, BorderLayout.NORTH);
 
-    this.add(statusBar, BorderLayout.SOUTH);
-    this.pack();
+    add(statusBar, BorderLayout.SOUTH);
+    pack();
 
     // Clicking, dragging on map to get / set tiles
     // Moving mouse updates coordinate view--
-    this.mapViewPanel.addMouseMotionListener(new MouseMotionListener() {
+    mapViewPanel.addMouseMotionListener(new MouseMotionListener() {
 
       public void mouseDragged(MouseEvent event) {
         handleClicks(event);
@@ -269,50 +253,20 @@ public class MapEditorWindow extends JFrame {
 
       public void mouseMoved(MouseEvent event) {
         statusBar.update(
-            mapViewPanel.vlr
-                + (int) (event.getX() / (MapEditorWindow.TILE_SIZE * mapViewPanel.scale)),
-            mapViewPanel.vud
-                + (int) (event.getY() / (MapEditorWindow.TILE_SIZE * mapViewPanel.scale)),
+            mapViewPanel.vlr + (int) (event.getX() / (TILE_SIZE * mapViewPanel.scale)),
+            mapViewPanel.vud + (int) (event.getY() / (TILE_SIZE * mapViewPanel.scale)),
             "");
       }
 
     });
 
     // clicking mouse
-    this.mapViewPanel.addMouseListener(new MouseListener() {
-
-      @Override
-      public void mousePressed(MouseEvent me) {
-        handleClicks(me);
-      }
-      
-      @Override
-      public void mouseClicked(MouseEvent me) {}
-      
-      @Override
-      public void mouseEntered(MouseEvent me) {}
-      
-      @Override
-      public void mouseExited(MouseEvent me) {}
-      
-      @Override
-      public void mouseReleased(MouseEvent me) {}
-
+    mapViewPanel.addMouseListener(new MouseAdapter() {
+      public void mousePressed(MouseEvent me) { handleClicks(me); }
     });
 
-    // experimenting 2-2-14
-    // this.setResizable(false);
-
-    // resize listener
-
-    this.addComponentListener(new ComponentAdapter() {
-      public void componentResized(ComponentEvent ae) {
-        System.out.println("component resized!!");
-        System.out.println(ae.getComponent());
-      }
-    });
-
-    // ////////////////////////////////
+   
+    setResizable(false);
     setVisible(true);
     repaint();
 
@@ -322,46 +276,42 @@ public class MapEditorWindow extends JFrame {
   // ------------------------------------------------------
 
   private void zoom(int amount) {
-    this.mapViewPanel.scale += amount;
-    if (this.mapViewPanel.scale < 1) {
-      this.mapViewPanel.scale = 1;
+    mapViewPanel.scale += amount;
+    if (mapViewPanel.scale < 1) {
+      mapViewPanel.scale = 1;
     }
-    this.updateGraphics();
-
+    updateGraphics();
   }
 
   private void handleClicks(MouseEvent ae) {
 
     int ctud = mapViewPanel.vud
-        + (ae.getY() / (MapEditorWindow.TILE_SIZE * this.mapViewPanel.scale));
+        + (ae.getY() / (MapEditorWindow.TILE_SIZE * mapViewPanel.scale));
     int ctlr = mapViewPanel.vlr
-        + (ae.getX() / (MapEditorWindow.TILE_SIZE * this.mapViewPanel.scale));
+        + (ae.getX() / (MapEditorWindow.TILE_SIZE * mapViewPanel.scale));
     if (ctud < 0 || ctud > 127) {
       return;
     }
     if (ctlr < 0 || ctlr > 127) {
       return;
     }
-    
-
-    
+     
     if (!ae.isMetaDown()) {
-      if (this.overlayEdit == 0) {
-        this.map.map[ctud][ctlr] = Main.currentTile; // setting tile
+      if (overlayEdit == 0) {
+        map.map[ctud][ctlr] = Main.currentTile; // setting tile
       } else if (overlayEdit == 1) {
-        this.map.overMap[ctud][ctlr] = Main.currentTile;
+        map.overMap[ctud][ctlr] = Main.currentTile;
       } else if (overlayEdit == 2) {
-        this.map.paraMap[ctud][ctlr] = Main.currentTile;
+        map.paraMap[ctud][ctlr] = Main.currentTile;
       }
       repaint();
     } else {
-      
       if (overlayEdit == 0) {
-        Main.currentTile = this.map.map[ctud][ctlr]; // getting tile
+        Main.currentTile = map.map[ctud][ctlr]; // getting tile
       } else if (overlayEdit == 1) {
-        Main.currentTile = this.map.overMap[ctud][ctlr];
+        Main.currentTile = map.overMap[ctud][ctlr];
       } else if (overlayEdit == 2) {
-        Main.currentTile = this.map.paraMap[ctud][ctlr];
+        Main.currentTile = map.paraMap[ctud][ctlr];
       }
     }
  
@@ -439,7 +389,7 @@ public class MapEditorWindow extends JFrame {
         map = new Map(selFile);
         jmHasParallax.setSelected(map.hasParallax);
         mapFileName = selFile.getAbsolutePath();
-        setTitle(generateTitle());
+        updateTitle();
 
         System.out.println("Map file name: " + mapFileName);
         mapViewPanel.setMap(map);
@@ -463,7 +413,7 @@ public class MapEditorWindow extends JFrame {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.SAVE_DIALOG);
     jfc.setCurrentDirectory(new File(mapsDir));
-    jfc.setSelectedFile(new File(this.mapFileName));
+    jfc.setSelectedFile(new File(mapFileName));
     
     // call up the dialog and examine what it returns.
     
@@ -481,27 +431,26 @@ public class MapEditorWindow extends JFrame {
   }
   
   
-  // generate a title
-  private String generateTitle() {
-    return map.mapDesc.trim() + " (" + map.tileFileName + ") - " + this.mapFileName;  
+  // update the title
+  private void updateTitle() {
+    setTitle(map.mapDesc.trim() + " (" + map.tileFileName + ") - " + mapFileName);  
   }
   
   
-
   // updating graphics
   // --------------------------------------------------------
 
   private void updateGraphics() {
-    this.mapViewPanel.setTileset(tilesEditorWindow.getTileSet());
-    this.mapViewPanel.updateGraphics();
-    this.pack();
-    this.repaint(); 
+    mapViewPanel.setTileset(tilesEditorWindow.getTileSet());
+    mapViewPanel.updateGraphics();
+    pack();
+    repaint(); 
   }
 
  
   public void paint(Graphics gr) {
     super.paint(gr);
-    this.mapViewPanel.repaint();  
+    mapViewPanel.repaint();  
   }
  
 

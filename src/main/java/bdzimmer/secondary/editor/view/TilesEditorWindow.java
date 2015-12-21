@@ -22,6 +22,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -94,10 +95,7 @@ public class TilesEditorWindow extends JFrame {
     
     // clicking to select and manipulate tiles
     this.getContentPane().addMouseListener(new MouseAdapter() {
-      public void mouseClicked(MouseEvent event) {
-        // System.out.println("Clicked -- " + event.getX() + " " + event.getY());
-        handleClicks(event);
-      }
+      public void mouseClicked(MouseEvent event) { handleClicks(event); }
     });
 
     // tileset visualization
@@ -117,12 +115,15 @@ public class TilesEditorWindow extends JFrame {
   }
 
   
-  // create an appropriately sized scaled DosGraphics for the tileset
+  // create an appropriately sized and scaled DosGraphics for the tileset
   private DosGraphics createDosGraphics() {
-    return new DosGraphics(
+    DosGraphics dg = new DosGraphics(
         (int)Math.ceil((float)tileset.tiles().length / tileset.tilesPerRow()) * tileset.height(),
         tileset.tilesPerRow() * tileset.width(),
         this.scale);
+    
+    dg.setGridDimensions(tileset.width(), tileset.height());
+    return dg;
   }
   
   
@@ -154,6 +155,8 @@ public class TilesEditorWindow extends JFrame {
       } else {
         zoomWindow.setTile(tileset.tiles()[currentTile].pixels(), currentTile);
       }
+      
+      zoomWindow.toFront();
 
     } else {
       
@@ -258,7 +261,7 @@ public class TilesEditorWindow extends JFrame {
    * and redraw.
    * 
    */
-  public void chooseLoadTileset() {
+  private void chooseLoadTileset() {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.OPEN_DIALOG);
     jfc.setCurrentDirectory(new File(tilesDir));     
@@ -274,7 +277,7 @@ public class TilesEditorWindow extends JFrame {
   /**
    * Select a tiles file to save with a file chooser, then save it.
    */
-  public void chooseSaveTileset() {
+  private void chooseSaveTileset() {
     JFileChooser jfc = new JFileChooser();
     jfc.setDialogType(JFileChooser.SAVE_DIALOG);
     jfc.setCurrentDirectory(new File(tilesDir));
@@ -332,21 +335,24 @@ public class TilesEditorWindow extends JFrame {
   
   private JMenuBar mainMenu() {
     
-    JMenuBar mainMenu = new JMenuBar();
+    final JMenuBar mainMenu = new JMenuBar();
 
-    JMenu fileMenu = new JMenu("File");
+    final JMenu fileMenu = new JMenu("File");
 
-    JMenuItem jmOpen = new JMenuItem("Open");
-    JMenuItem jmSave = new JMenuItem("Save");
-    JMenuItem jmSaveAs = new JMenuItem("Save As..");
-    JMenuItem jmReload = new JMenuItem("Reload");
-    JMenuItem jmChange = new JMenuItem("Change settings...");
+    final JMenuItem jmOpen = new JMenuItem("Open");
+    final JMenuItem jmSave = new JMenuItem("Save");
+    final JMenuItem jmSaveAs = new JMenuItem("Save As..");
+    final JMenuItem jmReload = new JMenuItem("Reload");
+    final JMenuItem jmChange = new JMenuItem("Change settings...");
 
-   
-    JMenu toolsMenu = new JMenu("Tools");
+    final JMenu toolsMenu = new JMenu("Tools");
 
-    JMenuItem jmSwap = new JMenuItem("Swap transparency");
-    JMenuItem jmBlacken = new JMenuItem("Blacken");
+    final JMenuItem jmSwap = new JMenuItem("Swap transparency");
+    final JMenuItem jmBlacken = new JMenuItem("Blacken");
+    
+    final JMenu viewMenu = new JMenu("View");
+    final JMenuItem gridShow = new JCheckBoxMenuItem("Grid");
+    gridShow.setSelected(false);
 
     jmOpen.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
@@ -400,6 +406,14 @@ public class TilesEditorWindow extends JFrame {
       }
     });
     
+    gridShow.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        System.out.println("grid show: "+ gridShow.isSelected());
+        dosGraphics.setShowGrid(gridShow.isSelected());
+        dosGraphics.repaint();
+      }
+    });
+    
     fileMenu.add(jmOpen);
     fileMenu.add(jmSave);
     fileMenu.add(jmSaveAs);
@@ -413,9 +427,11 @@ public class TilesEditorWindow extends JFrame {
     toolsMenu.add(jmBlacken);
     
     mainMenu.add(toolsMenu);
+    
+    viewMenu.add(gridShow);
+    mainMenu.add(viewMenu);
        
     return mainMenu;
-    
   }
   
   

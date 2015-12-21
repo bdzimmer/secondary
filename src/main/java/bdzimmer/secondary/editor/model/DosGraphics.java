@@ -20,37 +20,43 @@ public class DosGraphics extends JPanel {
   private final int[] buffer;
   
   private final int scale;
-  private final int sud;
-  private final int slr; // size
+  private final int height;
+  private final int width; // size
 
   private final int[] palette = new int[256];
   private int[][] rgbPalette = new int[256][3];
+  
+  private boolean showGrid = false;
+  private int gridWidth = 0;
+  private int gridHeight = 0;
 
 
 
   /**
    * Create a new DosGraphics instance.
    * 
-   * @param ud      vertical dimension
-   * @param lr      horizontal dimension
-   * @param scale   pixel scaling
+   * @param height     vertical dimension
+   * @param width      horizontal dimension
+   * @param scale      pixel scaling
    */
-  public DosGraphics(int ud, int lr, int scale) {
+  public DosGraphics(int height, int width, int scale) {
     
-    this.sud = ud;
-    this.slr = lr;
+    this.height = height;
+    this.width = width;
     this.scale = scale;
 
-    setPreferredSize(new Dimension(this.slr * this.scale, this.sud * this.scale));
-    setVisible(true);
+    
+    screenBuffer = new BufferedImage(
+        this.width * this.scale, this.height * this.scale, BufferedImage.TYPE_INT_RGB);
+    buffer = ((DataBufferInt) screenBuffer.getRaster().getDataBuffer()).getData();
+    
+    setPreferredSize(new Dimension(this.width * this.scale, this.height * this.scale));
     setIgnoreRepaint(false);
-   
-    screenBuffer = new BufferedImage(slr * this.scale, sud * this.scale,
-        BufferedImage.TYPE_INT_RGB); // Created image buffer
-    buffer = ((DataBufferInt) screenBuffer.getRaster().getDataBuffer())
-        .getData();
+    setVisible(true);
+  
   }
 
+  
   public DosGraphics() {
     this(240, 320, 2);
   }
@@ -62,15 +68,15 @@ public class DosGraphics extends JPanel {
    * Draw a tile without transparency.
    * 
    * @param tile  2d int array of tile
-   * @param ud    vertical position to draw at
-   * @param lr    horizontal position to draw at
+   * @param y    vertical position to draw at
+   * @param x    horizontal position to draw at
    */
-  public void drawTile(int[][] tile, int ud, int lr) {
+  public void drawTile(int[][] tile, int y, int x) {
     if (tile != null) {
       // Draw tile to screen.
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
-          setPixel(ud + i, lr + j, tile[i][j]);
+          setPixel(y + i, x + j, tile[i][j]);
 
         }
       }
@@ -85,14 +91,14 @@ public class DosGraphics extends JPanel {
    * @param ud    vertical position to draw at
    * @param lr    horizontal position to draw at
    */
-  public void drawTileTrans(int[][] tile, int ud, int lr) {
+  public void drawTileTrans(int[][] tile, int y, int x) {
     if (tile != null) {
       // Draw tile to screen.
       for (int i = 0; i < tile.length; i++) {
         for (int j = 0; j < tile[0].length; j++) {
           int curColor = tile[i][j];
           if (curColor != 255) {
-            setPixel(ud + i, lr + j, curColor);
+            setPixel(y + i, x + j, curColor);
           }
         }
       }
@@ -129,9 +135,9 @@ public class DosGraphics extends JPanel {
    * @param lr        horizontal position
    * @param myColor   color to set
    */
-  public void setPixel(int ud, int lr, int colorIndex) {
-    int rowLength = slr * scale;
-    int upperleft = ud * scale * rowLength + lr * scale;
+  public void setPixel(int y, int x, int colorIndex) {
+    int rowLength = width * scale;
+    int upperleft = y * scale * rowLength + x * scale;
     int curColor = palette[colorIndex];
 
     if (this.scale == 2) {
@@ -184,8 +190,8 @@ public class DosGraphics extends JPanel {
   public void updateClut() {
     // this also requires redrawing of all DosGraphics' to take effect
     for (int i = 0; i < 256; i++) {
-      this.palette[i] = 255 << 24 | (this.rgbPalette[i][0] * 4) << 16
-          | (this.rgbPalette[i][1] * 4) << 8 | (this.rgbPalette[i][2] * 4);
+      palette[i] = 255 << 24 | (rgbPalette[i][0] * 4) << 16
+          | (rgbPalette[i][1] * 4) << 8 | (rgbPalette[i][2] * 4);
     }
 
   }
@@ -200,6 +206,19 @@ public class DosGraphics extends JPanel {
 
   public void setRgbPalette(int[][] rgbPalette) {
     this.rgbPalette = rgbPalette;
+  }
+  
+  public boolean getShowGrid() {
+    return showGrid;
+  }
+  
+  public void setShowGrid(boolean showGrid) {
+    this.showGrid = showGrid;
+  }
+  
+  public void setGridDimensions(int gridWidth, int gridHeight) {
+    this.gridWidth = gridWidth;
+    this.gridHeight = gridHeight;
   }
   
   // get an IndexColorModel for part of the range
@@ -217,20 +236,34 @@ public class DosGraphics extends JPanel {
     // weird things happen when you try to set a transparent index (extra argument)
     // it seems that it will always be index 0 in a png, but also strange palette
     // shifts happen if it is set to 256. Seems best to not set this for now.
+    
     return new IndexColorModel(8, 256, r, g, b);
         
   }
-
+  
   /**
    * Draw the component.
    */
   public void paint(Graphics graphics) {
     super.paintComponent(graphics); // Draw things in superclass
-
+    
     graphics.setColor(Color.BLACK);
-    graphics.fillRect(0, 0, slr * 2 - 1, sud * 2 - 1);
+    graphics.fillRect(0, 0, width * 2 - 1, height * 2 - 1);
     graphics.drawImage(screenBuffer, 0, 0, null);
-
+    if (showGrid) drawGrid(graphics);
+  }
+  
+  // helper function for drawing a grid
+  private void drawGrid(Graphics g) {
+    System.out.println("drawing grid");
+    g.setColor(new Color(
+        rgbPalette[255][0] * 4, rgbPalette[255][1] * 4, rgbPalette[255][2] * 4));
+    for (int i = 0; i < height * scale; i += gridHeight * scale) { 
+      g.drawLine(0, i, width * scale - 1, i);
+    }    
+    for (int j = 0; j < width * scale; j += gridWidth * scale) {
+      g.drawLine(j, 0, j, height * scale - 1);
+    }
   }
 
 }

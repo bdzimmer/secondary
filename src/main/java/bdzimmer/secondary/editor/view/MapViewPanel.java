@@ -53,11 +53,9 @@ public class MapViewPanel extends JPanel {
     this.tileset = tileset;
     this.rgbPalette = rgbPalette;
 
-    this.dosGraphics = new DosGraphics(192, 320, this.scale); 
-    this.dosGraphics.setRgbPalette(this.rgbPalette);
-    // this.dosGraphics.updateClut();
-    this.add(dosGraphics, BorderLayout.SOUTH);
-
+    dosGraphics = new DosGraphics(192, 320, this.scale); 
+    dosGraphics.setRgbPalette(this.rgbPalette);
+    add(dosGraphics, BorderLayout.SOUTH);
   }
 
   // ## --------------------------------------------
@@ -67,13 +65,15 @@ public class MapViewPanel extends JPanel {
    */
   public void updateGraphics() {
 
-    this.remove(this.dosGraphics);
-    this.dosGraphics = new DosGraphics(this.numVerticalTiles * 16,
-        this.numHorizontalTiles * 16, this.scale);
+    remove(this.dosGraphics);
+    dosGraphics = new DosGraphics(
+        numVerticalTiles * 16,
+        numHorizontalTiles * 16,
+        scale);
 
-    this.dosGraphics.setRgbPalette(this.rgbPalette);
-    this.dosGraphics.updateClut();
-    this.add(this.dosGraphics);
+    dosGraphics.setRgbPalette(rgbPalette);
+    dosGraphics.updateClut();
+    add(dosGraphics);
 
   }
 
@@ -156,21 +156,14 @@ public class MapViewPanel extends JPanel {
     // if you forget this....horrible flickering
     super.paint(graphics);
 
-    this.drawMap();
+    drawMap();
+    // System.out.println("Drew map");
+    dosGraphics.updateClut();
+    // System.out.println("updated clut");
+    dosGraphics.repaint();
+    Graphics dgGraphics = dosGraphics.getBuffer().getGraphics();
 
-    System.out.println("Drew map");
-
-    this.dosGraphics.updateClut();
-
-    System.out.println("updated clut");
-
-    this.dosGraphics.repaint();
-
-    Graphics dgGraphics = this.dosGraphics.getBuffer().getGraphics();
-
-    System.out.println("got graphics");
-
-    // Bounds drawing...
+    // Bounds drawing
     if (this.dispBounds && this.tileset != null) {
         
       dgGraphics.setColor(new Color(dosGraphics.getPalette()[255]));
