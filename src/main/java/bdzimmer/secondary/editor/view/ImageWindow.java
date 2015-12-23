@@ -9,6 +9,7 @@ import java.awt.Image;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+
 public class ImageWindow extends JFrame {
   
   private static final long serialVersionUID = 1L;
@@ -20,10 +21,12 @@ public class ImageWindow extends JFrame {
    * @param image Image object
    */
   public ImageWindow(Image image) {
-    this.add(new ImagePanel(image));
-    this.pack();
-    this.setLocationRelativeTo(null);
-    this.setVisible(true);
+    add(new ImagePanel(image));
+    pack();
+    setLocationRelativeTo(null);
+    setResizable(false);
+    setVisible(true);
+    toFront();
   }
 
   class ImagePanel extends JPanel {
@@ -33,13 +36,13 @@ public class ImageWindow extends JFrame {
 
     ImagePanel(Image image) {
       this.image = image;
-      this.setPreferredSize(new Dimension(image.getWidth(null), image
-          .getHeight(null)));
-      this.setVisible(true);
+      setPreferredSize(
+          new Dimension(image.getWidth(null), image.getHeight(null)));
+      setVisible(true);
     }
 
     protected void paintComponent(Graphics gr) {
-      gr.drawImage(this.image, 0, 0, null);
+      gr.drawImage(image, 0, 0, null);
     }
 
   }

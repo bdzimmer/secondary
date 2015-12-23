@@ -53,6 +53,13 @@ class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, 
         (ImageWidget.DefaultHeight - mapImage.getHeight) / 2,
         null)
 
+    val viewer = new JButton("View")
+    viewer.addActionListener(new ActionListener() {
+      def actionPerformed(event: ActionEvent): Unit = {
+        new ImageWindow(mapImage)
+      }
+    })
+
     val loader = new JButton("Edit")
     loader.addActionListener(new ActionListener() {
       def actionPerformed(event: ActionEvent): Unit = {
@@ -60,7 +67,7 @@ class MapLoadWindow(main: Main) extends LoadWidgetWindow(main, main.contentDir, 
       }
     })
 
-    new ImageWidget(title, subsetImage, List(loader))
+    new ImageWidget(title, subsetImage, List(viewer, loader))
 
   }
 

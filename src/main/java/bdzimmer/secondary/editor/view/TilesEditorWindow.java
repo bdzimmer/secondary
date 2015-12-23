@@ -419,13 +419,11 @@ public class TilesEditorWindow extends JFrame {
     fileMenu.add(jmSaveAs);
     fileMenu.add(jmReload);
     fileMenu.addSeparator();
-    fileMenu.add(jmChange);
-    
+    fileMenu.add(jmChange);  
     mainMenu.add(fileMenu);
     
     toolsMenu.add(jmSwap);
-    toolsMenu.add(jmBlacken);
-    
+    toolsMenu.add(jmBlacken); 
     mainMenu.add(toolsMenu);
     
     viewMenu.add(gridShow);

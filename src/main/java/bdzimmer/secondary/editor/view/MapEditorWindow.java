@@ -8,6 +8,8 @@
 package bdzimmer.secondary.editor.view;
 
 import bdzimmer.secondary.editor.model.Map;
+import bdzimmer.secondary.editor.model.Palette;
+import bdzimmer.secondary.editor.model.Tileset;
 import bdzimmer.secondary.editor.view.MapViewPanel;
 import bdzimmer.secondary.editor.view.TilesEditorWindow;
 
@@ -44,7 +46,6 @@ public class MapEditorWindow extends JFrame {
   
   private Map map;
   public String mapFileName;
-  // private Tileset tileset;
   private final TilesEditorWindow tilesEditorWindow;
   
   private final JCheckBoxMenuItem jmHasParallax = new JCheckBoxMenuItem("Parallax Layer");
@@ -76,144 +77,8 @@ public class MapEditorWindow extends JFrame {
     
     updateTitle();
 
-    // ///////////// menu stuff ///////////////////////
-
-    final JCheckBoxMenuItem jmDispOver = new JCheckBoxMenuItem("Display Overlay Layer");
-    final JCheckBoxMenuItem jmDispBack = new JCheckBoxMenuItem("Display Background Layer");
-    final JCheckBoxMenuItem jmDispBounds = new JCheckBoxMenuItem("Display Bounds");
+    setJMenuBar(mainMenu());
     
-    jmDispOver.setSelected(true);
-    jmDispBack.setSelected(true);
-    jmDispBounds.setSelected(false);
-    jmHasParallax.setSelected(false);
-
-    JMenuBar mainMenu = new JMenuBar();
-    setJMenuBar(mainMenu);
-
-    JMenu fileMenu = new JMenu("File");
-    
-    JMenuItem jmNew = new JMenuItem("New");
-    fileMenu.add(jmNew);
-    
-    
-    JMenuItem jmOpen = new JMenuItem("Open");
-    fileMenu.add(jmOpen);
-    
-    JMenuItem jmSave = new JMenuItem("Save");
-    fileMenu.add(jmSave);
-    
-    JMenuItem jmSaveAs = new JMenuItem("Save As");
-    fileMenu.add(jmSaveAs);
-       
-    mainMenu.add(fileMenu);
-
-    JMenu editMenu = new JMenu("Edit");
-    
-    JMenuItem jmSetTitle = new JMenuItem("Set title...");
-    editMenu.add(jmSetTitle);
-    
-    editMenu.addSeparator();
-    
-    JMenuItem jmEditOverlay = new JMenuItem("Editing Background Layer");
-    editMenu.add(jmEditOverlay);
-    
-    editMenu.addSeparator();
-    
-    editMenu.add(jmDispOver);
-    editMenu.add(jmDispBack);
-    editMenu.add(jmDispBounds);
-    
-    editMenu.addSeparator();
-    
-    editMenu.add(jmHasParallax);
-    
-    mainMenu.add(editMenu);
-
-    jmNew.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        MapEditorWindow.this.map.erase();
-        mapViewPanel.vud = 0;
-        mapViewPanel.vlr = 0;
-        repaint();
-      }
-    });
-
-    jmOpen.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        chooseLoadMap();
-      }
-    });
-
-    jmSave.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        MapEditorWindow.this.map.save(new File(mapFileName));
-      }
-    });
-
-    jmSaveAs.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        chooseSaveMap();
-      }
-    });
-
-    jmSetTitle.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        MapEditorWindow.this.map.mapDesc = JOptionPane.showInputDialog("Enter new title:");
-        MapEditorWindow.this.map.tileFileName = JOptionPane
-            .showInputDialog("Enter new tile file name:");
-        updateTitle();
-      }
-    });
-
-    jmEditOverlay.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        if (overlayEdit == 0) {
-          ((JMenuItem) ae.getSource()).setText("Editing Overlay Layer");
-          overlayEdit = 1;
-          mapViewPanel.setParallaxEdit(false);
-        } else if (overlayEdit == 1) {
-          ((JMenuItem) ae.getSource()).setText("Editing Parallax Layer");
-          overlayEdit = 2;
-          mapViewPanel.setParallaxEdit(true);
-
-        } else if (overlayEdit == 2) {
-          ((JMenuItem) ae.getSource()).setText("Editing Background Layer");
-          overlayEdit = 0;
-          mapViewPanel.setParallaxEdit(false);
-        }
-
-        repaint();
-
-      }
-
-    });
-
-    // repaint map when choosing whether to display layers / bounds
-    jmDispOver.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        System.out.println(jmDispOver.isSelected());
-        mapViewPanel.setDispOver(jmDispOver.isSelected());
-        repaint();
-
-      }
-    });
-
-    jmDispBack.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        System.out.println(jmDispBack.isSelected());
-        mapViewPanel.setDispBack(jmDispBack.isSelected());
-        repaint();
-
-      }
-    });
-
-    jmDispBounds.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent ae) {
-        mapViewPanel.setDispBounds(jmDispBounds.isSelected());
-        repaint();
-      }
-    });
-
     // listener for scrolling with arrow keys
     setFocusable(true);
     addKeyListener(new KeyAdapter() {
@@ -453,5 +318,150 @@ public class MapEditorWindow extends JFrame {
     mapViewPanel.repaint();  
   }
  
+  private JMenuBar mainMenu() {
+    
+    // ///////////// menu stuff ///////////////////////
+
+    JMenuBar mainMenu = new JMenuBar();
+
+    JMenu fileMenu = new JMenu("File");
+    
+    JMenuItem jmNew = new JMenuItem("New");
+    JMenuItem jmOpen = new JMenuItem("Open");
+    JMenuItem jmSave = new JMenuItem("Save");
+    JMenuItem jmSaveAs = new JMenuItem("Save As");
+
+    JMenu editMenu = new JMenu("Edit");
+    
+    JMenuItem jmSetTitle = new JMenuItem("Set title...");
+    JMenuItem jmEditOverlay = new JMenuItem("Editing Background Layer");
+    final JCheckBoxMenuItem jmDispOver = new JCheckBoxMenuItem("Display Overlay Layer");
+    final JCheckBoxMenuItem jmDispBack = new JCheckBoxMenuItem("Display Background Layer");
+    final JCheckBoxMenuItem jmDispBounds = new JCheckBoxMenuItem("Display Bounds");
+    
+    jmDispOver.setSelected(true);
+    jmDispBack.setSelected(true);
+    jmDispBounds.setSelected(false);
+    jmHasParallax.setSelected(false);
+    
+    JMenu viewMenu = new JMenu("View");
+    
+    JMenuItem fullMap =  new JMenuItem("Full Map");
+    
+    
+    jmNew.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        MapEditorWindow.this.map.erase();
+        mapViewPanel.vud = 0;
+        mapViewPanel.vlr = 0;
+        repaint();
+      }
+    });
+
+    jmOpen.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        chooseLoadMap();
+      }
+    });
+
+    jmSave.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        MapEditorWindow.this.map.save(new File(mapFileName));
+      }
+    });
+
+    jmSaveAs.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        chooseSaveMap();
+      }
+    });
+
+    jmSetTitle.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        MapEditorWindow.this.map.mapDesc = JOptionPane.showInputDialog("Enter new title:");
+        MapEditorWindow.this.map.tileFileName = JOptionPane
+            .showInputDialog("Enter new tile file name:");
+        updateTitle();
+      }
+    });
+
+    jmEditOverlay.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        if (overlayEdit == 0) {
+          ((JMenuItem) ae.getSource()).setText("Editing Overlay Layer");
+          overlayEdit = 1;
+          mapViewPanel.setParallaxEdit(false);
+        } else if (overlayEdit == 1) {
+          ((JMenuItem) ae.getSource()).setText("Editing Parallax Layer");
+          overlayEdit = 2;
+          mapViewPanel.setParallaxEdit(true);
+
+        } else if (overlayEdit == 2) {
+          ((JMenuItem) ae.getSource()).setText("Editing Background Layer");
+          overlayEdit = 0;
+          mapViewPanel.setParallaxEdit(false);
+        }
+        repaint();
+      }
+    });
+
+    // repaint map when choosing whether to display layers / bounds
+    jmDispOver.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        System.out.println(jmDispOver.isSelected());
+        mapViewPanel.setDispOver(jmDispOver.isSelected());
+        repaint();
+      }
+    });
+
+    jmDispBack.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        System.out.println(jmDispBack.isSelected());
+        mapViewPanel.setDispBack(jmDispBack.isSelected());
+        repaint();
+      }
+    });
+
+    jmDispBounds.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        mapViewPanel.setDispBounds(jmDispBounds.isSelected());
+        repaint();
+      }
+    });
+    
+    fullMap.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {    
+        Tileset tiles = MapEditorWindow.this.tilesEditorWindow.getTileSet(); 
+        Palette palette = Tileset.extractPalette(
+            tiles.palettes().apply(0),
+            MapEditorWindow.this.tilesEditorWindow.getDosGraphics().getRgbPalette());
+        new ImageWindow(MapEditorWindow.this.map.image(tiles, palette));
+      }
+    });
+    
+    
+    fileMenu.add(jmNew);
+    fileMenu.add(jmOpen);
+    fileMenu.add(jmSave);
+    fileMenu.add(jmSaveAs);   
+    mainMenu.add(fileMenu);
+    
+    editMenu.add(jmSetTitle);
+    editMenu.addSeparator();
+    editMenu.add(jmEditOverlay);
+    editMenu.addSeparator();   
+    editMenu.add(jmDispOver);
+    editMenu.add(jmDispBack);
+    editMenu.add(jmDispBounds);
+    editMenu.addSeparator();
+    editMenu.add(jmHasParallax); 
+    mainMenu.add(editMenu);
+    
+    viewMenu.add(fullMap); 
+    mainMenu.add(viewMenu);
+    
+    return mainMenu;
+    
+  }
 
 }
