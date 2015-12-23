@@ -402,7 +402,7 @@ object ExportImages {
   // generate HTML for an item's upscaled image with responsive style
   // that links to the bare image
   def pixelImageLinkResponsive(item: WorldItem): String = {
-    link(image(pixelImagePathScale(item), true), pixelImagePathScale(item))
+    link(image(pixelImagePathScale(item, 1), true), pixelImagePathScale(item))
   }
 
 

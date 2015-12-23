@@ -61,7 +61,6 @@ class PaletteWindow extends JFrame {
             .getSource()).getModel();
         dosGraphics.getRgbPalette()[Main.currentColor][0] = (Integer) currentModel
             .getValue();
-        dosGraphics.updateClut();
         refreshPalette();
       }
 
@@ -72,7 +71,6 @@ class PaletteWindow extends JFrame {
             .getSource()).getModel();
         dosGraphics.getRgbPalette()[Main.currentColor][1] = (Integer) currentModel
             .getValue();
-        dosGraphics.updateClut();
         refreshPalette();
       }
 
@@ -83,42 +81,59 @@ class PaletteWindow extends JFrame {
             .getSource()).getModel();
         dosGraphics.getRgbPalette()[Main.currentColor][2] = (Integer) currentModel
             .getValue();
-        dosGraphics.updateClut();
         refreshPalette();
       }
 
     });
 
-    this.getContentPane().addMouseListener(new MouseAdapter() {
-      public void mousePressed(MouseEvent event) {
-        System.out.println(event.getX() + " " + event.getY());
+    this.dosGraphics.setToolTipText("<html>right click: grab color<br />left click: set color<br />alt-left click: interpolate colors</html>");
+    
+    this.dosGraphics.addMouseListener(new MouseAdapter() {
+      public void mouseClicked(MouseEvent event) {
+        
+        // System.out.println(event.getX() + " " + event.getY());
 
         int clickedColor = (int) ((event.getY() / 16) * 16) + (int) (event.getX() / 16);
         if (clickedColor < 256 && clickedColor >= 0) {
-          if (event.isMetaDown()) { // right click
-
-            // get a new current color
-            Main.currentColor = clickedColor;
-            cColorLabel.setBackground(new Color(
-                dosGraphics.getPalette()[Main.currentColor]));
-
-            updateSpinners();
-            dosGraphics.updateClut();
-            repaint();
+          if (event.isMetaDown()) {      
+            
+            // right click - grab color
+            Main.currentColor = clickedColor; 
 
           } else {
-            // left click -  replace the color in the palette
+            // left click -  set color 
+            
+            int[][] pal = dosGraphics.getRgbPalette();
 
-            dosGraphics.getPalette()[clickedColor] = dosGraphics.getPalette()[Main.currentColor];
-            dosGraphics.getRgbPalette()[clickedColor][0] = dosGraphics
-                .getRgbPalette()[Main.currentColor][0];
-            dosGraphics.getRgbPalette()[clickedColor][1] = dosGraphics
-                .getRgbPalette()[Main.currentColor][1];
-            dosGraphics.getRgbPalette()[clickedColor][2] = dosGraphics
-                .getRgbPalette()[Main.currentColor][2];
-            repaint();
-
+            if (event.isAltDown()) {
+              
+              // interpolate between current color and clicked color
+              int numColors = Math.abs(clickedColor - Main.currentColor);
+              int direction = (clickedColor > Main.currentColor) ? 1 : -1;
+              
+              for (int i = 1; i < numColors; i++) {
+                int curColor = Main.currentColor + i * direction;
+                pal[curColor][0] = pal[Main.currentColor][0] + (int)((pal[clickedColor][0] - pal[Main.currentColor][0]) / (float)numColors * i);
+                pal[curColor][1] = pal[Main.currentColor][1] + (int)((pal[clickedColor][1] - pal[Main.currentColor][1]) / (float)numColors * i);
+                pal[curColor][2] = pal[Main.currentColor][2] + (int)((pal[clickedColor][2] - pal[Main.currentColor][2]) / (float)numColors * i);
+              }
+              
+            } else {
+              
+              // dosGraphics.getPalette()[clickedColor] = dosGraphics.getPalette()[Main.currentColor];
+              pal[clickedColor][0] = pal[Main.currentColor][0];
+              pal[clickedColor][1] = pal[Main.currentColor][1];
+              pal[clickedColor][2] = pal[Main.currentColor][2];
+              
+            }
+            
+            // update after done updating the colors / current selection
+            Main.currentColor = clickedColor;
+            
           }
+          
+          repaint();
+          
         }
 
       }
@@ -222,21 +237,19 @@ class PaletteWindow extends JFrame {
     
     dosGraphics.updateClut();
     
-    System.out.println("refreshed palette");
-    
     for (int i = 0; i < 16; i++) {
       for (int j = 0; j < 16; j++) {
         for (int k = 0; k < 8; k++) {
           for (int l = 0; l < 8; l++) {
-            this.dosGraphics.setPixel(i * 8 + k, j * 8 + l, i * 16 + j);
+            dosGraphics.setPixel(i * 8 + k, j * 8 + l, i * 16 + j);
           }
         }
       }
     }
-    this.dosGraphics.repaint();
-    // also update the color label
-    cColorLabel.setBackground(new Color(
-        this.dosGraphics.getPalette()[Main.currentColor]));
+    
+    dosGraphics.repaint();
+    cColorLabel.setBackground(new Color(dosGraphics.getPalette()[Main.currentColor]));
+    updateSpinners();
   }
 
   public void updateSpinners() {
@@ -260,8 +273,6 @@ class PaletteWindow extends JFrame {
     gr.setColor(new Color(this.dosGraphics.getPalette()[255]));
     gr.drawRect((Main.currentColor % 16) * 16,
         (int) (Main.currentColor / 16) * 16, 16, 16);
-
-    System.out.println("painted");
   
   }
 }

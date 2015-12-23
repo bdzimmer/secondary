@@ -93,23 +93,22 @@ public class TilesEditorWindow extends JFrame {
     // main menu
     setJMenuBar(mainMenu());
     
-    // clicking to select and manipulate tiles
-    this.getContentPane().addMouseListener(new MouseAdapter() {
-      public void mouseClicked(MouseEvent event) { handleClicks(event); }
-    });
-
     // tileset visualization
     dosGraphics = createDosGraphics();
     dosGraphics.setRgbPalette(paletteWindow.getDosGraphics().getRgbPalette());
     graphicsPanel.add(dosGraphics);
     this.add(graphicsPanel, BorderLayout.NORTH);
     
+    // clicking to select and manipulate tiles
+    dosGraphics.addMouseListener(new MouseAdapter() {
+      public void mouseClicked(MouseEvent event) { handleClicks(event); }
+    });
+    
     // status bar
-    this.add(statusBar, BorderLayout.SOUTH);
+    add(statusBar, BorderLayout.SOUTH);
 
     pack();
-    this.setResizable(false);
-    
+    setResizable(false);
     setVisible(true);
 
   }
@@ -139,8 +138,8 @@ public class TilesEditorWindow extends JFrame {
     
     if (event.isMetaDown()) {
       // left click -- set tile in window
-      this.currentTile = selectedTile;
       
+      this.currentTile = selectedTile;  
       Main.currentTile = currentTile;
       Main.currentTileBitmap = tileset.tiles()[currentTile].pixels();
 
@@ -148,7 +147,7 @@ public class TilesEditorWindow extends JFrame {
         zoomWindow = new ZoomedTileWindow(
             "Zoom",
             tileset.tiles()[currentTile].pixels(),
-            dosGraphics.getRgbPalette());
+            paletteWindow);
         
         zoomWindow.setTileWindow(this);
         zoomWindow.setLocationRelativeTo(this);
@@ -165,6 +164,7 @@ public class TilesEditorWindow extends JFrame {
       // Calculate maximum size we can copy
       // The global tile bitmap here seems kind of dumb, but it's there to allow
       // copying tiles across tileset -- important functionality. 
+      
       int udlength = Math.min(tileset.height(), Main.currentTileBitmap.length);
       int lrlength = Math.min(tileset.width(), Main.currentTileBitmap[0].length);
       
@@ -174,6 +174,11 @@ public class TilesEditorWindow extends JFrame {
         }
       }
 
+      // set the copy as the current tile
+      this.currentTile = selectedTile;  
+      Main.currentTile = currentTile;
+      Main.currentTileBitmap = tileset.tiles()[currentTile].pixels();
+      
       repaint();
     }
     

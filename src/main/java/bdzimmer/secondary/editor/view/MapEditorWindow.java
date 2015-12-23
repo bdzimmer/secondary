@@ -86,14 +86,11 @@ public class MapEditorWindow extends JFrame {
     });
 
     addMouseWheelListener(new MouseWheelListener() {
-
-      @Override
       public void mouseWheelMoved(MouseWheelEvent ae) {
         int notches = ae.getWheelRotation();
         notches = Integer.signum(notches);
         zoom(notches);
       }
-
     });
 
     // Set the layout manager.
@@ -110,7 +107,7 @@ public class MapEditorWindow extends JFrame {
 
     // Clicking, dragging on map to get / set tiles
     // Moving mouse updates coordinate view--
-    mapViewPanel.addMouseMotionListener(new MouseMotionListener() {
+    mapViewPanel.getDosGraphics().addMouseMotionListener(new MouseMotionListener() {
 
       public void mouseDragged(MouseEvent event) {
         handleClicks(event);

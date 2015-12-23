@@ -336,5 +336,9 @@ public class MapViewPanel extends JPanel {
   public void setTileset(Tileset tileset) {
     this.tileset = tileset;
   }
+  
+  public DosGraphics getDosGraphics() {
+    return this.dosGraphics;
+  }
 
 }

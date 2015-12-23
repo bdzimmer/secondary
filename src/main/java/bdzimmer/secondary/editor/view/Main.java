@@ -95,8 +95,8 @@ public class Main extends JFrame {
 
   private static final long serialVersionUID = 1L;
   
-  public static final int[][] globalPalette = new int[256][3];
-  public static final PaletteWindow paletteWindow = new PaletteWindow(globalPalette);
+  private static final int[][] globalPalette = new int[256][3];
+  private static final PaletteWindow paletteWindow = new PaletteWindow(globalPalette);
   
   public final String contentDir;
   public final List<AssetMetadata> metadata;
@@ -258,8 +258,7 @@ public class Main extends JFrame {
     if (!"".equals(spritesFileName)) {
       spriteTiles = new OldTilesetLoader(spritesFileName, spriteAttributes).load();
       Tileset.modPalette(spriteTiles.palettes().apply(0), Main.globalPalette);
-      Main.paletteWindow.repaint();
-      
+      Main.paletteWindow.repaint();  
     } else {
       spriteTiles = OldTilesetLoader.fromAttributes(TileOptions.getOrQuit(tiletype));
     }
