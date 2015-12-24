@@ -28,7 +28,7 @@ import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.nodes.Tag
 
 import bdzimmer.secondary.export.model.{ParseSecTags => pst}
-import bdzimmer.secondary.editor.model.AssetMetadata
+import bdzimmer.pixeleditor.model.AssetMetadata
 
 // convert null strings to empty
 object NonNullString {

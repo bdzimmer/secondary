@@ -4,5 +4,8 @@ scala:
 jdk:
   - oraclejdk7
 
-install: git clone https://github.com/bdzimmer/gdrive-scala ../gdrive-scala
+install:
+  - git clone https://github.com/bdzimmer/gdrive-scala ../gdrive-scala
+  - git clone https://github.com/bdzimmer/util-scala ../util-scala
+  - git clone https://github.com/bdzimmer/pixel-editor ../pixel-editor
 script: sbt ++$TRAVIS_SCALA_VERSION test it:test

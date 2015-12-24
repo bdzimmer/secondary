@@ -15,7 +15,7 @@ val jvmSettings = whichJvmSettings match {
 lazy val root = (project in file("."))
   .settings(
     name := "Secondary",
-    version := "2015.11.13",
+    version := "2015.12.24",
     organization := "bdzimmer",
     scalaVersion := "2.10.6",
     mainClass in (Compile, run) := Some("bdzimmer.secondary.export.Driver"),
@@ -36,10 +36,13 @@ lazy val root = (project in file("."))
   .configs(IntegrationTest)
   .settings(Defaults.itSettings: _*)
   .dependsOn(gdrivescala)
+  .dependsOn(utilscala)
+  .dependsOn(pixeleditor)
 
 
 lazy val gdrivescala = RootProject(file("../gdrive-scala"))
-
+lazy val utilscala = RootProject(file("../util-scala"))
+lazy val pixeleditor = RootProject(file("../pixel-editor"))
 
 // import into Eclipse as a Scala project
 EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala

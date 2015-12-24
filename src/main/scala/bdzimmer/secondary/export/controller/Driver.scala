@@ -24,8 +24,8 @@ import bdzimmer.util.StringUtils._
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItem}
 import bdzimmer.secondary.export.view.ConfigurationGUI
-import bdzimmer.secondary.editor.view.Main
-import bdzimmer.secondary.editor.model.AssetMetadataUtils
+import bdzimmer.pixeleditor.view.Main
+import bdzimmer.pixeleditor.model.AssetMetadataUtils
 
 
 

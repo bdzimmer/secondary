@@ -10,7 +10,7 @@ import javax.imageio.ImageIO
 
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.editor.model.TileOptions
+import bdzimmer.pixeleditor.model.TileOptions
 
 
 class ExportImagesSuite extends FunSuite {

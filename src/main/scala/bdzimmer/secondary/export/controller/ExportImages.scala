@@ -12,9 +12,9 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
-import bdzimmer.secondary.editor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions}
-import bdzimmer.secondary.editor.model.Color
-import bdzimmer.secondary.editor.controller.OldTilesetLoader
+import bdzimmer.pixeleditor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions}
+import bdzimmer.pixeleditor.model.Color
+import bdzimmer.pixeleditor.controller.OldTilesetLoader
 
 import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Markdown
