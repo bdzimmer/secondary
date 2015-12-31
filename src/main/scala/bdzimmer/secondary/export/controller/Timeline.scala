@@ -78,7 +78,7 @@ class Timeline(months: List[String]) {
       List(
           Tags.b(year.toString) + Timeline.ColumnSeparator,
           eventStrings(curYear, date => {
-            Tags.b(date._2.map(x => months(x).capitalize).getOrElse("") + date._3.map(" " + _).getOrElse(""))
+            Tags.b(date._2.map(x => months(x).capitalize + " ").getOrElse("") + date._3.map(_ + ". ").getOrElse(""))
           }))
 
     }}), tdStyle = Timeline.TableStyle) + Tags.br

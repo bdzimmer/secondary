@@ -126,6 +126,7 @@ class ExportPages(
        column(Column6, h4("Thoughts") + taskList(getTask(_)("thought"))) +
 
        // Empty notes
+       /*
        column(
            Column6,
            h4("Empty Notes") +
@@ -133,7 +134,8 @@ class ExportPages(
              .filter(_.notes.equals(""))
              .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
        ) +
-
+       */
+       
        // Invalid tags
        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)),
 
