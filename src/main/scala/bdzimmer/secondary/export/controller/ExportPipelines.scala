@@ -172,8 +172,9 @@ object ExportPipelines {
       master: CollectionItem, world: List[WorldItem],
       images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
 
-    // get only the world items that are described in the subset of the
-    // meta we just downloaded
+    val exportPages = new ExportPages(master, world, projConf.localExportPath, projConf.license)
+    
+    // get only the world items that are described in the subset of the meta just downloaded
     val metaToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))
 
     // the file items to export are:
@@ -191,7 +192,6 @@ object ExportPipelines {
     logList("image to export", imagesToExport.map(_.id))
 
     println("--exporting pages")
-    val exportPages = new ExportPages(master, world, projConf.localExportPath, projConf.license)
     val allPageOutputs = List(
         exportPages.createMasterPage(),
         exportPages.createTasksPage(),

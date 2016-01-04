@@ -37,6 +37,11 @@ class ExportPages(
 
   val metaItems = WorldItem.filterList[MetaItem](world)
 
+  // which other items' tags reference each item
+  val references = world.map(item => {
+    (item.id, world.filter(_.tags.exists(x => item.id.equals(x.value) || item.name.equals(x.value))))
+  }).toMap
+
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
     items map(item => exportPageDispatch(item)) filter (!_.equals(""))
@@ -126,7 +131,7 @@ class ExportPages(
        column(Column6, h4("Thoughts") + taskList(getTask(_)("thought"))) +
 
        // Empty notes
-       /*
+
        column(
            Column6,
            h4("Empty Notes") +
@@ -134,8 +139,8 @@ class ExportPages(
              .filter(_.notes.equals(""))
              .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
        ) +
-       */
-       
+
+
        // Invalid tags
        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)),
 
@@ -219,7 +224,7 @@ class ExportPages(
         column(Column12,
             ExportPages.panel(
                 ExportImages.imageLinkPage(character, metaItems, false, 320, false, 12), true, false) +
-            np.transform(character.notes)),
+            np.transform(character.notes) + refItems(character)),
 
         license)
 
@@ -240,7 +245,7 @@ class ExportPages(
         Some(ExportPages.getToolbar(map)),
 
         column(Column12, ExportImages.pixelImageLinkResponsive(map) + hr) +
-        column(Column12, np.transform(map.notes)),
+        column(Column12, np.transform(map.notes) + refItems(map)),
 
         license)
 
@@ -260,7 +265,7 @@ class ExportPages(
         Some(ExportPages.getToolbar(tileset)),
 
         column(Column12, ExportImages.pixelImageLinkResponsive(tileset) + hr) +
-        column(Column12, np.transform(tileset.notes)),
+        column(Column12, np.transform(tileset.notes) + refItems(tileset)),
 
         license)
 
@@ -278,7 +283,7 @@ class ExportPages(
         collection.name, collection.description,
         Some(ExportPages.getToolbar(collection)),
 
-        column(Column12, np.transform(collection.notes) + hr) +
+        column(Column12, np.transform(collection.notes) + refItems(collection) + hr) +
 
         // links to child pages with images
         collection.children.map(x => {
@@ -322,7 +327,7 @@ class ExportPages(
         column(Column12,
             hr +
             licenseDescription +
-            np.transform(imageItem.notes)),
+            np.transform(imageItem.notes) + refItems(imageItem)),
         license)
 
     relFilePath
@@ -337,11 +342,25 @@ class ExportPages(
         location / relFilePath,
         item.name, item.description,
         Some(ExportPages.getToolbar(item)),
-        column(Column12,
-            np.transform(item.notes)),
+        column(Column12, np.transform(item.notes) + refItems(item)),
         license )
 
     relFilePath
+  }
+
+
+  private def refItems(item: WorldItem): String = {
+    val refs = references.get(item.id) match {
+      case Some(x) => x
+      case None => List()
+    }
+
+    if (refs.length > 0) {
+       h4("Referenced By") +
+       listGroup(refs.sortBy(_.name).map(x => listItem(ExportPages.textLinkPage(x))))
+    } else {
+      ""
+    }
   }
 
 
@@ -454,7 +473,6 @@ object ExportPages {
   def notepadURL(item: WorldItem): String = {
     "https://drivenotepad.appspot.com/app?state=%7B%22ids%22:%5B%22" + item.remoteid + "%22%5D,%22action%22:%22open%22%7D"
   }
-
 
 }
 
