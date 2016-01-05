@@ -80,17 +80,16 @@ class ExportPages(
         toolbar,
 
         column(Column12, np.transform(master.notes) + hr +
-        master.children.map(x => {
-
-            val curCollection = x.asInstanceOf[CollectionItem]
+        master.children.collect({case curCollection: CollectionItem => {
 
             column(Column6,
-              "<h3>" + curCollection.name + "</h3>\n" +
-              listGroup(curCollection.children
-              //   .map(x => ExportPages.getCollectionLinksWithDescription(x))))
-                .map(x => ExportPages.getCollectionLinksCollapsible(x))))
+              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
+              ExportPages.glyphLinkPage(curCollection) + "\n" +
+              listGroup(curCollection.children.map(x =>
+                ExportPages.getCollectionLinksCollapsible(x))))
 
-          }).grouped(2).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n")),
+          }}).grouped(2).map(_.mkString("\n") +
+          """<div class="clearfix"></div>""" + "\n").mkString("\n")),
 
         license)
 

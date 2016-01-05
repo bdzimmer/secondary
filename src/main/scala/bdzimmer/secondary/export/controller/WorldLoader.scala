@@ -153,10 +153,14 @@ object WorldLoader {
 
 
   // fix the srcyml / remote id for a collection
+  // 2016-01-04: also fix null children (arises when YAML contains an empty children field)
   def assignSrcYml(wi: WorldItemBean, srcyml: String, fileStatus: FileModifiedMap): Unit =  wi match {
     case x: CollectionItemBean => {
       x.srcyml = srcyml
       x.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
+      if (x.children == null) {
+        x.children = new java.util.LinkedList[WorldItemBean]();
+      }
       x.children.asScala.toList.map(y => assignSrcYml(y, srcyml, fileStatus))
     }
     case _ => {
