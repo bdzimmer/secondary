@@ -16,8 +16,13 @@ case class TreeEntry(
     description: String,
     nodeType: String,
     parentType: String,
-    children: List[TreeEntry])
+    children: List[TreeEntry],
+    marriages: List[Marriage])
 
+// marriages are wierd because they sort of turn spouses into siblings
+case class Marriage(
+    hidden: TreeEntry,
+    spouse: TreeEntry)
 
 object FamilyTree {
 
@@ -53,15 +58,24 @@ object FamilyTree {
     // add a hidden parent to a tree
     def wrapTree(te: TreeEntry): String = {
       "var root = " +
-      treeToJs(TreeEntry("root", "", "", "title", "none", List(te))) + ";\n" +
-      "var spouses = [];\n"
+      treeToJs(TreeEntry("root", "", "", "title", "none", List(te), List())) + ";"
+    }
+
+    def spouseLines(marriages: List[(String, String)]): String = {
+      val spouseObjects = marriages.map(m => s"""{srcId: "${m._1}",  dstId: "${m._2}"}""").mkString(",")
+      s"""var spouses = [${spouseObjects}];"""
+    }
+
+    def getAllMarriages(tree: TreeEntry): List[(String, String)] = {
+      tree.marriages.map(x => (tree.id, x.spouse.id)) ++ tree.children.flatMap(getAllMarriages)
     }
 
     val tree = buildTree(character, characters, "none", np)
+    val marriages = getAllMarriages(tree)
 
     val treeDiv =
       "\n\n" + s"""<div id="${tree.id + "_tree"}">""" + "\n" +
-      "<script>\n" + s"""${wrapTree(tree)}""" + "\n" + s"""drawTree(root, "#${tree.id + "_tree"}", 800, 640)""" +
+      "<script>\n" + s"""${wrapTree(tree)}\n${spouseLines(marriages)}""" + "\n" + s"""drawTree(root, spouses, "#${tree.id + "_tree"}", 800, 480)""" +
       "\n</script>\n</div>\n\n"
 
     treeDiv
@@ -98,7 +112,7 @@ object FamilyTree {
     val children2 =  allCharacters.map(char => {
       val tags = filterTags(node.tags, DescendantTags).filter(x => {
         val matchChar = tagCharacter(x)
-        tagCharacter(x).map(_.id.equals(char.id)).getOrElse(false)
+        matchChar.map(_.id.equals(char.id)).getOrElse(false)
       })
       (char, tags.map(_.kind))
     }).filter(_._2.length > 0).toMap
@@ -107,21 +121,63 @@ object FamilyTree {
     val distinctChildren = children1 ++ children2.map{
       case (k, v) => k -> (v ++ children1.getOrElse(k, Nil)).distinct}
 
-    val childrenEntries = distinctChildren.toList.map({case (child, tagKinds) => {
-      // remove the current node from the character list to avoid loops in the tree
-      val newAllCharacters = allCharacters.filter(x => !x.id.equals(node.id))
-      val parentType = if (tagKinds.contains("ancestor") || tagKinds.contains("descendant")) {
-        "ancestor"
-      } else {
-        "parent"
+    // group children by marriage (or no marriage)
+    val childrenBySpouse = distinctChildren.toList.map(x => {
+      val child = x._1
+
+      // keep the ancestors that are not the current character
+      val otherParent = filterTags(child.tags, AncestorTags).map(ancestorTag => {
+        tagCharacter(ancestorTag).map(char => (char, ancestorTag.kind))
+      }).flatten.filter(!_._1.id.equals(node.id)).headOption
+
+      // TODO: check other characters for descendant tags with this child!
+      // Need two-way checking, just like children above
+
+      val matchedParent = otherParent match {
+        case Some((parent, rel)) => (Some(parent), rel)
+
+        // do I really need to be carrying lists of tag kinds until this point?
+        case None => (None, if (x._2.contains("ancestor") || x._2.contains("descendant")) {
+          "ancestor"
+        } else {
+          "parent"
+        })
       }
-      buildTree(child, newAllCharacters, parentType, np)
+
+      (matchedParent, child)
+
+    }).groupBy(_._1).mapValues(_.map(_._2)) // seems like this should be less complicated
+
+    val newAllCharacters = allCharacters.filter(x => !x.id.equals(node.id))
+
+    def getParentType(x: String) = if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
+
+    val marriages = childrenBySpouse.toList.collect({case ((Some(parent), rel), children) => {
+      Marriage(
+          TreeEntry(
+              node.id + "_" + parent.id, "", "", "marriage", "none",
+              children.map(child => {
+                buildTree(child, newAllCharacters.filter(_.id.equals(parent.id)), getParentType(rel), np)
+              }), List()),
+          TreeEntry(parent.id, parent.name, "", "character", "none", List(), List()))
     }})
+
+    val singleParentChildren = childrenBySpouse.toList.collect({case ((None, rel), children) => {
+      children.map(child => {
+        buildTree(child, newAllCharacters, getParentType(rel), np)
+      })
+    }}).flatten
 
     val description = np.transform(
         node.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
 
-    TreeEntry(node.id, node.name, description, "character", parentType, childrenEntries)
+    println(node.name)
+    println("single parent children: " + singleParentChildren.map(_.name))
+    println("marriages: " + marriages.map(x => x.spouse.name + " " + x.hidden.children.map(_.name)))
+
+    println("***")
+
+    TreeEntry(node.id, node.name, description, "character", parentType, singleParentChildren, marriages)
   }
 
 
@@ -129,7 +185,9 @@ object FamilyTree {
   def treeToJs(te: TreeEntry): String = {
 
     val childrenString = if (te.children.length > 0) {
-      s"children: [\n${te.children.map(treeToJs(_)).mkString(",\n")}]"
+      s"children: [\n${te.children.map(child => {
+        treeToJs(child) :: child.marriages.map(marriage => List(treeToJs(marriage.hidden), treeToJs(marriage.spouse))).flatten
+      }).flatten.mkString(",\n")}]"
     } else {
       ""
     }

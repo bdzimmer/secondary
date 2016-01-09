@@ -9,10 +9,9 @@
 // 2015-10-07: Further updates for preview text. Needs initial zoom / scale based on layout.
 // 2015-10-08: Finds initial zoom and scale.
 // 2015-10-10: Fixed bugs with initial zoom and scale finding.
+// 2016-01-18: Fixed bugs with spouse lines. Line breaks in names. 
 
-// TODO: consistent variable names; spouse lines and marriage nodes
-
-var boxWidth = 100, boxHeight = 50;
+var boxWidth = 120, boxHeight = 50;
 var bendLocation = 0.4;
 
 var connectX = function (d) {
@@ -37,17 +36,17 @@ var preview = d3.select("body").append("div")
   .style("opacity", 0);
 
 
-function drawTree(root, id, width, height)  {
+function drawTree(root, spouses, id, width, height)  {
 
   // define layout; compute node and link positions
   var layout = d3.layout.tree().nodeSize([boxWidth * 1.1, boxHeight * 2]);
   var nodes = layout.nodes(root);
   var links = layout.links(nodes);
-  
+
   // figure out initial translation and scale
   // it appears that the translation and scale have to be applied to both
   // the main svg group and the zoom listener for consistent results.
-  
+
   var minX = d3.min(nodes, function(d) {return d.x;}) - boxWidth;
   var maxX = d3.max(nodes, function(d) {return d.x;}) + boxWidth;
   var minY = d3.min(nodes, function(d) {return d.y;}) - boxHeight;
@@ -56,10 +55,10 @@ function drawTree(root, id, width, height)  {
   var startScale = Math.min(width / (maxX - minX), height / (maxY - minY), 1)
   var transX = 0 - minX * startScale
   var transY = 0 - minY * startScale
-  
+
   console.log(minX + " " + maxX + " "  + minY + " " + maxY)
   console.log(transX + " " + transY + " " + startScale);
-  
+
   // create zoom object for initial layout that allows scaling and translation
   var zoom = d3.behavior.zoom()
     .on("zoom", function () {
@@ -85,24 +84,31 @@ function drawTree(root, id, width, height)  {
       return d.target.parentType;
     })
     .attr("d", elbow);
-  
+
   var flatNodes = flatten(root);
-  
-  // add spouse lines
-  svg.selectAll(".spouse")
+
+  // add spouse lines (double lines)
+  var spouseLines = svg.selectAll(".spouse")
     .data(spouses)
-    .enter().append("path")
+    .enter().append("g");
+
+  spouseLines.append("path")
     .attr("class", "spouse")
     .attr("d", function(d) {
-    	spouseLine(d, flatNodes);
+      return spouseLine(d, -3, flatNodes);
     });
 
-  
+  spouseLines.append("path")
+    .attr("class", "spouse")
+    .attr("d", function(d) {
+      return spouseLine(d, 0, flatNodes);
+    });
+
   // add node rectangles
   var groups = svg.selectAll(".node")
-	.data(nodes)
-	.enter().append("a")
-	.attr("xlink:href", function(d){return d.id + ".html";});
+    .data(nodes)
+    .enter().append("a")
+    .attr("xlink:href", function(d){return d.id + ".html";});
 
   groups.append("rect")
     .attr("class", "node")
@@ -121,34 +127,45 @@ function drawTree(root, id, width, height)  {
   	.on("mouseenter", mousenter)
     .on("mouseleave", mouseleave)
     .on("mousemove", mousemove);
-    
-  
-  groups.append("text")
-    .attr("class", "nodetext")
-    .text(function (d){return d.name;})
-    .attr("x", textX)
-    .attr("y", textY)
+
+  var texts = groups.append("g")
+    .attr("transform", function(d) {
+      return "translate(" + textX(d) + "," + textY(d) + ")";
+    })
     .on("mouseenter", mousenter)
     .on("mouseleave", mouseleave)
-    .on("mousemove", mousemove);
+    .on("mousemove", mousemove)
+
+  texts.append("text")
+    .attr("class", "nodetext")
+    .attr("x", 0)
+    .attr("y", "-2em")
+    .selectAll("tspan")
+    .data(function (d) {
+      return d.name.split(" ");
+    }).enter().append("tspan")
+      .text(function (d) {return d;})
+      .attr("x", 0)
+      .attr("dy", "2em");
 }
 
 
 // draw a spouse line
-function spouseLine(d, flatNodes) {
+function spouseLine(d, yoff, flatNodes) {
 
-  //start point
+  // start point
   var startNode = flatNodes.filter(function (v) {
     return (d.srcId === v.id);
   });
-  //end point
+
+  // end point
   var endNode = flatNodes.filter(function (v) {
     return (d.dstId === v.id);
   });
 
   // line start and end
-  var lineData = [{x: startNode[0].x, y: startNode[0].y},
-                  {x: endNode[0].x, y: endNode[0].y}];
+  var lineData = [{x: startNode[0].x, y: startNode[0].y + yoff},
+                  {x: endNode[0].x, y: endNode[0].y + yoff}];
 
   var fun = d3.svg.line()
     .x(function (d) { return d.x; })
@@ -163,7 +180,7 @@ function spouseLine(d, flatNodes) {
 // I think I can get rid of the stuff to add node ids.
 function flatten(root) {
   var n = [];
-  
+
   function recurse(node) {
     if (node.children) {
     	node.children.forEach(recurse);
@@ -177,7 +194,7 @@ function flatten(root) {
 
 
 // draw right angle lines
-function elbow(d, i) {
+function elbow(d) {
 
   if (d.target.parentType === "none") {
       return "M0,0L0,0";
@@ -194,7 +211,7 @@ function elbow(d, i) {
   .x(function (d) { return d.x; })
   .y(function (d) { return d.y; })
   .interpolate("step-after");
-  
+
   return fun(lineData);
 }
 
