@@ -4,6 +4,7 @@
 
 // 2015-10-05: Created. Spouse lines not supported yet.
 // 2015-10-07: Updates for previous and ancestor vs. parent relationships.
+// 2015-01-08: WIP marriages.
 
 package bdzimmer.secondary.export.controller
 
@@ -19,7 +20,7 @@ case class TreeEntry(
     children: List[TreeEntry],
     marriages: List[Marriage])
 
-// marriages are wierd because they sort of turn spouses into siblings
+// marriages are weird because they sort of turn spouses into siblings
 case class Marriage(
     hidden: TreeEntry,
     spouse: TreeEntry)
@@ -90,7 +91,6 @@ object FamilyTree {
       parentType: String,
       np: RenderSecTags): TreeEntry = {
 
-    // TODO: revise this logic
     def tagCharacter(tag: SecTag) = allCharacters.filter(x => {
       x.id.equals(tag.value) || x.name.equals(tag.value)
     }).headOption
@@ -99,58 +99,60 @@ object FamilyTree {
       tags.filter(x => kinds.contains(x.kind))
     }
 
-    // it's a child if it has an ancestor tag for the current character
-    val children1 = allCharacters.map(char => {
-      val tags = filterTags(char.tags, AncestorTags).filter(x => {
-        val matchChar = tagCharacter(x)
-        matchChar.map(_.id.equals(node.id)).getOrElse(false)
-      })
-      (char, tags.map(_.kind))
-    }).filter(_._2.length > 0).toMap
+    def getParentType(x: String) = if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
 
-    // it's a child if the current character has a descendant tag for it
-    val children2 =  allCharacters.map(char => {
-      val tags = filterTags(node.tags, DescendantTags).filter(x => {
-        val matchChar = tagCharacter(x)
-        matchChar.map(_.id.equals(char.id)).getOrElse(false)
-      })
-      (char, tags.map(_.kind))
-    }).filter(_._2.length > 0).toMap
+    // it's a child if it has an ancestor tag for the current character
+    val children1 = for {
+      char <- allCharacters
+      ancestorTag <- filterTags(char.tags, AncestorTags)
+      tagChar <- tagCharacter(ancestorTag)
+      if tagChar.id.equals(node.id)
+    } yield (char, ancestorTag.kind)
+
+    // child if the current character as a descendant tag for it
+    val children2 = for {
+      char <- allCharacters
+      descendantTag <- filterTags(node.tags, DescendantTags)
+      tagChar <- tagCharacter(descendantTag)
+      if tagChar.id.equals(char.id)
+    } yield (tagChar, descendantTag.kind)
 
     // distinct children / tags
-    val distinctChildren = children1 ++ children2.map{
-      case (k, v) => k -> (v ++ children1.getOrElse(k, Nil)).distinct}
+    val distinctChildren = (children1 ++ children2).toMap
+
+    // println(node.id + " distinct children: " + children1.map(x => x._1.id + "-" + x._2) + children2.map(x => x._1.id + "-" + x._2))
 
     // group children by marriage (or no marriage)
-    val childrenBySpouse = distinctChildren.toList.map(x => {
-      val child = x._1
+    val childrenBySpouse = distinctChildren.toList.map({case (child, rel) => {
 
-      // keep the ancestors that are not the current character
-      val otherParent = filterTags(child.tags, AncestorTags).map(ancestorTag => {
-        tagCharacter(ancestorTag).map(char => (char, ancestorTag.kind))
-      }).flatten.filter(!_._1.id.equals(node.id)).headOption
+      // keep the ancestors of the child that are not the current character
+      val otherParents1 = for {
+        ancestorTag <- filterTags(child.tags, AncestorTags)
+        tagChar <- tagCharacter(ancestorTag)
+        if !tagChar.id.equals(node.id)
+      } yield (tagChar, ancestorTag.kind)
 
-      // TODO: check other characters for descendant tags with this child!
-      // Need two-way checking, just like children above
+      // check other characters for descendant tags with this child
+      val otherParents2 = for {
+        char <- allCharacters
+        if !char.equals(node.id)
+        descendantTag <- filterTags(child.tags, DescendantTags)
+        tagChar <- tagCharacter(descendantTag)
+        if !tagChar.id.equals(child.id)
+      } yield (char, descendantTag.kind)
+
+      val otherParent = (otherParents1 ++ otherParents2).headOption
 
       val matchedParent = otherParent match {
         case Some((parent, rel)) => (Some(parent), rel)
-
-        // do I really need to be carrying lists of tag kinds until this point?
-        case None => (None, if (x._2.contains("ancestor") || x._2.contains("descendant")) {
-          "ancestor"
-        } else {
-          "parent"
-        })
+        case None => (None, getParentType(rel))
       }
 
       (matchedParent, child)
 
-    }).groupBy(_._1).mapValues(_.map(_._2)) // seems like this should be less complicated
+    }}).groupBy(_._1).mapValues(_.map(_._2)) // seems like this should be less complicated
 
     val newAllCharacters = allCharacters.filter(x => !x.id.equals(node.id))
-
-    def getParentType(x: String) = if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
 
     val marriages = childrenBySpouse.toList.collect({case ((Some(parent), rel), children) => {
       Marriage(
