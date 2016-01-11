@@ -68,7 +68,9 @@ object FamilyTree {
     }
 
     def getAllMarriages(tree: TreeEntry): List[(String, String)] = {
-      tree.marriages.map(x => (tree.id, x.spouse.id)) ++ tree.children.flatMap(getAllMarriages)
+      (tree.marriages.map(x => (tree.id, x.spouse.id))
+        ++ tree.marriages.flatMap(x => getAllMarriages(x.hidden))
+        ++ tree.children.flatMap(getAllMarriages))
     }
 
     val tree = buildTree(character, characters, "none", np)
@@ -152,14 +154,14 @@ object FamilyTree {
 
     }}).groupBy(_._1).mapValues(_.map(_._2)) // seems like this should be less complicated
 
-    val newAllCharacters = allCharacters.filter(x => !x.id.equals(node.id))
+    val newAllCharacters = allCharacters.filter(!_.id.equals(node.id))
 
     val marriages = childrenBySpouse.toList.collect({case ((Some(parent), rel), children) => {
       Marriage(
           TreeEntry(
               node.id + "_" + parent.id, "", "", "marriage", "none",
               children.map(child => {
-                buildTree(child, newAllCharacters.filter(_.id.equals(parent.id)), getParentType(rel), np)
+                buildTree(child, newAllCharacters.filter(!_.id.equals(parent.id)), getParentType(rel), np)
               }), List()),
           TreeEntry(parent.id, parent.name, "", "character", "none", List(), List()))
     }})
