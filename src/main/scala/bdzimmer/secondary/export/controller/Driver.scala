@@ -7,6 +7,7 @@
 // 2015-08-30: Further configuration updates.
 // 2015-09-12: Per-project configs. Commands.
 // 2015-09-15: Interactive mode.
+// 2016-01-12: Edit item command.
 
 
 package bdzimmer.secondary.export.controller
@@ -22,7 +23,7 @@ import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
 import bdzimmer.util.StringUtils._
 
 import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
-import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItem}
+import bdzimmer.secondary.export.model.{CollectionItem, ProjectConfig, ProjectStructure, WorldItem}
 import bdzimmer.secondary.export.view.ConfigurationGUI
 import bdzimmer.pixeleditor.view.Main
 import bdzimmer.pixeleditor.model.AssetMetadataUtils
@@ -36,18 +37,22 @@ class Driver {
   val projConf = ProjectConfig(projectDir)
   val driveSync = DriveSync(projConf)
 
+  var loadedWorld: Result[String, CollectionItem] = Fail("World not loaded!")
+
   def run(args: Array[String]): Unit = {
     val command = args.headOption.getOrElse(Driver.DefaultCommand)
     command match {
       case DriverCommands.Interactive => runInteractive
       case DriverCommands.Help => Driver.showUsage
-      case _ => runCommand(command)
+      case _ => runCommand(command, List())
     }
   }
 
 
   // start the interactive shell
   private def runInteractive(): Unit = {
+
+    // TODO: attempt an initial loading of the world
 
     println(Driver.Title)
     val br = new BufferedReader(new InputStreamReader(System.in))
@@ -56,13 +61,16 @@ class Driver {
     @tailrec
     def readEval() {
       print("> ")
-      val command = br.readLine()
+      val (command, args) = br.readLine().split("\\s+").toList match {
+        case x :: xs => (x, xs)
+        case Nil => ("", List())
+      }
 
       command match {
         case "exit" | "quit" | "q" => () // quit
         case "" => readEval() // do nothing
         case _ => {
-          runCommand(command)
+          runCommand(command, args)
           readEval()
         }
       }
@@ -72,20 +80,30 @@ class Driver {
 
 
   // run a command
-  private def runCommand(command: String): Unit = command match {
+  private def runCommand(command: String, args: List[String]): Unit = command match {
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(prop).startup(Array())
       println("You must restart Secondary for configuration changes to take effect.")
     }
-    case DriverCommands.Export => projConf.mode match {
-      case "drive" => {
-        driveSync match {
-          case Pass(ds) => ExportPipelines.exportDriveSync(projConf, ds)
-          case Fail(msg) => Driver.driveError(msg)
+    case DriverCommands.Edit => {
+      val name = args.mkString(" ")
+      editItemByName(name)
+    }
+    case DriverCommands.Export => {
+      val result = projConf.mode match {
+        case "drive" => {
+          driveSync match {
+            case Pass(ds) => ExportPipelines.exportDriveSync(projConf, ds)
+            case Fail(msg) => {
+              Driver.driveError(msg)
+              Fail(msg)
+            }
+          }
         }
+        case _ => ExportPipelines.exportLocalSync(projConf)
       }
-      case _ => ExportPipelines.exportLocalSync(projConf)
+      loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
     }
     case DriverCommands.BrowseLocal => browseLocal
     case DriverCommands.Browse => projConf.mode match {
@@ -110,30 +128,43 @@ class Driver {
 
   // browse to the local copy of the project website
   private def browseLocal(): Unit = {
-    val filename = List(
-        projConf.projectDir,
-        ProjectStructure.WebDir,
-        "index.html").mkString(slash)
+    val filename = projConf.projectDir / ProjectStructure.WebDir / "index.html"
     val uri = new File(filename).toURI
     Try(Desktop.getDesktop.browse(uri))
   }
 
-
   // browse to the exported website on Google Drive host
-  private def browseDrive(): Unit = {
-    driveSync match {
-      case Pass(ds) => Try {
-        val drivePermaLink = "http://www.googledrive.com/host/" + ds.driveOutputFile.getId
-        println(drivePermaLink)
-        Desktop.getDesktop.browse(new URI(drivePermaLink))
-      }
-      case Fail(msg) => Driver.driveError(msg)
+  private def browseDrive(): Unit = driveSync match {
+    case Pass(ds) => {
+      val drivePermaLink = "http://www.googledrive.com/host/" + ds.driveOutputFile.getId
+      println(drivePermaLink)
+      Try(Desktop.getDesktop.browse(new URI(drivePermaLink)))
     }
+    case Fail(msg) => Driver.driveError(msg)
+  }
+
+  // edit the source file associated with an object by name or id
+  private def editItemByName(name: String): Unit = loadedWorld match {
+    case Pass(master) => {
+      val world = WorldItem.collectionToList(master)
+      world.filter(item => item.id.equals(name) || item.name.equals(name)).headOption match {
+        case Some(item) => editItem(item)
+        case None => println("No such item!")
+      }
+    }
+    case Fail(msg) => println(msg)
+  }
+
+  // edit an item's source file locally or in Drive
+  private def editItem(item: WorldItem): Unit = projConf.mode match {
+    case "local" =>
+      Desktop.getDesktop.open(new File(projConf.localContentPath / item.srcyml))
+    case "drive" => Desktop.getDesktop.browse(new URI(ExportPages.notepadURL(item)))
   }
 
   private def serverMode(seconds: Int): Unit = {
     while(true) {
-      runCommand(DriverCommands.Export)
+      runCommand(DriverCommands.Export, List())
       Thread.sleep(seconds * 1000)
     }
   }
@@ -192,6 +223,7 @@ object Driver {
 object DriverCommands {
 
   val Configure = "configure"
+  val Edit = "edit"
   val Export = "export"
   val BrowseLocal = "browse-local"
   val Browse = "browse"
@@ -203,6 +235,7 @@ object DriverCommands {
   val CommandsDescriptions = List(
       (Configure, "edit project configuration"),
       (Export, "export"),
+      (Edit, "edit the source file for an item"),
       (BrowseLocal, "browse local copy of project web site"),
       (Browse, "browse exported project web site"),
       (Editor, "start editor (alpha)"),

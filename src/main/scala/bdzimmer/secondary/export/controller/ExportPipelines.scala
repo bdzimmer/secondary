@@ -27,12 +27,14 @@ import bdzimmer.secondary.export.view.Styles
 object ExportPipelines {
 
   // content -> web; always export everything
-  def exportLocalAll(projConf: ProjectConfig): Unit = {
+  def exportLocalAll(projConf: ProjectConfig): Result[String, CollectionItem] = {
 
     FileUtils.deleteDirectory(projConf.localExportPathFile)
     projConf.localExportPathFile.mkdirs
 
-    WorldLoader.loadWorld(projConf) match {
+    val loadedWorld = WorldLoader.loadWorld(projConf)
+
+    loadedWorld match {
 
       case Pass(master) => {
 
@@ -62,12 +64,13 @@ object ExportPipelines {
       case Fail(msg) => println(msg)
     }
 
+    loadedWorld
 
   }
 
 
   // content -> web; use local file time stamps
-  def exportLocalSync(projConf: ProjectConfig): Unit = {
+  def exportLocalSync(projConf: ProjectConfig): Result[String, CollectionItem] = {
 
     def localMetaStatusChanges(oldMetaStatus: FileModifiedMap, projConf: ProjectConfig): FileModifiedMap = {
       val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(_.endsWith(".yml"))
@@ -86,7 +89,9 @@ object ExportPipelines {
 
     // build the collection
 
-    WorldLoader.loadWorld(projConf, newMetaStatus) match {
+    val loadedWorld = WorldLoader.loadWorld(projConf, newMetaStatus)
+
+    loadedWorld match {
       case Pass(master) => {
 
         val world = WorldItem.collectionToList(master)
@@ -115,11 +120,13 @@ object ExportPipelines {
       case Fail(msg) => println(msg)
 
     }
+
+    loadedWorld
   }
 
 
   // Drive -> content, content -> web, web -> Drive
-  def exportDriveSync(projConf: ProjectConfig, ds: DriveSync): Unit = {
+  def exportDriveSync(projConf: ProjectConfig, ds: DriveSync): Result[String, CollectionItem] = {
 
     // download the metadata, update status
     val metaStatusFile = projConf.projectDir / ProjectStructure.DriveMetaStatusFile
@@ -129,7 +136,9 @@ object ExportPipelines {
 
     // build the collection
 
-    WorldLoader.loadWorld(projConf, newMetaStatus) match {
+    val loadedWorld = WorldLoader.loadWorld(projConf, newMetaStatus)
+
+    loadedWorld match {
       case Pass(master) => {
 
         val world = WorldItem.collectionToList(master)
@@ -162,6 +171,8 @@ object ExportPipelines {
 
       case Fail(msg) => println(msg)
     }
+
+    loadedWorld
   }
 
 
@@ -173,7 +184,7 @@ object ExportPipelines {
       images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
 
     val exportPages = new ExportPages(master, world, projConf.localExportPath, projConf.license)
-    
+
     // get only the world items that are described in the subset of the meta just downloaded
     val metaToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))
 
