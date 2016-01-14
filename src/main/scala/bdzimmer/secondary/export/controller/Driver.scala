@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
 // Entry point for world builder export process.
 
@@ -8,6 +8,7 @@
 // 2015-09-12: Per-project configs. Commands.
 // 2015-09-15: Interactive mode.
 // 2016-01-12: Edit item command.
+// 2016-01-13: Explore command.
 
 
 package bdzimmer.secondary.export.controller
@@ -81,6 +82,11 @@ class Driver {
 
   // run a command
   private def runCommand(command: String, args: List[String]): Unit = command match {
+    case DriverCommands.Browse => projConf.mode match {
+      case "drive" => browseDrive
+      case _ => browseLocal
+    }
+    case DriverCommands.BrowseLocal => browseLocal
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(prop).startup(Array())
@@ -90,6 +96,17 @@ class Driver {
       val name = args.mkString(" ")
       editItemByName(name)
     }
+    case DriverCommands.Editor => {
+      val master = WorldLoader.loadWorld(projConf) match {
+        case Pass(master) => {
+          val outputFilename = "assetmetadata.txt"
+          AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
+          new Main(projConf.mappedContentPathActual, "Secondary Editor", outputFilename)
+        }
+        case Fail(msg) => println(msg)
+      }
+    }
+    case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
       val result = projConf.mode match {
         case "drive" => {
@@ -104,21 +121,6 @@ class Driver {
         case _ => ExportPipelines.exportLocalSync(projConf)
       }
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
-    }
-    case DriverCommands.BrowseLocal => browseLocal
-    case DriverCommands.Browse => projConf.mode match {
-      case "drive" => browseDrive
-      case _ => browseLocal
-    }
-    case DriverCommands.Editor => {
-      val master = WorldLoader.loadWorld(projConf) match {
-        case Pass(master) => {
-          val outputFilename = "assetmetadata.txt"
-          AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
-          new Main(projConf.mappedContentPathActual, "Secondary Editor", outputFilename)
-        }
-        case Fail(msg) => println(msg)
-      }
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Help => Driver.showCommands
@@ -157,9 +159,19 @@ class Driver {
 
   // edit an item's source file locally or in Drive
   private def editItem(item: WorldItem): Unit = projConf.mode match {
-    case "local" =>
-      Desktop.getDesktop.open(new File(projConf.localContentPath / item.srcyml))
     case "drive" => Desktop.getDesktop.browse(new URI(ExportPages.notepadURL(item)))
+    case _ => Desktop.getDesktop.open(new File(projConf.localContentPath / item.srcyml))
+  }
+
+  // explore the project's source directory
+  private def explore(): Unit = projConf.mode match {
+    case "drive" => driveSync match {
+      case Pass(ds) =>
+        Desktop.getDesktop.browse(
+            new URI(s"https://drive.google.com/drive/folders/${ds.driveInputFile.getId}"))
+      case Fail(msg) => Driver.driveError(msg)
+    }
+    case _ => Desktop.getDesktop.open(projConf.localContentPathFile)
   }
 
   private def serverMode(seconds: Int): Unit = {
@@ -175,7 +187,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2015.12.14"
+  val Title = "Secondary - create worlds from text - v2016.01.14"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
@@ -215,30 +227,31 @@ object Driver {
     println("Drive problem: " + msg)
   }
 
-
 }
 
 
 
 object DriverCommands {
 
+  val Browse = "browse"
+  val BrowseLocal = "browse-local"
   val Configure = "configure"
   val Edit = "edit"
-  val Export = "export"
-  val BrowseLocal = "browse-local"
-  val Browse = "browse"
   val Editor = "editor"
+  val Explore = "explore"
+  val Export = "export"
   val Server = "server"
   val Interactive = "interactive"
   val Help = "help"
 
   val CommandsDescriptions = List(
-      (Configure, "edit project configuration"),
-      (Export, "export"),
-      (Edit, "edit the source file for an item"),
-      (BrowseLocal, "browse local copy of project web site"),
       (Browse, "browse exported project web site"),
+      (BrowseLocal, "browse local copy of project web site"),
+      (Configure, "edit project configuration"),
+      (Edit, "edit the source file for an item"),
       (Editor, "start editor (alpha)"),
+      (Explore, "explore project content dir"),
+      (Export, "export"),
       (Server, "server mode"),
       (Help, "show usage / commands"))
 }
