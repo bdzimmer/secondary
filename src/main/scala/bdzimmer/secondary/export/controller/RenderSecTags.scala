@@ -8,7 +8,7 @@ import org.pegdown.ast.AnchorLinkNode
 
 import bdzimmer.util.{Result, Pass, Fail}
 
-import bdzimmer.secondary.export.model.{CharacterItem, MetaItem, WorldItem, ParseSecTags, SecTag}
+import bdzimmer.secondary.export.model.{CharacterItem, MetaItem, WorldItem, ParseSecTags, SecTag, SecTags}
 import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 
@@ -40,7 +40,7 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   // a simpler version of the processTag function
   // determines whether a tag is valid without rendering it
   def validateTag(tag: SecTag): Result[String, String] = {
-    if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
+    if (SecTags.OtherTagKinds.contains(tag.kind)) {
        Pass("valid non-item tag")
     } else {
       // if it's an item tag, match the tag value against the world
@@ -54,8 +54,8 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
 
   // process a tag
   def processTag(tag: SecTag): Result[String, String] = {
-    if (ParseSecTags.OtherTagKinds.contains(tag.kind)) {
-      RenderSecTags.processOtherTag(tag)
+    if (SecTags.OtherTagKinds.contains(tag.kind)) {
+      Pass(RenderSecTags.processOtherTag(tag))
     } else {
       // if it's an item tag, match the tag value against the world
       matchItemTag(tag) match {
@@ -89,17 +89,15 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   // generate text for tags that reference WorldItems
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
-    case ParseSecTags.Link => RenderSecTags.link(item, args)
-    case ParseSecTags.Image => RenderSecTags.image(item, RenderSecTags.parseArgs(args), metaItems)
-    case ParseSecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
-    case ParseSecTags.FamilyTree => familyTree(item)
-    case ParseSecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
-    case ParseSecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
+    case SecTags.Link => RenderSecTags.link(item, args)
+    case SecTags.Image => RenderSecTags.image(item, RenderSecTags.parseArgs(args), metaItems)
+    case SecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
+    case SecTags.FamilyTree => familyTree(item)
+    case SecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
+    case SecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
-    case _ => (s"""<b>${kind.capitalize}: </b>"""
-      + ExportPages.textLinkPage(item)
-      + Tags.brInline)
+    case _ => (s"""<b>${kind.capitalize}: </b>""" + ExportPages.textLinkPage(item) + Tags.brInline)
   }
 
 
@@ -141,17 +139,19 @@ object RenderSecTags {
 
 
   // generate text for tag kinds that don't reference WorldItems
-  def processOtherTag(tag: SecTag): Result[String, String] = tag.kind match {
-    case ParseSecTags.Demo => {
+  def processOtherTag(tag: SecTag): String = tag.kind match {
+    case SecTags.Demo => {
       val body = tag.args match {
         case x :: Nil => x
         case x :: xs => s"$x | ${xs.mkString(" ")}"
         case _ => "..."
       }
-      Pass(s"{{${tag.value}: ${body}}}")
+      s"{{${tag.value}: ${body}}}"
     }
-    case ParseSecTags.Event => Pass(s"""<b>${tag.value}: </b> """ + tag.args.mkString(" ") + Tags.brInline)
-    case _ => Fail(s"unrecognized non-item tag: ${tag.kind}")
+    case SecTags.Birth => tagArgsString(tag)
+    case SecTags.Death => tagArgsString(tag)
+    case SecTags.Event => tagArgsString(tag)
+    case _ => tagString(tag)
   }
 
 
@@ -210,7 +210,19 @@ object RenderSecTags {
 
 
   def tagString(tag: SecTag): String = {
-    s"""<b>${tag.kind.capitalize}: </b> """ + tag.value + Tags.brInline
+    genShow(tag.kind.capitalize, tag.value)
+  }
+
+  def tagArgsString(tag: SecTag): String = {
+    val desc = tag.args match {
+      case Nil => "empty " + tag.kind.capitalize
+      case _ => tag.args.mkString(" ")
+    }
+    genShow(tag.value, desc)
+  }
+
+  def genShow(fst: String, snd: String): String = {
+    s"""<b>${fst}: </b> """ + snd + Tags.brInline
   }
 
 

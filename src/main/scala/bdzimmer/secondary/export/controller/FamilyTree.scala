@@ -27,9 +27,6 @@ case class Marriage(
 
 object FamilyTree {
 
-  val AncestorTags = Set("father", "mother", "parent", "ancestor")
-  val DescendantTags = Set("son", "daughter", "descendant")
-
   val TreeStyles =
     """<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>""" + "\n" +
     """<link href="tree/tree.css" rel="stylesheet">""" + "\n" +
@@ -41,7 +38,7 @@ object FamilyTree {
 
     def isRoot(char: CharacterItem): Boolean = {
       val charTagKinds = char.tags.map(_.kind).toSet
-      AncestorTags.intersect(charTagKinds).size == 0
+      Genealogy.AncestorTags.intersect(charTagKinds).size == 0
     }
 
     // root characters are those without a parent or ancestor
@@ -93,41 +90,12 @@ object FamilyTree {
       parentType: String,
       np: RenderSecTags): TreeEntry = {
 
-    def getParentType(x: String) = if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
-
-    val distinctChildren = findDistinctChildren(node, allCharacters)
+    val distinctChildren = Genealogy.findDistinctChildren(node, allCharacters)
 
     // println(node.id + " distinct children: " + children1.map(x => x._1.id + "-" + x._2) + children2.map(x => x._1.id + "-" + x._2))
 
     // group children by marriage (or no marriage)
-    val childrenBySpouse = distinctChildren.map({case (child, rel) => {
-
-      // keep the ancestors of the child that are not the current character
-      val otherParents1 = for {
-        ancestorTag <- filterTags(child.tags, AncestorTags)
-        tagChar <- tagCharacter(ancestorTag, allCharacters)
-        if !tagChar.id.equals(node.id)
-      } yield (tagChar, ancestorTag.kind)
-
-      // check other characters for descendant tags with this child
-      val otherParents2 = for {
-        char <- allCharacters
-        if !char.equals(node.id)
-        descendantTag <- filterTags(child.tags, DescendantTags)
-        tagChar <- tagCharacter(descendantTag, allCharacters)
-        if !tagChar.id.equals(child.id)
-      } yield (char, descendantTag.kind)
-
-      val otherParent = (otherParents1 ++ otherParents2).headOption
-
-      val matchedParent = otherParent match {
-        case Some((parent, rel)) => (Some(parent), rel)
-        case None => (None, getParentType(rel))
-      }
-
-      (matchedParent, child)
-
-    }}).groupBy(_._1).mapValues(_.map(_._2)) // seems like this should be less complicated
+    val childrenBySpouse = Genealogy.findParents(node, distinctChildren, allCharacters)
 
     val newAllCharacters = allCharacters.filter(!_.id.equals(node.id))
 
@@ -136,14 +104,19 @@ object FamilyTree {
           TreeEntry(
               node.id + "_" + parent.id, "", "", "marriage", "none",
               children.map(child => {
-                buildTree(child, newAllCharacters.filter(!_.id.equals(parent.id)), getParentType(rel), np)
+                buildTree(
+                    child,
+                    newAllCharacters.filter(!_.id.equals(parent.id)),
+                    Genealogy.getParentType(rel), np)
               }), List()),
-          TreeEntry(parent.id, parent.name, "", "character", "none", List(), List()))
+          TreeEntry(
+              parent.id, parent.name.replace(' ', '\t') + "\t" + Genealogy.lifespan(parent),
+              "", "character", "none", List(), List()))
     }})
 
     val singleParentChildren = childrenBySpouse.toList.collect({case ((None, rel), children) => {
       children.map(child => {
-        buildTree(child, newAllCharacters, getParentType(rel), np)
+        buildTree(child, newAllCharacters, Genealogy.getParentType(rel), np)
       })
     }}).flatten
 
@@ -156,45 +129,10 @@ object FamilyTree {
 
     println("***")
 
-    TreeEntry(node.id, node.name, description, "character", parentType, singleParentChildren, marriages)
+    TreeEntry(
+        node.id, node.name.replace(' ', '\t') + "\t" + Genealogy.lifespan(node),
+        description, "character", parentType, singleParentChildren, marriages)
   }
-
-
-  // find the distinct children of a character
-  def findDistinctChildren(
-      character: CharacterItem,
-      allCharacters: List[CharacterItem]): List[(CharacterItem, String)] = {
-
-    // it's a child if it has an ancestor tag for the current character
-    val children1 = for {
-      char <- allCharacters
-      ancestorTag <- filterTags(char.tags, AncestorTags)
-      tagChar <- tagCharacter(ancestorTag, allCharacters)
-      if tagChar.id.equals(character.id)
-    } yield (char, ancestorTag.kind)
-
-    // child if the current character as a descendant tag for it
-    val children2 = for {
-      char <- allCharacters
-      descendantTag <- filterTags(character.tags, DescendantTags)
-      tagChar <- tagCharacter(descendantTag, allCharacters)
-      if tagChar.id.equals(char.id)
-    } yield (tagChar, descendantTag.kind)
-
-    // distinct children / tags
-    (children1 ++ children2).toMap.toList
-
-  }
-
-
-  private def filterTags(tags: List[SecTag], kinds: Set[String]): List[SecTag] = {
-    tags.filter(x => kinds.contains(x.kind))
-  }
-
-  private def tagCharacter(
-      tag: SecTag, allCharacters: List[CharacterItem]) = allCharacters.filter(x => {
-    x.id.equals(tag.value) || x.name.equals(tag.value)
-  }).headOption
 
 
   // convert a TreeEntry tree into JavaScript code for use with D3

@@ -11,7 +11,7 @@
 // 2015-10-10: Fixed bugs with initial zoom and scale finding.
 // 2016-01-18: Fixed bugs with spouse lines. Line breaks in names. 
 
-var boxWidth = 120, boxHeight = 50;
+var boxWidth = 120, boxHeight = 80;
 var bendLocation = 0.4;
 
 var connectX = function (d) {
@@ -23,11 +23,11 @@ var connectY = function (d) {
 };
 
 var textX = function (d) {
-    return d.x - boxWidth / 2 + 5;
+    return d.x - boxWidth / 2 + 8;
 };
 
 var textY = function (d) {
-    return d.y - 10;
+    return d.y - boxHeight / 2 + 0;
 };
 
 var preview = d3.select("body").append("div")
@@ -139,10 +139,9 @@ function drawTree(root, spouses, id, width, height)  {
   texts.append("text")
     .attr("class", "nodetext")
     .attr("x", 0)
-    .attr("y", "-2em")
     .selectAll("tspan")
     .data(function (d) {
-      return d.name.split(" ");
+      return d.name.split("\t");
     }).enter().append("tspan")
       .text(function (d) {return d;})
       .attr("x", 0)

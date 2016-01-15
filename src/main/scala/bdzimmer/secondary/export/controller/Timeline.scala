@@ -20,10 +20,14 @@ class Timeline(months: List[String]) {
 
   def getHtml(item: WorldItem, format: String): String = {
 
-    val events = WorldItem.collectionToList(item).map(event => {
-      event.tags.filter(_.kind.equals(ParseSecTags.Event)).map(tag => {
+    val events = WorldItem.collectionToList(item).map(it => {
+      it.tags.filter(x => SecTags.EventTagKinds.contains(x.kind)).map(tag => {
         // date, description, originating page
-        (parseDateTuple(tag.value), tag.args.mkString(" "), event)
+        val desc = tag.args match {
+          case Nil => "empty " + tag.kind.capitalize
+          case _ => tag.args.mkString(" ")
+        }
+        (parseDateTuple(tag.value), desc, it)
       })
     }).flatten.sortBy(_._1)
 
@@ -112,7 +116,7 @@ class Timeline(months: List[String]) {
   }
 
 
-  private def parseDateTuple(date: String): DateTuple = {
+  def parseDateTuple(date: String): DateTuple = {
 
     val parseResult = date.split("\\s*[,\\s]+").toList match {
       case month :: day :: year :: Nil => Result(

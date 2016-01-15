@@ -17,9 +17,7 @@ import org.apache.commons.io.FileUtils
 case class SecTag(kind: String, value: String, args: List[String])
 
 
-object ParseSecTags {
-
-  val matcher = "\\{\\{(.*?)\\}\\}".r
+object SecTags {
 
   // upper CamelCase looks weird, but it's convention for constants
   // http://docs.scala-lang.org/style/naming-conventions.html
@@ -31,17 +29,27 @@ object ParseSecTags {
   val Jumbotron = "jumbotron"
   val Timeline = "timeline"
 
+  val Birth = "birth"
+  val Death = "death"
   val Event = "event"
+
   val Todo = "todo"
   val Thought = "thought"
   val Demo = "demo"
 
   val ItemTagKinds = List(Link, Image, ImageResponsive, FamilyTree, Jumbotron, Timeline)
-  val OtherTagKinds = List(Event, Todo, Thought, Demo)
+  val EventTagKinds = List(Birth, Death, Event)
+  val OtherTagKinds = List(Todo, Thought, Demo) ++ EventTagKinds
 
+}
+
+
+object ParseSecTags {
+
+  val matcher = "\\{\\{(.*?)\\}\\}".r
 
   def getAllTags(text: String): List[SecTag] = {
-    ParseSecTags.matcher.findAllMatchIn(text).map(m => {
+    matcher.findAllMatchIn(text).map(m => {
       getTag(m.group(1))
     }).toList
   }
