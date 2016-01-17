@@ -26,8 +26,8 @@ class ExportLocalTest extends FunSuite {
     val projectDir = System.getProperty("user.dir") / "doc"
     val projConf = ProjectConfig(projectDir)
 
-    ExportPipelines.exportLocalAll(projConf)
-    ExportPipelines.addStyles(projConf)
+    ExportPipeline.exportAll(projConf)
+    ExportPipeline.addStyles(projConf)
 
     val curDir = System.getProperty("user.dir")
     Try {

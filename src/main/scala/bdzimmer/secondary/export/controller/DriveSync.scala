@@ -56,7 +56,7 @@ class DriveSync(
 
 
   def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
-    val imageFiles = ExportPipelines.getReferencedImages(masterCollection)
+    val imageFiles = ExportPipeline.getReferencedImages(masterCollection)
     val downloadImageStatus = downloadFilesIntelligent(imageFiles, fileStatus)
 
     println("--refreshed image files")

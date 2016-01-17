@@ -9,6 +9,7 @@
 // 2015-09-15: Interactive mode.
 // 2016-01-12: Edit item command.
 // 2016-01-13: Explore command.
+// 2016-01-16: Styles command.
 
 
 package bdzimmer.secondary.export.controller
@@ -111,18 +112,19 @@ class Driver {
       val result = projConf.mode match {
         case "drive" => {
           driveSync match {
-            case Pass(ds) => ExportPipelines.exportDriveSync(projConf, ds)
+            case Pass(ds) => new DriveSyncExportPipeline(projConf, ds).run()
             case Fail(msg) => {
               Driver.driveError(msg)
               Fail(msg)
             }
           }
         }
-        case _ => ExportPipelines.exportLocalSync(projConf)
+        case _ => new LocalSyncExportPipeline(projConf).run()
       }
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
+    case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
     case DriverCommands.Help => Driver.showCommands
     case _ => println("Invalid command. Use 'help' for a list of commands.")
   }
@@ -187,7 +189,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.01.14"
+  val Title = "Secondary - create worlds from text - v2016.01.16"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
@@ -241,6 +243,7 @@ object DriverCommands {
   val Explore = "explore"
   val Export = "export"
   val Server = "server"
+  val Styles = "styles"
   val Interactive = "interactive"
   val Help = "help"
 
@@ -253,5 +256,6 @@ object DriverCommands {
       (Explore, "explore project content dir"),
       (Export, "export"),
       (Server, "server mode"),
+      (Styles, "add stylesheets"),
       (Help, "show usage / commands"))
 }
