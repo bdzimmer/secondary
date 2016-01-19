@@ -56,7 +56,7 @@ object Genealogy {
   def findParents(
       character: CharacterItem,
       children: List[(CharacterItem, String)],
-      allCharacters: List[CharacterItem]) = {
+      allCharacters: List[CharacterItem]): Map[(Option[CharacterItem], String), List[CharacterItem]] = {
 
     children.map({case (child, rel) => {
 

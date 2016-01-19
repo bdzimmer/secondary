@@ -94,10 +94,11 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     case SecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
     case SecTags.FamilyTree => familyTree(item)
     case SecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
+    case SecTags.Marriage => RenderSecTags.marriage(item, RenderSecTags.parseArgs(args))
     case SecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
-    case _ => (s"""<b>${kind.capitalize}: </b>""" + ExportPages.textLinkPage(item) + Tags.brInline)
+    case _ => RenderSecTags.genLink(kind.capitalize, item)
   }
 
 
@@ -143,7 +144,7 @@ object RenderSecTags {
     case SecTags.Demo => {
       val body = tag.args match {
         case x :: Nil => x
-        case x :: xs => s"$x | ${xs.mkString(" ")}"
+        case x :: xs => s"$x | ${xs.mkString(" | ")}"
         case _ => "..."
       }
       s"{{${tag.value}: ${body}}}"
@@ -188,6 +189,10 @@ object RenderSecTags {
   }
 
 
+  def marriage(item: WorldItem, args: Map[String, String]): String = {
+    genLink("Marriage", item)
+  }
+
   def timeline(item: WorldItem, args: Map[String, String]): String = {
     val timeline = new Timeline(Timeline.DefaultMonths)
     val format = args.getOrElse("format", Timeline.MonthDayParagraphFormat)
@@ -225,5 +230,8 @@ object RenderSecTags {
     s"""<b>${fst}: </b> """ + snd + Tags.brInline
   }
 
+  def genLink(name: String, item: WorldItem): String = {
+    s"""<b>${name}: </b>""" + ExportPages.textLinkPage(item) + Tags.brInline
+  }
 
 }

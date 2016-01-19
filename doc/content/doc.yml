@@ -32,7 +32,7 @@ children:
 
     A key feature of Secondary is a special set of tags that you can use in the notes of any item. Some of these function like tags in wiki markup, while others have purposes that are more specific to worldbuilding. Tags take the following form:
 
-    `{{demo: tag_name | value arg1=value1 arg2=value2 arg3=value3 ...}}`
+    `{{demo: tag_name | value | arg1=value1 | arg2=value2 | arg3=value3 ...}}`
 
     For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Other Tags}}, `value` usually a a sentence or two of descriptive text. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
 
@@ -52,7 +52,7 @@ children:
 
     **Usage**
 
-    `{{demo: link | item anchor}}`
+    `{{demo: link | item | anchor}}`
 
     * **item**: name or id of item
     * **anchor** (optional): name of anchor within item's notes; anchors are automatically generated for headings
@@ -63,7 +63,7 @@ children:
 
     `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
 
-    `{{demo: link | Tags Other Tags}}` &rarr; {{link: Tags | Other Tags}}
+    `{{demo: link | Tags | Other Tags}}` &rarr; {{link: Tags | Other Tags}}
 
 
     #### image
@@ -74,7 +74,7 @@ children:
 
     **Usage**
 
-    `{{demo: image | item link=true}}`
+    `{{demo: image | item | link=true}}`
 
     * **item**: name or id of image or character item
     * **link**: should the image link link back to its page?
@@ -102,16 +102,17 @@ children:
 
 
     #### jumbotron
-    `{{demo: jumbotron | image xPos=0% yPos=0% color=black}}`
+    `{{demo: jumbotron | image | xPos=0% | yPos=0% | color=black}}`
 
     {{todo: jumbotron tag documentation}}
 
 
     #### timeline
-    `{{demo: timeline | item format=monthDayParagraph}}`
+    `{{demo: timeline | item | format=monthDayParagraph}}`
 
     {{todo: timeline tag documentation}}
 
+    <br />
 
     ### Other Tags
     ***
@@ -120,7 +121,7 @@ children:
 
 
     #### event
-    `{{demo: event | date description}}`
+    `{{demo: event | date | description}}`
 
     {{todo: event tag documentation}}
 

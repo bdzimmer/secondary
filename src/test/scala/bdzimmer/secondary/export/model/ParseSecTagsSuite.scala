@@ -19,7 +19,7 @@ class ParseSecTagsSuite extends FunSuite {
         .equals(SecTag("familytree", "Billy Bob", List())))
 
     // kind with parameters
-    assert(ParseSecTags.getTag("jumbotron: Baloney Photo | color=white xpos=0% ypos=50%")
+    assert(ParseSecTags.getTag("jumbotron: Baloney Photo | color=white | xpos=0% | ypos=50%")
         .equals(SecTag("jumbotron", "Baloney Photo", List("color=white", "xpos=0%", "ypos=50%"))))
 
   }

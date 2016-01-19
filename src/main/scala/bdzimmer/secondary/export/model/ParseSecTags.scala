@@ -27,6 +27,7 @@ object SecTags {
   val ImageResponsive = "image-responsive"
   val FamilyTree = "familytree"
   val Jumbotron = "jumbotron"
+  val Marriage = "marriage"
   val Timeline = "timeline"
 
   val Birth = "birth"
@@ -37,7 +38,9 @@ object SecTags {
   val Thought = "thought"
   val Demo = "demo"
 
-  val ItemTagKinds = List(Link, Image, ImageResponsive, FamilyTree, Jumbotron, Timeline)
+  val ItemTagKinds = List(
+      Link, Image, ImageResponsive,
+      FamilyTree, Jumbotron, Marriage, Timeline)
   val EventTagKinds = List(Birth, Death, Event)
   val OtherTagKinds = List(Todo, Thought, Demo) ++ EventTagKinds
 
@@ -60,9 +63,7 @@ object ParseSecTags {
 
     tagText.split(":\\s+").toList match {
       case kind :: text :: extra => text.split("\\s*\\|\\s*").toList match {
-        case value :: argsList :: extra => {
-          SecTag(kind.toLowerCase(), value, argsList.split("\\s+").toList)
-        }
+        case value :: args => SecTag(kind.toLowerCase(), value, args)
         case _ => SecTag(kind.toLowerCase(), text, List())
       }
       case _ => SecTag("link", tagText, List())
