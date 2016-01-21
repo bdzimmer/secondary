@@ -37,7 +37,7 @@ object Genealogy {
       if tagChar.id.equals(character.id)
     } yield (char, ancestorTag.kind)
 
-    // child if the current character as a descendant tag for it
+    // child if the current character has a descendant tag for it
     val children2 = for {
       char <- allCharacters
       descendantTag <- filterTags(character.tags, DescendantTags)
@@ -56,9 +56,9 @@ object Genealogy {
   def findParents(
       character: CharacterItem,
       children: List[(CharacterItem, String)],
-      allCharacters: List[CharacterItem]): Map[(Option[CharacterItem], String), List[CharacterItem]] = {
+      allCharacters: List[CharacterItem]): Map[Option[CharacterItem], List[(CharacterItem, String)]] = {
 
-    children.map({case (child, rel) => {
+    val parentsByChild = children.map({case (child, rel) => {
 
       // keep the ancestors of the child that are not the current character
       val otherParents1 = for {
@@ -78,14 +78,39 @@ object Genealogy {
 
       val otherParent = (otherParents1 ++ otherParents2).headOption
 
-      val matchedParent = otherParent match {
-        case Some((parent, rel)) => (Some(parent), rel)
+      val (matchedParent, matchedParentRel) = otherParent match {
+        case Some((parent, parentRel)) => (Some(parent), parentRel)
         case None => (None, getParentType(rel))
       }
 
-      (matchedParent, child)
+      (matchedParent, (child, matchedParentRel))
 
-    }}).groupBy(_._1).mapValues(_.map(_._2)) // seems like this should be less complicated
+    }})
+
+    // seems like this should be less complicated
+    val result = parentsByChild.groupBy(_._1).mapValues(_.map(_._2))
+
+    // find extra spouses, ignoring children
+    // spouses from marriages in this character
+    val extraSpouses1 = for {
+      char <- allCharacters
+      marriageTag <- filterTags(character.tags, SecTags.Marriage)
+      tagChar <- tagCharacter(marriageTag, allCharacters)
+      if tagChar.id.equals(char.id)
+    } yield tagChar
+
+    // spouses from marriages in other characters
+    val extraSpouses2 = for {
+      char <- allCharacters
+      marriageTag <- filterTags(char.tags, SecTags.Marriage)
+      tagChar <- tagCharacter(marriageTag, allCharacters)
+      if tagChar.id.equals(character.id)
+    } yield char
+
+    val extraSpouses = extraSpouses1 ++ extraSpouses2
+    val extraSpousesMap = extraSpouses.map(x => (Option(x), List[(CharacterItem, String)]())).toMap
+
+    extraSpousesMap ++ result
 
   }
 
@@ -97,6 +122,10 @@ object Genealogy {
 
   private def filterTags(tags: List[SecTag], kinds: Set[String]): List[SecTag] = {
     tags.filter(x => kinds.contains(x.kind))
+  }
+
+  private def filterTags(tags: List[SecTag], kind: String): List[SecTag] = {
+    tags.filter(x => x.kind.equals(kind))
   }
 
   private def tagCharacter(

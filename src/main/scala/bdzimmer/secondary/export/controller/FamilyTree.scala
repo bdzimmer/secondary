@@ -99,25 +99,25 @@ object FamilyTree {
 
     val newAllCharacters = allCharacters.filter(!_.id.equals(node.id))
 
-    val marriages = childrenBySpouse.toList.collect({case ((Some(parent), rel), children) => {
+    val marriages = childrenBySpouse.toList.collect({case (Some(parent), children) => {
       Marriage(
           TreeEntry(
               node.id + "_" + parent.id, "", "", "marriage", "none",
-              children.map(child => {
+              children.map({case (child, rel) => {
                 buildTree(
                     child,
                     newAllCharacters.filter(!_.id.equals(parent.id)),
                     Genealogy.getParentType(rel), np)
-              }), List()),
+              }}), List()),
           TreeEntry(
               parent.id, parent.name.replace(' ', '\t') + "\t" + Genealogy.lifespan(parent),
               "", "character", "none", List(), List()))
     }})
 
-    val singleParentChildren = childrenBySpouse.toList.collect({case ((None, rel), children) => {
-      children.map(child => {
+    val singleParentChildren = childrenBySpouse.toList.collect({case (None, children) => {
+      children.map({case (child, rel) => {
         buildTree(child, newAllCharacters, Genealogy.getParentType(rel), np)
-      })
+      }})
     }}).flatten
 
     val description = np.transform(
