@@ -10,8 +10,10 @@ object Genealogy {
 
   val AncestorTags = Set("father", "mother", "parent", "ancestor")
   val DescendantTags = Set("son", "daughter", "descendant")
+  val MarriageTags = Set("marriage")
 
   val timeline = new Timeline(Timeline.DefaultMonths)
+
 
   // get a text description of a character's lifespan
   def lifespan(character: CharacterItem): String = {
@@ -24,29 +26,14 @@ object Genealogy {
     birth + death
   }
 
+
   // find the distinct children of a character
   def findDistinctChildren(
       character: CharacterItem,
       allCharacters: List[CharacterItem]): List[(CharacterItem, String)] = {
 
-    // it's a child if it has an ancestor tag for the current character
-    val children1 = for {
-      char <- allCharacters
-      ancestorTag <- filterTags(char.tags, AncestorTags)
-      tagChar <- tagCharacter(ancestorTag, allCharacters)
-      if tagChar.id.equals(character.id)
-    } yield (char, ancestorTag.kind)
-
-    // child if the current character has a descendant tag for it
-    val children2 = for {
-      char <- allCharacters
-      descendantTag <- filterTags(character.tags, DescendantTags)
-      tagChar <- tagCharacter(descendantTag, allCharacters)
-      if tagChar.id.equals(char.id)
-    } yield (tagChar, descendantTag.kind)
-
-    // distinct children / tags
-    (children1 ++ children2).toMap.toList
+    // TODO: might want to double check that toMap.toList is doing what I think
+    findRelatedCharacters(character, allCharacters, DescendantTags, AncestorTags).toMap.toList
 
   }
 
@@ -58,67 +45,58 @@ object Genealogy {
       children: List[(CharacterItem, String)],
       allCharacters: List[CharacterItem]): Map[Option[CharacterItem], List[(CharacterItem, String)]] = {
 
+    val allExceptThisChar = allCharacters.filter(!_.id.equals(character.id))
+
     val parentsByChild = children.map({case (child, rel) => {
-
-      // keep the ancestors of the child that are not the current character
-      val otherParents1 = for {
-        ancestorTag <- filterTags(child.tags, AncestorTags)
-        tagChar <- tagCharacter(ancestorTag, allCharacters)
-        if !tagChar.id.equals(character.id)
-      } yield (tagChar, ancestorTag.kind)
-
-      // check other characters for descendant tags with this child
-      val otherParents2 = for {
-        char <- allCharacters
-        if !char.equals(character.id)
-        descendantTag <- filterTags(child.tags, DescendantTags)
-        tagChar <- tagCharacter(descendantTag, allCharacters)
-        if !tagChar.id.equals(child.id)
-      } yield (char, descendantTag.kind)
-
-      val otherParent = (otherParents1 ++ otherParents2).headOption
-
+      val otherParent = findRelatedCharacters(child, allExceptThisChar, AncestorTags, DescendantTags).headOption
       val (matchedParent, matchedParentRel) = otherParent match {
         case Some((parent, parentRel)) => (Some(parent), parentRel)
         case None => (None, getParentType(rel))
       }
 
       (matchedParent, (child, matchedParentRel))
-
     }})
 
     // seems like this should be less complicated
     val result = parentsByChild.groupBy(_._1).mapValues(_.map(_._2))
 
-    // find extra spouses, ignoring children
-    // spouses from marriages in this character
-    val extraSpouses1 = for {
-      char <- allCharacters
-      marriageTag <- filterTags(character.tags, SecTags.Marriage)
-      tagChar <- tagCharacter(marriageTag, allCharacters)
-      if tagChar.id.equals(char.id)
-    } yield tagChar
-
-    // spouses from marriages in other characters
-    val extraSpouses2 = for {
-      char <- allCharacters
-      marriageTag <- filterTags(char.tags, SecTags.Marriage)
-      tagChar <- tagCharacter(marriageTag, allCharacters)
-      if tagChar.id.equals(character.id)
-    } yield char
-
-    val extraSpouses = extraSpouses1 ++ extraSpouses2
-    val extraSpousesMap = extraSpouses.map(x => (Option(x), List[(CharacterItem, String)]())).toMap
+    val extraSpouses = findRelatedCharacters(character, allCharacters, MarriageTags, MarriageTags)
+    val extraSpousesMap = extraSpouses.map(x => (Option(x._1), List[(CharacterItem, String)]())).toMap
 
     extraSpousesMap ++ result
 
   }
 
 
+  // find related characters by searching tags in two directions
+  def findRelatedCharacters(
+      character: CharacterItem,
+      allCharacters: List[CharacterItem],
+      outTagKinds: Set[String], inTagKinds: Set[String]): List[(CharacterItem, String)] = {
+
+    // outward-directed relationships
+    val outCharacters = for {
+      char <- allCharacters
+      outTag <- filterTags(character.tags, outTagKinds)
+      tagChar <- tagCharacter(outTag, allCharacters)
+      if tagChar.id.equals(char.id)
+    } yield (tagChar, outTag.kind)
+
+    // inward-directed relationships
+    val inCharacters = for {
+      char <- allCharacters
+      inTag <- filterTags(char.tags, inTagKinds)
+      tagChar <- tagCharacter(inTag, allCharacters)
+      if tagChar.id.equals(character.id)
+    } yield (char, inTag.kind)
+
+    return outCharacters ++ inCharacters
+  }
+
+
   def getParentType(x: String): String = {
     if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
   }
-
 
   private def filterTags(tags: List[SecTag], kinds: Set[String]): List[SecTag] = {
     tags.filter(x => kinds.contains(x.kind))
