@@ -17,8 +17,8 @@ case class TreeEntry(
     description: String,
     nodeType: String,
     parentType: String,
-    children: List[TreeEntry],
-    marriages: List[Marriage])
+    children: Seq[TreeEntry],
+    marriages: Seq[Marriage])
 
 // marriages are weird because they sort of turn spouses into siblings
 case class Marriage(
@@ -59,12 +59,12 @@ object FamilyTree {
       treeToJs(TreeEntry("root", "", "", "title", "none", List(te), List())) + ";"
     }
 
-    def spouseLines(marriages: List[(String, String)]): String = {
+    def spouseLines(marriages: Seq[(String, String)]): String = {
       val spouseObjects = marriages.map(m => s"""{srcId: "${m._1}",  dstId: "${m._2}"}""").mkString(",")
       s"""var spouses = [${spouseObjects}];"""
     }
 
-    def getAllMarriages(tree: TreeEntry): List[(String, String)] = {
+    def getAllMarriages(tree: TreeEntry): Seq[(String, String)] = {
       (tree.marriages.map(x => (tree.id, x.spouse.id))
         ++ tree.marriages.flatMap(x => getAllMarriages(x.hidden))
         ++ tree.children.flatMap(getAllMarriages))
@@ -136,11 +136,12 @@ object FamilyTree {
 
 
   // convert a TreeEntry tree into JavaScript code for use with D3
+  // TODO: get rid of flattens
   def treeToJs(te: TreeEntry): String = {
 
     val childrenString = if (te.children.length > 0) {
       s"children: [\n${te.children.map(child => {
-        treeToJs(child) :: child.marriages.map(marriage => List(treeToJs(marriage.hidden), treeToJs(marriage.spouse))).flatten
+        treeToJs(child) +: child.marriages.map(marriage => List(treeToJs(marriage.hidden), treeToJs(marriage.spouse))).flatten
       }).flatten.mkString(",\n")}]"
     } else {
       ""

@@ -4,12 +4,14 @@
 
 package bdzimmer.secondary.export.controller
 
+import scala.collection.immutable.Seq
+
 import bdzimmer.secondary.export.model.{CharacterItem, SecTag, SecTags}
 
 object Genealogy {
 
   val AncestorTags = Set("father", "mother", "parent", "ancestor")
-  val DescendantTags = Set("son", "daughter", "descendant")
+  val DescendantTags = Set("son", "daughter", "child", "descendant")
   val MarriageTags = Set("marriage")
 
   val timeline = new Timeline(Timeline.DefaultMonths)
@@ -30,7 +32,7 @@ object Genealogy {
   // find the distinct children of a character
   def findDistinctChildren(
       character: CharacterItem,
-      allCharacters: List[CharacterItem]): List[(CharacterItem, String)] = {
+      allCharacters: Seq[CharacterItem]): Seq[(CharacterItem, String)] = {
 
     // TODO: might want to double check that toMap.toList is doing what I think
     findRelatedCharacters(character, allCharacters, DescendantTags, AncestorTags).toMap.toList
@@ -42,8 +44,8 @@ object Genealogy {
   // find their parents and group
   def findParents(
       character: CharacterItem,
-      children: List[(CharacterItem, String)],
-      allCharacters: List[CharacterItem]): Map[Option[CharacterItem], List[(CharacterItem, String)]] = {
+      children: Seq[(CharacterItem, String)],
+      allCharacters: Seq[CharacterItem]): Map[Option[CharacterItem], Seq[(CharacterItem, String)]] = {
 
     val allExceptThisChar = allCharacters.filter(!_.id.equals(character.id))
 
@@ -61,7 +63,7 @@ object Genealogy {
     val result = parentsByChild.groupBy(_._1).mapValues(_.map(_._2))
 
     val extraSpouses = findRelatedCharacters(character, allCharacters, MarriageTags, MarriageTags)
-    val extraSpousesMap = extraSpouses.map(x => (Option(x._1), List[(CharacterItem, String)]())).toMap
+    val extraSpousesMap = extraSpouses.map(x => (Option(x._1), Seq[(CharacterItem, String)]())).toMap
 
     extraSpousesMap ++ result
 
@@ -71,8 +73,8 @@ object Genealogy {
   // find related characters by searching tags in two directions
   def findRelatedCharacters(
       character: CharacterItem,
-      allCharacters: List[CharacterItem],
-      outTagKinds: Set[String], inTagKinds: Set[String]): List[(CharacterItem, String)] = {
+      allCharacters: Seq[CharacterItem],
+      outTagKinds: Set[String], inTagKinds: Set[String]): Seq[(CharacterItem, String)] = {
 
     // outward-directed relationships
     val outCharacters = for {
@@ -90,7 +92,7 @@ object Genealogy {
       if tagChar.id.equals(character.id)
     } yield (char, inTag.kind)
 
-    return outCharacters ++ inCharacters
+    outCharacters ++ inCharacters
   }
 
 
@@ -98,18 +100,18 @@ object Genealogy {
     if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
   }
 
-  private def filterTags(tags: List[SecTag], kinds: Set[String]): List[SecTag] = {
+  private def filterTags(tags: Seq[SecTag], kinds: Set[String]): Seq[SecTag] = {
     tags.filter(x => kinds.contains(x.kind))
   }
 
-  private def filterTags(tags: List[SecTag], kind: String): List[SecTag] = {
+  private def filterTags(tags: Seq[SecTag], kind: String): Seq[SecTag] = {
     tags.filter(x => x.kind.equals(kind))
   }
 
-  private def tagCharacter(
-      tag: SecTag, allCharacters: List[CharacterItem]) = allCharacters.filter(x => {
-    x.id.equals(tag.value) || x.name.equals(tag.value)
-  }).headOption
-
+  private def tagCharacter(tag: SecTag, allCharacters: Seq[CharacterItem]): Option[CharacterItem] = {
+    allCharacters.filter(x => {
+      x.id.equals(tag.value) || x.name.equals(tag.value)
+    }).headOption
+  }
 
 }

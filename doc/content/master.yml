@@ -8,7 +8,7 @@ id: master
 name: Secondary
 description: create worlds from text
 notes: |-
-  Secondary is a static site generator created specifically for world building. Use Secondary for planning novels, creating game design documents, and more.
+  Secondary is a markup language and static site generator created specifically for world building. Use Secondary for planning novels, creating game design documents, and more.
 
   * **Edit**: Describe your world in text files with a combination of YAML and Markdown. Use your favorite text editor; there's no user interface to learn.
   * **Organize**: Group characters, places, and ideas into collections and hierarchies however you see fit. Add links and relationships between things in your world.

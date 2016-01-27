@@ -44,21 +44,23 @@ function drawTree(root, spouses, id, width, height)  {
   var links = layout.links(nodes);
 
   // figure out initial translation and scale
-  // it appears that the translation and scale have to be applied to both
-  // the main svg group and the zoom listener for consistent results.
-
+  // add boxHeight * 2 to minY because of invisible root node
+  
   var minX = d3.min(nodes, function(d) {return d.x;}) - boxWidth;
   var maxX = d3.max(nodes, function(d) {return d.x;}) + boxWidth;
-  var minY = d3.min(nodes, function(d) {return d.y;}) - boxHeight;
+  var minY = d3.min(nodes, function(d) {return d.y;}) - boxHeight + boxHeight * 2;
   var maxY = d3.max(nodes, function(d) {return d.y;}) + boxHeight;
 
   var startScale = Math.min(width / (maxX - minX), height / (maxY - minY), 1)
   var transX = 0 - minX * startScale
   var transY = 0 - minY * startScale
 
-  console.log(minX + " " + maxX + " "  + minY + " " + maxY)
-  console.log(transX + " " + transY + " " + startScale);
+  // console.log(minX + " " + maxX + " "  + minY + " " + maxY)
+  // console.log(transX + " " + transY + " " + startScale);
 
+  // it appears that the translation and scale have to be applied to both
+  // the main svg group and the zoom listener for consistent results.
+  
   // create zoom object for initial layout that allows scaling and translation
   var zoom = d3.behavior.zoom()
     .on("zoom", function () {

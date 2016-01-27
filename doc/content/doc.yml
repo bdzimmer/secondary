@@ -22,7 +22,7 @@ children:
   notes: |-
     {{TODO: items content}}
 
-- !item
+- !collection
   id: tags
   name: Tags
   notes: |-
@@ -34,7 +34,7 @@ children:
 
     `{{demo: tag_name | value | arg1=value1 | arg2=value2 | arg3=value3 ...}}`
 
-    For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Other Tags}}, `value` usually a a sentence or two of descriptive text. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
+    For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Other Tags}}, `value` is usually a sentence or two of descriptive text. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
 
     <br />
 
@@ -96,13 +96,35 @@ children:
 
 
     #### familytree
+
+    Insert a family tree showing a character and their descendants.
+
+    **Usage**
+
     `{{demo: familytree | character}}`
 
-    {{todo: familytree tag documentation}}
+    * **character**: name or id of character item
 
+    Family relationships are established by using any of the following item tags in the notes of characters:
+
+    * **father**, **mother**, **parent**
+    * **son**, **daughter**, **child**
+    * **ancestor**
+    * **descendant**
+    * **marriage**
+
+    For example, the tag `{{demo: mother | Lady Anne Darcy}}` in the notes of {{Fitzwilliam Darcy}} indicates that {{Lady Anne Darcy}} is Fitzwilliam's mother.
+
+    **Examples**
+
+    `{{demo: familytree | Anonymous Earl}}`
+
+    {{familytree: Anonymous Earl}}
+
+    See {{link: Genealogy Examples}} for further details.
 
     #### jumbotron
-    `{{demo: jumbotron | image | xPos=0% | yPos=0% | color=black}}`
+    `{{demo: jumbotron | image | xpos=0% | ypos=0% | color=black}}`
 
     {{todo: jumbotron tag documentation}}
 
@@ -119,6 +141,15 @@ children:
 
     {{todo: Other Tags description}}
 
+    #### birth
+    `{{demo: birth | date | description}}`
+
+    {{todo: birth tag documentation}}
+
+    #### death
+    `{{demo: death | date | description}}`
+
+    {{todo: death tag documentation}}
 
     #### event
     `{{demo: event | date | description}}`
@@ -139,6 +170,73 @@ children:
 
 
     {{jumbotron: image_alice | ypos=50%}}
+
+  children:
+
+  - !collection
+    id: genealogy
+    name: Genealogy Examples
+    notes: |-
+      See the child pages for explanations of the tags used to establish the relationships in the family tree.
+
+      `{{demo: familytree | Anonymous Earl}}`
+
+      {{familytree: Anonymous Earl}}
+
+    children:
+
+    - !character
+      id: earl
+      name: Anonymous Earl
+
+    - !character
+      id: lady_catherine
+      name: Lady Catherine deBourgh
+      notes: |-
+        `{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+
+    - !character
+      id: sir_lewis
+      name: Sir Lewis deBourgh
+      notes: |-
+        `{{demo: marriage | Lady Catherine deBourgh}}` &rarr; {{marriage: Lady Catherine deBourgh}}
+
+    - !character
+      id: anne_debourgh
+      name: Anne deBourgh
+      notes: |-
+        `{{demo: father | Sir Lewis deBourgh}}` &rarr; {{father: Sir Lewis deBourgh}}
+        `{{demo: mother | Lady Catherine deBourgh}}` &rarr; {{mother: Lady Catherine deBourgh}}
+
+    - !character
+      id: anne_darcy
+      name: Lady Anne Darcy
+      notes: |-
+        `{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+        `{{demo: marriage | Mr. Darcy}}` &rarr; {{marriage: Mr. Darcy}}
+
+    - !character
+      id: mr_darcy
+      name: Mr. Darcy
+
+    - !character
+      id: georgiana
+      name: Georgiana Darcy
+      notes: |-
+        `{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
+        `{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+
+    - !character
+      id: fitzwilliam_darcy
+      name: Fitzwilliam Darcy
+      notes: |-
+        `{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
+        `{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+        `{{demo: marriage | Elizabeth Bennet}}` &rarr; {{marriage: Elizabeth Bennet}}
+
+    - !character
+      id: elizabeth
+      name: Elizabeth Bennet
 
 - !item
   id: drive
