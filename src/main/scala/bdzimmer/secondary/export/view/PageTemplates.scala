@@ -16,6 +16,8 @@ object PageTemplates {
 
   val Column12 = 12
 
+  val NavbarSeparator = nbsp + nbsp + "&middot;" + nbsp + nbsp
+
   def createPage(outputFile: String, title: String, styles: String, body: String): Unit = {
 
     val pageText = s"""
@@ -66,10 +68,9 @@ object PageTemplates {
   }
 
 
-
   def createArticlePage(
       outputFile: String,
-      title: String, description: String, toolbar: Option[String],
+      title: String, description: String, navbar: Option[String],
       body: String, license: String): Unit = {
 
     createPage(
@@ -86,13 +87,12 @@ object PageTemplates {
                       Markdown.processLine(description))))) +
 
       container(
-        column(Column12, toolbar.getOrElse("")) +
+        column(Column12, navbar.getOrElse("")) +
         body +
         column(Column12, hr + centered(license))
       )
     )
 
   }
-
 
 }

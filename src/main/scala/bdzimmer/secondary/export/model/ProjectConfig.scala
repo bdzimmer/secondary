@@ -1,9 +1,10 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
 // Project configuration.
 
 // 2015-08-30: Created in refactor from Driver.
 // 2015-09-12: Changes for per-project configs.
+// 2016-01-30: Some new properties.
 
 package bdzimmer.secondary.export.model
 
@@ -12,24 +13,23 @@ import java.io.File
 import bdzimmer.util.PropertiesWrapper
 import bdzimmer.util.StringUtils._
 
-case class ConfigField(key: String, default: String, description: String)
-
-
+import bdzimmer.secondary.export.model.ConfigurationModel._
 
 
 class ProjectConfig(
-  val projectDir: String,
-  val mode: String,
-  val driveClientIdFile: String,
-  val driveAccessTokenFile: String,
-  val driveInputPath: String,
-  val driveOutputPath: String,
-  val mappedContentPath: String,
-  val masterName: String,
-  val license: String) {
+    val projectDir: String,
+    val mode: String,
+    val driveClientIdFile: String,
+    val driveAccessTokenFile: String,
+    val driveInputPath: String,
+    val driveOutputPath: String,
+    val mappedContentPath: String,
+    val masterName: String,
+    val license: String,
+    val navbars: Boolean,
+    val editLinks: Boolean) {
 
-
-  // attributes derived from the above
+  // additional attributes derived from the above
   val driveInputPathList = driveInputPath.split(slash).toList
   val driveOutputPathList = driveOutputPath.split(slash).toList
 
@@ -38,7 +38,7 @@ class ProjectConfig(
   val localExportPathFile = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
 
-  val mappedContentPathActual = if (mappedContentPath.equals("")) {
+  val mappedContentPathActual = if (mode.equals("local")) {
     localContentPath
   } else {
     mappedContentPath
@@ -50,19 +50,21 @@ class ProjectConfig(
 
 object ProjectConfig {
 
-  val mode = ConfigField("mode", "drive", "Export mode")
+  val mode = ChooseConfigField("mode", "drive", List("drive", "local"), "Export mode")
 
-  val driveClientIdFile = ConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
-  val driveAccessTokenFile = ConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
+  val driveClientIdFile = TextConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
+  val driveAccessTokenFile = TextConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
+  val driveInputPath = TextConfigField("driveInputPath", "secondary/content", "Drive input path")
+  val driveOutputPath = TextConfigField("driveOutputPath", "secondary/web", "Drive output path")
+  val mappedContentPath = TextConfigField("mappedContentPath", "", "Mapped content path")
 
-  val driveInputPath = ConfigField("driveInputPath", "secondary/content", "Drive input path")
-  val driveOutputPath = ConfigField("driveOutputPath", "secondary/web", "Drive output path")
-  val mappedContentPath = ConfigField("mappedContentPath", "", "Mapped content path")
-  val masterName = ConfigField("masterName", "master", "Master name")
-  val license = ConfigField("license", "Copyright &copy 2015. All rights reserved.", "License text")
+  val masterName = TextConfigField("masterName", "master", "Master name")
 
+  val license = TextConfigField("license", "Copyright &copy 2016. All rights reserved.", "License text")
+  val navbars = BoolConfigField("navbars", "true", "Navbars")
+  val editLinks = BoolConfigField("editlinks", "true", "Edit Links")
 
-  val requiredProperties =  List(
+  val requiredProperties: List[ConfigField] =  List(
       mode,
       driveClientIdFile,
       driveAccessTokenFile,
@@ -70,8 +72,9 @@ object ProjectConfig {
       driveOutputPath,
       mappedContentPath,
       masterName,
-      license)
-
+      license,
+      navbars,
+      editLinks)
 
   def getProperties(projectDir: String): PropertiesWrapper = {
     val propFilename = projectDir / ProjectStructure.ConfigurationFile
@@ -98,15 +101,15 @@ object ProjectConfig {
 
     new ProjectConfig(
         projectDir = projectDir,
-        mode                 = getProp(ProjectConfig.mode),
-        driveClientIdFile    = getProp(ProjectConfig.driveClientIdFile),
-        driveAccessTokenFile = getProp(ProjectConfig.driveAccessTokenFile),
-        driveInputPath       = getProp(ProjectConfig.driveInputPath),
-        driveOutputPath      = getProp(ProjectConfig.driveOutputPath),
-        mappedContentPath    = getProp(ProjectConfig.mappedContentPath),
-        masterName           = getProp(ProjectConfig.masterName),
-        license              = getProp(ProjectConfig.license))
-
-
+        mode                 = getProp(mode),
+        driveClientIdFile    = getProp(driveClientIdFile),
+        driveAccessTokenFile = getProp(driveAccessTokenFile),
+        driveInputPath       = getProp(driveInputPath),
+        driveOutputPath      = getProp(driveOutputPath),
+        mappedContentPath    = getProp(mappedContentPath),
+        masterName           = getProp(masterName),
+        license              = getProp(license),
+        navbars              = getProp(navbars).toBooleanSafe,
+        editLinks            = getProp(editLinks).toBooleanSafe)
   }
 }

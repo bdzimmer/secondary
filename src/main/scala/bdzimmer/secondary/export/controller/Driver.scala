@@ -54,7 +54,7 @@ class Driver {
   // start the interactive shell
   private def runInteractive(): Unit = {
 
-    // TODO: attempt an initial loading of the world
+    // TODO: attempt an initial loading of the world?
 
     println(Driver.Title)
     val br = new BufferedReader(new InputStreamReader(System.in))
@@ -90,7 +90,8 @@ class Driver {
     case DriverCommands.BrowseLocal => browseLocal
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
-      new ConfigurationGUI(prop).startup(Array())
+      new ConfigurationGUI(
+          prop, ProjectConfig.requiredProperties, "Secondary - Project Configuration").startup(Array())
       println("You must restart Secondary for configuration changes to take effect.")
     }
     case DriverCommands.Edit => {
@@ -189,7 +190,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.01.16"
+  val Title = "Secondary - create worlds from text - v2016.01.30"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

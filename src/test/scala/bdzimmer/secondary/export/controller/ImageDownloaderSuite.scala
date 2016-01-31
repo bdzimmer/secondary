@@ -32,8 +32,6 @@ class ImageDownloaderSuite extends FunSuite {
     val meta = resultJson.flatMap(ImageDownloader.parseWikimediaJson(_))
     assert(meta.isDefined)
 
-    // meta foreach println
-
   }
 
 

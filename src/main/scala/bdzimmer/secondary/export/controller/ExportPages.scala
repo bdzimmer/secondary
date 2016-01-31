@@ -31,7 +31,9 @@ class ExportPages(
     master: CollectionItem,
     world: List[WorldItem],
     val location: String,
-    license: String) {
+    license: String,
+    navbars: Boolean,
+    editLinks: Boolean) {
 
   val np = new RenderSecTags(world)
 
@@ -64,32 +66,28 @@ class ExportPages(
 
     val relFilePath = ExportPages.MasterPageFile
 
-    val toolbar = Some(List(
-            link("Index", ExportPages.IndexPageFile),
-            // link("Family Trees", ExportPages.FamilyTreesPageFile),
-            link("Tasks", ExportPages.TasksPageFile),
-            link("Stats", ExportPages.StatsPageFile),
-            link("Edit",
-                ExportPages.notepadURL(master))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr)
-
     PageTemplates.createArticlePage(
         location / relFilePath,
         master.name,
         master.description,
+        masterNavbar(master),
 
-        toolbar,
-
-        column(Column12, np.transform(master.notes) + hr +
-        master.children.collect({case curCollection: CollectionItem => {
-
-            column(Column6,
-              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
-              ExportPages.glyphLinkPage(curCollection) + "\n" +
-              listGroup(curCollection.children.map(x =>
-                ExportPages.getCollectionLinksCollapsible(x))))
-
-          }}).grouped(2).map(_.mkString("\n") +
-          """<div class="clearfix"></div>""" + "\n").mkString("\n")),
+        column(Column12,
+            np.transform(master.notes) +
+            (if (master.children.length > 0) {
+              hr +
+              master.children.collect({case curCollection: CollectionItem => {
+                  column(Column6,
+                      """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
+                      ExportPages.glyphLinkPage(curCollection) + "\n" +
+                      listGroup(curCollection.children.map(x =>
+                        ExportPages.getCollectionLinksCollapsible(x))))
+              }}).grouped(2).map(_.mkString("\n") +
+              """<div class="clearfix"></div>""" + "\n").mkString("\n")
+            } else {
+              ""
+            })
+        ),
 
         license)
 
@@ -216,9 +214,9 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        character.name, character.description,
-
-        Some(ExportPages.getToolbar(character)),
+        character.name,
+        character.description,
+        pageNavbar(character),
 
         column(Column12,
             ExportPages.panel(
@@ -239,9 +237,9 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        map.name, map.description,
-
-        Some(ExportPages.getToolbar(map)),
+        map.name,
+        map.description,
+        pageNavbar(map),
 
         column(Column12, ExportImages.pixelImageLinkResponsive(map) + hr) +
         column(Column12, np.transform(map.notes) + refItems(map)),
@@ -259,9 +257,9 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        tileset.name, tileset.description,
-
-        Some(ExportPages.getToolbar(tileset)),
+        tileset.name,
+        tileset.description,
+        pageNavbar(tileset),
 
         column(Column12, ExportImages.pixelImageLinkResponsive(tileset) + hr) +
         column(Column12, np.transform(tileset.notes) + refItems(tileset)),
@@ -279,8 +277,9 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        collection.name, collection.description,
-        Some(ExportPages.getToolbar(collection)),
+        collection.name,
+        collection.description,
+        pageNavbar(collection),
 
         column(Column12, np.transform(collection.notes) + refItems(collection) + hr) +
 
@@ -319,7 +318,7 @@ class ExportPages(
     PageTemplates.createArticlePage(
         location / relFilePath,
         imageItem.name, imageItem.description,
-        Some(ExportPages.getToolbar(imageItem)),
+        pageNavbar(imageItem),
 
         column(Column8, image(ExportImages.imageItemImagePath(imageItem), responsive = true)) +
         column(Column4, "") +
@@ -340,11 +339,45 @@ class ExportPages(
     PageTemplates.createArticlePage(
         location / relFilePath,
         item.name, item.description,
-        Some(ExportPages.getToolbar(item)),
+        pageNavbar(item),
         column(Column12, np.transform(item.notes) + refItems(item)),
-        license )
+        license)
 
     relFilePath
+  }
+
+
+  private def masterNavbar(master: CollectionItem): Option[String] = navbars match {
+    case true => {
+      val links = List(
+          link("Index", ExportPages.IndexPageFile),
+          link("Tasks", ExportPages.TasksPageFile),
+          link("Stats", ExportPages.StatsPageFile))
+      val linksWidthEdit = if (editLinks) {
+        links :+ link("Edit",  ExportPages.notepadURL(master))
+      } else {
+        links
+      }
+      val bar = linksWidthEdit.mkString(PageTemplates.NavbarSeparator) + hr
+      Some(bar)
+    }
+    case false => None
+  }
+
+
+  // get a toolbar for an article page for a world item
+  private def pageNavbar(item: WorldItem): Option[String] = navbars match {
+    case true => {
+      val links = List(link("Home", "index.html"))
+      val linksWidthEdit = if (editLinks) {
+        links :+ link("Edit",  ExportPages.notepadURL(master))
+      } else {
+        links
+      }
+      val bar = linksWidthEdit.mkString(PageTemplates.NavbarSeparator) + hr
+      Some(bar)
+    }
+    case false => None
   }
 
 
@@ -370,7 +403,6 @@ class ExportPages(
 object ExportPages {
 
   // constants
-
   val MasterPageFile = "index.html"
   val IndexPageFile = "indexpage.html"
   val TasksPageFile = "tasks.html"
@@ -454,13 +486,6 @@ object ExportPages {
   // generate HTML for a text link to an item's page with an anchor
   def textLinkPage(item: WorldItem, anchor: String, name: String): String = {
     link(Markdown.processLine(name), itemPageName(item) + "#" + anchor)
-  }
-
-  // get a toolbar for an article page for a world item
-  def getToolbar(item: WorldItem): String = {
-    List(// link("Edit Local", localURL(item, localDriveMapDir)),
-         link("Home", "index.html"),
-         link("Edit", notepadURL(item))).mkString(nbsp + nbsp + "&middot;" + nbsp + nbsp) + hr
   }
 
   // TODO: may need to add "display: inline" style as in glyph link

@@ -6,7 +6,7 @@
 // Timeline format choices are loosely based on the timelines found in the
 // appendices of Return of the King.
 
-// TODO: most of this is logic for HTML rendering, which should be moved to a view class.
+// TODO: most of this is logic for HTML rendering, which maybe should be moved to a view class.
 
 package bdzimmer.secondary.export.controller
 

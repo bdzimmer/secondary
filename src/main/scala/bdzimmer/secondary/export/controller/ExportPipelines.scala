@@ -247,7 +247,9 @@ object ExportPipeline {
         master,
         world,
         projConf.localExportPath,
-        projConf.license)
+        projConf.license,
+        projConf.navbars,
+        projConf.editLinks)
 
     val pageOutputs = List(
         exportPages.createMasterPage(),

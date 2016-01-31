@@ -1,8 +1,6 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
-// GUI for configuring properties for the world builder application.
-
-// 2015-08-24: Created.
+// Simple Scala Swing GUI for configuring properties.
 
 package bdzimmer.secondary.export.view
 
@@ -16,17 +14,23 @@ import java.awt.Font                    // scalastyle:ignore illegal.imports
 import javax.swing.border.EmptyBorder
 import javax.swing.SwingConstants
 
-import bdzimmer.secondary.export.model.ProjectConfig
 import bdzimmer.util.PropertiesWrapper
+import bdzimmer.util.StringUtils._
 
-class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
+import bdzimmer.secondary.export.model.ConfigurationModel._
+
+
+class ConfigurationGUI(
+    prop: PropertiesWrapper,
+    reqProps: List[ConfigField],
+    guiTitle: String) extends SimpleSwingApplication {
 
   val propFile = prop.file
+  val fieldFont = new Font("monospaced", Font.PLAIN, 12)
 
   def top = new Frame {
 
     val myBorder = new EmptyBorder(10, 10, 10, 10)  // scalastyle:ignore magic.number
-
     val saveStatus = new Label("")
 
     val save = new Button("Save") {
@@ -50,23 +54,37 @@ class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
       contents ++= List(saveStatus, new Label(), save, done)
     }
 
-    def configField(key: String, default: String) = new TextField {
-      text = prop(key).getOrElse(default)
-      columns = 75                         // scalastyle:ignore magic.number
-      font = new Font("monospaced", Font.PLAIN, 12)
-      reactions += {
-        case ValueChanged(field) => {
-          prop.set(key, text)
-          saveStatus.text = "Modified."
-        }
-      }
+    def setProperty(key: String, text: String): Unit = {
+      prop.set(key, text)
+      saveStatus.text = "Modified."
     }
 
+    def textConfigField(key: String, default: String) = new TextField {
+      text = prop(key).getOrElse(default)
+      columns = 75                         // scalastyle:ignore magic.number
+      font = fieldFont
+      reactions += { case ValueChanged(field) => setProperty(key, text) }
+    }
 
-    val columnPairs = ProjectConfig.requiredProperties.map(
-        x => (configField(x.key, x.default), x.description + ":")) :+ (savePanel, "")
+    def chooseConfigField(
+        key: String, default: String, choices: List[String]) = new ComboBox(choices) {
+      font = fieldFont
+      selection.item = prop(key).getOrElse(default)
+      selection.reactions += { case SelectionChanged(field) => setProperty(key, selection.item) }
+    }
 
-    title = "Secondary - Project Configuration"
+    def boolConfigField(key: String, default: String) = new CheckBox {
+      selected = prop(key).getOrElse(default).toBooleanSafe
+      reactions += { case ButtonClicked(field) => setProperty(key, selected.toString) }
+    }
+
+    val columnPairs = reqProps.map(x => x match {
+      case t: TextConfigField => (textConfigField(t.key, t.default), t.description + ":")
+      case c: ChooseConfigField => (chooseConfigField(c.key, c.default, c.choices), c.description + ":")
+      case b: BoolConfigField => (boolConfigField(b.key, b.default), b.description + ":")
+    }) :+ (savePanel, "")
+
+    title = guiTitle
 
     contents = new BorderPanel {
 
@@ -91,7 +109,4 @@ class ConfigurationGUI(prop: PropertiesWrapper) extends SimpleSwingApplication {
        }) = Center
     }
   }
-
-
 }
-
