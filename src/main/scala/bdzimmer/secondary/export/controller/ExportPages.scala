@@ -205,9 +205,6 @@ class ExportPages(
 
 
 
-
-  ///
-
   private def createCharacterPage(character: CharacterItem): String = {
 
     val relFilePath = ExportPages.itemPageName(character)
@@ -219,8 +216,8 @@ class ExportPages(
         pageNavbar(character),
 
         column(Column12,
-            ExportPages.panel(
-                ExportImages.imageLinkPage(character, metaItems, false, 320, false, 12), true, false) +
+            // ExportPages.panel(
+            //    ExportImages.imageLinkPage(character, metaItems, false, 320, false, 12), true, false) +
             np.transform(character.notes) + refItems(character)),
 
         license)
@@ -281,12 +278,19 @@ class ExportPages(
         collection.description,
         pageNavbar(collection),
 
-        column(Column12, np.transform(collection.notes) + refItems(collection) + hr) +
+        column(Column12,
+            np.transform(collection.notes) + refItems(collection) + hr +
+            (if (collection.children.length > 0) {
+              h4("Subarticles") +
+              listGroup(collection.children.sortBy(_.name).map(x => listItem(ExportPages.textLinkPage(x))))
+            } else {
+              ""
+            })),
 
         // links to child pages with images
-        collection.children.map(x => {
-          column(Column3, ExportImages.imageLinkPage(x, metaItems, responsive = true))
-        }).grouped(4).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n"),
+        // + collection.children.map(x => {
+        //  column(Column3, ExportImages.imageLinkPage(x, metaItems, responsive = true))
+        // }).grouped(4).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n"),
 
         license)
 

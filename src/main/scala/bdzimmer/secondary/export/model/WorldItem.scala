@@ -139,13 +139,12 @@ class MapItemBean extends MetaItemBean {
 
 class CharacterItemBean extends WorldItemBean {
 
-  @BeanProperty var image: String = ""
+  // @BeanProperty var image: String = ""
 
   def getVal(): CharacterItem = CharacterItem(
       id, name, description, notes,
       srcyml, remoteid,
-      pst.getAllTags(notes),
-      image) // sheetrow
+      pst.getAllTags(notes)) // image
 
 }
 
@@ -205,8 +204,7 @@ case class MapItem(
 
 case class CharacterItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
-    image: String) extends WorldItem
+    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -225,6 +223,7 @@ object WorldItem {
   constructor.addTypeDescription(new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")))
   constructor.addTypeDescription(new TypeDescription(classOf[MapItemBean], new Tag("!map")))
   constructor.addTypeDescription(new TypeDescription(classOf[CharacterItemBean], new Tag("!character")))
+  constructor.addTypeDescription(new TypeDescription(classOf[CharacterItemBean], new Tag("!person")))
 
   /**
    * Filter a list of WorldItems by type.

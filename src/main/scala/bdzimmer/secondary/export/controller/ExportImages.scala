@@ -59,15 +59,15 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     // prefix.
     val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x)))
 
-    val characterOutputs = (WorldItem.filterList[CharacterItem](items)
-        map(x => prepareCharacterItemOutputs(x, contentDir)))
+    // val characterOutputs = (WorldItem.filterList[CharacterItem](items)
+    //    map(x => prepareCharacterItemOutputs(x, contentDir)))
 
     // we can't just call toMap on all of these lists and then merge them, because
     // the lists may contain duplicate keys themselves.
 
     // skip adding spritesheet outputs to list, since we don't want to upload them
 
-    val allImageOutputsList = (mapImageOutputs ++ tileImageOutputs ++ imageOutputs ++ characterOutputs)
+    val allImageOutputsList = mapImageOutputs ++ tileImageOutputs ++ imageOutputs // ++ characterOutputs
 
     val allImageOutputs = (allImageOutputsList
         .map(x => List(x).toMap)
@@ -130,7 +130,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   }
 
 
-
+  /*
   def prepareCharacterItemOutputs(ci: CharacterItem, contentDir: String): (String, List[String]) = {
 
     val (cm, sheetRow) = ExportImages.getCharacterImageInfo(ci, metaItems)
@@ -165,6 +165,8 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     outputPairs
 
   }
+  *
+  */
 
 }
 
@@ -338,7 +340,7 @@ object ExportImages {
 
    ///
 
-
+   /*
   def getCharacterImageInfo(ci: CharacterItem, metaItems: List[MetaItem]): (Option[MetaItem], Int) = {
 
     // split spritesheet attribute by comma
@@ -357,8 +359,11 @@ object ExportImages {
     (metaOption, sheetRow)
 
   }
+  *
+  */
 
   // produce HTML for the image of a character
+  /*
   def characterImage(
       ci: CharacterItem, metaItems: List[MetaItem],
       scale: Int = 4,
@@ -375,8 +380,11 @@ object ExportImages {
     }).getOrElse("")
 
   }
+  *
+  */
 
 
+  /*
   def characterItemImagePath(
       ci: CharacterItem,
       metaItems: List[MetaItem],
@@ -391,6 +399,8 @@ object ExportImages {
     }).getOrElse("")
 
   }
+  *
+  */
 
 
   def pixelImagePathScale(item: WorldItem, scale: Int = 4): String = {
@@ -427,8 +437,8 @@ object ExportImages {
         val imageFile = pixelImagePathScale(x, 1)
         imageSprite(imageFile, 0, 0, 192, 192)
       }
-      case x: CharacterItem => characterImage(x, metaItems, scale, responsive, maxWidth)
       case x: ImageItem => image(imageItemImagePath(x), responsive, maxWidth)
+      // case x: CharacterItem => characterImage(x, metaItems, scale, responsive, maxWidth)
       case _ => ""
     }
 
@@ -449,8 +459,8 @@ object ExportImages {
       metaItems: List[MetaItem]): String = item match {
 
     case x: MapItem => pixelImagePathScale(x, 4)
-    case x: CharacterItem => characterItemImagePath(x, metaItems)
     case x: ImageItem => imageItemImagePath(x)
+    // case x: CharacterItem => characterItemImagePath(x, metaItems)
     case _ => ""
   }
 

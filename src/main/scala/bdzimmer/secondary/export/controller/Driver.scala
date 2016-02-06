@@ -19,7 +19,11 @@ import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
 import scala.annotation.tailrec
+import scala.collection.JavaConverters._
+import scala.sys.process._
 import scala.util.Try
+
+import org.apache.commons.io.FileUtils
 
 import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
 import bdzimmer.util.StringUtils._
@@ -163,7 +167,16 @@ class Driver {
   // edit an item's source file locally or in Drive
   private def editItem(item: WorldItem): Unit = projConf.mode match {
     case "drive" => Desktop.getDesktop.browse(new URI(ExportPages.notepadURL(item)))
-    case _ => Desktop.getDesktop.open(new File(projConf.localContentPath / item.srcyml))
+    case _ => {
+      val srcYml = new File(projConf.localContentPath / item.srcyml)
+      val idMatcher =  s"\\s*id:\\s*${item.id}"
+      val lineNumber = FileUtils.readLines(srcYml).asScala.zipWithIndex.find(x => {
+        x._1.matches(idMatcher)
+      }).fold(1)(_._2)
+      // Desktop.getDesktop.open(srcYml)
+      val nppCommand = s"""notepad++ "${srcYml.getPath}" -n${lineNumber}"""
+      Try(nppCommand.!!)
+    }
   }
 
   // explore the project's source directory
