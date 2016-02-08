@@ -101,12 +101,19 @@ class ExportPages(
 
     val relFilePath = ExportPages.TasksPageFile
 
+    def linkWithEdit(x: WorldItem): String = {
+      (if (editLinks) ExportPages.notepadLink(x) + nbsp else "") +
+      ExportPages.textLinkPage(x)
+    }
+
     def taskList(todoFunc: WorldItem => List[String]): String = {
       listGroup(world
               .map(x => (x, todoFunc(x)))
               .filter(_._2.length > 0)
-              .map(x => listItem(ExportPages.notepadLink(x._1) + nbsp + ExportPages.textLinkPage(x._1) +
-                  listGroup(x._2.map(text => listItem(Markdown.processLine(text)))))))
+              .map(x => {
+                listItem(
+                    linkWithEdit(x._1) +
+                    listGroup(x._2.map(text => listItem(Markdown.processLine(text)))))}))
     }
 
     // get task strings
@@ -134,7 +141,7 @@ class ExportPages(
            h4("Empty Notes") +
            listGroup(world
              .filter(_.notes.equals(""))
-             .map(x => listItem(ExportPages.notepadLink(x) + nbsp + ExportPages.textLinkPage(x))))
+             .map(x => listItem(linkWithEdit(x))))
        ) +
 
 
@@ -282,7 +289,7 @@ class ExportPages(
             np.transform(collection.notes) + refItems(collection) + hr +
             (if (collection.children.length > 0) {
               h4("Subarticles") +
-              listGroup(collection.children.sortBy(_.name).map(x => listItem(ExportPages.textLinkPage(x))))
+              listGroup(collection.children.map(x => listItem(ExportPages.textLinkPage(x))))
             } else {
               ""
             })),

@@ -97,9 +97,7 @@ object WorldLoader {
       coll <- bean
       newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
     } yield {
-      coll.children = new java.util.LinkedList
-      coll.children.addAll(newChildren.asJava)
-      coll
+      assignChildren(coll, newChildren)
     }
 
   }
@@ -117,6 +115,13 @@ object WorldLoader {
           } else {
             loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
           }
+
+          case coll: CollectionItemBean => for {
+            newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
+          } yield {
+            assignChildren(coll, newChildren)
+          }
+
           case _ => Pass(child)
         }
     })
@@ -137,6 +142,18 @@ object WorldLoader {
 
   }
 
+
+  // sort of impure
+  // reassign the children of a collection with the result of getNewChildren
+  def assignChildren(
+      coll: CollectionItemBean,
+      newChildren: List[WorldItemBean]): CollectionItemBean = {
+
+    coll.children = new java.util.LinkedList
+    coll.children.addAll(newChildren.asJava)
+    coll
+
+  }
 
 
   def logParseError(filename: String, message: String): String = {
