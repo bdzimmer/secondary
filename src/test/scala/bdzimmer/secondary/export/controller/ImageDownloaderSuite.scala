@@ -49,6 +49,7 @@ class ImageDownloaderSuite extends FunSuite {
     assert(outputFilename.isDefined)
     outputFilename.map(x => assert(FilenameUtils.getBaseName(x).equals(outputName)))
     outputFilename.map(x => new java.io.File(outputName).exists)
+    outputFilename.map(x => ImageDownloader.downsizeImage("output.jpg", "downsized.jpg", "jpg", 800))
 
   }
 

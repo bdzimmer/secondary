@@ -81,8 +81,8 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   // download or copy image files to the output location
   def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
 
-    val relativeName = (ExportImages.ImagesDir /
-        imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename))
+    val ext = FilenameUtils.getExtension(imageItem.filename)
+    val relativeName = ExportImages.ImagesDir / imageItem.id + "." + ext
     val absoluteName = location / relativeName
 
     imageItem.filename.startsWith("wikimedia:") match {
@@ -119,7 +119,10 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
           val outputName = for {
             json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
             wm <- ImageDownloader.parseWikimediaJson(json)
-            junk = ImageDownloader.downloadImage(wm, imagesLocation / imageItem.id)
+            imagePrefix = imagesLocation / imageItem.id
+            temp = ImageDownloader.downloadImage(wm, imagePrefix + "_org")
+            // TODO: if downsizing is not needed, just copy or rename the temp image
+            _ = ImageDownloader.downsizeImage(temp, absoluteName, ext)
           } yield relativeName
           (srcFilename, outputName.toList)
         }

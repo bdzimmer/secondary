@@ -294,11 +294,6 @@ class ExportPages(
               ""
             })),
 
-        // links to child pages with images
-        // + collection.children.map(x => {
-        //  column(Column3, ExportImages.imageLinkPage(x, metaItems, responsive = true))
-        // }).grouped(4).map(_.mkString("\n") + """<div class="clearfix"></div>""" + "\n").mkString("\n"),
-
         license)
 
     relFilePath

@@ -9,14 +9,18 @@
 
 package bdzimmer.secondary.export.controller
 
+import java.awt.image.BufferedImage  // scalastyle:ignore illegal.imports
+import java.awt.Image                // scalastyle:ignore illegal.imports
+import java.io.File
 import java.net.URL
+import javax.imageio.ImageIO
 
-import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 import scala.util.Try
 
 import net.liftweb.json.JsonParser
 import net.liftweb.json.JsonParser._
 import net.liftweb.json.JsonAST._
+import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 
 
 case class WikimediaMeta(
@@ -36,15 +40,16 @@ case class WikimediaMeta(
 
 object ImageDownloader {
 
-  val wikipediaURL = "https://en.wikipedia.org"
-  val metaDataQuery = "/w/api.php?action=query&prop=imageinfo&format=json&iiprop=url%7Cdimensions%7Cmime%7Cextmetadata&titles="
+  val WikipediaURL = "https://en.wikipedia.org"
+  val MetaDataQuery = "/w/api.php?action=query&prop=imageinfo&format=json&iiprop=url%7Cdimensions%7Cmime%7Cextmetadata&titles="
 
+  val MaxWidth = 1920
 
   // get a JSON string - None if the query fails
   def getWikimediaJson(filename: String): Option[String] = {
 
     // I think we can always assume a "File:" prefix
-    val queryString = wikipediaURL + metaDataQuery + "File:" + filename
+    val queryString = WikipediaURL + MetaDataQuery + "File:" + filename
     // println(queryString)
     val is = new URL(queryString).openStream
     val result = Try(IOUtils.toString(is))
@@ -121,10 +126,31 @@ object ImageDownloader {
   def downloadImage(wm: WikimediaMeta, outputName: String): String = {
     val outputExtension = FilenameUtils.getExtension(wm.url)
     val outputFilename = outputName + "." + outputExtension
-    val outputFile = new java.io.File(outputFilename)
+    val outputFile = new File(outputFilename)
     println(wm.url)
     FileUtils.copyURLToFile(new java.net.URL(wm.url), outputFile)
     outputFilename
+  }
+
+
+  // read an image, downsize, save as png
+  def downsizeImage(inputImage: String, outputImage: String, ext: String, maxWidth: Int = MaxWidth): Unit = {
+    Try {
+      val img = ImageIO.read(new File(inputImage))
+      val downsized = if (img.getWidth > maxWidth) {
+        val scaledHeight = img.getHeight * (maxWidth / img.getWidth.toFloat)
+        val scaledImage = img.getScaledInstance(maxWidth, scaledHeight.toInt, Image.SCALE_SMOOTH)
+        val scaledBufferedImage = new BufferedImage(
+            scaledImage.getWidth(null),
+            scaledImage.getHeight(null),
+            BufferedImage.TYPE_INT_RGB)
+        scaledBufferedImage.getGraphics.drawImage(scaledImage, 0, 0, null)
+        scaledBufferedImage
+      } else {
+        img
+      }
+      ImageIO.write(downsized, ext, new File(outputImage))
+    }
   }
 
 }
