@@ -163,7 +163,7 @@ object WorldLoader {
 
   // Load a collection of WorldItems from a YAML document.
   def loadCollection(yamlString: String): CollectionItemBean = {
-    val yaml = new Yaml(WorldItem.constructor)
+    val yaml = new Yaml(WorldItem.Constructor)
     val collectionBean = yaml.load(yamlString).asInstanceOf[CollectionItemBean]
     collectionBean
   }

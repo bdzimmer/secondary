@@ -80,13 +80,6 @@ trait TileMetaItemBean extends MetaItemBean {
   @BeanProperty var tiletype: String = ""
 }
 
-class BareWorldItemBean extends WorldItemBean {
-  def getVal(): BareWorldItem = BareWorldItem(
-      id, name, description, notes,
-      srcyml, remoteid, pst.getAllTags(notes))
-}
-
-
 class CollectionItemBean extends WorldItemBean {
    @BeanProperty var children: java.util.List[WorldItemBean] = new java.util.LinkedList[WorldItemBean]()
 
@@ -97,10 +90,14 @@ class CollectionItemBean extends WorldItemBean {
        children.asScala.map(_.getVal).toList)
 }
 
-// reference to another YML file
-// as far as I know, the getVal function here will never be called.
-class YamlIncludeBean extends MetaItemBean {
-  def getVal(): BareWorldItem = BareWorldItem(
+class ThingItemBean extends WorldItemBean {
+  def getVal(): ThingItem = ThingItem(
+      id, name, description, notes,
+      srcyml, remoteid, pst.getAllTags(notes))
+}
+
+class PlaceItemBean extends WorldItemBean {
+  def getVal(): PlaceItem = PlaceItem(
       id, name, description, notes,
       srcyml, remoteid, pst.getAllTags(notes))
 }
@@ -112,6 +109,23 @@ class ImageItemBean extends MetaItemBean {
       pst.getAllTags(notes),
       filename)
 }
+
+class CharacterItemBean extends WorldItemBean {
+
+  def getVal(): CharacterItem = {
+
+    val (cleanedName, nameParts) = WorldItem.cleanName(name)
+
+    CharacterItem(
+      id, cleanedName, nameParts,
+      description, notes,
+      srcyml, remoteid,
+      pst.getAllTags(notes))
+  }
+
+}
+
+///
 
 class TilesetItemBean extends TileMetaItemBean {
   def getVal(): TilesetItem = TilesetItem(
@@ -137,17 +151,13 @@ class MapItemBean extends MetaItemBean {
       filename)
 }
 
-class CharacterItemBean extends WorldItemBean {
-
-  // @BeanProperty var image: String = ""
-
-  def getVal(): CharacterItem = CharacterItem(
+// reference to another YML file
+// as far as I know, the getVal function here will never be called.
+class YamlIncludeBean extends MetaItemBean {
+  def getVal(): ThingItem = ThingItem(
       id, name, description, notes,
-      srcyml, remoteid,
-      pst.getAllTags(notes)) // image
-
+      srcyml, remoteid, pst.getAllTags(notes))
 }
-
 
 // immutable versions ///////////////////////////////////////////////////////////////////
 
@@ -163,7 +173,6 @@ trait WorldItem {
     val tags: List[SecTag]
 }
 
-
 trait MetaItem extends WorldItem {
   val filename: String
 }
@@ -172,20 +181,31 @@ trait TileMetaItem extends MetaItem {
   val tiletype: String
 }
 
-
-case class BareWorldItem(
-    id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
-
 case class CollectionItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String, tags: List[SecTag],
     children: List[WorldItem]) extends WorldItem
 
+case class ThingItem(
+    id: String, name: String, description: String, notes: String,
+    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
+
+// for now, PlaceItem has no fields that distinguish it from ThingItem
+case class PlaceItem(
+    id: String, name: String, description: String, notes: String,
+    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
+
 case class ImageItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String, tags: List[SecTag],
     filename: String) extends MetaItem
+
+case class CharacterItem(
+    id: String, name: String, nameParts: Option[List[String]],
+    description: String, notes: String,
+    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
+
+/// items for pixel art content ///
 
 case class TilesetItem(
     id: String, name: String, description: String, notes: String,
@@ -202,10 +222,6 @@ case class MapItem(
     srcyml: String, remoteid: String, tags: List[SecTag],
     filename: String) extends MetaItem
 
-case class CharacterItem(
-    id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
-
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -213,17 +229,26 @@ case class CharacterItem(
 object WorldItem {
 
   // YAML constructor with descriptions for the various types
+  val Constructor = new Constructor(classOf[CollectionItemBean])
 
-  val constructor = new Constructor(classOf[CollectionItemBean])
-  constructor.addTypeDescription(new TypeDescription(classOf[BareWorldItemBean], new Tag("!item")))
-  constructor.addTypeDescription(new TypeDescription(classOf[CollectionItemBean], new Tag("!collection")))
-  constructor.addTypeDescription(new TypeDescription(classOf[YamlIncludeBean], new Tag("!include")))
-  constructor.addTypeDescription(new TypeDescription(classOf[ImageItemBean], new Tag("!image")))
-  constructor.addTypeDescription(new TypeDescription(classOf[TilesetItemBean], new Tag("!tileset")))
-  constructor.addTypeDescription(new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")))
-  constructor.addTypeDescription(new TypeDescription(classOf[MapItemBean], new Tag("!map")))
-  constructor.addTypeDescription(new TypeDescription(classOf[CharacterItemBean], new Tag("!character")))
-  constructor.addTypeDescription(new TypeDescription(classOf[CharacterItemBean], new Tag("!person")))
+  val TypeDescriptions = List(
+      new TypeDescription(classOf[CollectionItemBean],  new Tag("!collection")),
+      new TypeDescription(classOf[ThingItemBean],       new Tag("!thing")),
+      new TypeDescription(classOf[ThingItemBean],       new Tag("!item")),
+      new TypeDescription(classOf[PlaceItemBean],       new Tag("!place")),
+      new TypeDescription(classOf[PlaceItemBean],       new Tag("!location")),
+      new TypeDescription(classOf[ImageItemBean],       new Tag("!image")),
+      new TypeDescription(classOf[CharacterItemBean],   new Tag("!character")),
+      new TypeDescription(classOf[CharacterItemBean],   new Tag("!person")),
+      new TypeDescription(classOf[TilesetItemBean],     new Tag("!tileset")),
+      new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")),
+      new TypeDescription(classOf[MapItemBean],         new Tag("!map")),
+      new TypeDescription(classOf[YamlIncludeBean],     new Tag("!include")))
+
+  for (td <- TypeDescriptions) {
+    Constructor.addTypeDescription(td)
+  }
+
 
   /**
    * Filter a list of WorldItems by type.
@@ -257,5 +282,16 @@ object WorldItem {
     }).flatten
   }
 
+
+  def cleanName(x: String): (String, Option[List[String]]) = {
+    val split = x.split("\\|").map(_.trim)
+    val cleaned = split.mkString(" ")
+    val parts = if (split.length > 1) {
+      Some(split.toList)
+    } else {
+      None
+    }
+    (cleaned, parts)
+  }
 
 }

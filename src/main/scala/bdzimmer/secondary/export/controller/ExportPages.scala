@@ -70,7 +70,7 @@ class ExportPages(
         location / relFilePath,
         master.name,
         master.description,
-        masterNavbar(master),
+        masterNavbar,
 
         column(Column12,
             np.transform(master.notes) +
@@ -128,7 +128,7 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        "Tasks", "",  None,
+        "Tasks", "",  pageNavbar(None),
 
        // Todos and thoughts
        column(Column6, h4("To-dos") + taskList(getTask(_)("todo"))) +
@@ -159,22 +159,37 @@ class ExportPages(
 
     val relFilePath = ExportPages.IndexPageFile
 
+    def getName(item: WorldItem): String = item match {
+      case x: CharacterItem => x.nameParts match {
+        case None => x.name
+        case Some(parts) => parts match {
+          case fst :: snd :: Nil =>  snd + ", " + fst
+          case fst :: snd :: rest => snd + ", " + fst + " " + rest.mkString(" ")
+          case _ => x.name
+        }
+      }
+      case _ => item.name
+    }
+
     PageTemplates.createArticlePage(
 
         location / relFilePath,
-        "Index", "", None,
+        "Index", "", pageNavbar(None),
 
         column(Column6, {
           val groupedItems = (world
             .drop(1)  // get rid of master collection - assumes master is first in list
             .filter(!_.isInstanceOf[MetaItem])
-            .groupBy(_.name.replaceAll("""\p{Punct}""", "")(0).toUpper))
+            .groupBy(getName(_).replaceAll("""\p{Punct}""", "")(0).toUpper))
 
           groupedItems.toList.sortBy(_._1).map({case (letter, items) => {
             h4(letter.toString) +
             listGroup(
-              items.sortBy(_.name).map(item => listItem(ExportPages.textLinkPage(item)))
-            )
+              items
+                .map(x => (getName(x), x))
+                .sortBy(_._1)
+                .map(x => listItem(
+                    link(Markdown.processLine(x._1), ExportPages.itemPageName(x._2)))))
           }}).mkString(br)
         }),
 
@@ -192,7 +207,7 @@ class ExportPages(
     PageTemplates.createArticlePage(
 
         location / relFilePath,
-        "Stats", "",  None,
+        "Stats", "",  pageNavbar(None),
 
         column(Column12, {
 
@@ -220,7 +235,7 @@ class ExportPages(
         location / relFilePath,
         character.name,
         character.description,
-        pageNavbar(character),
+        pageNavbar(Some(character)),
 
         column(Column12,
             // ExportPages.panel(
@@ -243,7 +258,7 @@ class ExportPages(
         location / relFilePath,
         map.name,
         map.description,
-        pageNavbar(map),
+        pageNavbar(Some(map)),
 
         column(Column12, ExportImages.pixelImageLinkResponsive(map) + hr) +
         column(Column12, np.transform(map.notes) + refItems(map)),
@@ -263,7 +278,7 @@ class ExportPages(
         location / relFilePath,
         tileset.name,
         tileset.description,
-        pageNavbar(tileset),
+        pageNavbar(Some(tileset)),
 
         column(Column12, ExportImages.pixelImageLinkResponsive(tileset) + hr) +
         column(Column12, np.transform(tileset.notes) + refItems(tileset)),
@@ -283,13 +298,13 @@ class ExportPages(
         location / relFilePath,
         collection.name,
         collection.description,
-        pageNavbar(collection),
+        pageNavbar(Some(collection)),
 
         column(Column12,
             np.transform(collection.notes) + refItems(collection) + hr +
             (if (collection.children.length > 0) {
               h4("Subarticles") +
-              listGroup(collection.children.map(x => listItem(ExportPages.textLinkPage(x))))
+              listGroup(collection.children.map(x => ExportPages.getCollectionLinksCollapsible(x)))
             } else {
               ""
             })),
@@ -324,7 +339,7 @@ class ExportPages(
     PageTemplates.createArticlePage(
         location / relFilePath,
         imageItem.name, imageItem.description,
-        pageNavbar(imageItem),
+        pageNavbar(Some(imageItem)),
 
         column(Column8, image(ExportImages.imageItemImagePath(imageItem), responsive = true)) +
         column(Column4, "") +
@@ -345,7 +360,7 @@ class ExportPages(
     PageTemplates.createArticlePage(
         location / relFilePath,
         item.name, item.description,
-        pageNavbar(item),
+        pageNavbar(Some(item)),
         column(Column12, np.transform(item.notes) + refItems(item)),
         license)
 
@@ -353,34 +368,34 @@ class ExportPages(
   }
 
 
-  private def masterNavbar(master: CollectionItem): Option[String] = navbars match {
+  private def masterNavbar(): Option[String] = navbars match {
     case true => {
       val links = List(
           link("Index", ExportPages.IndexPageFile),
           link("Tasks", ExportPages.TasksPageFile),
           link("Stats", ExportPages.StatsPageFile))
-      val linksWidthEdit = if (editLinks) {
-        links :+ link("Edit",  ExportPages.notepadURL(master))
-      } else {
-        links
+      val linksWidthEdit = editLinks match {
+        case true =>  links :+ link("Edit",  ExportPages.notepadURL(master))
+        case false => links
       }
-      val bar = linksWidthEdit.mkString(PageTemplates.NavbarSeparator) + hr
+      val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
+      val bar = (linksWidthEdit ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
       Some(bar)
     }
     case false => None
   }
 
 
-  // get a toolbar for an article page for a world item
-  private def pageNavbar(item: WorldItem): Option[String] = navbars match {
+  // get a navbar for an article page for a world item
+  private def pageNavbar(item: Option[WorldItem]): Option[String] = navbars match {
     case true => {
-      val links = List(link("Home", "index.html"))
-      val linksWidthEdit = if (editLinks) {
-        links :+ link("Edit",  ExportPages.notepadURL(master))
-      } else {
-        links
+      val links = List(link("Home", ExportPages.MasterPageFile))
+      val linksWidthEdit = editLinks match {
+        case true =>  links ++ item.map(x => link("Edit",  ExportPages.notepadURL(x)))
+        case false => links
       }
-      val bar = linksWidthEdit.mkString(PageTemplates.NavbarSeparator) + hr
+      val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
+      val bar = (linksWidthEdit ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
       Some(bar)
     }
     case false => None
