@@ -33,6 +33,12 @@ object FamilyTree {
     """<script src="tree/drawtree.js" charset="utf-8"></script>""" + "\n"
 
 
+  def nameList(char: CharacterItem): List[String] = char.nameParts match {
+    case Some(xs) => xs
+    case None => List(char.name)
+  }
+
+
   // for now, all of the family trees
   def getAllJs(characters: List[CharacterItem], np: RenderSecTags): String = {
 
@@ -85,24 +91,24 @@ object FamilyTree {
   // build family tree given a root character and a list of characters to
   // search for descendants.
   def buildTree(
-      node: CharacterItem,
+      char: CharacterItem,
       allCharacters: List[CharacterItem],
       parentType: String,
       np: RenderSecTags): TreeEntry = {
 
-    val distinctChildren = Genealogy.findDistinctChildren(node, allCharacters)
+    val distinctChildren = Genealogy.findDistinctChildren(char, allCharacters)
 
     // println(node.id + " distinct children: " + children1.map(x => x._1.id + "-" + x._2) + children2.map(x => x._1.id + "-" + x._2))
 
     // group children by marriage (or no marriage)
-    val childrenBySpouse = Genealogy.findParents(node, distinctChildren, allCharacters)
+    val childrenBySpouse = Genealogy.findParents(char, distinctChildren, allCharacters)
 
-    val newAllCharacters = allCharacters.filter(!_.id.equals(node.id))
+    val newAllCharacters = allCharacters.filter(!_.id.equals(char.id))
 
     val marriages = childrenBySpouse.toList.collect({case (Some(parent), children) => {
       Marriage(
           TreeEntry(
-              node.id + "_" + parent.id, "", "", "marriage", "none",
+              char.id + "_" + parent.id, "", "", "marriage", "none",
               children.map({case (child, rel) => {
                 buildTree(
                     child,
@@ -110,7 +116,7 @@ object FamilyTree {
                     Genealogy.getParentType(rel), np)
               }}), List()),
           TreeEntry(
-              parent.id, parent.name.replace(' ', '\t') + "\t" + Genealogy.lifespan(parent),
+              parent.id, nameList(parent).mkString("\t") + "\t" + Genealogy.lifespan(parent),
               "", "character", "none", List(), List()))
     }})
 
@@ -121,16 +127,16 @@ object FamilyTree {
     }}).flatten
 
     val description = np.transform(
-        node.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
+        char.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
 
-    println(node.name)
+    println(char.name)
     println("single parent children: " + singleParentChildren.map(_.name))
     println("marriages: " + marriages.map(x => x.spouse.name + " " + x.hidden.children.map(_.name)))
 
     println("***")
 
     TreeEntry(
-        node.id, node.name.replace(' ', '\t') + "\t" + Genealogy.lifespan(node),
+        char.id, nameList(char).mkString("\t") + "\t" + Genealogy.lifespan(char),
         description, "character", parentType, singleParentChildren, marriages)
   }
 

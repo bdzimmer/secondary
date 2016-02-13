@@ -133,11 +133,14 @@ object ImageDownloader {
   }
 
 
-  // read an image, downsize, save as png
+  // read an image, downsize, save
   def downsizeImage(inputImage: String, outputImage: String, ext: String, maxWidth: Int = MaxWidth): Unit = {
     Try {
-      val img = ImageIO.read(new File(inputImage))
-      val downsized = if (img.getWidth > maxWidth) {
+      val inputImageFile = new File(inputImage)
+      val img = ImageIO.read(inputImageFile)
+
+      if (img.getWidth > maxWidth) {
+        println("downsizing " + inputImage + " to " + outputImage)
         val scaledHeight = img.getHeight * (maxWidth / img.getWidth.toFloat)
         val scaledImage = img.getScaledInstance(maxWidth, scaledHeight.toInt, Image.SCALE_SMOOTH)
         val scaledBufferedImage = new BufferedImage(
@@ -145,11 +148,10 @@ object ImageDownloader {
             scaledImage.getHeight(null),
             BufferedImage.TYPE_INT_RGB)
         scaledBufferedImage.getGraphics.drawImage(scaledImage, 0, 0, null)
-        scaledBufferedImage
+        ImageIO.write(scaledBufferedImage, ext, new File(outputImage))
       } else {
-        img
+        if (!inputImage.equals(outputImage)) FileUtils.copyFile(inputImageFile, new File(outputImage))
       }
-      ImageIO.write(downsized, ext, new File(outputImage))
     }
   }
 

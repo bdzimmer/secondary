@@ -209,13 +209,13 @@ object ExportPipeline {
 
       val filesToExport = WorldItem.filterList[MetaItem](world).filter(x => fileStatus.keySet.contains(x.filename))
       val charsToExport = WorldItem.filterList[CharacterItem](pagesToExport)
-      val wikiImagesToExport = WorldItem.filterList[ImageItem](pagesToExport).filter(x => x.filename.startsWith("wikimedia:"))
+      val imagesToExport = WorldItem.filterList[ImageItem](pagesToExport)
 
       logList("files to export", filesToExport.map(_.id))
       logList("chars to export", charsToExport.map(_.id))
-      logList("image to export", wikiImagesToExport.map(_.id))
+      logList("image to export", imagesToExport.map(_.id))
 
-      filesToExport ++ charsToExport ++ wikiImagesToExport
+      filesToExport ++ charsToExport ++ imagesToExport
 
     } else {
       List()

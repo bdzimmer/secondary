@@ -113,13 +113,13 @@ children:
     * **descendant**
     * **marriage**
 
-    For example, the tag `{{demo: mother | Lady Anne Darcy}}` in the notes of {{Fitzwilliam Darcy}} indicates that {{Lady Anne Darcy}} is Fitzwilliam's mother.
+    For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
 
     **Examples**
 
-    `{{demo: familytree | Anonymous Earl}}`
+    `{{demo: familytree | Lady Catherine de Bourgh}}`
 
-    {{familytree: Anonymous Earl}}
+    {{familytree: Lady Catherine de Bourgh}}
 
     See {{link: Genealogy Examples}} for further details.
 
@@ -191,44 +191,44 @@ children:
 
     - !character
       id: lady_catherine
-      name: Lady Catherine deBourgh
+      name: Lady Catherine | de Bourgh
       notes: |-
         `{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
 
     - !character
       id: sir_lewis
-      name: Sir Lewis deBourgh
+      name: Sir Lewis | de Bourgh
       notes: |-
-        `{{demo: marriage | Lady Catherine deBourgh}}` &rarr; {{marriage: Lady Catherine deBourgh}}
+        `{{demo: marriage | Lady Catherine de Bourgh}}` &rarr; {{marriage: Lady Catherine de Bourgh}}
 
     - !character
       id: anne_debourgh
-      name: Anne deBourgh
+      name: Anne | de Bourgh
       notes: |-
-        `{{demo: father | Sir Lewis deBourgh}}` &rarr; {{father: Sir Lewis deBourgh}}
-        `{{demo: mother | Lady Catherine deBourgh}}` &rarr; {{mother: Lady Catherine deBourgh}}
+        `{{demo: father | Sir Lewis de Bourgh}}` &rarr; {{father: Sir Lewis de Bourgh}}
+        `{{demo: mother | Lady Catherine de Bourgh}}` &rarr; {{mother: Lady Catherine de Bourgh}}
 
     - !character
       id: anne_darcy
-      name: Lady Anne Darcy
+      name: Lady Anne | Darcy
       notes: |-
         `{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
         `{{demo: marriage | Mr. Darcy}}` &rarr; {{marriage: Mr. Darcy}}
 
     - !character
       id: mr_darcy
-      name: Mr. Darcy
+      name: Mr. | Darcy
 
     - !character
       id: georgiana
-      name: Georgiana Darcy
+      name: Georgiana | Darcy
       notes: |-
         `{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
         `{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
 
     - !character
       id: fitzwilliam_darcy
-      name: Fitzwilliam Darcy
+      name: Fitzwilliam | Darcy
       notes: |-
         `{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
         `{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
@@ -236,7 +236,7 @@ children:
 
     - !character
       id: elizabeth
-      name: Elizabeth Bennet
+      name: Elizabeth | Bennet
 
 - !item
   id: drive

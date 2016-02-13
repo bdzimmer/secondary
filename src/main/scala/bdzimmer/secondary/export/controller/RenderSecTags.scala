@@ -14,8 +14,6 @@ import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
 
-  val metaItems = WorldItem.filterList[MetaItem](world)
-
   // transform markdown text with special tags to HTML
   def transform(text: String): String = {
 
@@ -90,10 +88,10 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
     case SecTags.Link => RenderSecTags.link(item, args)
-    case SecTags.Image => RenderSecTags.image(item, RenderSecTags.parseArgs(args), metaItems)
-    case SecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, true), false)
+    case SecTags.Image => RenderSecTags.image(item, RenderSecTags.parseArgs(args))
+    case SecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, true), false)
     case SecTags.FamilyTree => familyTree(item)
-    case SecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args), metaItems)
+    case SecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args))
     case SecTags.Marriage => RenderSecTags.marriage(item, RenderSecTags.parseArgs(args))
     case SecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
 
@@ -157,21 +155,21 @@ object RenderSecTags {
 
 
   // TODO: Image stuff really needs overhauling.
-  def image(item: WorldItem, args: Map[String, String], metaItems: List[MetaItem]): String = {
+  def image(item: WorldItem, args: Map[String, String]): String = {
 
     if (args.getOrElse("link", "true").equals("true")) {
-      ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320), true)
+      ExportPages.panel(ExportImages.imageLinkPage(item, false, 320), true)
     } else {
-      ExportPages.panel(ExportImages.imageLinkPage(item, metaItems, false, 320, false), true)
+      ExportPages.panel(ExportImages.imageLinkPage(item, false, 320, false), true)
     }
 
   }
 
 
   // more flexible jumbotron tag renderer
-  def jumbotron(item: WorldItem, args: Map[String, String], metaItems: List[MetaItem]): String = {
+  def jumbotron(item: WorldItem, args: Map[String, String]): String = {
 
-    val imagePath = ExportImages.itemImagePath(item, metaItems)
+    val imagePath = ExportImages.itemImagePath(item)
     val xPos = args.getOrElse("xpos", "0%")
     val yPos = args.getOrElse("ypos", "50%")
     val color = args.getOrElse("color", "black")

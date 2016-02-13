@@ -50,24 +50,20 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     // (filterList[TileMetaItem](items)
     //    map(x => Export.exportIndividualTileImages(x, contentDir, location)))
 
-    // only export individual tile images for sprite sheets
-    val spritesheetImageOutputs = (WorldItem.filterList[SpritesheetItem](items)
-        map(x => (x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
+    // export individual tile images for sprite sheets
+    // val spritesheetImageOutputs = (WorldItem.filterList[SpritesheetItem](items)
+    //    map(x => (x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
 
     // In the case of ImageItems, the filename is already an image. It either exists
     // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
     // prefix.
-    val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x)))
-
-    // val characterOutputs = (WorldItem.filterList[CharacterItem](items)
-    //    map(x => prepareCharacterItemOutputs(x, contentDir)))
+    val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x, contentDir)))
 
     // we can't just call toMap on all of these lists and then merge them, because
     // the lists may contain duplicate keys themselves.
 
     // skip adding spritesheet outputs to list, since we don't want to upload them
-
-    val allImageOutputsList = mapImageOutputs ++ tileImageOutputs ++ imageOutputs // ++ characterOutputs
+    val allImageOutputsList = mapImageOutputs ++ tileImageOutputs ++ imageOutputs
 
     val allImageOutputs = (allImageOutputsList
         .map(x => List(x).toMap)
@@ -79,28 +75,29 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
 
   // download or copy image files to the output location
-  def prepareImageItemOutputs(imageItem: ImageItem): (String, List[String]) = {
+  def prepareImageItemOutputs(imageItem: ImageItem, contentDir: String): (String, List[String]) = {
 
     val ext = FilenameUtils.getExtension(imageItem.filename)
     val relativeName = ExportImages.ImagesDir / imageItem.id + "." + ext
     val absoluteName = location / relativeName
+    val dstFile = new File(absoluteName)
 
-    imageItem.filename.startsWith("wikimedia:") match {
+    val (resultSrc, resultDst) = imageItem.filename.startsWith("wikimedia:") match {
 
       case false => {
         // local file - copy to images folder
         // source is original local file
 
-        // TODO: fix non-wikimedia images! this doesn't work!
-
         val srcFilename = imageItem.filename
-        val srcFile = new java.io.File(srcFilename)
+        val srcAbsFilename = contentDir / imageItem.filename
+        val srcFile = new File(srcAbsFilename)
 
-        if (srcFile.exists) {
-          FileUtils.copyFile(srcFile, new java.io.File(absoluteName))
-          (srcFilename, List(relativeName))
+        if (!dstFile.exists && srcFile.exists) {
+          println("\t\t\tcopying to " + relativeName)
+          FileUtils.copyFile(srcFile, dstFile)
+          (srcFilename, Some(relativeName))
         } else {
-          (srcFilename, List())
+          (srcFilename, None)
         }
       }
 
@@ -110,66 +107,30 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
         val srcFilename = imageItem.srcyml
 
         // only download if it doesn't already exist in the scratch location
-        if (new java.io.File(absoluteName).exists) {
-          (srcFilename, List())
-        } else {
-
-          println("\t\t\tdownloading " + relativeName)
-
+        if (!dstFile.exists) {
+          println("\t\t\tdownloading to " + relativeName)
           val outputName = for {
             json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
             wm <- ImageDownloader.parseWikimediaJson(json)
             imagePrefix = imagesLocation / imageItem.id
-            temp = ImageDownloader.downloadImage(wm, imagePrefix + "_org")
-            // TODO: if downsizing is not needed, just copy or rename the temp image
-            _ = ImageDownloader.downsizeImage(temp, absoluteName, ext)
+            _ = ImageDownloader.downloadImage(wm, imagePrefix)
           } yield relativeName
-          (srcFilename, outputName.toList)
+          (srcFilename, outputName)
+        } else {
+          (srcFilename, None)
         }
-
       }
     }
 
+    resultDst.map(filename => {
+      // downsize image (in place) if necessary
+      ImageDownloader.downsizeImage(location / filename, location / filename, ext)
+    })
+
+    (resultSrc, resultDst.toList)
   }
 
 
-  /*
-  def prepareCharacterItemOutputs(ci: CharacterItem, contentDir: String): (String, List[String]) = {
-
-    val (cm, sheetRow) = ExportImages.getCharacterImageInfo(ci, metaItems)
-
-    val outputPairs = cm match {
-
-      case Some(ss: SpritesheetItem) => {
-
-        // TODO: use TileOptions.tiles.get here and deal with the option
-        val spritesheetType = TileOptions.getOrQuit(ss.tiletype)
-
-        val outputImageFiles = ExportImages.outputScales map (scale => {
-          val offset = 3
-          val inputFile = (imagesLocation / ss.id + "_tiles" /
-              ((sheetRow * spritesheetType.tilesPerRow + offset) + ExportImages.scalePostfix(scale) + ".png"))
-          val relativeName = ExportImages.ImagesDir / ci.id + ExportImages.scalePostfix(scale) + ".png"
-          val absoluteName = location / relativeName
-          FileUtils.copyFile(new File(inputFile), new File(absoluteName))
-
-          relativeName
-
-        })
-
-        (ss.filename, outputImageFiles)
-
-      }
-
-      case _ => ("", List())
-
-    }
-
-    outputPairs
-
-  }
-  *
-  */
 
 }
 
@@ -341,70 +302,6 @@ object ExportImages {
     result
   }
 
-   ///
-
-   /*
-  def getCharacterImageInfo(ci: CharacterItem, metaItems: List[MetaItem]): (Option[MetaItem], Int) = {
-
-    // split spritesheet attribute by comma
-    // first part is item id, second part spritesheet row (if exists)
-    val spriteSplit = ci.image.split(",\\s+")
-    val (metaId, sheetRow) = spriteSplit.toList match {
-      case x :: xs => {
-        (x, xs.headOption.flatMap(s => Try(s.toInt).toOption).getOrElse(0))
-      }
-      case Nil => ("", 0)
-    }
-
-    // there may not be a matching MetaItem in the collection
-    // if it doesn't exist yet
-    val metaOption = metaItems.filter(_.id.equals(metaId)).headOption
-    (metaOption, sheetRow)
-
-  }
-  *
-  */
-
-  // produce HTML for the image of a character
-  /*
-  def characterImage(
-      ci: CharacterItem, metaItems: List[MetaItem],
-      scale: Int = 4,
-      responsive: Boolean = true,
-      maxWidth: Int = 480): String = {
-
-    val metaOption = getCharacterImageInfo(ci, metaItems)._1
-    val path = characterItemImagePath(ci, metaItems, scale)
-
-    metaOption.map(meta => meta match {
-      case ss: SpritesheetItem => image(path)
-      case im: ImageItem => image(path, responsive, maxWidth)
-      case _ => ""
-    }).getOrElse("")
-
-  }
-  *
-  */
-
-
-  /*
-  def characterItemImagePath(
-      ci: CharacterItem,
-      metaItems: List[MetaItem],
-      scale: Int = 4): String = {
-
-    val (metaOption, sheetRow) = getCharacterImageInfo(ci, metaItems)
-
-    metaOption.map(meta => meta match {
-      case ss: SpritesheetItem => pixelImagePathScale(ci, scale)
-      case im: ImageItem => imageItemImagePath(im)
-      case _ => ""
-    }).getOrElse("")
-
-  }
-  *
-  */
-
 
   def pixelImagePathScale(item: WorldItem, scale: Int = 4): String = {
     val imageFile = ImagesDir / item.id + "%s.png"
@@ -429,7 +326,6 @@ object ExportImages {
   // different kinds of images and contexts where this is used.
   def imageLinkPage(
       item: WorldItem,
-      metaItems: List[MetaItem],
       responsive: Boolean = true,
       maxWidth: Int = 480,
       showName: Boolean = true,
@@ -441,7 +337,6 @@ object ExportImages {
         imageSprite(imageFile, 0, 0, 192, 192)
       }
       case x: ImageItem => image(imageItemImagePath(x), responsive, maxWidth)
-      // case x: CharacterItem => characterImage(x, metaItems, scale, responsive, maxWidth)
       case _ => ""
     }
 
@@ -457,13 +352,9 @@ object ExportImages {
 
   // can this be combined with the above somehow?
   // I believe this is only used for jumbotron images.
-  def itemImagePath(
-      item: WorldItem,
-      metaItems: List[MetaItem]): String = item match {
-
+  def itemImagePath(item: WorldItem): String = item match {
     case x: MapItem => pixelImagePathScale(x, 4)
     case x: ImageItem => imageItemImagePath(x)
-    // case x: CharacterItem => characterItemImagePath(x, metaItems)
     case _ => ""
   }
 
