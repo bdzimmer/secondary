@@ -35,14 +35,21 @@ object SecTags {
   val Event = "event"
 
   val Todo = "todo"
+  val InProgress = "in-progress"
+  val Done = "done"
+
   val Thought = "thought"
+
   val Demo = "demo"
 
   val ItemTagKinds = List(
       Link, Image, ImageResponsive,
       FamilyTree, Jumbotron, Marriage, Timeline)
+
   val EventTagKinds = List(Birth, Death, Event)
-  val OtherTagKinds = List(Todo, Thought, Demo) ++ EventTagKinds
+  val TaskTagKinds = List(Todo, InProgress, Done)
+  val ThoughtTagKinds = List(Thought)
+  val OtherTagKinds = List(Demo) ++ EventTagKinds ++ TaskTagKinds ++ ThoughtTagKinds
 
 }
 
@@ -70,5 +77,14 @@ object ParseSecTags {
     }
 
   }
+
+
+  def parseArgs(args: List[String]): Map[String, String] = {
+    args.map(x => x.split("=").toList match {
+      case fst :: snd :: xs => Some((fst, snd))
+      case _ => None
+    }).flatten.toMap
+  }
+
 
 }

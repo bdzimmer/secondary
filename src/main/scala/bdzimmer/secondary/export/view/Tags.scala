@@ -11,6 +11,8 @@
 
 package bdzimmer.secondary.export.view
 
+import scala.collection.immutable.Seq
+
 
 object Tags {
 
@@ -55,7 +57,7 @@ object Tags {
   }
 
 
-  def listGroup(items: List[String]): String = {
+  def listGroup(items: Seq[String]): String = {
     """<ul>""" + "\n" + items.mkString("\n") +  """</ul>"""
   }
 
@@ -112,17 +114,26 @@ object Tags {
   }
 
   // TODO: probably do something different with styles
-  def table(contents: List[List[String]], tdStyle: List[String]): String = {
+  def table(contents: Seq[Seq[String]], tdStyle: Seq[String]): String = {
 
     val tableTags = s"<table>\n%s\n</table>\n"
 
     val tableRowTags = s"<tr>\n%s\n</tr>"
 
-    tableTags.format(contents.map(row => {
-      tableRowTags.format(row.zip(tdStyle).map({case (cell, style) => {
-        s"""<td style="${style}">${cell}</td>"""
-      }}).mkString)
-    }).mkString)
+    if (tdStyle.length > 0) {
+      tableTags.format(contents.map(row => {
+        tableRowTags.format(row.zip(tdStyle).map({case (cell, style) => {
+          s"""<td style="${style}">${cell}</td>"""
+        }}).mkString)
+      }).mkString)
+
+    } else {
+      tableTags.format(contents.map(row => {
+        tableRowTags.format(row.map(cell => {
+          s"""<td>${cell}</td>"""
+        }).mkString)
+      }).mkString)
+    }
 
   }
 

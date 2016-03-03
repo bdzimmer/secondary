@@ -88,12 +88,12 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
     case SecTags.Link => RenderSecTags.link(item, args)
-    case SecTags.Image => RenderSecTags.image(item, RenderSecTags.parseArgs(args))
+    case SecTags.Image => RenderSecTags.image(item, ParseSecTags.parseArgs(args))
     case SecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, true), false)
     case SecTags.FamilyTree => familyTree(item)
-    case SecTags.Jumbotron => RenderSecTags.jumbotron(item, RenderSecTags.parseArgs(args))
-    case SecTags.Marriage => RenderSecTags.marriage(item, RenderSecTags.parseArgs(args))
-    case SecTags.Timeline => RenderSecTags.timeline(item, RenderSecTags.parseArgs(args))
+    case SecTags.Jumbotron => RenderSecTags.jumbotron(item, ParseSecTags.parseArgs(args))
+    case SecTags.Marriage => RenderSecTags.marriage(item, ParseSecTags.parseArgs(args))
+    case SecTags.Timeline => RenderSecTags.timeline(item, ParseSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
     case _ => RenderSecTags.genLink(kind.capitalize, item)
@@ -128,14 +128,6 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
 
 
 object RenderSecTags {
-
-  def parseArgs(args: List[String]): Map[String, String] = {
-    args.map(x => x.split("=").toList match {
-      case fst :: snd :: xs => Some((fst, snd))
-      case _ => None
-    }).flatten.toMap
-  }
-
 
   // generate text for tag kinds that don't reference WorldItems
   def processOtherTag(tag: SecTag): String = tag.kind match {

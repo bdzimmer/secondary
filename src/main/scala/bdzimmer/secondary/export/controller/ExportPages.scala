@@ -117,8 +117,8 @@ class ExportPages(
     }
 
     // get task strings
-    def getTask(item: WorldItem)(prefix: String): List[String] = {
-      item.tags.filter(_.kind.equals(prefix)).map(_.value)
+    def getTask(item: WorldItem)(prefixes: List[String]): List[String] = {
+      item.tags.filter(x => prefixes.contains(x.kind)).map(_.value)
     }
 
     // get invalid tags
@@ -126,13 +126,16 @@ class ExportPages(
       item.tags.map(np.validateTag(_)).collect({case Fail(x) => x})
     }
 
+
+    val allTasks = world.flatMap(item => item.tags.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item)))
+
     PageTemplates.createArticlePage(
         location / relFilePath,
         "Tasks", "",  pageNavbar(None),
 
        // Todos and thoughts
-       column(Column6, h4("To-dos") + taskList(getTask(_)("todo"))) +
-       column(Column6, h4("Thoughts") + taskList(getTask(_)("thought"))) +
+       column(Column6, h4("To-dos") + taskList(getTask(_)(SecTags.TaskTagKinds))) +
+       column(Column6, h4("Thoughts") + taskList(getTask(_)(SecTags.ThoughtTagKinds))) +
 
        // Empty notes
 
@@ -144,9 +147,10 @@ class ExportPages(
              .map(x => listItem(linkWithEdit(x))))
        ) +
 
-
        // Invalid tags
-       column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)),
+       column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)) +
+
+       column(12, h4("Tasks Table") + Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2)))),
 
        license)
 
