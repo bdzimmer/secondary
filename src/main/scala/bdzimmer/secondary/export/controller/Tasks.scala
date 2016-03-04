@@ -21,6 +21,13 @@ case class Task(
 
 object Tasks {
 
+   val TasksStyles =
+     // """<script src="https://code.jquery.com/jquery-1.12.0.min.js" charset="utf-8"></script>""" + "\n" +
+     """<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>""" + "\n" +
+     """<script src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js" charset="utf-8"></script>""" + "\n" +
+     """<link href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
+
+
    def createTask(s: SecTag, item: WorldItem): Task = {
      val args = ParseSecTags.parseArgs(s.args)
      Task(s.kind, s.value, item, args.get("recorded"), args.get("started"), args.get("finished"))
@@ -55,8 +62,10 @@ object Tasks {
            "vertical-align: top",
            "vertical-align: top; white-space: nowrap",
            "vertical-align: top; white-space: nowrap",
-           "vertical-align: top; white-space: nowrap")
-     )
-
+           "vertical-align: top; white-space: nowrap"),
+       Some("tasks")
+     ) +
+     TasksStyles +
+     """<script>$(document).ready(function() {$('#tasks').DataTable();});</script>"""
    }
 }

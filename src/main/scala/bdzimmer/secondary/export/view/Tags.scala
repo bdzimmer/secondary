@@ -114,21 +114,24 @@ object Tags {
   }
 
   // TODO: probably do something different with styles
-  def table(contents: Seq[Seq[String]], tdStyle: Seq[String]): String = {
+  def table(
+      contents: Seq[Seq[String]],
+      tdStyle: Seq[String],
+      id: Option[String]): String = {
 
-    val tableTags = s"<table>\n%s\n</table>\n"
-
+    val tableTags = s"<table%s>\n%s\n</table>\n"
     val tableRowTags = s"<tr>\n%s\n</tr>"
+    val idString = id.map(x => s""" id="${x}"""").getOrElse("")
 
     if (tdStyle.length > 0) {
-      tableTags.format(contents.map(row => {
+      tableTags.format(idString, contents.map(row => {
         tableRowTags.format(row.zip(tdStyle).map({case (cell, style) => {
           s"""<td style="${style}">${cell}</td>"""
         }}).mkString)
       }).mkString)
 
     } else {
-      tableTags.format(contents.map(row => {
+      tableTags.format(idString, contents.map(row => {
         tableRowTags.format(row.map(cell => {
           s"""<td>${cell}</td>"""
         }).mkString)

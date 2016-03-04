@@ -53,7 +53,7 @@ class Timeline(months: List[String]) {
         Tags.table(curMonth.map({case(date, desc, src) => {
           List(date._3.map(x => Tags.b(x.toString) + Timeline.ColumnSeparator).getOrElse(""),
                Markdown.processLine(desc) + Tags.nbsp + ExportPages.glyphLinkPage(src))
-        }}), tdStyle = Timeline.TableStyle) + Tags.br
+        }}), tdStyle = Timeline.TableStyle, None) + Tags.br
 
       }}).mkString
     }}).mkString
@@ -87,7 +87,7 @@ class Timeline(months: List[String]) {
             Tags.b(date._2.map(x => months(x).capitalize + " ").getOrElse("") + date._3.map(_ + ". ").getOrElse(""))
           }))
 
-    }}), tdStyle = Timeline.TableStyle) + Tags.br
+    }}), tdStyle = Timeline.TableStyle, None) + Tags.br
 
   }
 
