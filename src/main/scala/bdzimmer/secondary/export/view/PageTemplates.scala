@@ -45,6 +45,12 @@ object PageTemplates {
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
+    <!-- Bootstrap core JavaScript -->
+    <!-- (Originally placed at the end of the document so the pages load faster) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="styles/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Additional styles -->
     <style>
       ${styles}
     </style>
@@ -52,12 +58,6 @@ object PageTemplates {
 
   <body>
     ${body}
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <script src="styles/bootstrap/js/bootstrap.min.js"></script>
   </body>
 </html>
   """

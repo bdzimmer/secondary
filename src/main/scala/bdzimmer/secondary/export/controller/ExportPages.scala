@@ -126,33 +126,32 @@ class ExportPages(
       item.tags.map(np.validateTag(_)).collect({case Fail(x) => x})
     }
 
-
     val allTasks = world.flatMap(item => item.tags.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item)))
 
     PageTemplates.createArticlePage(
         location / relFilePath,
         "Tasks", "",  pageNavbar(None),
 
-       // Todos and thoughts
-       column(Column6, h4("To-dos") + taskList(getTask(_)(SecTags.TaskTagKinds))) +
-       column(Column6, h4("Thoughts") + taskList(getTask(_)(SecTags.ThoughtTagKinds))) +
+        column(12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2)))),
 
-       // Empty notes
+        // Empty notes
 
-       column(
-           Column6,
-           h4("Empty Notes") +
-           listGroup(world
-             .filter(_.notes.equals(""))
-             .map(x => listItem(linkWithEdit(x))))
-       ) +
+        column(
+            Column6,
+            h4("Empty Notes") +
+            listGroup(world
+              .filter(_.notes.equals(""))
+              .map(x => listItem(linkWithEdit(x))))
+        ) +
 
-       // Invalid tags
-       column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)) +
+        // Invalid tags
+        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)) +
 
-       column(12, h4("Tasks Table") + Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2)))),
+        // Todos and thoughts - deprecated soon.
+        column(Column6, h4("Thoughts") + taskList(getTask(_)(List(SecTags.Thought)))) +
+        column(Column6, h4("Tasks") + taskList(getTask(_)(SecTags.TaskTagKinds))) +
 
-       license)
+        license)
 
     relFilePath
   }

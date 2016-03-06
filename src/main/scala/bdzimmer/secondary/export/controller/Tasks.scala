@@ -14,9 +14,9 @@ case class Task(
     kind: String,
     desc: String,
     item: WorldItem,
-    recorded: Option[String],
-    started: Option[String],
-    finished: Option[String])
+    log: Option[String],
+    start: Option[String],
+    done: Option[String])
 
 
 object Tasks {
@@ -30,42 +30,42 @@ object Tasks {
 
    def createTask(s: SecTag, item: WorldItem): Task = {
      val args = ParseSecTags.parseArgs(s.args)
-     Task(s.kind, s.value, item, args.get("recorded"), args.get("started"), args.get("finished"))
+     Task(s.kind, s.value, item, args.get("log"), args.get("start"), args.get("done"))
    }
 
 
    def table(tasks: Seq[Task]): String = {
 
-     // TODO: proper task sorting
+     // TODO: better initial task sorting
 
-     val headers = List(
+     val head = List(
          Tags.b("Item"),
          Tags.b("Status"),
          Tags.b("Description"),
-         Tags.b("Recorded"),
-         Tags.b("Started"),
-         Tags.b("Finished")).map(_ + Tags.nbsp + Tags.nbsp)
+         Tags.b("Log"),
+         Tags.b("Start"),
+         Tags.b("Done")).map(_ + Tags.nbsp + Tags.nbsp)
 
-     Tags.table(
-       headers +: tasks.sortBy(_.recorded).map(task => {
-         List(
-             ExportPages.textLinkPage(task.item),
-             Tags.b(task.kind.capitalize),
-             Markdown.processLine(task.desc),
-             task.recorded.getOrElse(""),
-             task.started.getOrElse(""),
-             task.finished.getOrElse("")).map(_ + Tags.nbsp + Tags.nbsp)
-       }).toList,
+     val body = tasks.sortBy(_.log).map(task => {
        List(
-           "vertical-align: top; white-space: nowrap",
-           "vertical-align: top; white-space: nowrap",
-           "vertical-align: top",
-           "vertical-align: top; white-space: nowrap",
-           "vertical-align: top; white-space: nowrap",
-           "vertical-align: top; white-space: nowrap"),
-       Some("tasks")
-     ) +
+           ExportPages.textLinkPage(task.item),
+           Tags.b(task.kind.capitalize),
+           Markdown.processLine(task.desc),
+           task.log.getOrElse(""),
+           task.start.getOrElse(""),
+           task.done.getOrElse("")).map(_ + Tags.nbsp + Tags.nbsp)
+     }).toList
+
+     val styles = List(
+         "vertical-align: top; white-space: nowrap",
+         "vertical-align: top; white-space: nowrap",
+         "vertical-align: top",
+         "vertical-align: top; white-space: nowrap",
+         "vertical-align: top; white-space: nowrap",
+         "vertical-align: top; white-space: nowrap")
+
+     Tags.table(Some(head), body, Some(styles), Some("tasks"), Some("dataTable display")) +
      TasksStyles +
-     """<script>$(document).ready(function() {$('#tasks').DataTable();});</script>"""
+     """<script>$(document).ready(function() {$('#tasks').dataTable({"pageLength": 30});});</script>"""
    }
 }

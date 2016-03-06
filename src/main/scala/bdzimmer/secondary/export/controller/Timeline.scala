@@ -50,10 +50,10 @@ class Timeline(months: List[String]) {
 
         // the endline is required for the markdown processing
         month.map(x => Tags.b(months(x).capitalize)).getOrElse("") + "\n\n\n" +
-        Tags.table(curMonth.map({case(date, desc, src) => {
+        Tags.table(None, curMonth.map({case(date, desc, src) => {
           List(date._3.map(x => Tags.b(x.toString) + Timeline.ColumnSeparator).getOrElse(""),
                Markdown.processLine(desc) + Tags.nbsp + ExportPages.glyphLinkPage(src))
-        }}), tdStyle = Timeline.TableStyle, None) + Tags.br
+        }}), tdStyle = Some(Timeline.TableStyle), None, None) + Tags.br
 
       }}).mkString
     }}).mkString
@@ -79,7 +79,7 @@ class Timeline(months: List[String]) {
 
   private def renderByYearTable(events: List[(DateTuple, String, WorldItem)]): String = {
 
-    Tags.table(events.groupBy(_._1._1).toList.sortBy(_._1).map({case(year, curYear) => {
+    Tags.table(None, events.groupBy(_._1._1).toList.sortBy(_._1).map({case(year, curYear) => {
 
       List(
           Tags.b(year.toString) + Timeline.ColumnSeparator,
@@ -87,7 +87,7 @@ class Timeline(months: List[String]) {
             Tags.b(date._2.map(x => months(x).capitalize + " ").getOrElse("") + date._3.map(_ + ". ").getOrElse(""))
           }))
 
-    }}), tdStyle = Timeline.TableStyle, None) + Tags.br
+    }}), tdStyle = Some(Timeline.TableStyle), None, None) + Tags.br
 
   }
 

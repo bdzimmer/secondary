@@ -115,29 +115,46 @@ object Tags {
 
   // TODO: probably do something different with styles
   def table(
-      contents: Seq[Seq[String]],
-      tdStyle: Seq[String],
-      id: Option[String]): String = {
+      head: Option[Seq[String]],
+      body: Seq[Seq[String]],
+      tdStyle: Option[Seq[String]],
+      id: Option[String],
+      cssClass: Option[String] = None): String = {
 
-    val tableTags = s"<table%s>\n%s\n</table>\n"
-    val tableRowTags = s"<tr>\n%s\n</tr>"
-    val idString = id.map(x => s""" id="${x}"""").getOrElse("")
-
-    if (tdStyle.length > 0) {
-      tableTags.format(idString, contents.map(row => {
-        tableRowTags.format(row.zip(tdStyle).map({case (cell, style) => {
-          s"""<td style="${style}">${cell}</td>"""
-        }}).mkString)
-      }).mkString)
-
-    } else {
-      tableTags.format(idString, contents.map(row => {
-        tableRowTags.format(row.map(cell => {
-          s"""<td>${cell}</td>"""
-        }).mkString)
-      }).mkString)
+    def styleAttribute(style: String): String = {
+      s""" style="${style}""""
     }
 
+    val tableRowTags = s"<tr>\n%s</tr>\n"
+    val idString = id.map(x => s""" id="${x}"""").getOrElse("")
+    val cssClassString = cssClass.map(x => s""" class="${x}"""").getOrElse("")
+
+    val headStyled = tdStyle match {
+      case Some(x) => head.map(row => row.zip(x.map(styleAttribute)))
+      case None => head.map(row => row.map((_, "")))
+    }
+
+    val bodyStyled = tdStyle match {
+      case Some(x) => body.map(row => row.zip(x.map(styleAttribute)))
+      case None => body.map(row => row.map((_, "")))
+    }
+
+    val tableBody = bodyStyled.map(row => {
+      tableRowTags.format(row.map({case (cell, style) => {
+        s"""<td${style}>${cell}</td>\n"""
+      }}).mkString)
+    }).mkString
+
+    val tableHead = headStyled.map(row => {
+      tableRowTags.format(row.map({case (cell, style) => {
+        s"""<td${style}>${cell}</td>\n"""
+      }}).mkString)
+    })
+
+    s"<table%s%s>\n".format(idString, cssClassString) +
+    tableHead.map(x => "<thead>\n" + x + "</thead>\n").getOrElse("") +
+    "<tbody>\n" + tableBody + "</tbody>\n" +
+    "</table>\n"
   }
 
   val hr = "<hr />"
