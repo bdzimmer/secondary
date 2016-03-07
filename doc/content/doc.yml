@@ -34,7 +34,7 @@ children:
 
     `{{demo: tag_name | value | arg1=value1 | arg2=value2 | arg3=value3 ...}}`
 
-    For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Other Tags}}, `value` is usually a sentence or two of descriptive text. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
+    For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Task Tags}}, `value` is usually a sentence or two of descriptive text, and for {{link: tags | Event Tags}}, `value` is a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
 
     <br />
 
@@ -45,6 +45,8 @@ children:
     Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
 
     <br />
+
+    ***
 
     #### link
 
@@ -63,8 +65,9 @@ children:
 
     `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
 
-    `{{demo: link | Tags | Other Tags}}` &rarr; {{link: Tags | Other Tags}}
+    `{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
 
+    ***
 
     #### image
 
@@ -85,6 +88,7 @@ children:
 
     `{{demo: image | image_red_riding_hood}}`
 
+    ***
 
     #### image-responsive
 
@@ -94,6 +98,7 @@ children:
 
     See {{link: Tags | image}} for more details.
 
+    ***
 
     #### familytree
 
@@ -115,6 +120,8 @@ children:
 
     For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
 
+    **birth** and **death** tags in a character's notes will add lifespan dates to their entry in the family tree. See {{link: tags | Event Tags}} below for more about these tags.
+
     **Examples**
 
     `{{demo: familytree | Lady Catherine de Bourgh}}`
@@ -123,53 +130,111 @@ children:
 
     See {{link: Genealogy Examples}} for further details.
 
+    ***
+
     #### jumbotron
-    `{{demo: jumbotron | image | xpos=0% | ypos=0% | color=black}}`
 
-    {{todo: jumbotron tag documentation}}
+    Set the background image, image position, and text color of the article jumbotron.
 
+    **Usage**
+
+    `{{demo: jumbotron | image | xpos=0% | ypos=50% | color=black}}`
+
+    * **image**: name or id of image item
+    * **xpos**: image x-position, in percentage (%) or pixels (px)
+    * **ypos**: image y-position, in percentage or pixels
+    * **color**: text color
+
+    **Examples**
+
+    `{{demo: jumbotron | image_alice | ypos=50%}}`
+
+    {{jumbotron: image_alice | ypos=50%}}
+
+    (see jumbotron at top of page)
+
+    {{todo: test pixels}}
+
+    ***
 
     #### timeline
+
+    Insert a timeline of all events in a hierarchy of items.
+
+    **Usage**
+
     `{{demo: timeline | item | format=monthDayParagraph}}`
 
-    {{todo: timeline tag documentation}}
+    * **item**: name or id of an item; events will be gathered from the item and all items underneath it in the heirarchy.
+    * **format**: one of several formatting options:
+        * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
+        * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
+        * **yearTable**: create a single table. The first cell in the row contains a year, and the second cell contains a paragraph of the events of that year. Best for events with the greatest spacing.
+
+    Events are described using {{link: tags | Event Tags}}.
+
+    **Example**
+
+    This timeline tag gathers event tags from the examples in the next section.
+
+    `{{demo: timeline | tags | format=monthDayParagraph}}`
+
+    {{timeline: tags | format=monthDayParagraph}}
+
+    ***
 
     <br />
 
-    ### Other Tags
+    ### Event Tags
     ***
 
-    {{todo: Other Tags description}}
+    These tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
 
-    #### birth
+    * June 1, 1940
+    * June 1940
+    * 1940
+
+    The parts of the date must be separated by at least one comma or a whitespace character, with additional whitespace allowed.
+
+    <br />
+
+    ***
+
+    #### birth / death
+
+    Describe the birth or death of a character.
+
+    **Usage**
+
     `{{demo: birth | date | description}}`
-
-    {{todo: birth tag documentation}}
-
-    #### death
     `{{demo: death | date | description}}`
 
-    {{todo: death tag documentation}}
+    * **date**: date of birth or death of the character whose notes this tag appears in
+    * **description**: description of the event
+
+    Birth and death tags may be added to any page, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
+
+    **Examples**
+
+    {{todo: birth and death examples}}
+
+    ***
 
     #### event
+
     `{{demo: event | date | description}}`
 
     {{todo: event tag documentation}}
 
-
-    #### todo
-    `{{demo: todo | description}}`
-
-    {{todo: todo tag documentation}}
+    <br />
 
 
-    #### thought
-    `{{demo: thought | description}}`
+    ### Task Tags
+    ***
 
-    {{todo: thought tag documentation}}
+    `{{demo: task_type | description | log=None | start=None | done=None}}`
 
-
-    {{jumbotron: image_alice | ypos=50%}}
+    {{todo: task tag documentation}}
 
   children:
 

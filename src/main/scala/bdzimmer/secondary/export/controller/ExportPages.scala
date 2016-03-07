@@ -132,7 +132,7 @@ class ExportPages(
         location / relFilePath,
         "Tasks", "",  pageNavbar(None),
 
-        column(12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2)))),
+        column(12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2)))) +
 
         // Empty notes
 
@@ -149,7 +149,7 @@ class ExportPages(
 
         // Todos and thoughts - deprecated soon.
         column(Column6, h4("Thoughts") + taskList(getTask(_)(List(SecTags.Thought)))) +
-        column(Column6, h4("Tasks") + taskList(getTask(_)(SecTags.TaskTagKinds))) +
+        column(Column6, h4("Tasks") + taskList(getTask(_)(SecTags.TaskTagKinds))),
 
         license)
 
