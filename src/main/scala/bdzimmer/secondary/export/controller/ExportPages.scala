@@ -41,7 +41,9 @@ class ExportPages(
 
   // which other items' tags reference each item
   val references = world.map(item => {
-    (item.id, world.filter(_.tags.exists(x => item.id.equals(x.value) || item.name.equals(x.value))))
+    (item.id, world.filter(otherItem => !otherItem.id.equals(item.id) && otherItem.tags.exists(x => {
+      (item.id.equals(x.value) || item.name.equals(x.value))
+    })))
   }).toMap
 
 

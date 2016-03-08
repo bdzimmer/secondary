@@ -66,6 +66,6 @@ object Tasks {
 
      Tags.table(Some(head), body, Some(styles), Some("tasks"), Some("dataTable display")) +
      TasksStyles +
-     """<script>$(document).ready(function() {$('#tasks').dataTable({"pageLength": 30});});</script>"""
+     """<script>$(document).ready(function() {$('#tasks').dataTable({"pageLength": 30, "stateSave": true});});</script>"""
    }
 }

@@ -94,10 +94,21 @@ class Timeline(months: List[String]) {
 
   private def eventStrings(events: List[(DateTuple, String, WorldItem)], dateFormat: DateTuple => String): String = {
 
+    /*
     events.map({case(date, desc, src) => {
       dateFormat(date) +
       Markdown.processLine(desc) + Tags.nbsp +
       ExportPages.glyphLinkPage(src) + Tags.nbsp
+    }}).mkString
+		*/
+
+    // group events together that ocurred on the same day
+    events.groupBy(_._1).toList.sortBy(_._1).map({case(date, eventsOfDate) => {
+      dateFormat(date) +
+      eventsOfDate.map({case(date, desc, src) => {
+        Markdown.processLine(desc) + Tags.nbsp +
+        ExportPages.glyphLinkPage(src) + Tags.nbsp
+      }}).mkString
     }}).mkString
 
   }
