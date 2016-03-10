@@ -44,65 +44,11 @@ children:
 
     Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
 
-    <br />
-
-    ***
-
-    #### link
-
-    Create a link to an item.
-
-    **Usage**
-
-    `{{demo: link | item | anchor}}`
-
-    * **item**: name or id of item
-    * **anchor** (optional): name of anchor within item's notes; anchors are automatically generated for headings
-
-    Since link is the most often used tag, the "link:" is optional if it is being used without an anchor argument.
-
-    **Examples**
-
-    `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
-
-    `{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
-
-    ***
-
-    #### image
-
-    {{image: image_red_riding_hood}}
-
-    Insert an image.
-
-    **Usage**
-
-    `{{demo: image | item | link=true}}`
-
-    * **item**: name or id of image or character item
-    * **link**: should the image link link back to its page?
-
-    The image will be right aligned with a maximum width of 320px.
-
-    **Example**
-
-    `{{demo: image | image_red_riding_hood}}`
-
-    ***
-
-    #### image-responsive
-
-    Insert a responsive image that fills the width of the page.
-
-    `{{demo: image-responsive | item}}`
-
-    See {{link: Tags | image}} for more details.
-
     ***
 
     #### familytree
 
-    Insert a family tree showing a character and their descendants.
+    Insert the family tree of a character and their descendants.
 
     **Usage**
 
@@ -132,6 +78,37 @@ children:
 
     ***
 
+    #### image
+
+    {{image: image_red_riding_hood}}
+
+    Insert an image.
+
+    **Usage**
+
+    `{{demo: image | item | link=true}}`
+
+    * **item**: name or id of image item
+    * **link**: should the image link link back to its page?
+
+    The image will be right aligned with a maximum width of 320px.
+
+    **Example**
+
+    `{{demo: image | image_red_riding_hood}}`
+
+    ***
+
+    #### image-responsive
+
+    Insert a responsive image that fills the width of the page.
+
+    `{{demo: image-responsive | item}}`
+
+    See {{link: Tags | image}} for more details.
+
+    ***
+
     #### jumbotron
 
     Set the background image, image position, and text color of the article jumbotron.
@@ -151,9 +128,28 @@ children:
 
     {{jumbotron: image_alice | ypos=50%}}
 
-    (see jumbotron at top of page)
+    See jumbotron at top of page.
 
-    {{todo: test pixels}}
+    ***
+
+    #### link
+
+    Create a link to an item.
+
+    **Usage**
+
+    `{{demo: link | item | anchor}}`
+
+    * **item**: name or id of item
+    * **anchor** (optional): name of anchor within item's notes; anchors are automatically generated for headings
+
+    Because link is the most often used tag, `link:` is optional if it is being used without an anchor argument.
+
+    **Examples**
+
+    `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
+
+    `{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
 
     ***
 
@@ -165,7 +161,7 @@ children:
 
     `{{demo: timeline | item | format=monthDayParagraph}}`
 
-    * **item**: name or id of an item; events will be gathered from the item and all items underneath it in the heirarchy.
+    * **item**: name or id of an item; events will be gathered from the item and all items underneath it in the hierarchy.
     * **format**: one of several formatting options:
         * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
         * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
@@ -181,22 +177,18 @@ children:
 
     {{timeline: tags | format=monthDayParagraph}}
 
-    ***
-
     <br />
 
     ### Event Tags
     ***
 
-    These tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
+    Event tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
 
     * June 1, 1940
     * June 1940
     * 1940
 
     The parts of the date must be separated by at least one comma or a whitespace character, with additional whitespace allowed.
-
-    <br />
 
     ***
 
@@ -207,6 +199,7 @@ children:
     **Usage**
 
     `{{demo: birth | date | description}}`
+
     `{{demo: death | date | description}}`
 
     * **date**: date of birth or death of the character whose notes this tag appears in
@@ -214,27 +207,70 @@ children:
 
     Birth and death tags may be added to any page, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
 
-    **Examples**
+    **Example**
 
-    {{todo: birth and death examples}}
+    `{{demo: death | November 23, 1926 | Angell dies after "a careless push" from a sailor.}}`
+
+    {{death: November 23, 1926 | Angell dies after "a careless push" from a sailor.}}
 
     ***
 
     #### event
 
+    Describe an event.
+
+    **Usage**
+
     `{{demo: event | date | description}}`
 
-    {{todo: event tag documentation}}
+    * **date**: date of the event
+    * **description**: description of the event
+
+    **Examples**
+
+    `{{demo: event |  March 23, 1925 | *Alert*--manned by the crew of *Emma*--arrives at R'lyeh.}}`
+
+    {{event: March 23, 1925 | *Alert*--manned by the crew of *Emma*--arrives at R'lyeh.}}
+
+    `{{demo: event |  April 12, 1925 | *Vigilant* rescues *Alert*.}}`
+
+    {{event: April 12, 1925 | *Vigilant* rescues *Alert*.}}
 
     <br />
-
 
     ### Task Tags
     ***
 
+    Task tags describe thoughts and work items in various stages of completion. Tasks are gathered from the entire world hierarchy into tables and outlines on the Tasks page of the generated site.
+
+    ***
+
+    #### thought / todo / started / done
+
+    Describe a task.
+
+    **Usage**
+
     `{{demo: task_type | description | log=None | start=None | done=None}}`
 
-    {{todo: task tag documentation}}
+    * **task_type**: thought, todo, started, or done
+    * **description**: description of the task
+    * **log**: date that the task was first recorded
+    * **start**: planned or actual start date
+    * **done**: planned or actual finish date
+
+    Currently, dates are simple strings and are not parsed further. For meaningful sorting, use numerical year-month-day dates with consistent numbers of digits.
+
+    **Examples**
+
+    `{{demo: todo | Add additional example events | log=2016-03-09 | start=2016-03-10}}`
+
+    {{todo: Add additional example events | log=2016-03-09 | start=2016-03-10}}
+
+    `{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}`
+
+    {{done: Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}
+
 
   children:
 
