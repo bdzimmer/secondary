@@ -7,7 +7,8 @@ import com.google.api.client.util.DateTime
 
 package object controller {
 
-  type FileModifiedMap = scala.collection.immutable.Map[String, (String, DateTime)]
+  type FileMap = scala.collection.immutable.Map[String, (String, DateTime)]
   type FileOutputsMap = scala.collection.immutable.Map[String, List[String]]
+  type ItemMap = scala.collection.immutable.Map[String, (String, Int)]
 
 }

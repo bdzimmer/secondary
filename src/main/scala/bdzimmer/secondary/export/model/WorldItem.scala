@@ -69,14 +69,14 @@ trait WorldItemBean {
   def getVal(): WorldItem
 }
 
-// represents metadata for a piece of content
+// represents a reference to a piece of content
 // that exists in its own file.
-trait MetaItemBean extends WorldItemBean {
+trait RefItemBean extends WorldItemBean {
   @BeanProperty var filename: String = ""
 }
 
 // a piece of content that is a tileset with attributes
-trait TileMetaItemBean extends MetaItemBean {
+trait TileRefItemBean extends RefItemBean {
   @BeanProperty var tiletype: String = ""
 }
 
@@ -86,8 +86,7 @@ class CollectionItemBean extends WorldItemBean {
    def getVal(): CollectionItem = CollectionItem (
        id, name, description, notes,
        srcyml, remoteid,
-       pst.getAllTags(notes),
-       children.asScala.map(_.getVal).toList)
+       pst.getAllTags(notes))(children.asScala.map(_.getVal).toList)
 }
 
 class ThingItemBean extends WorldItemBean {
@@ -102,7 +101,7 @@ class PlaceItemBean extends WorldItemBean {
       srcyml, remoteid, pst.getAllTags(notes))
 }
 
-class ImageItemBean extends MetaItemBean {
+class ImageItemBean extends RefItemBean {
   def getVal(): ImageItem = ImageItem(
       id, name, description, notes,
       srcyml, remoteid,
@@ -127,7 +126,7 @@ class CharacterItemBean extends WorldItemBean {
 
 ///
 
-class TilesetItemBean extends TileMetaItemBean {
+class TilesetItemBean extends TileRefItemBean {
   def getVal(): TilesetItem = TilesetItem(
       id, name, description, notes,
       srcyml, remoteid,
@@ -135,7 +134,7 @@ class TilesetItemBean extends TileMetaItemBean {
       filename, tiletype)
 }
 
-class SpritesheetItemBean extends TileMetaItemBean {
+class SpritesheetItemBean extends TileRefItemBean {
   def getVal(): SpritesheetItem = SpritesheetItem(
       id, name, description, notes,
       srcyml, remoteid,
@@ -143,7 +142,7 @@ class SpritesheetItemBean extends TileMetaItemBean {
       filename, tiletype)
 }
 
-class MapItemBean extends MetaItemBean {
+class MapItemBean extends RefItemBean {
   def getVal(): MapItem = MapItem(
       id, name, description, notes,
       srcyml, remoteid,
@@ -153,7 +152,7 @@ class MapItemBean extends MetaItemBean {
 
 // reference to another YML file
 // as far as I know, the getVal function here will never be called.
-class YamlIncludeBean extends MetaItemBean {
+class YamlIncludeBean extends RefItemBean {
   def getVal(): ThingItem = ThingItem(
       id, name, description, notes,
       srcyml, remoteid, pst.getAllTags(notes))
@@ -173,18 +172,18 @@ trait WorldItem {
     val tags: List[SecTag]
 }
 
-trait MetaItem extends WorldItem {
+trait RefItem extends WorldItem {
   val filename: String
 }
 
-trait TileMetaItem extends MetaItem {
+trait TileRefItem extends RefItem {
   val tiletype: String
 }
 
 case class CollectionItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
-    children: List[WorldItem]) extends WorldItem
+    srcyml: String, remoteid: String, tags: List[SecTag])
+    (val children: List[WorldItem]) extends WorldItem
 
 case class ThingItem(
     id: String, name: String, description: String, notes: String,
@@ -198,7 +197,7 @@ case class PlaceItem(
 case class ImageItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String, tags: List[SecTag],
-    filename: String) extends MetaItem
+    filename: String) extends RefItem
 
 case class CharacterItem(
     id: String, name: String, nameParts: Option[List[String]],
@@ -210,17 +209,17 @@ case class CharacterItem(
 case class TilesetItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String, tags: List[SecTag],
-    filename: String, tiletype: String) extends TileMetaItem
+    filename: String, tiletype: String) extends TileRefItem
 
 case class SpritesheetItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String, tags: List[SecTag],
-    filename: String, tiletype: String) extends TileMetaItem
+    filename: String, tiletype: String) extends TileRefItem
 
 case class MapItem(
     id: String, name: String, description: String, notes: String,
     srcyml: String, remoteid: String, tags: List[SecTag],
-    filename: String) extends MetaItem
+    filename: String) extends RefItem
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -245,9 +244,7 @@ object WorldItem {
       new TypeDescription(classOf[MapItemBean],         new Tag("!map")),
       new TypeDescription(classOf[YamlIncludeBean],     new Tag("!include")))
 
-  for (td <- TypeDescriptions) {
-    Constructor.addTypeDescription(td)
-  }
+  TypeDescriptions.foreach(td => Constructor.addTypeDescription(td))
 
 
   /**

@@ -8,7 +8,7 @@ import org.pegdown.ast.AnchorLinkNode
 
 import bdzimmer.util.{Result, Pass, Fail}
 
-import bdzimmer.secondary.export.model.{CharacterItem, MetaItem, WorldItem, ParseSecTags, SecTag, SecTags}
+import bdzimmer.secondary.export.model.{CharacterItem, RefItem, WorldItem, ParseSecTags, SecTag, SecTags}
 import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 

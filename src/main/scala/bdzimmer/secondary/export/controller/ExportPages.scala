@@ -37,7 +37,7 @@ class ExportPages(
 
   val np = new RenderSecTags(world)
 
-  val metaItems = WorldItem.filterList[MetaItem](world)
+  val metaItems = WorldItem.filterList[RefItem](world)
 
   // which other items' tags reference each item
   val references = world.map(item => {
@@ -57,7 +57,7 @@ class ExportPages(
     case x: CharacterItem => createCharacterPage(x)
     case x: ImageItem => createImagePage(x)
     case x: MapItem => createMapPage(x)
-    case x: TileMetaItem => createTilePage(x)
+    case x: TileRefItem => createTilePage(x)
     case _ => createItemPage(item)
   }
 
@@ -184,7 +184,7 @@ class ExportPages(
         column(Column6, {
           val groupedItems = (world
             .drop(1)  // get rid of master collection - assumes master is first in list
-            .filter(!_.isInstanceOf[MetaItem])
+            .filter(!_.isInstanceOf[RefItem])
             .groupBy(getName(_).replaceAll("""\p{Punct}""", "")(0).toUpper))
 
           groupedItems.toList.sortBy(_._1).map({case (letter, items) => {
@@ -275,7 +275,7 @@ class ExportPages(
 
 
 
-  private def createTilePage(tileset: TileMetaItem): String = {
+  private def createTilePage(tileset: TileRefItem): String = {
 
     val relFilePath = ExportPages.itemPageName(tileset)
 

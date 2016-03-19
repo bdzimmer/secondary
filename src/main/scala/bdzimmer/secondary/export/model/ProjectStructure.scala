@@ -17,11 +17,9 @@ object ProjectStructure {
   // configuration file
   val ConfigurationFile = "secondary.properties"
 
-  // timestamp files
-  val DriveMetaStatusFile = "drive_meta_status.txt"
-  val DriveFileStatusFile = "drive_file_status.txt"
-
-  val LocalMetaStatusFile = "local_meta_status.txt"
-  val LocalFileStatusFile = "local_file_status.txt"
+  // status files
+  val MetaStatusFile = "status_meta.txt"
+  val RefStatusFile = "status_ref.txt"
+  val ItemStatusFile = "status_item.txt"
 
 }

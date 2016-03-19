@@ -26,13 +26,15 @@ import bdzimmer.secondary.export.view.Styles
 
 abstract class ExportPipeline(projConf: ProjectConfig)  {
 
+  val metaStatusFile = projConf.projectDir / ProjectStructure.MetaStatusFile
+  val refStatusFile = projConf.projectDir / ProjectStructure.RefStatusFile
+  val itemStatusFile = projConf.projectDir / ProjectStructure.ItemStatusFile
+
   // download the metadata and get updated status maps
-  def downloadMeta(): (FileModifiedMap, FileModifiedMap)
+  def downloadMeta(): (FileMap, FileMap)
 
   // download the referenced files and get updated status maps
-  def downloadRefs(world: List[WorldItem]): (FileModifiedMap, FileModifiedMap)
-
-  def saveStatus(metaStatus: FileModifiedMap, refStatus: FileModifiedMap): Unit
+  def downloadRefs(world: List[WorldItem]): (FileMap, FileMap)
 
   def uploadExports(allPageOutputs: List[String], allImageOutputs: FileOutputsMap): Unit
 
@@ -48,13 +50,20 @@ abstract class ExportPipeline(projConf: ProjectConfig)  {
 
         val world = WorldItem.collectionToList(master)
         val (newRefStatus, refStatusChanges) = downloadRefs(world)
+        val (newItemStatus, itemStatusChanges) = loadItemStatus(world)
 
-        // only export / upload if files have changed
-        if (metaStatusChanges.size > 0 || refStatusChanges.size > 0) {
+        // only export the things that have changed
+        if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
+
+          // val pagesToExport = world.filter(x => metaStatusChanges.keySet.contains(x.srcyml)) // old behavior
+          val pagesToExport = world.filter(x => itemStatusChanges.keySet.contains(x.id))
+          val filesToExport = WorldItem.filterList[RefItem](world).filter(x => refStatusChanges.keySet.contains(x.filename))
+
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
-              metaStatusChanges, refStatusChanges, master, world, images = true, projConf)
+               pagesToExport, filesToExport, master, world, images = true, projConf)
+
           uploadExports(allPageOutputs, allImageOutputs)
-          saveStatus(newMetaStatus, newRefStatus)
+          saveStatus(newMetaStatus, newRefStatus, newItemStatus)
         } else {
           println("Nothing to do.")
         }
@@ -64,32 +73,48 @@ abstract class ExportPipeline(projConf: ProjectConfig)  {
 
     loadedWorld
   }
+
+
+  private def loadItemStatus(world: List[WorldItem]): (ItemMap, ItemMap) = {
+    val oldItemStatus = WorldLoader.loadOrEmptyItemMap(itemStatusFile)
+    val newItemStatus = world.map(x => (x.id, (x.srcyml, x.hashCode))).toMap
+    val changes = newItemStatus.filter({case (k, v) => oldItemStatus.get(k) match {
+      case Some(x) => v._2 != x._2
+      case None => true
+    }})
+
+    (newItemStatus, changes)
+  }
+
+
+  private def saveStatus(
+      metaStatus: FileMap,
+      refStatus: FileMap,
+      itemStatus: ItemMap): Unit = {
+    WorldLoader.saveFileMap(metaStatusFile, metaStatus)
+    WorldLoader.saveFileMap(refStatusFile, refStatus)
+    WorldLoader.saveItemMap(itemStatusFile, itemStatus)
+  }
+
+
 }
 
 
 
 class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(projConf) {
 
-  val metaStatusFile = projConf.projectDir / ProjectStructure.LocalMetaStatusFile
-  val refStatusFile = projConf.projectDir / ProjectStructure.LocalFileStatusFile
-
-  def downloadMeta(): (FileModifiedMap, FileModifiedMap) = {
+  def downloadMeta(): (FileMap, FileMap) = {
     val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
-    val newMetaStatus = WorldLoader.mergeModifiedMaps(oldMetaStatus, metaStatusChanges)
+    val newMetaStatus = WorldLoader.mergeFileMaps(oldMetaStatus, metaStatusChanges)
     (newMetaStatus, metaStatusChanges)
   }
 
-  def downloadRefs(world: List[WorldItem]): (FileModifiedMap, FileModifiedMap) = {
+  def downloadRefs(world: List[WorldItem]): (FileMap, FileMap) = {
     val oldRefStatus = WorldLoader.loadOrEmptyModifiedMap(refStatusFile)
     val refStatusChanges = localFileStatusChanges(world, oldRefStatus, projConf)
-    val newRefStatus = WorldLoader.mergeModifiedMaps(oldRefStatus, refStatusChanges)
+    val newRefStatus = WorldLoader.mergeFileMaps(oldRefStatus, refStatusChanges)
     (newRefStatus, refStatusChanges)
-  }
-
-  def saveStatus(metaStatus: FileModifiedMap, refStatus: FileModifiedMap): Unit = {
-    WorldLoader.saveModifiedMap(metaStatusFile, metaStatus)
-    WorldLoader.saveModifiedMap(refStatusFile, refStatus)
   }
 
   def uploadExports(allPageOutputs: List[String], allImageOutputs: FileOutputsMap): Unit = {
@@ -97,8 +122,8 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
   }
 
   private def localMetaStatusChanges(
-      oldMetaStatus: FileModifiedMap,
-      projConf: ProjectConfig): FileModifiedMap = {
+      oldMetaStatus: FileMap,
+      projConf: ProjectConfig): FileMap = {
 
     val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(_.endsWith(".yml"))
     localFileUpdates(ymlFiles, oldMetaStatus, projConf)
@@ -106,8 +131,8 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
 
   private def localFileStatusChanges(
       world: List[WorldItem],
-      oldFileStatus: FileModifiedMap,
-      projConf: ProjectConfig): FileModifiedMap = {
+      oldFileStatus: FileMap,
+      projConf: ProjectConfig): FileMap = {
 
     val imageFiles = ExportPipeline.getReferencedImages(world)
     localFileUpdates(imageFiles, oldFileStatus, projConf)
@@ -116,8 +141,8 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
   // files is names of files relative to local content directory
   private def localFileUpdates(
       files: List[String],
-      oldFileStatus: FileModifiedMap,
-      projConf: ProjectConfig): FileModifiedMap = {
+      oldFileStatus: FileMap,
+      projConf: ProjectConfig): FileMap = {
 
     val currentStatus = files.map(x =>
       (x, new File(projConf.localContentPath / x).lastModified))
@@ -126,7 +151,6 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
         case Some(x) => v > x._2.getValue
         case None => true
     }}).map(x => (x._1, ("", new DateTime(x._2)))).toMap
-
   }
 
 }
@@ -135,26 +159,18 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
 
 class DriveSyncExportPipeline(projConf: ProjectConfig, ds: DriveSync) extends ExportPipeline(projConf) {
 
-  val metaStatusFile = projConf.projectDir / ProjectStructure.DriveMetaStatusFile
-  val refStatusFile = projConf.projectDir / ProjectStructure.DriveFileStatusFile
-
-  def downloadMeta(): (FileModifiedMap, FileModifiedMap) = {
+  def downloadMeta(): (FileMap, FileMap) = {
     val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = ds.downloadMetadata(oldMetaStatus)
-    val newMetaStatus = WorldLoader.mergeModifiedMaps(oldMetaStatus, metaStatusChanges)
+    val newMetaStatus = WorldLoader.mergeFileMaps(oldMetaStatus, metaStatusChanges)
     (newMetaStatus, metaStatusChanges)
   }
 
-  def downloadRefs(world: List[WorldItem]): (FileModifiedMap, FileModifiedMap) = {
+  def downloadRefs(world: List[WorldItem]): (FileMap, FileMap) = {
     val oldRefStatus = WorldLoader.loadOrEmptyModifiedMap(refStatusFile)
     val refStatusChanges = ds.downloadImages(world, oldRefStatus)
-    val newRefStatus = WorldLoader.mergeModifiedMaps(oldRefStatus, refStatusChanges)
+    val newRefStatus = WorldLoader.mergeFileMaps(oldRefStatus, refStatusChanges)
     (newRefStatus, refStatusChanges)
-  }
-
-  def saveStatus(metaStatus: FileModifiedMap, refStatus: FileModifiedMap): Unit = {
-    WorldLoader.saveModifiedMap(metaStatusFile, metaStatus)
-    WorldLoader.saveModifiedMap(refStatusFile, refStatus)
   }
 
   def uploadExports(allPageOutputs: List[String], allImageOutputs: FileOutputsMap): Unit = {
@@ -171,7 +187,6 @@ object ExportPipeline {
 
   // simple export - local export everything without regard to what has changed
   def exportAll(projConf: ProjectConfig): Result[String, CollectionItem] = {
-
     FileUtils.deleteDirectory(projConf.localExportPathFile)
     projConf.localExportPathFile.mkdirs
 
@@ -184,38 +199,33 @@ object ExportPipeline {
       case Fail(msg) => println(msg)
     }
     loadedWorld
-
   }
 
 
   // export content from local content location to export location
   // using file timestamps to only process content that has changed
   def export(
-      metaStatus: FileModifiedMap, fileStatus: FileModifiedMap,
+      pagesToExport: List[WorldItem], refsToExport: List[RefItem],
       master: CollectionItem, world: List[WorldItem],
       images: Boolean = false, projConf: ProjectConfig): (List[String], FileOutputsMap) = {
-
-    // get only the world items that are described in the subset of the meta just downloaded
-    val pagesToExport = world.filter(x => metaStatus.keySet.contains(x.srcyml))
 
     logList("pages to export", pagesToExport.map(_.id))
 
     val imagesToExport = if (images) {
 
       // the images to export are:
-      // 1) the metaitems in the whole collection whose files were refreshed
+      // 1) the metaitems in the whole collection whose files were refreshed (refsToExport)
       // 2) the characteritems in refreshed metadata (need to get new images in case their images changed)
       // 3) the imageitems in refreshed metadata that reference wikimedia instead of local files
 
-      val filesToExport = WorldItem.filterList[MetaItem](world).filter(x => fileStatus.keySet.contains(x.filename))
       val charsToExport = WorldItem.filterList[CharacterItem](pagesToExport)
       val imagesToExport = WorldItem.filterList[ImageItem](pagesToExport)
 
-      logList("files to export", filesToExport.map(_.id))
+      logList("refs to export", refsToExport.map(_.id))
       logList("chars to export", charsToExport.map(_.id))
       logList("image to export", imagesToExport.map(_.id))
 
-      filesToExport ++ charsToExport ++ imagesToExport
+      refsToExport ++ charsToExport ++ imagesToExport
 
     } else {
       List()
@@ -232,7 +242,6 @@ object ExportPipeline {
     }}
 
     (pageOutputs, imageOutputs)
-
   }
 
 
@@ -268,7 +277,6 @@ object ExportPipeline {
     }
 
     (pageOutputs, imageOutputs)
-
   }
 
 
@@ -305,11 +313,12 @@ object ExportPipeline {
   // get all of the local image files referenced by a world
   def getReferencedImages(world: List[WorldItem]): List[String] = {
     // find a unique list of the files pointed to by meta items.
-    val uniqueFiles = WorldItem.filterList[MetaItem](world).map(_.filename).distinct
+    val uniqueFiles = WorldItem.filterList[RefItem](world).map(_.filename).distinct
     // some of these files are not actual files, but links to remote data.
     // so filter those out
     uniqueFiles.filter(x => !x.startsWith("wikimedia:"))
   }
+
 
   def logList(prefix: String, list: List[String]): Unit = {
     list.foreach(x => println(prefix + ": " + x))

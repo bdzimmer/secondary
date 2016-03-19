@@ -31,7 +31,7 @@ class DriveSync(
   projConf.localExportPathFile.mkdirs
 
 
-  def downloadMetadata(fileStatus: FileModifiedMap): FileModifiedMap = {
+  def downloadMetadata(fileStatus: FileMap): FileMap = {
 
     // find the yaml files in drive
     val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile) filter (_.getTitle.endsWith(".yml"))
@@ -55,7 +55,7 @@ class DriveSync(
   }
 
 
-  def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileModifiedMap): FileModifiedMap = {
+  def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileMap): FileMap = {
     val imageFiles = ExportPipeline.getReferencedImages(masterCollection)
     val downloadImageStatus = downloadFilesIntelligent(imageFiles, fileStatus)
 
@@ -67,7 +67,7 @@ class DriveSync(
 
   // download only files that are not present in fileStatus or are newer
   // 2015-10-10: modified so it won't attempt to download files that don't exist
-  def downloadFilesIntelligent(files: List[String], fileStatus: FileModifiedMap): FileModifiedMap = {
+  def downloadFilesIntelligent(files: List[String], fileStatus: FileMap): FileMap = {
 
     // find just the files that are newer those in fileStatus or not present in it
 
@@ -112,7 +112,7 @@ class DriveSync(
 
   // download a list of files, creating proper directories in the
   // download location if they don't already exist.
-  def downloadFiles(files: List[(String, DriveFile)]): FileModifiedMap = {
+  def downloadFiles(files: List[(String, DriveFile)]): FileMap = {
 
     files.map({case (filename, driveFile) => {
 

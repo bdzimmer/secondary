@@ -35,7 +35,6 @@ import bdzimmer.pixeleditor.view.Main
 import bdzimmer.pixeleditor.model.AssetMetadataUtils
 
 
-
 class Driver {
 
   // project directory is current working directory
@@ -203,7 +202,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.02.13"
+  val Title = "Secondary - create worlds from text - v2016.03.19"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

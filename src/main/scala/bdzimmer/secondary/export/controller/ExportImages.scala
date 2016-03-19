@@ -29,7 +29,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   val imagesLocation = location / ExportImages.ImagesDir
   new File(imagesLocation).mkdir
 
-  val metaItems = WorldItem.filterList[MetaItem](world)
+  val metaItems = WorldItem.filterList[RefItem](world)
 
 
   def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
@@ -43,7 +43,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     val mapImageOutputs = (WorldItem.filterList[MapItem](items)
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 
-    val tileImageOutputs = (WorldItem.filterList[TileMetaItem](items)
+    val tileImageOutputs = (WorldItem.filterList[TileRefItem](items)
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 
     // // export individual tile images
@@ -130,10 +130,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     (resultSrc, resultDst.toList)
   }
 
-
-
 }
-
 
 
 
@@ -155,20 +152,20 @@ object ExportImages {
   /**
   * Export an image of a world item
   *
-  * @param worldItem  worldItem to export
+  * @param refItem  worldItem to export
   * @param inputDir   input directory to find filenames from
   * @param outputDir  output directory to save images to
   * @returns          names of files exported
   */
-  def exportImage(worldItem: MetaItem, inputDir: String, outputDir: String): List[String] = {
+  def exportImage(refItem: RefItem, inputDir: String, outputDir: String): List[String] = {
 
-    val inputName = worldItem.filename
+    val inputName = refItem.filename
 
-    val image: BufferedImage = worldItem match {
+    val image: BufferedImage = refItem match {
       case x: MapItem => getMapImage(
           inputDir / inputName,
           inputDir / ContentStructure.TileDir + slash)
-      case x: TileMetaItem => {
+      case x: TileRefItem => {
         TileOptions.types.get(x.tiletype) match {
           case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
           case None => ExportImages.imageMessage("Invalid tile type.")
@@ -179,7 +176,7 @@ object ExportImages {
 
     // various scales to output
     outputScales map (scaleFactor => {
-       val relativeName = ImagesDir / worldItem.id + scalePostfix(scaleFactor) + ".png"
+       val relativeName = ImagesDir / refItem.id + scalePostfix(scaleFactor) + ".png"
        val absoluteName = outputDir / relativeName
        ImageIO.write(rescaleImage(image, scaleFactor), "png", new File(absoluteName))
        relativeName
@@ -188,9 +185,8 @@ object ExportImages {
   }
 
 
-
   // Export individual images of tiles in a tile set.
-  def exportIndividualTileImages(tilesetItem: TileMetaItem, inputDir: String, outputDir: String): List[String] = {
+  def exportIndividualTileImages(tilesetItem: TileRefItem, inputDir: String, outputDir: String): List[String] = {
 
     val inputName = tilesetItem.filename
 
@@ -248,7 +244,6 @@ object ExportImages {
   }
 
 
-
   /**
    * Get a BufferedImage representation of a map file.
    *
@@ -269,7 +264,6 @@ object ExportImages {
 
     image
   }
-
 
 
   /**
@@ -349,7 +343,6 @@ object ExportImages {
   }
 
 
-
   // can this be combined with the above somehow?
   // I believe this is only used for jumbotron images.
   def itemImagePath(item: WorldItem): String = item match {
@@ -359,9 +352,7 @@ object ExportImages {
   }
 
 
-
   /// /// ///
-
 
   // functions for working with FileOutputsMaps
 

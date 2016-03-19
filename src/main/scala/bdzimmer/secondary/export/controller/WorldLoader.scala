@@ -34,7 +34,7 @@ object WorldLoader {
   def loadWorld(
       inputDir: String,
       masterName: String,
-      fileStatus: FileModifiedMap): Result[String, CollectionItem] = {
+      fileStatus: FileMap): Result[String, CollectionItem] = {
 
     val masterFilename = masterName + ".yml"
 
@@ -64,7 +64,7 @@ object WorldLoader {
 
   }
 
-  def loadWorld(projConf: ProjectConfig, fileStatus: FileModifiedMap): Result[String, CollectionItem] = {
+  def loadWorld(projConf: ProjectConfig, fileStatus: FileMap): Result[String, CollectionItem] = {
     WorldLoader.loadWorld(
         projConf.localContentPath,
         projConf.masterName,
@@ -72,14 +72,14 @@ object WorldLoader {
   }
 
   def loadWorld(projConf: ProjectConfig): Result[String, CollectionItem] = {
-    WorldLoader.loadWorld(projConf, getEmptyModifiedMap)
+    WorldLoader.loadWorld(projConf, emptyFileMap)
   }
 
 
   def loadFile(
       filename: String,
       inputDir: String,
-      fileStatus: FileModifiedMap,
+      fileStatus: FileMap,
       loadedFiles: List[String]): Result[String, CollectionItemBean] = {
 
     val bean = for {
@@ -105,7 +105,7 @@ object WorldLoader {
   def getNewChildren(
       bean: CollectionItemBean,
       inputDir: String,
-      fileStatus: FileModifiedMap,
+      fileStatus: FileMap,
       loadedFiles: List[String]): Result[String, List[WorldItemBean]] = {
 
     val newChildrenLoads = bean.children.asScala.map(child => {
@@ -171,7 +171,7 @@ object WorldLoader {
 
   // fix the srcyml / remote id for a collection
   // 2016-01-04: also fix null children (arises when YAML contains an empty children field)
-  def assignSrcYml(wi: WorldItemBean, srcyml: String, fileStatus: FileModifiedMap): Unit =  wi match {
+  def assignSrcYml(wi: WorldItemBean, srcyml: String, fileStatus: FileMap): Unit =  wi match {
     case x: CollectionItemBean => {
       x.srcyml = srcyml
       x.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
@@ -189,44 +189,59 @@ object WorldLoader {
 
   //////////////////////
 
-  // functions for loading and saving FileModifiedMaps
+  // functions for loading and saving FileMaps
 
-  // save a FileModifiedMap to a text file
-  def saveModifiedMap(filename: String, map: FileModifiedMap): Unit = {
+  def saveFileMap(filename: String, map: FileMap): Unit = {
     val pw = new java.io.PrintWriter(new java.io.File(filename))
     // scalastyle:ignore regex
     map.foreach(x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2.getValue))
     pw.close
   }
 
-  // load a FileModifiedMap from a text file
-  def loadModifiedMap(filename: String): FileModifiedMap = {
+  def loadFileMap(filename: String): FileMap = {
     val lines = FileUtils.readLines(new File(filename), "UTF-8").asScala
     lines.map(x => x.split("\t")).map(x => (x(0), (x(1), new DateTime(x(2).toLong)))).toMap
   }
 
-  // load a FileModifiedMap from a text file, returning an empty map
-  // if the file doesn't exist.
-  def loadOrEmptyModifiedMap(filename: String): FileModifiedMap = {
-    (new java.io.File(filename).exists) match {
-      case true => loadModifiedMap(filename)
-      case false => getEmptyModifiedMap
-    }
+  def loadOrEmptyModifiedMap(filename: String): FileMap = Result.fromFilename(filename) match {
+    case Pass(x) => loadFileMap(x.getPath)
+    case Fail(_) => emptyFileMap
   }
 
-  // get an empty FileModifiedMap
-  def getEmptyModifiedMap(): FileModifiedMap = {
+  def emptyFileMap(): FileMap = {
     List.empty[(String, (String, DateTime))].toMap
   }
 
-  // merge FileModifiedMaps keeping newer dates / ids.
-  def mergeModifiedMaps(map1: FileModifiedMap, map2: FileModifiedMap): FileModifiedMap = {
+  def mergeFileMaps(map1: FileMap, map2: FileMap): FileMap = {
     map1 ++ map2.map{case (k, v) => k -> {
       map1.get(k) match {
         case Some(x) => if (x._2.getValue > v._2.getValue) x else v
         case None => v
       }
     }}
+  }
+
+  // functions for saving and loading ItemMaps
+
+  def saveItemMap(filename: String, map: ItemMap): Unit = {
+    val pw = new java.io.PrintWriter(new java.io.File(filename))
+    // scalastyle:ignore regex
+    map.foreach(x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2))
+    pw.close
+  }
+
+  def loadItemMap(filename: String): ItemMap = {
+    val lines = FileUtils.readLines(new File(filename), "UTF-8").asScala
+    lines.map(x => x.split("\t")).map(x => (x(0), (x(1), x(2).toInt))).toMap
+  }
+
+  def loadOrEmptyItemMap(filename: String): ItemMap = Result.fromFilename(filename) match {
+    case Pass(x) => loadItemMap(x.getPath)
+    case Fail(_) => emptyItemMap
+  }
+
+  def emptyItemMap(): ItemMap = {
+    List.empty[(String, (String, Int))].toMap
   }
 
 }
