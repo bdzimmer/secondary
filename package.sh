@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2015 Ben Zimmer. All rights reserved.
+# Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
 # Package a distribution archive.
 # This isn't the best; contains a lot of  cheap workarounds for use with
@@ -12,7 +12,7 @@ rm -rf dist/doc
 # TODO: figure out how to run sbt from Cygwin.
 # sbt assembly $@
 
-cp target/scala-2.10/secondary-assembly-2015.11.13.jar dist/secondary.jar
+cp target/scala-2.10/secondary-assembly-2015.12.24.jar dist/secondary.jar
 cp -R doc/web dist/doc
 
 chmod -R 755 dist

@@ -304,9 +304,14 @@ object ExportPipeline {
     // copy family tree javascript into output directory
     val treeDestDir = new File(outputDirFile, "tree")
     if (treeDestDir.exists) FileUtils.deleteDirectory(treeDestDir)
-    val treeSrcDir = new File(getClass.getResource("/tree").getPath)
-    FileUtils.copyDirectoryToDirectory(treeSrcDir, outputDirFile)
 
+    treeDestDir.mkdirs()
+    FileUtils.copyURLToFile(
+        getClass.getResource("/tree/drawtree.js"),
+        new File(treeDestDir, "drawtree.js"))
+    FileUtils.copyURLToFile(
+        getClass.getResource("/tree/tree.css"),
+        new File(treeDestDir, "tree.css"))
   }
 
 
