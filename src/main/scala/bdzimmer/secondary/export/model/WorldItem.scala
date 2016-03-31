@@ -61,6 +61,11 @@ trait WorldItemBean {
   def getNotes(): String = notes
   def setNotes(notes: String): Unit = {this.notes = NonNullString(notes)}
 
+  // used by new parser
+  var path: String = ""
+  def getPath(): String = path
+  def setPath(path: String): Unit = {this.path = NonNullString(path)}
+
 
   var srcyml: String = ""
   var remoteid: String = ""

@@ -102,7 +102,7 @@ class Driver {
       editItemByName(name)
     }
     case DriverCommands.Editor => {
-      val master = WorldLoader.loadWorld(projConf) match {
+      val master = WorldLoaderYML.loadWorld(projConf) match {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
@@ -202,7 +202,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.03.19"
+  val Title = "Secondary - create worlds from text - v2016.03.30"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
