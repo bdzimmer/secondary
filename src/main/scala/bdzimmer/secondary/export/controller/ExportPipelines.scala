@@ -26,8 +26,6 @@ import bdzimmer.secondary.export.view.Styles
 
 abstract class ExportPipeline(projConf: ProjectConfig)  {
 
-  val ymlFormat = true   // for testing!
-
   val metaStatusFile = projConf.projectDir / ProjectStructure.MetaStatusFile
   val refStatusFile = projConf.projectDir / ProjectStructure.RefStatusFile
   val itemStatusFile = projConf.projectDir / ProjectStructure.ItemStatusFile
@@ -45,10 +43,7 @@ abstract class ExportPipeline(projConf: ProjectConfig)  {
   def run(): Result[String, CollectionItem] = {
 
     val (newMetaStatus, metaStatusChanges) = downloadMeta()
-    val loadedWorld = ymlFormat match {
-      case true => WorldLoaderYML.loadWorld(projConf, newMetaStatus)
-      case false => WorldLoaderFlat.loadWorld(projConf, newMetaStatus)
-    }
+    val loadedWorld = WorldLoader.loadWorld(projConf, newMetaStatus)
 
     loadedWorld match {
       case Pass(master) => {
@@ -195,7 +190,7 @@ object ExportPipeline {
     FileUtils.deleteDirectory(projConf.localExportPathFile)
     projConf.localExportPathFile.mkdirs
 
-    val loadedWorld = WorldLoaderYML.loadWorld(projConf)
+    val loadedWorld = WorldLoader.loadWorld(projConf)
     loadedWorld match {
       case Pass(master) => {
         val world = WorldItem.collectionToList(master)

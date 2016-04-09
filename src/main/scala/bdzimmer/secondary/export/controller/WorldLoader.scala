@@ -7,6 +7,7 @@
 // 2015-09-04: Switched to FileUtils instead of Source.
 // 2015-10-21: Error handling for YAML parsing.
 // 2015-11-06: YAML includes instead of main collections.
+// 2016-04-09: Include flat format from YAML files; flat master.
 
 package bdzimmer.secondary.export.controller
 
@@ -28,7 +29,7 @@ import bdzimmer.util.StringUtils._
 import bdzimmer.secondary.export.model._
 
 
-object WorldLoaderYML {
+private object WorldLoaderYML {
 
 
   def loadWorld(
@@ -40,24 +41,11 @@ object WorldLoaderYML {
 
     for {
       // load the world from YAML files and validate
-      world <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename)).map(_.getVal)
-      result <- WorldLoader.validate(world)
+      world <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename))
+      result <- WorldLoader.validate(world.getVal)
     } yield {
       result
     }
-  }
-
-
-  def loadWorld(projConf: ProjectConfig, fileStatus: FileMap): Result[String, CollectionItem] = {
-    loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        fileStatus)
-  }
-
-
-  def loadWorld(projConf: ProjectConfig): Result[String, CollectionItem] = {
-    loadWorld(projConf, WorldLoader.emptyFileMap)
   }
 
 
@@ -82,7 +70,7 @@ object WorldLoaderYML {
       coll <- bean
       newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
     } yield {
-      assignChildren(coll, newChildren)
+      setChildren(coll, newChildren)
     }
   }
 
@@ -98,13 +86,21 @@ object WorldLoaderYML {
           case x: YamlIncludeBean => if (loadedFiles.contains(x.filename)) {
             Fail(s"""***\nitem "${bean.id}" contains circular reference to file "${x.filename}"\n***""")
           } else {
-            loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
+            if (x.filename.endsWith(".yml")) {
+              loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
+            } else {
+              for {
+                collList <- WorldLoaderFlat.loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
+                coll <- WorldLoaderFlat.wire(collList)
+              } yield {
+                coll
+              }
+            }
           }
-
           case coll: CollectionItemBean => for {
             newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
           } yield {
-            assignChildren(coll, newChildren)
+            setChildren(coll, newChildren)
           }
 
           case _ => Pass(child)
@@ -128,9 +124,9 @@ object WorldLoaderYML {
   }
 
 
-  // sort of impure
+  // impure
   // reassign the children of a collection with the result of getNewChildren
-  def assignChildren(
+  def setChildren(
       coll: CollectionItemBean,
       newChildren: List[WorldItemBean]): CollectionItemBean = {
 
@@ -171,7 +167,7 @@ object WorldLoaderYML {
 
 
 
-object WorldLoaderFlat {
+private object WorldLoaderFlat {
 
   def loadWorld(
       inputDir: String,
@@ -183,25 +179,12 @@ object WorldLoaderFlat {
     for {
       // load the world from sec files
       worldList <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename))
-      world <- wire(worldList)   // wire up using paths attributes
-      result <- WorldLoader.validate(world) // validate
+      world <- wire(worldList)                     // wire up using paths attributes and harden
+      result <- WorldLoader.validate(world.getVal) // harden and validate
     } yield {
       result
     }
 
-  }
-
-
-  def loadWorld(projConf: ProjectConfig, fileStatus: FileMap): Result[String, CollectionItem] = {
-    loadWorld(
-        projConf.localContentPath,
-        projConf.masterName,
-        fileStatus)
-  }
-
-
-  def loadWorld(projConf: ProjectConfig): Result[String, CollectionItem] = {
-    loadWorld(projConf, WorldLoader.emptyFileMap)
   }
 
 
@@ -336,12 +319,12 @@ object WorldLoaderFlat {
       val propVal = splitted.drop(1).mkString(": ")
 
       val result = field match {
-        case "id" => item.setId(propVal)
-        case "name" => item.setName(propVal)
+        case "id"          => item.setId(propVal)
+        case "name"        => item.setName(propVal)
         case "description" => item.setDescription(propVal)
-        case "notes" => item.setDescription(propVal)
-        case "path" => item.setPath(propVal)
-        case "filename" => item match {
+        case "notes"       => item.setDescription(propVal)
+        case "path"        => item.setPath(propVal)
+        case "filename"    => item match {
           case x: RefItemBean => x.setFilename(propVal)
           case _ => field
         }
@@ -364,16 +347,16 @@ object WorldLoaderFlat {
 
 
   // wire up the world using the path fields of the beans
-  // assumes that the master has id "master"
-  def wire(worldList: List[WorldItemBean]): Result[String, CollectionItem] = {
+  // assumes that the head of the list is a collection
+  def wire(worldList: List[WorldItemBean]): Result[String, CollectionItemBean] = {
 
-    val worldMap = worldList.map(x => (x.id, x)).toMap
+    val worldMap = (worldList.map(x => (x.id, x)) ++ worldList.map(x => (x.name, x))).toMap
 
     if (worldMap.size < worldList.size) {
       Fail("Duplicate IDs!")                 // for now
     } else {
 
-      val errors = worldList.filter(!_.id.equals("master")).map(x => {
+      val errors = worldList.filter(!_.path.equals("")).map(x => {
 
         // for now, the path property is the id of the parent
         worldMap.get(x.path) match {
@@ -382,7 +365,7 @@ object WorldLoaderFlat {
             Pass(x)
           }
           case Some(_) => Fail(s"item '${x.name}' in '${x.srcyml}' declares non-collection parent '${x.path}'")
-          case None => Fail(s"item '${x.name}' in '${x.srcyml}' declares non-existent parent '${x.path}'")
+          case None    => Fail(s"item '${x.name}' in '${x.srcyml}' declares non-visible parent '${x.path}'")
         }
 
       }).collect({case Fail(x) => x})
@@ -390,10 +373,11 @@ object WorldLoaderFlat {
       if (errors.length > 0) {
         Fail(errors.mkString("\n"))
       } else {
-        worldMap.get("master") match {
-          case Some(master: CollectionItemBean) => Pass(master.getVal)
-          case Some(_) => Fail("master not a collection")
-          case None => Fail("master not found")
+        // worldMap.get("master") match {
+        worldList.headOption match {
+          case Some(master: CollectionItemBean) => Pass(master)
+          case Some(_) => Fail("head item not a collection")
+          case None    => Fail("head item not found")
         }
       }
     }
@@ -404,6 +388,23 @@ object WorldLoaderFlat {
 
 
 object WorldLoader {
+
+
+  def loadWorld(projConf: ProjectConfig, fileStatus: FileMap): Result[String, CollectionItem] = {
+
+    // start with YAML or Flat loader depending on the extension of the master file
+
+    Result.fromFilename(projConf.localContentPath / projConf.masterName + ".yml") match {
+      case Pass(_) =>  WorldLoaderYML.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
+      case Fail(_) => WorldLoaderFlat.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
+    }
+  }
+
+
+  def loadWorld(projConf: ProjectConfig): Result[String, CollectionItem] = {
+    loadWorld(projConf, WorldLoader.emptyFileMap)
+  }
+
 
   def validate(world: CollectionItem): Result[String, CollectionItem] = {
 

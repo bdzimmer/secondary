@@ -57,8 +57,6 @@ class Driver {
   // start the interactive shell
   private def runInteractive(): Unit = {
 
-    // TODO: attempt an initial loading of the world?
-
     println(Driver.Title)
     val br = new BufferedReader(new InputStreamReader(System.in))
     readEval()
@@ -102,7 +100,7 @@ class Driver {
       editItemByName(name)
     }
     case DriverCommands.Editor => {
-      val master = WorldLoaderYML.loadWorld(projConf) match {
+      val master = WorldLoader.loadWorld(projConf) match {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
@@ -202,7 +200,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.03.30"
+  val Title = "Secondary - create worlds from text - v2016.04.09"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
@@ -248,17 +246,17 @@ object Driver {
 
 object DriverCommands {
 
-  val Browse = "browse"
+  val Browse      = "browse"
   val BrowseLocal = "browse-local"
-  val Configure = "configure"
-  val Edit = "edit"
-  val Editor = "editor"
-  val Explore = "explore"
-  val Export = "export"
-  val Server = "server"
-  val Styles = "styles"
+  val Configure   = "configure"
+  val Edit        = "edit"
+  val Editor      = "editor"
+  val Explore     = "explore"
+  val Export      = "export"
+  val Server      = "server"
+  val Styles      = "styles"
   val Interactive = "interactive"
-  val Help = "help"
+  val Help        = "help"
 
   val CommandsDescriptions = List(
       (Browse, "browse exported project web site"),

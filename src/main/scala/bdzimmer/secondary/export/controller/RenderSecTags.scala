@@ -64,6 +64,9 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
   }
 
 
+  // TODO: something similar can be done much more efficiently by building a map
+  // mapping ids to items and names to items - see WorldLoaderFlat.wire()
+
   def matchItemTag(tag: SecTag): Option[WorldItem] = {
 
     // original: match tag value against WorldItem id
@@ -146,7 +149,7 @@ object RenderSecTags {
   }
 
 
-  // TODO: Image stuff really needs overhauling.
+  // TODO: image width / alignment args
   def image(item: WorldItem, args: Map[String, String]): String = {
 
     if (args.getOrElse("link", "true").equals("true")) {

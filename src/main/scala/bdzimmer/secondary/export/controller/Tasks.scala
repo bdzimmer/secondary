@@ -21,6 +21,8 @@ case class Task(
 
 object Tasks {
 
+  // TODO: download these stylesheets in the Styles downloader and link to local copies
+
    val TasksStyles =
      // """<script src="https://code.jquery.com/jquery-1.12.0.min.js" charset="utf-8"></script>""" + "\n" +
      """<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>""" + "\n" +
@@ -35,8 +37,6 @@ object Tasks {
 
 
    def table(tasks: Seq[Task]): String = {
-
-     // TODO: better initial task sorting
 
      val head = List(
          Tags.b("Item"),
