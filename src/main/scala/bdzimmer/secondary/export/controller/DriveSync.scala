@@ -34,21 +34,23 @@ class DriveSync(
   def downloadMetadata(fileStatus: FileMap): FileMap = {
 
     // find the yaml files in drive
-    val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile) filter (_.getTitle.endsWith(".yml"))
+    val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile).filter(x => {
+      x.getTitle.endsWith(".yml") || x.getTitle.endsWith(".sec")
+    })
     val driveYamlFilenames = driveYamlFiles.map(_.getTitle)
 
     // delete any local yaml files that aren't present on drive
-    projConf.localContentPathFile.listFiles.filter(_.getName.endsWith(".yml")).map(x => {
-      if (!driveYamlFilenames.contains(x.getName)) {
-        println("deleting local: " + x.getName)
-        x.delete
-      }
+    projConf.localContentPathFile.listFiles.toList.filter(x => {
+      x.getName.endsWith(".yml") || x.getName.endsWith(".sec")
+    }).map(x => if (!driveYamlFilenames.contains(x.getName)) {
+      println("deleting local: " + x.getName)
+      x.delete
     })
 
     // download / update the drive files to local with the download function
     val downloadFileStatus = downloadFilesIntelligent(driveYamlFilenames, fileStatus)
 
-    println("--refreshed YAML metadata")
+    println("--refreshed metadata")
 
     downloadFileStatus
 

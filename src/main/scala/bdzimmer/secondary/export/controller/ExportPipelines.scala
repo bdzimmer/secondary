@@ -27,7 +27,7 @@ import bdzimmer.secondary.export.view.Styles
 abstract class ExportPipeline(projConf: ProjectConfig)  {
 
   val metaStatusFile = projConf.projectDir / ProjectStructure.MetaStatusFile
-  val refStatusFile = projConf.projectDir / ProjectStructure.RefStatusFile
+  val refStatusFile  = projConf.projectDir / ProjectStructure.RefStatusFile
   val itemStatusFile = projConf.projectDir / ProjectStructure.ItemStatusFile
 
   // download the metadata and get updated status maps
@@ -49,7 +49,7 @@ abstract class ExportPipeline(projConf: ProjectConfig)  {
       case Pass(master) => {
 
         val world = WorldItem.collectionToList(master)
-        val (newRefStatus, refStatusChanges) = downloadRefs(world)
+        val (newRefStatus, refStatusChanges)   = downloadRefs(world)
         val (newItemStatus, itemStatusChanges) = loadItemStatus(world)
 
         // only export the things that have changed
@@ -80,7 +80,7 @@ abstract class ExportPipeline(projConf: ProjectConfig)  {
     val newItemStatus = world.map(x => (x.id, (x.srcyml, x.hashCode))).toMap
     val changes = newItemStatus.filter({case (k, v) => oldItemStatus.get(k) match {
       case Some(x) => v._2 != x._2
-      case None => true
+      case None    => true
     }})
 
     (newItemStatus, changes)
@@ -92,7 +92,7 @@ abstract class ExportPipeline(projConf: ProjectConfig)  {
       refStatus: FileMap,
       itemStatus: ItemMap): Unit = {
     WorldLoader.saveFileMap(metaStatusFile, metaStatus)
-    WorldLoader.saveFileMap(refStatusFile, refStatus)
+    WorldLoader.saveFileMap(refStatusFile,  refStatus)
     WorldLoader.saveItemMap(itemStatusFile, itemStatus)
   }
 
@@ -125,7 +125,10 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
       oldMetaStatus: FileMap,
       projConf: ProjectConfig): FileMap = {
 
-    val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(_.endsWith(".yml"))
+    val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(x => {
+      x.endsWith(".yml") || x.endsWith(".sec")
+    })
+
     localFileUpdates(ymlFiles, oldMetaStatus, projConf)
   }
 
@@ -149,7 +152,7 @@ class LocalSyncExportPipeline(projConf: ProjectConfig) extends ExportPipeline(pr
 
     currentStatus.filter({case (k, v) => oldFileStatus.get(k) match {
         case Some(x) => v > x._2.getValue
-        case None => true
+        case None    => true
     }}).map(x => (x._1, ("", new DateTime(x._2)))).toMap
   }
 
@@ -221,7 +224,7 @@ object ExportPipeline {
       val charsToExport = WorldItem.filterList[CharacterItem](pagesToExport)
       val imagesToExport = WorldItem.filterList[ImageItem](pagesToExport)
 
-      logList("refs to export", refsToExport.map(_.id))
+      logList("refs to export",  refsToExport.map(_.id))
       logList("chars to export", charsToExport.map(_.id))
       logList("image to export", imagesToExport.map(_.id))
 

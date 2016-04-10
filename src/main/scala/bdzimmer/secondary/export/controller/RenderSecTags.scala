@@ -12,7 +12,10 @@ import bdzimmer.secondary.export.model.{CharacterItem, RefItem, WorldItem, Parse
 import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 
-class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
+class RenderSecTags(
+    val itemByString: Map[String, WorldItem], // for generating links
+    val characters: List[CharacterItem],      // for family trees
+    disableTrees: Boolean = false) {
 
   // transform markdown text with special tags to HTML
   def transform(text: String): String = {
@@ -42,9 +45,9 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
        Pass("valid non-item tag")
     } else {
       // if it's an item tag, match the tag value against the world
-      matchItemTag(tag) match {
+      itemByString.get(tag.value) match {
         case Some(item) => Pass("valid item tag")
-        case None => Fail(s"""invalid item "${tag.value}" in tag "${tag.kind}"""")
+        case None       => Fail(s"""invalid item "${tag.value}" in tag "${tag.kind}"""")
       }
     }
   }
@@ -56,47 +59,25 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
       Pass(RenderSecTags.processOtherTag(tag))
     } else {
       // if it's an item tag, match the tag value against the world
-      matchItemTag(tag) match {
+      itemByString.get(tag.value) match {
         case Some(item) => Pass(processItemTag(tag.kind, item, tag.args))
-        case None => Fail(s"""invalid item "${tag.value}" in tag "${tag.kind}"""")
+        case None       => Fail(s"""invalid item "${tag.value}" in tag "${tag.kind}"""")
       }
     }
   }
 
-
-  // TODO: something similar can be done much more efficiently by building a map
-  // mapping ids to items and names to items - see WorldLoaderFlat.wire()
-
-  def matchItemTag(tag: SecTag): Option[WorldItem] = {
-
-    // original: match tag value against WorldItem id
-    // world.filter(_.id.equals(tag.value)).headOption
-
-    // new: match tag against id first; if no matches match against name
-    val idMatches = world.filter(_.id.equals(tag.value))
-    idMatches.length match {
-      case 1 => idMatches.headOption
-      case _ => {
-        val nameMatches = world.filter(_.name.equals(tag.value))
-        nameMatches.length match {
-          case 1 => nameMatches.headOption
-          case _ => None
-        }
-      }
-    }
-  }
 
 
   // generate text for tags that reference WorldItems
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
-    case SecTags.Link => RenderSecTags.link(item, args)
-    case SecTags.Image => RenderSecTags.image(item, ParseSecTags.parseArgs(args))
+    case SecTags.Link            => RenderSecTags.link(item, args)
+    case SecTags.Image           => RenderSecTags.image(item, ParseSecTags.parseArgs(args))
     case SecTags.ImageResponsive => ExportPages.panel(ExportImages.imageLinkPage(item, true), false)
-    case SecTags.FamilyTree => familyTree(item)
-    case SecTags.Jumbotron => RenderSecTags.jumbotron(item, ParseSecTags.parseArgs(args))
-    case SecTags.Marriage => RenderSecTags.marriage(item, ParseSecTags.parseArgs(args))
-    case SecTags.Timeline => RenderSecTags.timeline(item, ParseSecTags.parseArgs(args))
+    case SecTags.FamilyTree      => familyTree(item)
+    case SecTags.Jumbotron       => RenderSecTags.jumbotron(item, ParseSecTags.parseArgs(args))
+    case SecTags.Marriage        => RenderSecTags.marriage(item, ParseSecTags.parseArgs(args))
+    case SecTags.Timeline        => RenderSecTags.timeline(item, ParseSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
     case _ => RenderSecTags.genLink(kind.capitalize, item)
@@ -113,18 +94,15 @@ class RenderSecTags(val world: List[WorldItem], disableTrees: Boolean = false) {
     } else {
       item match {
         case character: CharacterItem => {
-          val safeRender = new RenderSecTags(this.world, true)
-          val characters = WorldItem.filterList[CharacterItem](world)
+          val safeRender = new RenderSecTags(itemByString, characters, true)
           val result = FamilyTree.TreeStyles + FamilyTree.getJs(
               character, characters, safeRender)
-
           result
         }
         case _ => ""
       }
     }
   }
-
 
 }
 
@@ -137,15 +115,15 @@ object RenderSecTags {
     case SecTags.Demo => {
       val body = tag.args match {
         case x :: Nil => x
-        case x :: xs => s"$x | ${xs.mkString(" | ")}"
-        case _ => "..."
+        case x :: xs  => s"$x | ${xs.mkString(" | ")}"
+        case _        => "..."
       }
       s"{{${tag.value}: ${body}}}"
     }
     case SecTags.Birth => tagArgsString(tag)
     case SecTags.Death => tagArgsString(tag)
     case SecTags.Event => tagArgsString(tag)
-    case _ => tagString(tag)
+    case _             => tagString(tag)
   }
 
 
@@ -165,8 +143,9 @@ object RenderSecTags {
   def jumbotron(item: WorldItem, args: Map[String, String]): String = {
 
     val imagePath = ExportImages.itemImagePath(item)
-    val xPos = args.getOrElse("xpos", "0%")
-    val yPos = args.getOrElse("ypos", "50%")
+
+    val xPos  = args.getOrElse("xpos",  "0%")
+    val yPos  = args.getOrElse("ypos",  "50%")
     val color = args.getOrElse("color", "black")
 
     s"""
@@ -214,7 +193,7 @@ object RenderSecTags {
   def tagArgsString(tag: SecTag): String = {
     val desc = tag.args match {
       case Nil => "empty " + tag.kind.capitalize
-      case _ => tag.args.mkString(" ")
+      case _   => tag.args.mkString(" ")
     }
     genShow(tag.value, desc)
   }

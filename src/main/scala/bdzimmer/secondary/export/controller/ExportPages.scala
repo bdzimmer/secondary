@@ -35,9 +35,13 @@ class ExportPages(
     navbars: Boolean,
     editLinks: Boolean) {
 
-  val np = new RenderSecTags(world)
+
+  // derive some data structures that are used repeatedly throughout the rendering process
 
   val metaItems = WorldItem.filterList[RefItem](world)
+
+  // map of ids and names of items to the actual item object
+  val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
 
   // which other items' tags reference each item
   val references = world.map(item => {
@@ -46,6 +50,11 @@ class ExportPages(
     })))
   }).toMap
 
+  // only the characters - used by RenderSecTags for FamilyTrees
+  // and eventually other character-specific tags
+  val characters = WorldItem.filterList[CharacterItem](world)
+
+  val np = new RenderSecTags(itemByString, characters)
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
     items map(item => exportPageDispatch(item)) filter (!_.equals(""))
@@ -54,11 +63,11 @@ class ExportPages(
 
   def exportPageDispatch(item: WorldItem): String = item match {
     case x: CollectionItem => createCollectionPage(x)
-    case x: CharacterItem => createCharacterPage(x)
-    case x: ImageItem => createImagePage(x)
-    case x: MapItem => createMapPage(x)
-    case x: TileRefItem => createTilePage(x)
-    case _ => createItemPage(item)
+    case x: CharacterItem  => createCharacterPage(x)
+    case x: ImageItem      => createImagePage(x)
+    case x: MapItem        => createMapPage(x)
+    case x: TileRefItem    => createTilePage(x)
+    case _                 => createItemPage(item)
   }
 
 
@@ -147,13 +156,13 @@ class ExportPages(
         ) +
 
         // Invalid tags
-        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)) +
+        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags))
 
         // Todos and thoughts - deprecated soon.
-        column(Column6, h4("Thoughts") + taskList(getTask(_)(List(SecTags.Thought)))) +
-        column(Column6, h4("Tasks") + taskList(getTask(_)(SecTags.TaskTagKinds))),
+        // column(Column6, h4("Thoughts") + taskList(getTask(_)(List(SecTags.Thought)))) +
+        // column(Column6, h4("Tasks") + taskList(getTask(_)(SecTags.TaskTagKinds)))
 
-        license)
+        , license)
 
     relFilePath
   }
@@ -166,11 +175,11 @@ class ExportPages(
 
     def getName(item: WorldItem): String = item match {
       case x: CharacterItem => x.nameParts match {
-        case None => x.name
+        case None        => x.name
         case Some(parts) => parts match {
-          case fst :: snd :: Nil =>  snd + ", " + fst
+          case fst :: snd :: Nil  => snd + ", " + fst
           case fst :: snd :: rest => snd + ", " + fst + " " + rest.mkString(" ")
-          case _ => x.name
+          case _                  => x.name
         }
       }
       case _ => item.name
@@ -217,12 +226,12 @@ class ExportPages(
         column(Column12, {
 
           val wordCount = world.map(_.notes.split("\\s").length).sum
-          val tagCount = world.map(_.tags.length).sum
+          val tagCount  = world.map(_.tags.length).sum
 
           h4("Counts") +
           p(b("Items: ") + world.length) +
           p(b("Words: ") + wordCount) +
-          p(b("Tags: ") + tagCount)
+          p(b("Tags: ")  + tagCount)
         }),
 
         license)
@@ -242,10 +251,7 @@ class ExportPages(
         character.description,
         pageNavbar(Some(character)),
 
-        column(Column12,
-            // ExportPages.panel(
-            //    ExportImages.imageLinkPage(character, metaItems, false, 320, false, 12), true, false) +
-            np.transform(character.notes) + refItems(character)),
+        column(Column12, np.transform(character.notes) + refItems(character)),
 
         license)
 
@@ -326,7 +332,7 @@ class ExportPages(
     val relFilePath = ExportPages.itemPageName(imageItem)
 
     val wikiNameOption = (imageItem.filename.startsWith("wikimedia:") match {
-      case true => Some(imageItem.filename.split(":")(1))
+      case true  => Some(imageItem.filename.split(":")(1))
       case false => None
     })
 
@@ -380,7 +386,7 @@ class ExportPages(
           link("Tasks", ExportPages.TasksPageFile),
           link("Stats", ExportPages.StatsPageFile))
       val linksWidthEdit = editLinks match {
-        case true =>  links :+ link("Edit",  ExportPages.notepadURL(master))
+        case true  => links :+ link("Edit",  ExportPages.notepadURL(master))
         case false => links
       }
       val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
@@ -396,7 +402,7 @@ class ExportPages(
     case true => {
       val links = List(link("Home", ExportPages.MasterPageFile))
       val linksWidthEdit = editLinks match {
-        case true =>  links ++ item.map(x => link("Edit",  ExportPages.notepadURL(x)))
+        case true  => links ++ item.map(x => link("Edit",  ExportPages.notepadURL(x)))
         case false => links
       }
       val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
@@ -410,7 +416,7 @@ class ExportPages(
   private def refItems(item: WorldItem): String = {
     val refs = references.get(item.id) match {
       case Some(x) => x
-      case None => List()
+      case None    => List()
     }
 
     if (refs.length > 0) {
@@ -430,14 +436,14 @@ object ExportPages {
 
   // constants
   val MasterPageFile = "index.html"
-  val IndexPageFile = "indexpage.html"
-  val TasksPageFile = "tasks.html"
-  val StatsPageFile = "stats.html"
+  val IndexPageFile  = "indexpage.html"
+  val TasksPageFile  = "tasks.html"
+  val StatsPageFile  = "stats.html"
 
   // recursively generate nested lists of links from a CollectionItem
   def getCollectionLinks(item: WorldItem): String =  item match {
     case x: CollectionItem => listItem(textLinkPage(x) + listGroup(x.children.map(x => getCollectionLinks(x))))
-    case _ => listItem(textLinkPage(item))
+    case _                 => listItem(textLinkPage(item))
   }
 
 
@@ -473,20 +479,10 @@ object ExportPages {
   // panel that can be pulled right
   def panel(contents: String, pullRight: Boolean = false, border: Boolean = true): String = {
 
-    val pullClass = pullRight match {
-      case true => " pull-right"
-      case false => ""
-    }
+    val pullClass  = if (pullRight) " pull-right"       else ""
+    val leftMargin = if (pullRight) "margin-left:32px;" else ""
 
-    val leftMargin = pullRight match {
-      case true => "margin-left:32px;"
-      case false => ""
-    }
-
-    val borderStyle = border match {
-      case true => ""
-      case false => "border: 0; box-shadow: 0 0 0; border-radius: 0;"
-    }
+    val borderStyle = if (border) "" else "border: 0; box-shadow: 0 0 0; border-radius: 0;"
 
     (s"""<div class="panel panel-default${pullClass}" style="${leftMargin} ${borderStyle}"><div class="panel-body">${contents}""" +
     """</div></div>""")
@@ -525,5 +521,3 @@ object ExportPages {
   }
 
 }
-
-

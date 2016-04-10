@@ -34,7 +34,7 @@ import bdzimmer.pixeleditor.model.AssetMetadata
 object NonNullString {
   def apply(s: String): String = s match {
     case null => ""
-    case _ => s
+    case _    => s
   }
 }
 
@@ -262,25 +262,25 @@ object WorldItem {
    */
   def filterList[A <: WorldItem : ClassTag](items: List[WorldItem]): List[A] = items.headOption match {
     case Some(x: A) => x :: filterList[A](items.tail)
-    case Some(_) => filterList[A](items.tail)
-    case None => Nil
+    case Some(_)    =>      filterList[A](items.tail)
+    case None       => Nil
   }
 
 
   // create a list of all world items in a hierarchy
   def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {
     case x: CollectionItem => x :: x.children.flatMap(x => collectionToList(x))
-    case _ => List(worldItem)
+    case _                 => List(worldItem)
   }
 
 
   // convert the world to a list of AssetMetadata items for use by the editor
   def assetMetadata(worldItem: WorldItem): List[AssetMetadata] = {
     collectionToList(worldItem).map(item => item match {
-      case x: MapItem => Some(AssetMetadata(x.id, "Map", x.name, x.filename, "unused"))
-      case x: TilesetItem => Some(AssetMetadata(x.id, "Tileset", x.name, x.filename, x.tiletype))
+      case x: MapItem         => Some(AssetMetadata(x.id, "Map",         x.name, x.filename, "unused"))
+      case x: TilesetItem     => Some(AssetMetadata(x.id, "Tileset",     x.name, x.filename, x.tiletype))
       case x: SpritesheetItem => Some(AssetMetadata(x.id, "Spritesheet", x.name, x.filename, x.tiletype))
-      case _ => None
+      case _                  => None
     }).flatten
   }
 
@@ -288,11 +288,7 @@ object WorldItem {
   def cleanName(x: String): (String, Option[List[String]]) = {
     val split = x.split("\\|").map(_.trim)
     val cleaned = split.mkString(" ")
-    val parts = if (split.length > 1) {
-      Some(split.toList)
-    } else {
-      None
-    }
+    val parts = if (split.length > 1) Some(split.toList) else None
     (cleaned, parts)
   }
 

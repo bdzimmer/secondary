@@ -255,6 +255,8 @@ private object WorldLoaderFlat {
         val Trimmer(trimmed) = line
 
         if (state != inHeader && line.startsWith("!")) {
+
+
           if (item != null) {
             item.notes = notes.mkString("\n")
             items += item
@@ -282,6 +284,7 @@ private object WorldLoaderFlat {
       }
 
       if (item != null) {
+        item.notes = notes.mkString("\n")
         items += item
       }
 
@@ -395,7 +398,7 @@ object WorldLoader {
     // start with YAML or Flat loader depending on the extension of the master file
 
     Result.fromFilename(projConf.localContentPath / projConf.masterName + ".yml") match {
-      case Pass(_) =>  WorldLoaderYML.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
+      case Pass(_) => WorldLoaderYML.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
       case Fail(_) => WorldLoaderFlat.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
     }
   }
@@ -454,7 +457,7 @@ object WorldLoader {
     map1 ++ map2.map{case (k, v) => k -> {
       map1.get(k) match {
         case Some(x) => if (x._2.getValue > v._2.getValue) x else v
-        case None => v
+        case None    => v
       }
     }}
   }
