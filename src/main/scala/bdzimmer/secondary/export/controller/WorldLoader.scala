@@ -237,7 +237,7 @@ private object WorldLoaderFlat {
 
     val items = scala.collection.mutable.Buffer[WorldItemBean]()
 
-    val ioTry = Try {
+    Result({
 
       // line by line state machine for parsing
       // should be fast and memory efficient!
@@ -256,9 +256,10 @@ private object WorldLoaderFlat {
 
         if (state != inHeader && line.startsWith("!")) {
 
-
           if (item != null) {
-            item.notes = notes.mkString("\n")
+            if (notes.size > 0) {
+              item.notes = notes.mkString("\n")
+            }
             items += item
             notes.clear()
           }
@@ -284,14 +285,14 @@ private object WorldLoaderFlat {
       }
 
       if (item != null) {
-        item.notes = notes.mkString("\n")
+        if (notes.size > 0) {
+          item.notes = notes.mkString("\n")
+        }
         items += item
       }
 
       items.toList
-    }
-
-    Result.fromTry(ioTry)
+    })
 
   }
 
@@ -325,7 +326,7 @@ private object WorldLoaderFlat {
         case "id"          => item.setId(propVal)
         case "name"        => item.setName(propVal)
         case "description" => item.setDescription(propVal)
-        case "notes"       => item.setDescription(propVal)
+        case "notes"       => item.setNotes(propVal)
         case "path"        => item.setPath(propVal)
         case "filename"    => item match {
           case x: RefItemBean => x.setFilename(propVal)
@@ -416,12 +417,12 @@ object WorldLoader {
     val duplicateIDs = worldList.groupBy(_.id).toList.sortBy(_._1).filter(_._2.length > 1)
     duplicateIDs.length match {
       case 0 => Pass(world)
-      case _ => Fail({
+      case _ => Fail(
         "Duplicate ids found\n" +
         duplicateIDs.map(x =>
           "\tid: " + x._1 + "\n" +
           "\tpresent in files: " + x._2.map(_.srcyml).distinct.mkString(", ")).mkString("\n")
-      })
+      )
     }
 
   }
