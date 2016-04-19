@@ -2,8 +2,7 @@
 # Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
 # Package a distribution archive.
-# This isn't the best; contains a lot of  cheap workarounds for use with
-# Cygwin.
+# This isn't the best; contains some cheap workarounds for use with Cygwin.
 
 chmod -R 755 dist
 rm dist/secondary.jar
@@ -12,7 +11,7 @@ rm -rf dist/doc
 # TODO: figure out how to run sbt from Cygwin.
 # sbt assembly $@
 
-cp target/scala-2.10/secondary-assembly-2015.12.24.jar dist/secondary.jar
+cp target/scala-2.10/secondary-assembly-2016.04.18.jar dist/secondary.jar
 cp -R doc/web dist/doc
 
 chmod -R 755 dist

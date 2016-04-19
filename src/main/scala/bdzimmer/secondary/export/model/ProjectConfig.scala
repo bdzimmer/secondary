@@ -33,7 +33,7 @@ class ProjectConfig(
   val driveInputPathList = driveInputPath.split(slash).toList
   val driveOutputPathList = driveOutputPath.split(slash).toList
 
-  val localExportPath = projectDir  / ProjectStructure.WebDir
+  val localExportPath  = projectDir / ProjectStructure.WebDir
   val localContentPath = projectDir / ProjectStructure.ContentDir
   val localExportPathFile = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
@@ -52,17 +52,17 @@ object ProjectConfig {
 
   val mode = ChooseConfigField("mode", "drive", List("drive", "local"), "Export mode")
 
-  val driveClientIdFile = TextConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
+  val driveClientIdFile    = TextConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
   val driveAccessTokenFile = TextConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
-  val driveInputPath = TextConfigField("driveInputPath", "secondary/content", "Drive input path")
-  val driveOutputPath = TextConfigField("driveOutputPath", "secondary/web", "Drive output path")
-  val mappedContentPath = TextConfigField("mappedContentPath", "", "Mapped content path")
+  val driveInputPath       = TextConfigField("driveInputPath", "secondary/content", "Drive input path")
+  val driveOutputPath      = TextConfigField("driveOutputPath", "secondary/web", "Drive output path")
+  val mappedContentPath    = TextConfigField("mappedContentPath", "", "Mapped content path")
 
-  val masterName = TextConfigField("masterName", "master", "Master name")
+  val masterName           = TextConfigField("masterName", "master", "Master name")
 
-  val license = TextConfigField("license", "Copyright &copy 2016. All rights reserved.", "License text")
-  val navbars = BoolConfigField("navbars", "true", "Navbars")
-  val editLinks = BoolConfigField("editlinks", "true", "Edit Links")
+  val license              = TextConfigField("license", "Copyright &copy 2016. All rights reserved.", "License text")
+  val navbars              = BoolConfigField("navbars", "true", "Navbars")
+  val editLinks            = BoolConfigField("editlinks", "true", "Edit Links")
 
   val requiredProperties: List[ConfigField] =  List(
       mode,

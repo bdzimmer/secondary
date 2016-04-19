@@ -48,8 +48,8 @@ class Driver {
     val command = args.headOption.getOrElse(Driver.DefaultCommand)
     command match {
       case DriverCommands.Interactive => runInteractive
-      case DriverCommands.Help => Driver.showUsage
-      case _ => runCommand(command, List())
+      case DriverCommands.Help        => Driver.showUsage
+      case _                          => runCommand(command, List())
     }
   }
 
@@ -66,13 +66,13 @@ class Driver {
       print("> ")
       val (command, args) = br.readLine().split("\\s+").toList match {
         case x :: xs => (x, xs)
-        case Nil => ("", List())
+        case Nil     => ("", List())
       }
 
       command match {
         case "exit" | "quit" | "q" => () // quit
         case "" => readEval() // do nothing
-        case _ => {
+        case _  => {
           runCommand(command, args)
           readEval()
         }
@@ -86,7 +86,7 @@ class Driver {
   private def runCommand(command: String, args: List[String]): Unit = command match {
     case DriverCommands.Browse => projConf.mode match {
       case "drive" => browseDrive
-      case _ => browseLocal
+      case _       => browseLocal
     }
     case DriverCommands.BrowseLocal => browseLocal
     case DriverCommands.Configure => {
@@ -114,21 +114,26 @@ class Driver {
       val result = projConf.mode match {
         case "drive" => {
           driveSync match {
-            case Pass(ds) => new DriveSyncExportPipeline(projConf, ds).run()
+            case Pass(ds)  => {
+              ds.downloadInput()
+              val world = new ExportPipeline(projConf).run()
+              ds.uploadOutput()
+              world
+            }
             case Fail(msg) => {
               Driver.driveError(msg)
               Fail(msg)
             }
           }
         }
-        case _ => new LocalSyncExportPipeline(projConf).run()
+        case _ => new ExportPipeline(projConf).run()
       }
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
-    case DriverCommands.Help => Driver.showCommands
-    case _ => println("Invalid command. Use 'help' for a list of commands.")
+    case DriverCommands.Help   => Driver.showCommands
+    case _                     => println("Invalid command. Use 'help' for a list of commands.")
   }
 
 
@@ -155,7 +160,7 @@ class Driver {
       val world = WorldItem.collectionToList(master)
       world.filter(item => item.id.equals(name) || item.name.equals(name)).headOption match {
         case Some(item) => editItem(item)
-        case None => println("No such item!")
+        case None       => println("No such item!")
       }
     }
     case Fail(msg) => println(msg)
@@ -179,9 +184,7 @@ class Driver {
   // explore the project's source directory
   private def explore(): Unit = projConf.mode match {
     case "drive" => driveSync match {
-      case Pass(ds) =>
-        Desktop.getDesktop.browse(
-            new URI(s"https://drive.google.com/drive/folders/${ds.driveInputFile.getId}"))
+      case Pass(ds)  => Desktop.getDesktop.browse(new URI(DriveSync.DriveWebUrl / ds.driveInputFile.getId))
       case Fail(msg) => Driver.driveError(msg)
     }
     case _ => Desktop.getDesktop.open(projConf.localContentPathFile)
@@ -259,14 +262,14 @@ object DriverCommands {
   val Help        = "help"
 
   val CommandsDescriptions = List(
-      (Browse, "browse exported project web site"),
+      (Browse,      "browse exported project web site"),
       (BrowseLocal, "browse local copy of project web site"),
-      (Configure, "edit project configuration"),
-      (Edit, "edit the source file for an item"),
-      (Editor, "start editor (alpha)"),
-      (Explore, "explore project content dir"),
-      (Export, "export"),
-      (Server, "server mode"),
-      (Styles, "add stylesheets"),
-      (Help, "show usage / commands"))
+      (Configure,   "edit project configuration"),
+      (Edit,        "edit the source file for an item"),
+      (Editor,      "start editor (alpha)"),
+      (Explore,     "explore project content dir"),
+      (Export,      "export"),
+      (Server,      "server mode"),
+      (Styles,      "add stylesheets"),
+      (Help,        "show usage / commands"))
 }

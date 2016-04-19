@@ -291,6 +291,8 @@ private object WorldLoaderFlat {
         items += item
       }
 
+      br.close()
+
       items.toList
     })
 
@@ -330,22 +332,22 @@ private object WorldLoaderFlat {
         case "path"        => item.setPath(propVal)
         case "filename"    => item match {
           case x: RefItemBean => x.setFilename(propVal)
-          case _ => field
+          case _              => field
         }
         case "tiletype" => item match {
           case x: TileRefItemBean => x.setTiletype(propVal)
-          case _ => field
+          case _                  => field
         }
         case _ => field
       }
 
       result match {
         case x: String => Some("invalid property '" + x + "'")
-        case _ => None
+        case _         => None
       }
 
     } else {
-      Some("invalid propery format")
+      Some("invalid property format")
     }
   }
 

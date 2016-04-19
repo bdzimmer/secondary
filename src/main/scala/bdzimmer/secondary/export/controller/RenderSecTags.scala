@@ -80,7 +80,7 @@ class RenderSecTags(
     case SecTags.Timeline        => RenderSecTags.timeline(item, ParseSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
-    case _ => RenderSecTags.genLink(kind.capitalize, item)
+    case _                       => RenderSecTags.genLink(kind.capitalize, item)
   }
 
 

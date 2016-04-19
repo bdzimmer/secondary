@@ -2,7 +2,8 @@
 
 // Class for downloading and uploading project content.
 
-// 2015-09-17: Created from refactoring ContentTransformer.
+// TODO: think about generalizing some of these methods
+// TODO: Refactor into separate project - general drive sync capability
 
 package bdzimmer.secondary.export.controller
 
@@ -18,8 +19,8 @@ import bdzimmer.util.StringUtils._
 import bdzimmer.gdrivescala.{DriveBuilder, DriveUtils, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{ProjectConfig, WorldItem}
 
-
 // functions for syncing to and from Google Drive
+
 class DriveSync(
     projConf: ProjectConfig,
     drive: Drive,
@@ -31,44 +32,73 @@ class DriveSync(
   projConf.localExportPathFile.mkdirs
 
 
-  def downloadMetadata(fileStatus: FileMap): FileMap = {
+  val driveContentStatusFile = projConf.projectDir / "drivecontentstatus.txt"
+  val localWebStatusFile     = projConf.projectDir / "localwebstatus.txt"
 
-    // find the yaml files in drive
-    val driveYamlFiles = DriveUtils.getFilesByParent(drive, driveInputFile).filter(x => {
-      x.getTitle.endsWith(".yml") || x.getTitle.endsWith(".sec")
-    })
-    val driveYamlFilenames = driveYamlFiles.map(_.getTitle)
 
-    // delete any local yaml files that aren't present on drive
-    projConf.localContentPathFile.listFiles.toList.filter(x => {
-      x.getName.endsWith(".yml") || x.getName.endsWith(".sec")
-    }).map(x => if (!driveYamlFilenames.contains(x.getName)) {
-      println("deleting local: " + x.getName)
-      x.delete
-    })
+  // download any changed files in the content directory
+  // run before export
+  def downloadInput(): Unit = {
+
+    val driveContentStatus = WorldLoader.loadOrEmptyModifiedMap(driveContentStatusFile)
+
+    // recursively find all files in Drive content folder
+    val driveContentFiles = driveFilesbyParentRecursive(drive, driveInputFile, List())
+
+    // TODO: delete local content files that aren't in drive content
 
     // download / update the drive files to local with the download function
-    val downloadFileStatus = downloadFilesIntelligent(driveYamlFilenames, fileStatus)
+    val driveContentStatusUpdates = downloadFilesIntelligent(driveContentFiles.map(_._1.mkString(slash)), driveContentStatus)
 
-    println("--refreshed metadata")
-
-    downloadFileStatus
+    val driveContentStatusNew = WorldLoader.mergeFileMaps(driveContentStatus, driveContentStatusUpdates)
+    WorldLoader.saveFileMap(driveContentStatusFile, driveContentStatusNew)
 
   }
 
 
-  def downloadImages(masterCollection: List[WorldItem], fileStatus:  FileMap): FileMap = {
-    val imageFiles = ExportPipeline.getReferencedImages(masterCollection)
-    val downloadImageStatus = downloadFilesIntelligent(imageFiles, fileStatus)
+  // upload output file changes
+  // run after export
+  def uploadOutput(): Unit = {
 
-    println("--refreshed image files")
+    val localWebStatus = WorldLoader.loadOrEmptyModifiedMap(localWebStatusFile)
 
-    downloadImageStatus
+    // recursively find all files in local web folder
+    val localContentFiles = filesByParentRecursive(projConf.localExportPathFile, List())
+
+    // TODO: delete Drive web files that aren't in local web
+
+    val localWebStatusUpdates = ExportPipeline.localFileUpdates(
+        localContentFiles.map(_._1.mkString(slash)), localWebStatus, projConf.localExportPath)
+
+    // upload only the updated files
+    upload(localWebStatusUpdates.keys.toList)
+
+    val localWebStatusNew = WorldLoader.mergeFileMaps(localWebStatus, localWebStatusUpdates)
+    WorldLoader.saveFileMap(localWebStatusFile, localWebStatusNew)
+
   }
 
 
-  // download only files that are not present in fileStatus or are newer
-  // 2015-10-10: modified so it won't attempt to download files that don't exist
+  private def driveFilesbyParentRecursive(drive: Drive, driveDir: DriveFile, driveDirName: List[String]): List[(List[String], DriveFile)] = {
+    DriveUtils.getFilesByParent(drive, driveDir).flatMap(file => file.getMimeType.equals(DriveUtils.folderType) match {
+      case true  => driveFilesbyParentRecursive(drive, file, driveDirName :+ file.getTitle)
+      case false => List((driveDirName :+ file.getTitle, file))
+    })
+  }
+
+
+  private def filesByParentRecursive(dir: File, dirName: List[String]): List[(List[String], File)] = {
+    dir.listFiles.toList.flatMap(file => file.isDirectory() match {
+      case true  => filesByParentRecursive(file, dirName :+ file.getName)
+      case false => List((dirName :+ file.getName, file))
+    })
+  }
+
+
+  // download only files that are
+  // 1) not present in fileStatus
+  // 2) newer than what is recorded in fileStatus
+  // 3) don't exist locally
   def downloadFilesIntelligent(files: List[String], fileStatus: FileMap): FileMap = {
 
     // find just the files that are newer those in fileStatus or not present in it
@@ -83,14 +113,11 @@ class DriveSync(
       val filePath = filename.split(slash).toList
       val driveFile = {
 
-        // original version
-        // DriveUtils.getFileByPath(drive, driveInputFile, filePath)
-
         // if it's already in the fileStatus, get it directly by id
         // otherwise find it
         fileStatus.get(filename) match {
           case Some(x) => Option(drive.files.get(x._1).execute) // also need to deal with the possibility that the file doesn't exist
-          case None =>  DriveUtils.getFileByPath(drive, driveInputFile, filePath)
+          case None    => DriveUtils.getFileByPath(drive, driveInputFile, filePath)
         }
 
       }
@@ -99,10 +126,11 @@ class DriveSync(
 
     }).flatten
 
+    // only download the a file if it's newer than what's in the fileStatus or it doesn't exist locally
     val filesToDownload = uniqueFilesDrive.filter({case (filename, driveFile) => {
       fileStatus.get(filename) match {
-        case Some(x) => driveFile.getModifiedDate.getValue > x._2.getValue
-        case None => true
+        case Some(x) => driveFile.getModifiedDate.getValue > x._2.getValue || !(new File(projConf.localContentPath / filename).exists)
+        case None    => true
       }
 
     }})
@@ -133,8 +161,7 @@ class DriveSync(
   }
 
 
-  // 2015-07-19
-  // new upload function
+  // upload files
   def upload(filesToUpload: List[String]): Unit = {
 
     val filesToUploadSplit = filesToUpload.map(
@@ -177,8 +204,9 @@ class DriveSync(
 
 object DriveSync {
 
-  // TODO: does AppName matter?
-  val AppName = "DriveTesting"
+  val AppName = "Secondary"  // the actual value of this does not seem to matter
+
+  val DriveWebUrl = "https://drive.google.com/drive/folders"
 
   // safely create a DriveSync object from the project configuration
   // failure messages if input or output directories don't exist
@@ -198,20 +226,18 @@ object DriveSync {
   } yield (new DriveSync(projConf, drive, driveInputFile, driveOutputFile))
 
 
-  def createDrive(projConf: ProjectConfig): Result[String, Drive] = {
+  def createDrive(projConf: ProjectConfig): Result[String, Drive] =  for {
 
-    for {
+    clientIdFile <- Result.fromFilename(projConf.driveClientIdFile)
+    accessTokenFile <-  Result.fromFilename(projConf.driveAccessTokenFile)
 
-      clientIdFile <- Result.fromFilename(projConf.driveClientIdFile)
-      accessTokenFile <-  Result.fromFilename(projConf.driveAccessTokenFile)
+    id = DriveBuilder.getClientIdFromJsonFile(clientIdFile)
+    token = DriveBuilder.getAccessTokenFromJsonFile(accessTokenFile)
 
-      id = DriveBuilder.getClientIdFromJsonFile(clientIdFile)
-      token = DriveBuilder.getAccessTokenFromJsonFile(accessTokenFile)
-
-    } yield {
-      val keys = GoogleDriveKeys(id, token)
-      DriveBuilder.getDrive(keys, AppName)
-    }
+  } yield {
+    val keys = GoogleDriveKeys(id, token)
+    DriveBuilder.getDrive(keys, AppName)
   }
+
 
 }
