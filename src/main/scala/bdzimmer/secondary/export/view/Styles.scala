@@ -25,7 +25,7 @@ object Styles {
   val H1JumbotronSize = 72
   val BodyFontSize = 16
   val BodyLineHeight = 2
-  val BodyMarginBottom = 20
+  val BodyVerticalMargin = 20
 
 
   val CollapsibleLists = """
@@ -59,7 +59,7 @@ li.swivel label { margin-bottom: 0px; }
 
 
     val sheetText = s"""
-/* Copyright (c) 2015 Ben Zimmer. All rights reserved. */
+/* Copyright (c) 2016 Ben Zimmer. All rights reserved. */
 
 /* Set a custom font and increase the font size for everything. */
 
@@ -75,9 +75,8 @@ ${headingSizeStyle}
 
 h4, .h4 {
   border-bottom: 1px solid #eee;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-  padding-top: 20px;
+  margin: 20px 0px 20px 0px;
+  padding: 20px 0px 20px 0px;
 }
 
 .jumbotron h1, .jumbotron .h1 {
@@ -90,7 +89,7 @@ p, div {
 }
 
 p {
-  margin: 0 0 ${BodyMarginBottom}px;
+  margin: ${BodyVerticalMargin}px 0px ${BodyVerticalMargin}px 0px;
 }
 
 body {
