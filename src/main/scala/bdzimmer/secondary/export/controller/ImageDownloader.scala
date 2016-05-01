@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
 // Object with functions for getting metadata and images from Wikimedia.
 
@@ -6,6 +6,7 @@
 // 2015-08-23: Metadata retrieval and image downloads.
 // 2015-08-24: Extension awareness in image downloader. JSON parsing fixes.
 // 2015-09-02: JSON parsing fixes.
+// 2016-04-30: Rewrote JSON parsing with Jackson.
 
 package bdzimmer.secondary.export.controller
 
@@ -17,9 +18,8 @@ import javax.imageio.ImageIO
 
 import scala.util.Try
 
-import net.liftweb.json.JsonParser
-import net.liftweb.json.JsonParser._
-import net.liftweb.json.JsonAST._
+import com.fasterxml.jackson.core.{JsonFactory, JsonParser, JsonToken}
+
 import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 
 
@@ -59,66 +59,144 @@ object ImageDownloader {
   }
 
 
-  // transform JSON into a metadata object
-  // return None if it doesn't make sense to parse the JSON
-  // into metadata
   def parseWikimediaJson(json: String): Option[WikimediaMeta] = {
 
-    val root = JsonParser.parse(json)
+    val parser = new JsonFactory().createJsonParser(json);
 
-    for { // Option monad
+    var title          = ""
+    var width          = 0
+    var height         = 0
+    var url            = ""
+    var descriptionurl = ""
+    var artist         = ""
+    var license        = ""
+    var attribution    = true
+    var copyrighted    = true
+    var restrictions   = ""
 
-      // get first page
-      page <- (for {
-        JField("pages", JObject(pages)) <- root
-        page <- pages
-      } yield page).headOption
+    var foundPage      = false
 
+    try {
 
-      // if page is present with imageinfo and a url, then
-      // attempt tp parse
-      result <- (page \ "imageinfo" \ "url") match {
-        case x: JString => Some(parsePage(page))
-        case _ => None
+      parser.nextToken()
+      while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+        if ("query".equals(parser.getCurrentName())) {              // "query":
+
+          parser.nextToken()                                        // {
+          while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+            if ("pages".equals(parser.getCurrentName())) {          // "pages":
+
+              parser.nextToken()                                    // {
+              while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+                // println("page: " + parser.getCurrentName() + " " + parser.getValueAsString(""))
+                if (!foundPage && parser.getCurrentName() != null) {  // only process the first one that has an imginfo with url
+
+                  parser.nextToken()                                // {
+                  while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+                    // println("page token: " + parser.getCurrentName() + " " + parser.getValueAsString(""))
+                    if ("title".equals(parser.getCurrentName())) {  // "title":
+                      parser.nextToken()
+                      title = parser.getValueAsString("")
+
+                    } else if ("imageinfo".equals(parser.getCurrentName())) { // "imageinfo":
+
+                      parser.nextToken()    // [
+                      var foundImageinfo = false
+                      while(!parser.isClosed && parser.nextToken() != JsonToken.END_ARRAY) {
+                        // it's an array, and we only care about the first element
+                        if (!foundImageinfo && parser.getCurrentToken().equals(JsonToken.START_OBJECT)) { // {
+                          foundImageinfo = true
+
+                          while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+                            // println("page imageinfo token: " + parser.getCurrentName() + " " + parser.getValueAsString(""))
+                            if ("width".equals(parser.getCurrentName())) {
+                              parser.nextToken()
+                              width = parser.getIntValue()
+                            } else if ("height".equals(parser.getCurrentName())) {
+                              parser.nextToken()
+                              height = parser.getIntValue()
+                            } else if ("url".equals(parser.getCurrentName())) {
+                              parser.nextToken()
+                              url = parser.getValueAsString("")
+                              foundPage = true
+                            } else if ("descriptionurl".equals(parser.getCurrentName())) {
+                              parser.nextToken()
+                              descriptionurl = parser.getValueAsString("")
+                            } else if ("extmetadata".equals(parser.getCurrentName())) {
+
+                              parser.nextToken()   // {
+                              while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+                                // println("page imageinfo extmetadata token: " + parser.getCurrentName() + " " + parser.getValueAsString(""))
+                                if ("Artist".equals(parser.getCurrentName())) {
+                                  parser.nextToken()
+                                  artist = impureGetSingle(parser, "value")
+                                } else if ("LicenseShortName".equals(parser.getCurrentName())) {
+                                  parser.nextToken()
+                                  license = impureGetSingle(parser, "value")
+                                } else if ("AttributionRequired".equals(parser.getCurrentName())) {
+                                  parser.nextToken()
+                                  attribution = impureGetSingle(parser, "value", "true").toBoolean
+                                } else if ("Copyrighted".equals(parser.getCurrentName())) {
+                                  parser.nextToken()
+                                  copyrighted = impureGetSingle(parser, "value", "true").toBoolean
+                                } else if ("Restrictions".equals(parser.getCurrentName())) {
+                                  parser.nextToken()
+                                  restrictions = impureGetSingle(parser, "value")
+                                } else {
+                                  parser.skipChildren()
+                                }
+                              }
+                            } else {
+                              parser.skipChildren()
+                            }
+                          }
+                        } else {
+                          parser.skipChildren()
+                        }
+                      }
+                    } else {
+                      parser.skipChildren()
+                    }
+                  }
+                } else {
+                  parser.skipChildren()
+                }
+              }
+            } else {
+              parser.skipChildren()
+            }
+          }
+        } else {
+          parser.skipChildren()  // skip potential subobjects
+        }
       }
 
-    } yield result
+    } catch {
+      case _: Throwable => // do nothing
+    }
 
+    if (foundPage) {
+      Some(WikimediaMeta(
+        title, width, height, url, descriptionurl,
+        artist, license, attribution, copyrighted, restrictions))
+    } else {
+      None
+    }
   }
 
 
-  // helper function - parse a page
-  private def parsePage(page: JField): WikimediaMeta = {
-
-    def extractStr(jval: JValue, default: String = ""): String = jval match {
-      case JString(x) => x
-      case _ => default
+  // parser is pointing to JsonToken.START_OBJECT
+  private def impureGetSingle(parser: JsonParser, key: String, default: String = ""): String = {
+    var v = default
+    while(!parser.isClosed && parser.nextToken() != JsonToken.END_OBJECT) {
+      if (key.equals(parser.getCurrentName())) {
+        parser.nextToken()
+        v = parser.getValueAsString("")
+      } else {
+        parser.skipChildren()  // skip potential subobjects
+      }
     }
-
-    def extractInt(jval: JValue, default: Int = 0): Int = jval match {
-      case JInt(x) => x.toInt
-      case _ => default
-    }
-
-    val imageinfo = page \ "imageinfo"
-    val extmeta = imageinfo \ "extmetadata"
-    def metaValue(key: String): JValue = {
-      extmeta \ key \ "value"
-    }
-
-    WikimediaMeta(
-      title = extractStr(page \ "title"),
-      width = extractInt(imageinfo \ "width").toInt,
-      height = extractInt(imageinfo \ "height").toInt,
-      url = extractStr(imageinfo \ "url"),
-      descriptionurl = extractStr(imageinfo \ "descriptionurl"),
-
-      artist = extractStr(metaValue("Artist")),
-      license = extractStr(metaValue("LicenseShortName")),
-      attribution = extractStr(metaValue("AttributionRequired"), "true").toBoolean,
-      copyrighted = extractStr(metaValue("Copyrighted"), "true").toBoolean,
-      restrictions = extractStr(metaValue("Restrictions"))
-    )
+    v
   }
 
 

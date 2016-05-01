@@ -31,8 +31,8 @@ lazy val root = (project in file("."))
       "org.yaml"           % "snakeyaml"                 % "1.14",
       "com.google.apis"    % "google-api-services-drive" % "v2-rev167-1.20.0",
       "org.scala-lang"     % "scala-swing"               % "2.10+",
-      "org.scalatest"     %% "scalatest"                 % "2.2.4" % "it,test",
-      "net.liftweb"       %% "lift-json"                 % "2.6"
+      "com.fasterxml.jackson.core" % "jackson-core"      % "2.1.3",
+      "org.scalatest"     %% "scalatest"                 % "2.2.4" % "it,test"
     ))
   .configs(IntegrationTest)
   .settings(Defaults.itSettings: _*)

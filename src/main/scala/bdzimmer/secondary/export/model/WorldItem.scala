@@ -32,10 +32,7 @@ import bdzimmer.pixeleditor.model.AssetMetadata
 
 // convert null strings to empty
 object NonNullString {
-  def apply(s: String): String = s match {
-    case null => ""
-    case _    => s
-  }
+  def apply(s: String): String = if (s == null) "" else s
 }
 
 
@@ -91,7 +88,8 @@ class CollectionItemBean extends WorldItemBean {
    def getVal(): CollectionItem = CollectionItem (
        id, name, description, notes,
        srcyml, remoteid,
-       pst.getAllTags(notes))(children.asScala.map(_.getVal).toList)
+       pst.getAllTags(notes),
+       children.asScala.map(_.getVal).toList)
 }
 
 class ThingItemBean extends WorldItemBean {
@@ -187,8 +185,8 @@ trait TileRefItem extends RefItem {
 
 case class CollectionItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag])
-    (val children: List[WorldItem]) extends WorldItem
+    srcyml: String, remoteid: String, tags: List[SecTag],
+    val children: List[WorldItem]) extends WorldItem
 
 case class ThingItem(
     id: String, name: String, description: String, notes: String,
