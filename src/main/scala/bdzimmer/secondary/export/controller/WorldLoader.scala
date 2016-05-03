@@ -180,7 +180,7 @@ private object WorldLoaderFlat {
       // load the world from sec files
       worldList <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename))
       world <- wire(worldList)                     // wire up using paths attributes and harden
-      result <- WorldLoader.validate(world.getVal) // harden and validate
+      result <- WorldLoader.validate(world.getVal) // validate
     } yield {
       result
     }
@@ -196,29 +196,25 @@ private object WorldLoaderFlat {
 
     for {
       inputFile <- Result.fromFilename(inputDir / filename)
-      items <- parseFile(inputFile, fileStatus)
+      items     <- parseFile(inputFile, fileStatus)
 
-      // items that aren't YamlIncludeBeans
-      realItems = items.filter(!_.isInstanceOf[YamlIncludeBean])
-      includeItems = items.collect({case x: YamlIncludeBean => x})
-
-      // load includes
-      includeLoads = includeItems.map(x => if (loadedFiles.contains(x.filename)) {
-        Fail(s"""***\n"${filename}" contains circular reference to file "${x.filename}"\n***""")
-      } else {
-        loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
+      resultItems = items.map(item => item match {
+        case x: YamlIncludeBean => if (loadedFiles.contains(x.filename)) {
+          Fail(s"""'${filename}' contains circular reference to file '${x.filename}'""")
+        } else {
+          loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
+        }
+        case _                  => Pass(List(item))
       })
 
       // gather error messages
-      parseErrors = includeLoads.collect({case Fail(x) => x})
-      // get the sucessfully loaded items
-      includePasses = includeLoads.collect({case Pass(x) => x}).toList.flatten
+      parseFails = resultItems.collect({case Fail(x) => x})
 
       // if any errors, yield an error
-      result <- if (parseErrors.length > 0) {
-        Fail(parseErrors.mkString("\n"))
+      result <- if (parseFails.length > 0) {
+        Fail(parseFails.mkString("\n"))
       } else {
-        Pass(realItems ++ includePasses)
+        Pass(resultItems.collect({case Pass(x) => x}).flatten)
       }
 
     } yield {
@@ -266,7 +262,7 @@ private object WorldLoaderFlat {
 
           // create a new item based on this line
           item = WorldLoaderFlat.itemBeanFactory(trimmed)
-          item.srcyml = inputFile.getName
+          item.srcyml   = inputFile.getName
           item.remoteid = fileStatus.get(inputFile.getName).map(_._1).getOrElse("")
           state = inHeader
 
@@ -275,7 +271,7 @@ private object WorldLoaderFlat {
         } else if (state == inHeader) {
           // set properties of the item
           setProperty(item, trimmed).map(x => {
-            throw(new Exception(lineCount + ": " + line + "\n" + x))
+            throw(new Exception(inputFile.getName + " " + lineCount + ": '" + line + "'\n\t" + x))
           })
         } else if (state == inNotes) {
           notes += trimmed
@@ -364,7 +360,7 @@ private object WorldLoaderFlat {
 
       val errors = worldList.filter(!_.path.equals("")).map(x => {
 
-        // for now, the path property is the id of the parent
+        // for now, the path property is the id or name of the parent
         worldMap.get(x.path) match {
           case Some(coll: CollectionItemBean) => {
             coll.children.add(x)
