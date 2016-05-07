@@ -29,21 +29,21 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   val imagesLocation = location / ExportImages.ImagesDir
   new File(imagesLocation).mkdir
 
-  val metaItems = WorldItem.filterList[RefItem](world)
-
+  // TODO: rename metaItems to refItems
+  val metaItems = world.collect({case x: RefItem => x})
 
   def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
 
     // export tileset / spritesheet and map images
 
     // for maps, tilesets, and spritesheets, filename is a datafile that gets converted
-    // to images of various scales which are saved as standard image files. These
-    // scaled standard image files become the outputs.
+    // to images of various scales which are saved as standard image files, probably PNG.
+    // These scaled standard image files become the outputs.
 
-    val mapImageOutputs = (WorldItem.filterList[MapItem](items)
+    val mapImageOutputs = (items.collect({case x: MapItem => x})
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 
-    val tileImageOutputs = (WorldItem.filterList[TileRefItem](items)
+    val tileImageOutputs = (items.collect({case x: TileRefItem => x})
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 
     // // export individual tile images
@@ -57,7 +57,8 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     // In the case of ImageItems, the filename is already an image. It either exists
     // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
     // prefix.
-    val imageOutputs = (WorldItem.filterList[ImageItem](items).map(x => prepareImageItemOutputs(x, contentDir)))
+    val imageOutputs = (items.collect({case x: ImageItem => x})
+        map(x => prepareImageItemOutputs(x, contentDir)))
 
     // we can't just call toMap on all of these lists and then merge them, because
     // the lists may contain duplicate keys themselves.
@@ -82,6 +83,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     val absoluteName = location / relativeName
     val dstFile = new File(absoluteName)
 
+    // todo: change to if / else
     val (resultSrc, resultDst) = imageItem.filename.startsWith("wikimedia:") match {
 
       case false => {
@@ -103,8 +105,8 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
       case true => {
         // wikimedia file - download to images folder
-        // source is scrcyml!
-        val srcFilename = imageItem.srcyml
+        // source is scrcfilename!
+        val srcFilename = imageItem.srcfilename
 
         // only download if it doesn't already exist in the scratch location
         if (!dstFile.exists) {
@@ -122,6 +124,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
       }
     }
 
+    // todo: change to foreach
     resultDst.map(filename => {
       // downsize image (in place) if necessary
       ImageDownloader.downsizeImage(location / filename, location / filename, ext)

@@ -23,12 +23,9 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.ClassTag
 
-import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.TypeDescription
-import org.yaml.snakeyaml.nodes.Tag
-
 import bdzimmer.secondary.export.model.{ParseSecTags => pst}
 import bdzimmer.pixeleditor.model.AssetMetadata
+
 
 // convert null strings to empty
 object NonNullString {
@@ -64,7 +61,7 @@ trait WorldItemBean {
   def setPath(path: String): Unit = {this.path = NonNullString(path)}
 
 
-  var srcyml: String = ""
+  var srcfilename: String = ""
   var remoteid: String = ""
 
   // function to get immutable version
@@ -87,7 +84,7 @@ class CollectionItemBean extends WorldItemBean {
 
    def getVal(): CollectionItem = CollectionItem (
        id, name, description, notes,
-       srcyml, remoteid,
+       srcfilename, remoteid,
        pst.getAllTags(notes),
        children.asScala.map(_.getVal).toList)
 }
@@ -95,19 +92,19 @@ class CollectionItemBean extends WorldItemBean {
 class ThingItemBean extends WorldItemBean {
   def getVal(): ThingItem = ThingItem(
       id, name, description, notes,
-      srcyml, remoteid, pst.getAllTags(notes))
+      srcfilename, remoteid, pst.getAllTags(notes))
 }
 
 class PlaceItemBean extends WorldItemBean {
   def getVal(): PlaceItem = PlaceItem(
       id, name, description, notes,
-      srcyml, remoteid, pst.getAllTags(notes))
+      srcfilename, remoteid, pst.getAllTags(notes))
 }
 
 class ImageItemBean extends RefItemBean {
   def getVal(): ImageItem = ImageItem(
       id, name, description, notes,
-      srcyml, remoteid,
+      srcfilename, remoteid,
       pst.getAllTags(notes),
       filename)
 }
@@ -121,7 +118,7 @@ class CharacterItemBean extends WorldItemBean {
     CharacterItem(
       id, cleanedName, nameParts,
       description, notes,
-      srcyml, remoteid,
+      srcfilename, remoteid,
       pst.getAllTags(notes))
   }
 
@@ -132,7 +129,7 @@ class CharacterItemBean extends WorldItemBean {
 class TilesetItemBean extends TileRefItemBean {
   def getVal(): TilesetItem = TilesetItem(
       id, name, description, notes,
-      srcyml, remoteid,
+      srcfilename, remoteid,
       pst.getAllTags(notes),
       filename, tiletype)
 }
@@ -140,7 +137,7 @@ class TilesetItemBean extends TileRefItemBean {
 class SpritesheetItemBean extends TileRefItemBean {
   def getVal(): SpritesheetItem = SpritesheetItem(
       id, name, description, notes,
-      srcyml, remoteid,
+      srcfilename, remoteid,
       pst.getAllTags(notes),
       filename, tiletype)
 }
@@ -148,17 +145,17 @@ class SpritesheetItemBean extends TileRefItemBean {
 class MapItemBean extends RefItemBean {
   def getVal(): MapItem = MapItem(
       id, name, description, notes,
-      srcyml, remoteid,
+      srcfilename, remoteid,
       pst.getAllTags(notes),
       filename)
 }
 
-// reference to another YML file
+// reference to another source file
 // as far as I know, the getVal function here will never be called.
-class YamlIncludeBean extends RefItemBean {
+class SrcIncludeBean extends RefItemBean {
   def getVal(): ThingItem = ThingItem(
       id, name, description, notes,
-      srcyml, remoteid, pst.getAllTags(notes))
+      srcfilename, remoteid, pst.getAllTags(notes))
 }
 
 // immutable versions ///////////////////////////////////////////////////////////////////
@@ -170,7 +167,7 @@ trait WorldItem {
     val name: String
     val description: String
     val notes: String
-    val srcyml: String
+    val srcfilename: String
     val remoteid: String
     val tags: List[SecTag]
 }
@@ -185,43 +182,43 @@ trait TileRefItem extends RefItem {
 
 case class CollectionItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
+    srcfilename: String, remoteid: String, tags: List[SecTag],
     val children: List[WorldItem]) extends WorldItem
 
 case class ThingItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
+    srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
 // for now, PlaceItem has no fields that distinguish it from ThingItem
 case class PlaceItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
+    srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
 case class ImageItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
+    srcfilename: String, remoteid: String, tags: List[SecTag],
     filename: String) extends RefItem
 
 case class CharacterItem(
     id: String, name: String, nameParts: Option[List[String]],
     description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag]) extends WorldItem
+    srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
 /// items for pixel art content ///
 
 case class TilesetItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
+    srcfilename: String, remoteid: String, tags: List[SecTag],
     filename: String, tiletype: String) extends TileRefItem
 
 case class SpritesheetItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
+    srcfilename: String, remoteid: String, tags: List[SecTag],
     filename: String, tiletype: String) extends TileRefItem
 
 case class MapItem(
     id: String, name: String, description: String, notes: String,
-    srcyml: String, remoteid: String, tags: List[SecTag],
+    srcfilename: String, remoteid: String, tags: List[SecTag],
     filename: String) extends RefItem
 
 
@@ -229,26 +226,6 @@ case class MapItem(
 
 
 object WorldItem {
-
-  // YAML constructor with descriptions for the various types
-  val Constructor = new Constructor(classOf[CollectionItemBean])
-
-  val TypeDescriptions = List(
-      new TypeDescription(classOf[CollectionItemBean],  new Tag("!collection")),
-      new TypeDescription(classOf[ThingItemBean],       new Tag("!thing")),
-      new TypeDescription(classOf[ThingItemBean],       new Tag("!item")),
-      new TypeDescription(classOf[PlaceItemBean],       new Tag("!place")),
-      new TypeDescription(classOf[PlaceItemBean],       new Tag("!location")),
-      new TypeDescription(classOf[ImageItemBean],       new Tag("!image")),
-      new TypeDescription(classOf[CharacterItemBean],   new Tag("!character")),
-      new TypeDescription(classOf[CharacterItemBean],   new Tag("!person")),
-      new TypeDescription(classOf[TilesetItemBean],     new Tag("!tileset")),
-      new TypeDescription(classOf[SpritesheetItemBean], new Tag("!spritesheet")),
-      new TypeDescription(classOf[MapItemBean],         new Tag("!map")),
-      new TypeDescription(classOf[YamlIncludeBean],     new Tag("!include")))
-
-  TypeDescriptions.foreach(td => Constructor.addTypeDescription(td))
-
 
   /**
    * Filter a list of WorldItems by type.
@@ -258,12 +235,13 @@ object WorldItem {
    * @return a list of the WorldItems of type A in the list
    *
    */
+  /*
   def filterList[A <: WorldItem : ClassTag](items: List[WorldItem]): List[A] = items.headOption match {
     case Some(x: A) => x :: filterList[A](items.tail)
     case Some(_)    =>      filterList[A](items.tail)
     case None       => Nil
   }
-
+	*/
 
   // create a list of all world items in a hierarchy
   def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {

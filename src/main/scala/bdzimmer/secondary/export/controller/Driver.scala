@@ -170,13 +170,13 @@ class Driver {
   private def editItem(item: WorldItem): Unit = projConf.mode match {
     case "drive" => Desktop.getDesktop.browse(new URI(ExportPages.notepadURL(item)))
     case _ => {
-      val srcYml = new File(projConf.localContentPath / item.srcyml)
+      val srcFile = new File(projConf.localContentPath / item.srcfilename)
       val idMatcher =  s"\\s*id:\\s*${item.id}"
-      val lineNumber = FileUtils.readLines(srcYml).asScala.zipWithIndex.find(x => {
+      val lineNumber = FileUtils.readLines(srcFile).asScala.zipWithIndex.find(x => {
         x._1.matches(idMatcher)
       }).fold(1)(_._2)
-      // Desktop.getDesktop.open(srcYml)
-      val nppCommand = s"""notepad++ "${srcYml.getPath}" -n${lineNumber}"""
+      // Desktop.getDesktop.open(srcFile)
+      val nppCommand = s"""notepad++ "${srcFile.getPath}" -n${lineNumber}"""
       Try(nppCommand.!!)
     }
   }
@@ -203,7 +203,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.04.09"
+  val Title = "Secondary - create worlds from text - v2016.05.06"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

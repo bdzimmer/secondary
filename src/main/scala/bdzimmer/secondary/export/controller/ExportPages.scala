@@ -38,7 +38,8 @@ class ExportPages(
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
-  val metaItems = WorldItem.filterList[RefItem](world)
+  // TODO: rename metaItems to refItems
+  val metaItems = world.collect({case x: RefItem => x})
 
   // map of ids and names of items to the actual item object
   val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
@@ -52,7 +53,7 @@ class ExportPages(
 
   // only the characters - used by RenderSecTags for FamilyTrees
   // and eventually other character-specific tags
-  val characters = WorldItem.filterList[CharacterItem](world)
+  val characters = world.collect({case x: CharacterItem => x})
 
   val np = new RenderSecTags(itemByString, characters)
 
@@ -515,7 +516,7 @@ object ExportPages {
     link("""<small><span class="glyphicon glyphicon-pencil"></span></small>""", notepadURL(item))
   }
 
-  // get the URL of the YAML source on Drive
+  // get the URL of a source file on Drive
   def notepadURL(item: WorldItem): String = {
     "https://drivenotepad.appspot.com/app?state=%7B%22ids%22:%5B%22" + item.remoteid + "%22%5D,%22action%22:%22open%22%7D"
   }

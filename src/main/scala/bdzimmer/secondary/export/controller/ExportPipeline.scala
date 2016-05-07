@@ -39,7 +39,7 @@ class ExportPipeline(projConf: ProjectConfig)  {
 
   def downloadRefs(world: List[WorldItem]): (FileMap, FileMap) = {
     val oldRefStatus = WorldLoader.loadOrEmptyModifiedMap(refStatusFile)
-    val refStatusChanges = localFileStatusChanges(world, oldRefStatus, projConf)
+    val refStatusChanges = localReferencedFileStatusChanges(world, oldRefStatus, projConf)
     val newRefStatus = WorldLoader.mergeFileMaps(oldRefStatus, refStatusChanges)
     (newRefStatus, refStatusChanges)
   }
@@ -61,9 +61,9 @@ class ExportPipeline(projConf: ProjectConfig)  {
         // only export the things that have changed
         if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
 
-          // val pagesToExport = world.filter(x => metaStatusChanges.keySet.contains(x.srcyml)) // old behavior
+          // val pagesToExport = world.filter(x => metaStatusChanges.keySet.contains(x.srcfilename)) // old behavior
           val pagesToExport = world.filter(x => itemStatusChanges.keySet.contains(x.id))
-          val filesToExport = WorldItem.filterList[RefItem](world).filter(x => refStatusChanges.keySet.contains(x.filename))
+          val filesToExport = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
 
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
                pagesToExport, filesToExport, master, world, images = true, projConf)
@@ -84,14 +84,14 @@ class ExportPipeline(projConf: ProjectConfig)  {
       oldMetaStatus: FileMap,
       projConf: ProjectConfig): FileMap = {
 
-    val ymlFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(x => {
-      x.endsWith(".yml") || x.endsWith(".sec")
+    val srcFiles = projConf.localContentPathFile.listFiles.toList.map(_.getName).filter(x => {
+      x.endsWith(".sec")
     })
 
-    ExportPipeline.localFileUpdates(ymlFiles, oldMetaStatus, projConf.localContentPath)
+    ExportPipeline.localFileUpdates(srcFiles, oldMetaStatus, projConf.localContentPath)
   }
 
-  private def localFileStatusChanges(
+  private def localReferencedFileStatusChanges(
       world: List[WorldItem],
       oldFileStatus: FileMap,
       projConf: ProjectConfig): FileMap = {
@@ -102,7 +102,7 @@ class ExportPipeline(projConf: ProjectConfig)  {
 
   private def loadItemStatus(world: List[WorldItem]): (ItemMap, ItemMap) = {
     val oldItemStatus = WorldLoader.loadOrEmptyItemMap(itemStatusFile)
-    val newItemStatus = world.map(x => (x.id, (x.srcyml, x.hashCode))).toMap
+    val newItemStatus = world.map(x => (x.id, (x.srcfilename, x.hashCode))).toMap
     val changes = newItemStatus.filter({case (k, v) => oldItemStatus.get(k) match {
       case Some(x) => v._2 != x._2
       case None    => true
@@ -159,18 +159,15 @@ object ExportPipeline {
     val imagesToExport = if (images) {
 
       // the images to export are:
-      // 1) the metaitems in the whole collection whose files were refreshed (refsToExport)
-      // 2) the characteritems in refreshed metadata (need to get new images in case their images changed)
-      // 3) the imageitems in refreshed metadata that reference wikimedia instead of local files
+      // 1) the refitems in the whole collection whose referenced files were updated (refsToExport)
+      // 2) the imageitems whose metadata changed
 
-      val charsToExport = WorldItem.filterList[CharacterItem](pagesToExport)
-      val imagesToExport = WorldItem.filterList[ImageItem](pagesToExport)
+      val imagesToExport = pagesToExport.collect({case x: ImageItem => x})
 
       logList("refs to export",  refsToExport.map(_.id))
-      logList("chars to export", charsToExport.map(_.id))
       logList("image to export", imagesToExport.map(_.id))
 
-      refsToExport ++ charsToExport ++ imagesToExport
+      refsToExport ++ imagesToExport
 
     } else {
       List()
@@ -263,8 +260,8 @@ object ExportPipeline {
   // get all of the local image files referenced by a world
   def getReferencedImages(world: List[WorldItem]): List[String] = {
     // find a unique list of the files pointed to by meta items.
-    val uniqueFiles = WorldItem.filterList[RefItem](world).map(_.filename).distinct
-    // some of these files are not actual files, but links to remote data.
+    val uniqueFiles = world.collect({case x: RefItem => x}).map(_.filename).distinct
+    // some of these files are not actual local files, but links to remote data.
     // so filter those out
     uniqueFiles.filter(x => !x.startsWith("wikimedia:"))
   }

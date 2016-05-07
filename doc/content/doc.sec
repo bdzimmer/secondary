@@ -1,0 +1,349 @@
+# Copyright (c) 2016 Ben Zimmer. All rights reserved.
+
+!collection
+id: documentation
+name: Documentation
+path: master
+
+!item
+id: layout
+name: Project Layout
+path: Documentation
+
+{{TODO: project layout content}}
+
+!item
+id: items
+name: Items
+path: Documentation
+
+{{TODO: items content}}
+
+!collection
+id: tags
+name: Tags
+path: Documentation
+
+### Overview
+***
+
+A key feature of Secondary is a special set of tags that you can use in the notes of any item. Some of these function like tags in wiki markup, while others have purposes that are more specific to worldbuilding. Tags take the following form:
+
+`{{demo: tag_name | value | arg1=value1 | arg2=value2 | arg3=value3 ...}}`
+
+For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Task Tags}}, `value` is usually a sentence or two of descriptive text, and for {{link: tags | Event Tags}}, `value` is a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
+
+<br />
+
+
+### Item Tags
+***
+
+Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
+
+***
+
+#### familytree
+
+Insert the family tree of a character and their descendants.
+
+**Usage**
+
+`{{demo: familytree | character}}`
+
+* **character**: name or id of character item
+
+Family relationships are established by using any of the following item tags in the notes of characters:
+
+* **father**, **mother**, **parent**
+* **son**, **daughter**, **child**
+* **ancestor**
+* **descendant**
+* **marriage**
+
+For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
+
+**birth** and **death** tags in a character's notes will add lifespan dates to their entry in the family tree. See {{link: tags | Event Tags}} below for more about these tags.
+
+**Examples**
+
+`{{demo: familytree | Lady Catherine de Bourgh}}`
+
+{{familytree: Lady Catherine de Bourgh}}
+
+See {{link: Genealogy Examples}} for further details.
+
+***
+
+#### image
+
+{{image: image_red_riding_hood}}
+
+Insert an image.
+
+**Usage**
+
+`{{demo: image | item | link=true}}`
+
+* **item**: name or id of image item
+* **link**: should the image link link back to its page?
+
+The image will be right aligned with a maximum width of 320px.
+
+**Example**
+
+`{{demo: image | image_red_riding_hood}}`
+
+***
+
+#### image-responsive
+
+Insert a responsive image that fills the width of the page.
+
+`{{demo: image-responsive | item}}`
+
+See {{link: Tags | image}} for more details.
+
+***
+
+#### jumbotron
+
+Set the background image, image position, and text color of the article jumbotron.
+
+**Usage**
+
+`{{demo: jumbotron | image | xpos=0% | ypos=50% | color=black}}`
+
+* **image**: name or id of image item
+* **xpos**: image x-position, in percentage (%) or pixels (px)
+* **ypos**: image y-position, in percentage or pixels
+* **color**: text color
+
+**Examples**
+
+`{{demo: jumbotron | image_alice | ypos=50%}}`
+
+{{jumbotron: image_alice | ypos=50%}}
+
+See jumbotron at top of page.
+
+***
+
+#### link
+
+Create a link to an item.
+
+**Usage**
+
+`{{demo: link | item | anchor}}`
+
+* **item**: name or id of item
+* **anchor** (optional): name of anchor within item's notes; anchors are automatically generated for headings
+
+Because link is the most often used tag, `link:` is optional if it is being used without an anchor argument.
+
+**Examples**
+
+`{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
+
+`{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
+
+***
+
+#### timeline
+
+Insert a timeline of all events in a hierarchy of items.
+
+**Usage**
+
+`{{demo: timeline | item | format=monthDayParagraph}}`
+
+* **item**: name or id of an item; events will be gathered from the item and all items underneath it in the hierarchy.
+* **format**: one of several formatting options:
+    * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
+    * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
+    * **yearTable**: create a single table. The first cell in the row contains a year, and the second cell contains a paragraph of the events of that year. Best for events with the greatest spacing.
+
+Events are described using {{link: tags | Event Tags}}.
+
+**Example**
+
+This timeline tag gathers event tags from the examples in the next section.
+
+`{{demo: timeline | tags | format=monthDayParagraph}}`
+
+{{timeline: tags | format=monthDayParagraph}}
+
+<br />
+
+### Event Tags
+***
+
+Event tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
+
+* June 1, 1940
+* June 1940
+* 1940
+
+The parts of the date must be separated by at least one comma or a whitespace character, with additional whitespace allowed.
+
+***
+
+#### birth / death
+
+Describe the birth or death of a character.
+
+**Usage**
+
+`{{demo: birth | date | description}}`
+
+`{{demo: death | date | description}}`
+
+* **date**: date of birth or death of the character whose notes this tag appears in
+* **description**: description of the event
+
+Birth and death tags may be added to any page, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
+
+**Example**
+
+`{{demo: death | November 23, 1926 | Angell dies after "a careless push" from a sailor.}}`
+
+{{death: November 23, 1926 | Angell dies after "a careless push" from a sailor.}}
+
+***
+
+#### event
+
+Describe an event.
+
+**Usage**
+
+`{{demo: event | date | description}}`
+
+* **date**: date of the event
+* **description**: description of the event
+
+**Examples**
+
+`{{demo: event |  March 23, 1925 | *Alert*--manned by the crew of *Emma*--arrives at R'lyeh.}}`
+
+{{event: March 23, 1925 | *Alert*--manned by the crew of *Emma*--arrives at R'lyeh.}}
+
+`{{demo: event |  April 12, 1925 | *Vigilant* rescues *Alert*.}}`
+
+{{event: April 12, 1925 | *Vigilant* rescues *Alert*.}}
+
+<br />
+
+### Task Tags
+***
+
+Task tags describe thoughts and work items in various stages of completion. Tasks are gathered from the entire world hierarchy into tables and outlines on the Tasks page of the generated site.
+
+***
+
+#### thought / todo / started / done
+
+Describe a task.
+
+**Usage**
+
+`{{demo: task_type | description | log=None | start=None | done=None}}`
+
+* **task_type**: thought, todo, started, or done
+* **description**: description of the task
+* **log**: date that the task was first recorded
+* **start**: planned or actual start date
+* **done**: planned or actual finish date
+
+Currently, dates are simple strings and are not parsed further. For meaningful sorting, use numerical year-month-day dates with consistent numbers of digits.
+
+**Examples**
+
+`{{demo: todo | Add additional example events | log=2016-03-09 | start=2016-03-10}}`
+
+{{todo: Add additional example events | log=2016-03-09 | start=2016-03-10}}
+
+`{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}`
+
+{{done: Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}
+
+
+!collection
+id: genealogy
+name: Genealogy Examples
+path: Tags
+
+See the child pages for explanations of the tags used to establish the relationships in the family tree.
+
+`{{demo: familytree | Anonymous Earl}}`
+
+{{familytree: Anonymous Earl}}
+
+!character
+id: earl
+name: Anonymous Earl
+path: genealogy
+
+!character
+id: lady_catherine
+name: Lady Catherine | de Bourgh
+path: genealogy
+
+`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+
+!character
+id: sir_lewis
+name: Sir Lewis | de Bourgh
+path: genealogy
+
+`{{demo: marriage | Lady Catherine de Bourgh}}` &rarr; {{marriage: Lady Catherine de Bourgh}}
+
+!character
+id: anne_debourgh
+name: Anne | de Bourgh
+path: genealogy
+
+`{{demo: father | Sir Lewis de Bourgh}}` &rarr; {{father: Sir Lewis de Bourgh}}
+`{{demo: mother | Lady Catherine de Bourgh}}` &rarr; {{mother: Lady Catherine de Bourgh}}
+
+!character
+id: anne_darcy
+name: Lady Anne | Darcy
+path: genealogy
+
+`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+`{{demo: marriage | Mr. Darcy}}` &rarr; {{marriage: Mr. Darcy}}
+
+!character
+id: mr_darcy
+name: Mr. | Darcy
+
+!character
+id: georgiana
+name: Georgiana | Darcy
+path: genealogy
+
+`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
+`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+
+!character
+id: fitzwilliam_darcy
+name: Fitzwilliam | Darcy
+path: genealogy
+
+`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
+`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+`{{demo: marriage | Elizabeth Bennet}}` &rarr; {{marriage: Elizabeth Bennet}}
+
+!character
+id: elizabeth
+name: Elizabeth | Bennet
+path: genealogy
+
+!item
+id: faq
+name: Frequently Asked Questions
+path: Documentation
+
+{{TODO: faq content}}

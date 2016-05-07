@@ -1,0 +1,19 @@
+# Copyright (c) 2016 Ben Zimmer. All rights reserved.
+
+!collection
+id: images
+name: Images
+description: Images used in documentation.
+path: master
+
+!image
+id: image_red_riding_hood
+name: Red Riding Hood - Rackham
+filename: wikimedia:Arthur_Rackham_Little_Red_Riding_Hood%2B.jpg
+path: Images
+
+!image
+id: image_alice
+name: Alice in Wonderland - Rackham
+filename: wikimedia:Alice_in_Wonderland_by_Arthur_Rackham_-_04_-_Why_Mary_Ann,_what_are_you_doing_out_here%3F.jpg
+path: Images

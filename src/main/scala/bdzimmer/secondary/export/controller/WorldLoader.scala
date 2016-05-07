@@ -20,151 +20,11 @@ import scala.util.{Try, Success, Failure}
 
 import com.google.api.client.util.DateTime
 import org.apache.commons.io.FileUtils
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
 
 import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.export.model._
-
-
-private object WorldLoaderYML {
-
-
-  def loadWorld(
-      inputDir: String,
-      masterName: String,
-      fileStatus: FileMap): Result[String, CollectionItem] = {
-
-    val masterFilename = masterName + ".yml"
-
-    for {
-      // load the world from YAML files and validate
-      world <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename))
-      result <- WorldLoader.validate(world.getVal)
-    } yield {
-      result
-    }
-  }
-
-
-  def loadFile(
-      filename: String,
-      inputDir: String,
-      fileStatus: FileMap,
-      loadedFiles: List[String]): Result[String, CollectionItemBean] = {
-
-    val bean = for {
-      inputFile <- Result.fromFilename(inputDir / filename)
-      yamlString <- Result(FileUtils.readFileToString(inputFile, "UTF-8"))
-      result <- Result(loadCollection(yamlString)).mapLeft(WorldLoader.logParseError(filename, _))
-    } yield {
-      result
-    }
-
-    // set srcyml before getting new children
-    bean.foreach(assignSrcYml(_, filename, fileStatus))
-
-    for {
-      coll <- bean
-      newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
-    } yield {
-      setChildren(coll, newChildren)
-    }
-  }
-
-
-  def getNewChildren(
-      bean: CollectionItemBean,
-      inputDir: String,
-      fileStatus: FileMap,
-      loadedFiles: List[String]): Result[String, List[WorldItemBean]] = {
-
-    val newChildrenLoads = bean.children.asScala.map(child => {
-        child match {
-          case x: YamlIncludeBean => if (loadedFiles.contains(x.filename)) {
-            Fail(s"""***\nitem "${bean.id}" contains circular reference to file "${x.filename}"\n***""")
-          } else {
-            if (x.filename.endsWith(".yml")) {
-              loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
-            } else {
-              for {
-                collList <- WorldLoaderFlat.loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
-                coll <- WorldLoaderFlat.wire(collList)
-              } yield {
-                coll
-              }
-            }
-          }
-          case coll: CollectionItemBean => for {
-            newChildren <- getNewChildren(coll, inputDir, fileStatus, loadedFiles)
-          } yield {
-            setChildren(coll, newChildren)
-          }
-
-          case _ => Pass(child)
-        }
-    })
-
-    // gather error messages from children into a list
-    val parseErrors = newChildrenLoads.collect({case Fail(x) => x})
-
-    // get the child items that loaded into a list
-    val newChildren = newChildrenLoads.collect({case Pass(x) => x}).toList
-
-    val result: Result[String, List[WorldItemBean]] = if (parseErrors.length > 0) {
-      Fail(parseErrors.mkString("\n"))
-    } else {
-      Pass(newChildren)
-    }
-
-    result
-
-  }
-
-
-  // impure
-  // reassign the children of a collection with the result of getNewChildren
-  def setChildren(
-      coll: CollectionItemBean,
-      newChildren: List[WorldItemBean]): CollectionItemBean = {
-
-    coll.children = new java.util.LinkedList
-    coll.children.addAll(newChildren.asJava)
-    coll
-
-  }
-
-
-  // Load a collection of WorldItems from a YAML document.
-  def loadCollection(yamlString: String): CollectionItemBean = {
-    val yaml = new Yaml(WorldItem.Constructor)
-    val collectionBean = yaml.load(yamlString).asInstanceOf[CollectionItemBean]
-    collectionBean
-  }
-
-
-  // fix the srcyml / remote id for a collection
-  // 2016-01-04: also fix null children (arises when YAML contains an empty children field)
-  def assignSrcYml(wi: WorldItemBean, srcyml: String, fileStatus: FileMap): Unit =  wi match {
-    case x: CollectionItemBean => {
-      x.srcyml = srcyml
-      x.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
-      if (x.children == null) {
-        x.children = new java.util.LinkedList[WorldItemBean]();
-      }
-      x.children.asScala.toList.map(y => assignSrcYml(y, srcyml, fileStatus))
-    }
-    case _ => {
-      wi.srcyml = srcyml
-      wi.remoteid = fileStatus.get(srcyml).map(_._1).getOrElse("")
-    }
-  }
-
-
-}
-
 
 
 private object WorldLoaderFlat {
@@ -199,7 +59,7 @@ private object WorldLoaderFlat {
       items     <- parseFile(inputFile, fileStatus)
 
       resultItems = items.map(item => item match {
-        case x: YamlIncludeBean => if (loadedFiles.contains(x.filename)) {
+        case x: SrcIncludeBean => if (loadedFiles.contains(x.filename)) {
           Fail(s"""'${filename}' contains circular reference to file '${x.filename}'""")
         } else {
           loadFile(x.filename, inputDir, fileStatus, x.filename +: loadedFiles)
@@ -262,7 +122,7 @@ private object WorldLoaderFlat {
 
           // create a new item based on this line
           item = WorldLoaderFlat.itemBeanFactory(trimmed)
-          item.srcyml   = inputFile.getName
+          item.srcfilename = inputFile.getName
           item.remoteid = fileStatus.get(inputFile.getName).map(_._1).getOrElse("")
           state = inHeader
 
@@ -307,7 +167,7 @@ private object WorldLoaderFlat {
     case "!tileset"     => new TilesetItemBean()
     case "!spritesheet" => new SpritesheetItemBean()
     case "!map"         => new MapItemBean()
-    case "!include"     => new YamlIncludeBean()
+    case "!include"     => new SrcIncludeBean()
     case _              => new ThingItemBean()
   }
 
@@ -366,8 +226,8 @@ private object WorldLoaderFlat {
             coll.children.add(x)
             Pass(x)
           }
-          case Some(_) => Fail(s"item '${x.name}' in '${x.srcyml}' declares non-collection parent '${x.path}'")
-          case None    => Fail(s"item '${x.name}' in '${x.srcyml}' declares non-visible parent '${x.path}'")
+          case Some(_) => Fail(s"item '${x.name}' in '${x.srcfilename}' declares non-collection parent '${x.path}'")
+          case None    => Fail(s"item '${x.name}' in '${x.srcfilename}' declares non-visible parent '${x.path}'")
         }
 
       }).collect({case Fail(x) => x})
@@ -393,13 +253,7 @@ object WorldLoader {
 
 
   def loadWorld(projConf: ProjectConfig, fileStatus: FileMap): Result[String, CollectionItem] = {
-
-    // start with YAML or Flat loader depending on the extension of the master file
-
-    Result.fromFilename(projConf.localContentPath / projConf.masterName + ".yml") match {
-      case Pass(_) => WorldLoaderYML.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
-      case Fail(_) => WorldLoaderFlat.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
-    }
+    WorldLoaderFlat.loadWorld(projConf.localContentPath, projConf.masterName, fileStatus)
   }
 
 
@@ -419,7 +273,7 @@ object WorldLoader {
         "Duplicate ids found\n" +
         duplicateIDs.map(x =>
           "\tid: " + x._1 + "\n" +
-          "\tpresent in files: " + x._2.map(_.srcyml).distinct.mkString(", ")).mkString("\n")
+          "\tpresent in files: " + x._2.map(_.srcfilename).distinct.mkString(", ")).mkString("\n")
       )
     }
 
