@@ -14,6 +14,7 @@ case class Task(
     kind: String,
     desc: String,
     item: WorldItem,
+    group: WorldItem,
     log: Option[String],
     start: Option[String],
     done: Option[String])
@@ -30,15 +31,16 @@ object Tasks {
      """<link href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
 
 
-   def createTask(s: SecTag, item: WorldItem): Task = {
+   def createTask(s: SecTag, item: WorldItem, group: WorldItem): Task = {
      val args = ParseSecTags.parseArgs(s.args)
-     Task(s.kind, s.value, item, args.get("log"), args.get("start"), args.get("done"))
+     Task(s.kind, s.value, item, group, args.get("log"), args.get("start"), args.get("done"))
    }
 
 
    def table(tasks: Seq[Task]): String = {
 
      val head = List(
+         Tags.b("Group"),
          Tags.b("Item"),
          Tags.b("Status"),
          Tags.b("Description"),
@@ -48,6 +50,7 @@ object Tasks {
 
      val body = tasks.sortBy(_.log).map(task => {
        List(
+           ExportPages.textLinkPage(task.group),
            ExportPages.textLinkPage(task.item),
            Tags.b(task.kind.capitalize),
            Markdown.processLine(task.desc),
@@ -57,6 +60,7 @@ object Tasks {
      }).toList
 
      val styles = List(
+         "vertical-align: top; white-space: nowrap",
          "vertical-align: top; white-space: nowrap",
          "vertical-align: top; white-space: nowrap",
          "vertical-align: top",

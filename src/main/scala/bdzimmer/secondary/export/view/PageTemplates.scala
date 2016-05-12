@@ -64,7 +64,7 @@ object PageTemplates {
 
     val fileWriter = new java.io.FileWriter(outputFile, false)
     fileWriter.write(pageText)
-    fileWriter.close
+    fileWriter.close()
   }
 
 

@@ -111,6 +111,7 @@ class Driver {
     }
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
+      val startTime = System.currentTimeMillis
       val result = projConf.mode match {
         case "drive" => {
           driveSync match {
@@ -128,6 +129,8 @@ class Driver {
         }
         case _ => new ExportPipeline(projConf).run()
       }
+      val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+      println("completed in " + totalTime + " sec")
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
     }
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)

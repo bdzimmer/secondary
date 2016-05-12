@@ -38,18 +38,23 @@ class ExportPages(
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
-  // TODO: rename metaItems to refItems
-  val metaItems = world.collect({case x: RefItem => x})
+  // val refItems = world.collect({case x: RefItem => x})
 
   // map of ids and names of items to the actual item object
   val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
 
   // which other items' tags reference each item
   val references = world.map(item => {
-    (item.id, world.filter(otherItem => !otherItem.id.equals(item.id) && otherItem.tags.exists(x => {
-      (item.id.equals(x.value) || item.name.equals(x.value))
-    })))
+    (item.id, world.filter(otherItem =>
+      !otherItem.id.equals(item.id) &&
+      otherItem.tags.exists(x =>
+        !SecTags.NonItemTagKinds.contains(x.kind) &&
+        (item.id.equals(x.value) || item.name.equals(x.value))
+    )))
   }).toMap
+
+  // the main collection for each each item
+  val groups = master.children.flatMap(group => WorldItem.collectionToList(group).map(item => (item.id, group))).toMap
 
   // only the characters - used by RenderSecTags for FamilyTrees
   // and eventually other character-specific tags
@@ -138,13 +143,14 @@ class ExportPages(
       item.tags.map(np.validateTag(_)).collect({case Fail(x) => x})
     }
 
-    val allTasks = world.flatMap(item => item.tags.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item)))
+    val allTasks = (world
+        .flatMap(item => item.tags.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item, groups.getOrElse(item.id, master)))))
 
     PageTemplates.createArticlePage(
         location / relFilePath,
         "Tasks", "",  pageNavbar(None),
 
-        column(12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2)))) +
+        column(12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2, x._3)))) +
 
         // Empty notes
 
@@ -157,13 +163,9 @@ class ExportPages(
         ) +
 
         // Invalid tags
-        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags))
+        column(Column6, h4("Invalid Tags") + taskList(getInvalidTags)),
 
-        // Todos and thoughts - deprecated soon.
-        // column(Column6, h4("Thoughts") + taskList(getTask(_)(List(SecTags.Thought)))) +
-        // column(Column6, h4("Tasks") + taskList(getTask(_)(SecTags.TaskTagKinds)))
-
-        , license)
+        license)
 
     relFilePath
   }

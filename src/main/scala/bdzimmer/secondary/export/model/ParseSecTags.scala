@@ -47,7 +47,9 @@ object SecTags {
 
   val EventTagKinds = List(Birth, Death, Event)
   val TaskTagKinds = List(Thought, Todo, Started, Done)
-  val OtherTagKinds = List(Demo) ++ EventTagKinds ++ TaskTagKinds
+  val OtherTagKinds = Demo +: (EventTagKinds ++ TaskTagKinds)
+
+  val NonItemTagKinds = EventTagKinds ++ TaskTagKinds ++ OtherTagKinds
 
 }
 
