@@ -14,12 +14,12 @@ import scala.collection.{immutable => sci}
 import scala.util.{Try, Success, Failure}
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
-import com.google.api.client.util.DateTime
+// import com.google.api.client.util.DateTime
 
 import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.gdrivescala.DriveUtils
+// import bdzimmer.gdrivescala.DriveUtils
 import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Styles
 
@@ -276,9 +276,9 @@ object ExportPipeline {
       (x, new File(parentDir / x).lastModified))
 
     currentStatus.filter({case (k, v) => oldFileStatus.get(k) match {
-        case Some(x) => v > x._2.getValue
+        case Some(x) => v > x._2
         case None    => true
-    }}).map(x => (x._1, ("", new DateTime(x._2)))).toMap
+    }}).map(x => (x._1, ("", x._2))).toMap
   }
 
   def logList(prefix: String, list: List[String]): Unit = {

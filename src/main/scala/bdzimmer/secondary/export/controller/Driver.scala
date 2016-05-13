@@ -28,7 +28,6 @@ import org.apache.commons.io.FileUtils
 import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.gdrivescala.{DriveUtils, DriveBuilder, GoogleDriveKeys}
 import bdzimmer.secondary.export.model.{CollectionItem, ProjectConfig, ProjectStructure, WorldItem}
 import bdzimmer.secondary.export.view.ConfigurationGUI
 import bdzimmer.pixeleditor.view.Main
@@ -40,7 +39,6 @@ class Driver {
   // project directory is current working directory
   val projectDir = System.getProperty("user.dir")
   val projConf = ProjectConfig(projectDir)
-  val driveSync = DriveSync(projConf)
 
   var loadedWorld: Result[String, CollectionItem] = Fail("World not loaded!")
 
@@ -84,11 +82,7 @@ class Driver {
 
   // run a command
   private def runCommand(command: String, args: List[String]): Unit = command match {
-    case DriverCommands.Browse => projConf.mode match {
-      case "drive" => browseDrive
-      case _       => browseLocal
-    }
-    case DriverCommands.BrowseLocal => browseLocal
+    case DriverCommands.Browse      => browseLocal
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(
@@ -114,18 +108,36 @@ class Driver {
       val startTime = System.currentTimeMillis
       val result = projConf.mode match {
         case "drive" => {
-          driveSync match {
-            case Pass(ds)  => {
-              ds.downloadInput()
-              val world = new ExportPipeline(projConf).run()
-              ds.uploadOutput()
-              world
-            }
-            case Fail(msg) => {
-              Driver.driveError(msg)
-              Fail(msg)
-            }
+
+          /*
+          val driveSync = DriveSync(
+            projConf.driveClientIdFile,
+            projConf.driveAccessTokenFile,
+            projConf.localContentPath,
+            projConf.localExportPath,
+            projConf.driveInputPath,
+            projConf.driveOutputPath,
+            projConf.projectDir / "drivecontentstatus.txt",
+            projConf.projectDir / "localwebstatus.txt")
+
+
+          driveSync match  {
+            case Pass(ds)  => ds.downloadInput()
+            case Fail(msg) => DriveSync.driveError(msg)
           }
+					*/
+
+          val world = new ExportPipeline(projConf).run()
+
+          /*
+          driveSync match  {
+            case Pass(ds)  => ds.uploadOutput()
+            case Fail(msg) => DriveSync.driveError(msg)
+          }
+					*/
+
+          world
+
         }
         case _ => new ExportPipeline(projConf).run()
       }
@@ -147,16 +159,6 @@ class Driver {
     Try(Desktop.getDesktop.browse(uri))
   }
 
-  // browse to the exported website on Google Drive host
-  private def browseDrive(): Unit = driveSync match {
-    case Pass(ds) => {
-      val drivePermaLink = "http://www.googledrive.com/host/" + ds.driveOutputFile.getId
-      println(drivePermaLink)
-      Try(Desktop.getDesktop.browse(new URI(drivePermaLink)))
-    }
-    case Fail(msg) => Driver.driveError(msg)
-  }
-
   // edit the source file associated with an object by name or id
   private def editItemByName(name: String): Unit = loadedWorld match {
     case Pass(master) => {
@@ -170,28 +172,19 @@ class Driver {
   }
 
   // edit an item's source file locally or in Drive
-  private def editItem(item: WorldItem): Unit = projConf.mode match {
-    case "drive" => Desktop.getDesktop.browse(new URI(ExportPages.notepadURL(item)))
-    case _ => {
-      val srcFile = new File(projConf.localContentPath / item.srcfilename)
-      val idMatcher =  s"\\s*id:\\s*${item.id}"
-      val lineNumber = FileUtils.readLines(srcFile).asScala.zipWithIndex.find(x => {
-        x._1.matches(idMatcher)
-      }).fold(1)(_._2)
-      // Desktop.getDesktop.open(srcFile)
-      val nppCommand = s"""notepad++ "${srcFile.getPath}" -n${lineNumber}"""
-      Try(nppCommand.!!)
-    }
+  private def editItem(item: WorldItem): Unit = {
+    val srcFile = new File(projConf.localContentPath / item.srcfilename)
+    val idMatcher =  s"\\s*id:\\s*${item.id}"
+    val lineNumber = FileUtils.readLines(srcFile).asScala.zipWithIndex.find(x => {
+      x._1.matches(idMatcher)
+    }).fold(1)(_._2)
+    // Desktop.getDesktop.open(srcFile)
+    val nppCommand = s"""notepad++ "${srcFile.getPath}" -n${lineNumber}"""
+    Try(nppCommand.!!)
   }
 
   // explore the project's source directory
-  private def explore(): Unit = projConf.mode match {
-    case "drive" => driveSync match {
-      case Pass(ds)  => Desktop.getDesktop.browse(new URI(DriveSync.DriveWebUrl / ds.driveInputFile.getId))
-      case Fail(msg) => Driver.driveError(msg)
-    }
-    case _ => Desktop.getDesktop.open(projConf.localContentPathFile)
-  }
+  private def explore(): Unit = Desktop.getDesktop.open(projConf.localContentPathFile)
 
   private def serverMode(seconds: Int): Unit = {
     while(true) {
@@ -206,7 +199,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.05.06"
+  val Title = "Secondary - create worlds from text - v2016.05.12"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
@@ -241,11 +234,6 @@ object Driver {
     println()
   }
 
-
-  private def driveError(msg: String): Unit = {
-    println("Drive problem: " + msg)
-  }
-
 }
 
 
@@ -253,7 +241,6 @@ object Driver {
 object DriverCommands {
 
   val Browse      = "browse"
-  val BrowseLocal = "browse-local"
   val Configure   = "configure"
   val Edit        = "edit"
   val Editor      = "editor"
@@ -266,7 +253,6 @@ object DriverCommands {
 
   val CommandsDescriptions = List(
       (Browse,      "browse exported project web site"),
-      (BrowseLocal, "browse local copy of project web site"),
       (Configure,   "edit project configuration"),
       (Edit,        "edit the source file for an item"),
       (Editor,      "start editor (alpha)"),

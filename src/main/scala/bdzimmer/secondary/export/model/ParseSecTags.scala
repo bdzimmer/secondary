@@ -35,9 +35,10 @@ object SecTags {
   val Event = "event"
 
   val Thought = "thought"
-  val Todo = "todo"
+  val Todo    = "todo"
   val Started = "started"
-  val Done = "done"
+  val Done    = "done"
+  val Blocked = "blocked"
 
   val Demo = "demo"
 
@@ -46,7 +47,7 @@ object SecTags {
       FamilyTree, Jumbotron, Marriage, Timeline)
 
   val EventTagKinds = List(Birth, Death, Event)
-  val TaskTagKinds = List(Thought, Todo, Started, Done)
+  val TaskTagKinds = List(Thought, Todo, Started, Done, Blocked)
   val OtherTagKinds = Demo +: (EventTagKinds ++ TaskTagKinds)
 
   val NonItemTagKinds = EventTagKinds ++ TaskTagKinds ++ OtherTagKinds

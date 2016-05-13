@@ -18,7 +18,6 @@ import scala.ref
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
-import com.google.api.client.util.DateTime
 import org.apache.commons.io.FileUtils
 
 import bdzimmer.util.{Result, Pass, Fail}
@@ -288,13 +287,13 @@ object WorldLoader {
   def saveFileMap(filename: String, map: FileMap): Unit = {
     val pw = new java.io.PrintWriter(new java.io.File(filename))
     // scalastyle:ignore regex
-    map.foreach(x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2.getValue))
+    map.foreach(x =>  pw.println(x._1 + "\t" + x._2._1 + "\t" + x._2._2))
     pw.close
   }
 
   def loadFileMap(filename: String): FileMap = {
     val lines = FileUtils.readLines(new File(filename), "UTF-8").asScala
-    lines.map(x => x.split("\t")).map(x => (x(0), (x(1), new DateTime(x(2).toLong)))).toMap
+    lines.map(x => x.split("\t")).map(x => (x(0), (x(1), x(2).toLong))).toMap
   }
 
   def loadOrEmptyModifiedMap(filename: String): FileMap = Result.fromFilename(filename) match {
@@ -303,13 +302,13 @@ object WorldLoader {
   }
 
   def emptyFileMap(): FileMap = {
-    List.empty[(String, (String, DateTime))].toMap
+    List.empty[(String, (String, Long))].toMap
   }
 
   def mergeFileMaps(map1: FileMap, map2: FileMap): FileMap = {
     map1 ++ map2.map{case (k, v) => k -> {
       map1.get(k) match {
-        case Some(x) => if (x._2.getValue > v._2.getValue) x else v
+        case Some(x) => if (x._2 > v._2) x else v
         case None    => v
       }
     }}

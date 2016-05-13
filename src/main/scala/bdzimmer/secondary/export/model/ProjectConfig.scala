@@ -30,8 +30,8 @@ class ProjectConfig(
     val editLinks: Boolean) {
 
   // additional attributes derived from the above
-  val driveInputPathList = driveInputPath.split(slash).toList
-  val driveOutputPathList = driveOutputPath.split(slash).toList
+  // val driveInputPathList = driveInputPath.split(slash).toList
+  // val driveOutputPathList = driveOutputPath.split(slash).toList
 
   val localExportPath  = projectDir / ProjectStructure.WebDir
   val localContentPath = projectDir / ProjectStructure.ContentDir

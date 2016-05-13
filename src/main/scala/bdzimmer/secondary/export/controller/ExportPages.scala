@@ -16,7 +16,6 @@ import java.io.File
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
-import com.google.api.client.util.DateTime
 import org.apache.commons.io.FilenameUtils
 
 import bdzimmer.secondary.export.model._
