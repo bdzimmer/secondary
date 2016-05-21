@@ -28,7 +28,7 @@ case class Marriage(
 object FamilyTree {
 
   val TreeStyles =
-    """<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>""" + "\n" +
+    """<script src="styles/d3.min.js" charset="utf-8"></script>""" + "\n" +
     """<link href="tree/tree.css" rel="stylesheet">""" + "\n" +
     """<script src="tree/drawtree.js" charset="utf-8"></script>""" + "\n"
 

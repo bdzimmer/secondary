@@ -8,6 +8,7 @@
 package bdzimmer.secondary.export.controller
 
 import java.io.File
+import java.net.{HttpURLConnection, URL}
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
@@ -225,6 +226,9 @@ object ExportPipeline {
   // generate stylesheets into project web dir
   def addStyles(projConf: ProjectConfig): Unit = {
 
+    // TODO: better location for all of the links to stylesheets; eliminate
+    // duplicated names
+
     val outputDirFile = new File(projConf.localExportPath)
 
     // if Bootstrap doesn't exist in the project directory, download and extract it
@@ -243,17 +247,65 @@ object ExportPipeline {
     // generate secondary.css in styles directory
     Styles.createStyleSheet(projConf.localExportPath / "styles" / "secondary.css")
 
+    // download other stylesheets used into styles directory
+    FileUtils.copyURLToFile(
+        new URL("https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"),
+        new File(stylesDir, "jquery.min.js"))
+
+    FileUtils.copyURLToFile(
+        new URL("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"),
+        new File(stylesDir, "d3.min.js"))
+
+    def download403(url: URL, file: File): Unit = {
+      val hc = url.openConnection().asInstanceOf[HttpURLConnection]
+      hc.setRequestProperty("User-Agent", "curl/7.43.0")
+      FileUtils.copyInputStreamToFile(hc.getInputStream(), file)
+    }
+
+    download403(
+        new URL("https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"),
+        new File(stylesDir, "jquery.dataTables.min.js"))
+    download403(
+        new URL("https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css"),
+        new File(stylesDir, "jquery.dataTables.min.css"))
+
+    val imagesDir = new File(outputDirFile, "images")
+    if (!imagesDir.exists) {
+      imagesDir.mkdir
+    }
+
+    download403(
+        new URL("https://cdn.datatables.net/1.10.11/images/sort_asc.png"),
+        new File(imagesDir, "sort_asc.png"))
+    download403(
+        new URL("https://cdn.datatables.net/1.10.11/images/sort_desc.png"),
+        new File(imagesDir, "sort_desc.png"))
+    download403(
+        new URL("https://cdn.datatables.net/1.10.11/images/sort_both.png"),
+        new File(imagesDir, "sort_both.png"))
+
+
     // copy family tree javascript into output directory
     val treeDestDir = new File(outputDirFile, "tree")
     if (treeDestDir.exists) FileUtils.deleteDirectory(treeDestDir)
-
     treeDestDir.mkdirs()
+
     FileUtils.copyURLToFile(
         getClass.getResource("/tree/drawtree.js"),
         new File(treeDestDir, "drawtree.js"))
     FileUtils.copyURLToFile(
         getClass.getResource("/tree/tree.css"),
         new File(treeDestDir, "tree.css"))
+
+    // download webfonts
+    val fontsDir = new File(outputDirFile, "fonts")
+    if (fontsDir.exists) FileUtils.deleteDirectory(fontsDir)
+    fontsDir.mkdir
+
+    val (fontCss, fontUrls) = Fonts.convert(Styles.FontDescription)
+    FileUtils.writeStringToFile(new File(fontsDir, "fonts.css"), fontCss)
+    fontUrls.foreach(x => FileUtils.copyURLToFile(new URL(x._1), new File(fontsDir, x._2)))
+
   }
 
 

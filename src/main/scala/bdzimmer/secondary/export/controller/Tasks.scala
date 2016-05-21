@@ -26,9 +26,12 @@ object Tasks {
 
    val TasksStyles =
      // """<script src="https://code.jquery.com/jquery-1.12.0.min.js" charset="utf-8"></script>""" + "\n" +
-     """<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>""" + "\n" +
-     """<script src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js" charset="utf-8"></script>""" + "\n" +
-     """<link href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
+     // """<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>""" + "\n" +
+     // """<script src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js" charset="utf-8"></script>""" + "\n" +
+     // """<link href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
+     """<script src="styles/jquery.min.js"></script>""" + "\n" +
+     """<script src="styles/jquery.dataTables.min.js" charset="utf-8"></script>""" + "\n" +
+     """<link href="styles/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
 
 
    def createTask(s: SecTag, item: WorldItem, group: WorldItem): Task = {

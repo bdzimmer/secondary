@@ -20,6 +20,7 @@ import bdzimmer.util.StringUtils._
 object Styles {
 
   val FontFace = "Libre Baskerville"
+  val FontDescription = FontFace.replace(' ', '+') + ":400,400italic,700,700italic"
   val FontFallback = "serif"
   val HeadingSizes = (1 to 6) zip List(42, 36, 30, 24, 18, 14)
   val H1JumbotronSize = 72

@@ -33,7 +33,9 @@ object PageTemplates {
     <title>${title}</title>
 
     <!-- Fonts -->
-    <link href='https://fonts.googleapis.com/css?family=${Styles.FontFace.replace(' ', '+')}:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
+    <!-- <link href='https://fonts.googleapis.com/css?family=${Styles.FontDescription}' rel='stylesheet' type='text/css'> -->
+    <link href='fonts/fonts.css' rel='stylesheet' type='text/css'>
+
     <!-- Bootstrap core CSS -->
     <link href="styles/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles for Secondary -->
@@ -47,7 +49,7 @@ object PageTemplates {
 
     <!-- Bootstrap core JavaScript -->
     <!-- (Originally placed at the end of the document so the pages load faster) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="styles/jquery.min.js"></script>
     <script src="styles/bootstrap/js/bootstrap.min.js"></script>
 
     <!-- Additional styles -->
