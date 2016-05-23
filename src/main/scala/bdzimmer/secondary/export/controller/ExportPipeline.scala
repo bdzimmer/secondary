@@ -7,22 +7,21 @@
 
 package bdzimmer.secondary.export.controller
 
-import java.io.File
+import java.io.{File, FileOutputStream}
 import java.net.{HttpURLConnection, URL}
 
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
 import scala.util.{Try, Success, Failure}
 
-import org.apache.commons.io.{FileUtils, FilenameUtils}
-// import com.google.api.client.util.DateTime
+import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
+import org.apache.commons.compress.archivers.zip.ZipFile
 
 import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
-
-// import bdzimmer.gdrivescala.DriveUtils
 import bdzimmer.secondary.export.model._
-import bdzimmer.secondary.export.view.Styles
+import bdzimmer.secondary.export.view.{Styles}
+import bdzimmer.secondary.export.view.WebResource
 
 
 class ExportPipeline(projConf: ProjectConfig)  {
@@ -223,88 +222,99 @@ object ExportPipeline {
   }
 
 
-  // generate stylesheets into project web dir
+  // generate stylesheets and download web resources into project web dir
   def addStyles(projConf: ProjectConfig): Unit = {
-
-    // TODO: better location for all of the links to stylesheets; eliminate
-    // duplicated names
 
     val outputDirFile = new File(projConf.localExportPath)
 
-    // if Bootstrap doesn't exist in the project directory, download and extract it
-    val extractedBootstrapName = FilenameUtils.removeExtension(Styles.BootstrapFilename)
-    val extractedBootstrap = new File(projConf.projectDir, extractedBootstrapName)
-    if (!extractedBootstrap.exists) {
-      Styles.getBootstrap(projConf.projectDir)
-    }
-
-    // copy bootstrap into styles directory in export directory and rename
-    val stylesDir = new File(outputDirFile, "styles")
-    if (stylesDir.exists) FileUtils.deleteDirectory(stylesDir)
-    stylesDir.mkdir
-    FileUtils.moveDirectory(extractedBootstrap, new File(stylesDir, "bootstrap"))
-
-    // generate secondary.css in styles directory
-    Styles.createStyleSheet(projConf.localExportPath / "styles" / "secondary.css")
-
-    // download other stylesheets used into styles directory
-    FileUtils.copyURLToFile(
-        new URL("https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"),
-        new File(stylesDir, "jquery.min.js"))
-
-    FileUtils.copyURLToFile(
-        new URL("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"),
-        new File(stylesDir, "d3.min.js"))
-
-    def download403(url: URL, file: File): Unit = {
-      val hc = url.openConnection().asInstanceOf[HttpURLConnection]
+    def download(wr: WebResource): Unit = {
+      val hc = wr.url.openConnection().asInstanceOf[HttpURLConnection]
       hc.setRequestProperty("User-Agent", "curl/7.43.0")
-      FileUtils.copyInputStreamToFile(hc.getInputStream(), file)
+      FileUtils.copyInputStreamToFile(
+          hc.getInputStream(),
+          new File(outputDirFile, wr.localRelFilename))
     }
 
-    download403(
-        new URL("https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"),
-        new File(stylesDir, "jquery.dataTables.min.js"))
-    download403(
-        new URL("https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css"),
-        new File(stylesDir, "jquery.dataTables.min.css"))
+    def copy(wr: WebResource): Unit = {
+      FileUtils.copyURLToFile(wr.url, new File(outputDirFile, wr.localRelFilename))
+    }
 
-    val imagesDir = new File(outputDirFile, "images")
+    // extract a zip archive
+    // http://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files
+    def extractArchive(archive: File, outputDirname: String): Unit = {
+
+      val zipFile = new ZipFile(archive)
+      Try {
+        val entries = zipFile.getEntries
+        val entriesIterator = Iterator.continually((entries, entries.nextElement)).takeWhile(_._1.hasMoreElements).map(_._2)
+        entriesIterator.foreach(entry => {
+          val extractedEntry = new File(outputDirname, entry.getName)
+
+          if (entry.isDirectory) {
+            extractedEntry.mkdirs
+          } else {
+            extractedEntry.getParentFile.mkdirs
+            val in = zipFile.getInputStream(entry)
+            val out = new FileOutputStream(extractedEntry)
+            IOUtils.copy(in, out)
+            IOUtils.closeQuietly(in)
+            out.close()
+          }
+        })
+      }
+      zipFile.close()
+
+    }
+
+    // create the output directories
+
+    val stylesDir = new File(outputDirFile, WebResource.StylesRelDirname)
+    if (stylesDir.exists) FileUtils.deleteDirectory(stylesDir)
+    stylesDir.mkdir()
+
+    val fontsDir = new File(outputDirFile, WebResource.FontsRelDirname)
+    if (fontsDir.exists) FileUtils.deleteDirectory(fontsDir)
+    fontsDir.mkdir()
+
+    val imagesDir = new File(outputDirFile, WebResource.ImagesRelDirname)
     if (!imagesDir.exists) {
-      imagesDir.mkdir
+      imagesDir.mkdir()
     }
 
-    download403(
-        new URL("https://cdn.datatables.net/1.10.11/images/sort_asc.png"),
-        new File(imagesDir, "sort_asc.png"))
-    download403(
-        new URL("https://cdn.datatables.net/1.10.11/images/sort_desc.png"),
-        new File(imagesDir, "sort_desc.png"))
-    download403(
-        new URL("https://cdn.datatables.net/1.10.11/images/sort_both.png"),
-        new File(imagesDir, "sort_both.png"))
-
-
-    // copy family tree javascript into output directory
-    val treeDestDir = new File(outputDirFile, "tree")
+    val treeDestDir = new File(outputDirFile, WebResource.TreeRelDirname)
     if (treeDestDir.exists) FileUtils.deleteDirectory(treeDestDir)
-    treeDestDir.mkdirs()
+    treeDestDir.mkdir()
 
-    FileUtils.copyURLToFile(
-        getClass.getResource("/tree/drawtree.js"),
-        new File(treeDestDir, "drawtree.js"))
-    FileUtils.copyURLToFile(
-        getClass.getResource("/tree/tree.css"),
-        new File(treeDestDir, "tree.css"))
+    // generate main stylesheet in styles directory
+    val mainCss = Styles.styleSheet
+    val fileWriter = new java.io.FileWriter(
+        projConf.localExportPath / WebResource.MainStylesheet, false)
+    fileWriter.write(mainCss)
+    fileWriter.close()
 
     // download webfonts
-    val fontsDir = new File(outputDirFile, "fonts")
-    if (fontsDir.exists) FileUtils.deleteDirectory(fontsDir)
-    fontsDir.mkdir
-
     val (fontCss, fontUrls) = Fonts.convert(Styles.FontDescription)
-    FileUtils.writeStringToFile(new File(fontsDir, "fonts.css"), fontCss)
-    fontUrls.foreach(x => FileUtils.copyURLToFile(new URL(x._1), new File(fontsDir, x._2)))
+    FileUtils.writeStringToFile(
+        new File(outputDirFile, WebResource.FontsStylesheet), fontCss)
+    fontUrls.foreach(x => download(WebResource(x._1, WebResource.FontsRelDirname)))
+
+    // copy family tree files from JAR
+    copy(WebResource.TreeJs)
+    copy(WebResource.TreeCss)
+
+    // download other stylesheets and scripts used into appropriate directories
+    download(WebResource.BootstrapZip)
+    extractArchive(
+        new File(outputDirFile, WebResource.BootstrapZip.localRelFilename),
+        stylesDir.getPath)
+
+    download(WebResource.Jquery)
+    download(WebResource.D3)
+    download(WebResource.DataTablesJs)
+    download(WebResource.DataTablesCss)
+    download(WebResource.SortAsc)
+    download(WebResource.SortDesc)
+    download(WebResource.SortBoth)
 
   }
 

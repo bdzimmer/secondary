@@ -8,9 +8,6 @@
 
 package bdzimmer.secondary.export.view
 
-import org.apache.commons.io.{FileUtils, IOUtils}
-import org.apache.commons.compress.archivers.zip.ZipFile
-
 import java.io.{File, FileOutputStream}
 import scala.util.Try
 
@@ -48,18 +45,14 @@ li.swivel label { margin-bottom: 0px; }
 """
 
 
-  val BootstrapFilename = "bootstrap-3.3.5-dist.zip"
-  val BootstrapUrl = "https://github.com/twbs/bootstrap/releases/download/v3.3.5/" + BootstrapFilename
-
-
-  def createStyleSheet(outputFile: String): Unit = {
+  def styleSheet(): String = {
 
     val headingSizeStyle = HeadingSizes.map({case (level, size) => {
       s"""h${level}, .h${level} {font-size: ${size}px}"""
     }}).mkString("\n")
 
 
-    val sheetText = s"""
+    s"""
 /* Copyright (c) 2016 Ben Zimmer. All rights reserved. */
 
 /* Set a custom font and increase the font size for everything. */
@@ -97,51 +90,6 @@ body {
   line-height: ${BodyLineHeight};
 }
 """ + CollapsibleLists
-
-    val fileWriter = new java.io.FileWriter(outputFile, false)
-    fileWriter.write(sheetText)
-    fileWriter.close
-  }
-
-
-
-  // download boostrap archive, extract, and delete
-  def getBootstrap(downloadDir: String): Unit = {
-
-    val outputFilename = downloadDir / BootstrapFilename
-    val outputFile = new File(outputFilename)
-
-    FileUtils.copyURLToFile(new java.net.URL(BootstrapUrl), outputFile)
-    extractArchive(outputFile, downloadDir)
-    outputFile.delete
-
-  }
-
-
-  // extract a zip archive
-  // http://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files
-  def extractArchive(archive: File, outputDirname: String): Unit = {
-
-    val zipFile = new ZipFile(archive)
-    Try {
-      val entries = zipFile.getEntries
-      val entriesIterator = Iterator.continually((entries, entries.nextElement)).takeWhile(_._1.hasMoreElements).map(_._2)
-      entriesIterator.foreach(entry => {
-        val extractedEntry = new File(outputDirname, entry.getName)
-
-        if (entry.isDirectory) {
-          extractedEntry.mkdirs
-        } else {
-          extractedEntry.getParentFile.mkdirs
-          val in = zipFile.getInputStream(entry)
-          val out = new FileOutputStream(extractedEntry)
-          IOUtils.copy(in, out)
-          IOUtils.closeQuietly(in)
-          out.close
-        }
-      })
-    }
-    zipFile.close
 
   }
 

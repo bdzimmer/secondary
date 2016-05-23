@@ -7,7 +7,7 @@ package bdzimmer.secondary.export.controller
 import scala.collection.immutable.Seq
 
 import bdzimmer.secondary.export.model.{ParseSecTags, SecTag, WorldItem}
-import bdzimmer.secondary.export.view.{Markdown, Tags}
+import bdzimmer.secondary.export.view.{Markdown, Tags, WebResource}
 
 // TODO: some kind of actual date class for dates
 case class Task(
@@ -22,16 +22,10 @@ case class Task(
 
 object Tasks {
 
-  // TODO: download these stylesheets in the Styles downloader and link to local copies
-
    val TasksStyles =
-     // """<script src="https://code.jquery.com/jquery-1.12.0.min.js" charset="utf-8"></script>""" + "\n" +
-     // """<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>""" + "\n" +
-     // """<script src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js" charset="utf-8"></script>""" + "\n" +
-     // """<link href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
-     """<script src="styles/jquery.min.js"></script>""" + "\n" +
-     """<script src="styles/jquery.dataTables.min.js" charset="utf-8"></script>""" + "\n" +
-     """<link href="styles/jquery.dataTables.min.css" rel="stylesheet">""" + "\n"
+     s"""<script src="${WebResource.Jquery.localRelFilename}"></script>""" + "\n" +
+     s"""<script src="${WebResource.DataTablesJs.localRelFilename}" charset="utf-8"></script>""" + "\n" +
+     s"""<link href="${WebResource.DataTablesCss.localRelFilename}" rel="stylesheet">""" + "\n"
 
 
    def createTask(s: SecTag, item: WorldItem, group: WorldItem): Task = {

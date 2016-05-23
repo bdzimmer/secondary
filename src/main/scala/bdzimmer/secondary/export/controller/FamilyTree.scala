@@ -9,7 +9,7 @@
 package bdzimmer.secondary.export.controller
 
 import bdzimmer.secondary.export.model.{CharacterItem, SecTag}
-import bdzimmer.secondary.export.view.Tags
+import bdzimmer.secondary.export.view.{Tags, WebResource}
 
 case class TreeEntry(
     id: String,
@@ -28,9 +28,9 @@ case class Marriage(
 object FamilyTree {
 
   val TreeStyles =
-    """<script src="styles/d3.min.js" charset="utf-8"></script>""" + "\n" +
-    """<link href="tree/tree.css" rel="stylesheet">""" + "\n" +
-    """<script src="tree/drawtree.js" charset="utf-8"></script>""" + "\n"
+    s"""<script src="${WebResource.D3.localRelFilename}" charset="utf-8"></script>""" + "\n" +
+    s"""<link href="${WebResource.TreeCss.localRelFilename}" rel="stylesheet">""" + "\n" +
+    s"""<script src="${WebResource.TreeJs.localRelFilename}" charset="utf-8"></script>""" + "\n"
 
 
   def nameList(char: CharacterItem): List[String] = char.nameParts match {
@@ -129,11 +129,10 @@ object FamilyTree {
     val description = np.transform(
         char.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
 
-    println(char.name)
-    println("single parent children: " + singleParentChildren.map(_.name))
-    println("marriages: " + marriages.map(x => x.spouse.name + " " + x.hidden.children.map(_.name)))
-
-    println("***")
+    // println(char.name)
+    // println("single parent children: " + singleParentChildren.map(_.name))
+    // println("marriages: " + marriages.map(x => x.spouse.name + " " + x.hidden.children.map(_.name)))
+    // println("***")
 
     TreeEntry(
         char.id, nameList(char).mkString("\t") + "\t" + Genealogy.lifespan(char),

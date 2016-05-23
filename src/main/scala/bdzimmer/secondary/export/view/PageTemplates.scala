@@ -11,6 +11,7 @@ package bdzimmer.secondary.export.view
 
 import bdzimmer.secondary.export.view.Tags._
 
+
 // Static class for generating Bootstrap HTML.
 object PageTemplates {
 
@@ -33,13 +34,12 @@ object PageTemplates {
     <title>${title}</title>
 
     <!-- Fonts -->
-    <!-- <link href='https://fonts.googleapis.com/css?family=${Styles.FontDescription}' rel='stylesheet' type='text/css'> -->
-    <link href='fonts/fonts.css' rel='stylesheet' type='text/css'>
+    <link href="${WebResource.FontsStylesheet}" rel="stylesheet">
 
     <!-- Bootstrap core CSS -->
-    <link href="styles/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="${WebResource.BootstrapCss}" rel="stylesheet">
     <!-- Custom styles for Secondary -->
-    <link href="styles/secondary.css" rel="stylesheet">
+    <link href="${WebResource.MainStylesheet}" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -49,8 +49,8 @@ object PageTemplates {
 
     <!-- Bootstrap core JavaScript -->
     <!-- (Originally placed at the end of the document so the pages load faster) -->
-    <script src="styles/jquery.min.js"></script>
-    <script src="styles/bootstrap/js/bootstrap.min.js"></script>
+    <script src="${WebResource.Jquery.localRelFilename}"></script>
+    <script src="${WebResource.BootstrapJs}"></script>
 
     <!-- Additional styles -->
     <style>
