@@ -42,8 +42,15 @@ class ExportPages(
   // map of ids and names of items to the actual item object
   val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
 
-  // which other items' tags reference each item
-  val references = world.map(item => {
+  // outward references
+  val references = world.map(item =>
+    (item.id,
+     item.tags
+     .filter(tag => !SecTags.NonItemTagKinds.contains(tag.kind))
+     .flatMap(tag => itemByString.get(tag.value)))).toMap
+
+  // inward references
+  val referencedBy = world.map(item => {
     (item.id, world.filter(otherItem =>
       !otherItem.id.equals(item.id) &&
       otherItem.tags.exists(x =>
@@ -416,7 +423,7 @@ class ExportPages(
 
 
   private def refItems(item: WorldItem): String = {
-    val refs = references.get(item.id) match {
+    val refs = referencedBy.get(item.id) match {
       case Some(x) => x
       case None    => List()
     }

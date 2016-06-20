@@ -61,12 +61,52 @@ class ExportPipeline(projConf: ProjectConfig)  {
         // only export the things that have changed
         if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
 
-          // val pagesToExport = world.filter(x => metaStatusChanges.keySet.contains(x.srcfilename)) // old behavior
-          val pagesToExport = world.filter(x => itemStatusChanges.keySet.contains(x.id))
-          val filesToExport = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
+          val exportPages = new ExportPages(
+              master,
+              world,
+              projConf.localExportPath,
+              projConf.license,
+              projConf.navbars,
+              projConf.editLinks)
+
+          val exportImages = new ExportImages(
+              world,
+              projConf.localExportPath,
+              projConf.license)
+
+          val modifiedIds = itemStatusChanges.keySet
+
+          // items that have been modified
+          val modifiedItems = world.filter(x => modifiedIds.contains(x.id))
+
+          // items that are referenced by modified items
+          // this will keep "referenced by" lists up to date
+          // I don't think this is usually important; so this may be something to make optional
+          val modifiedItemsReferences = modifiedItems.flatMap(x => exportPages.references.get(x.id)).flatten
+
+          // items with timelines that contain events from modified items
+          val timelineItems = (world
+              .flatMap(item =>
+                  item.tags.filter(_.kind.equals(SecTags.Timeline))  // timeline tags in each item
+                  .flatMap(tag =>                                    // find the item each timeline tag is based on
+                      exportPages.itemByString.get(tag.value).map(x => (item, x))))).distinct
+
+          val timelineItemsRefresh = (timelineItems
+              .filter(itemPair =>
+                  WorldItem.collectionToList(itemPair._2).exists(x => modifiedIds.contains(x.id)))
+              .map(_._1)).distinct
+
+          // timelineItems.foreach(x => println("items with timelines: " + x._1.id))
+          // timelineItemsRefresh.foreach(x => println("items with timelines to refresh: " + x.id))
+
+          // TODO: also find family trees that need refreshing
+
+          val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ timelineItemsRefresh).distinct
+
+          val modifiedRefs = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
 
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
-               pagesToExport, filesToExport, master, world, images = true, projConf)
+               itemsToExport, modifiedRefs, exportPages, exportImages, images = true, projConf.localContentPath)
 
           saveStatus(newMetaStatus, newRefStatus, newItemStatus)
         } else {
@@ -136,7 +176,21 @@ object ExportPipeline {
     loadedWorld match {
       case Pass(master) => {
         val world = WorldItem.collectionToList(master)
-        ExportPipeline.exportPagesAndImages(master, world, world, world, projConf)
+
+        val exportPages = new ExportPages(
+          master,
+          world,
+          projConf.localExportPath,
+          projConf.license,
+          projConf.navbars,
+          projConf.editLinks)
+
+        val exportImages = new ExportImages(
+          world,
+          projConf.localExportPath,
+          projConf.license)
+
+        ExportPipeline.exportPagesAndImages(exportPages, exportImages, world, world, projConf.localContentPath)
       }
       case Fail(msg) => println(msg)
     }
@@ -149,10 +203,12 @@ object ExportPipeline {
   def export(
       pagesToExport: List[WorldItem],
       refsToExport:  List[RefItem],
-      master: CollectionItem,
-      world:  List[WorldItem],
+      // master: CollectionItem,
+      // world:  List[WorldItem],
+      exportPages: ExportPages,
+      exportImages: ExportImages,
       images: Boolean = false,
-      projConf: ProjectConfig): (List[String], FileOutputsMap) = {
+      localContentPath: String): (List[String], FileOutputsMap) = {
 
     logList("pages to export", pagesToExport.map(_.id))
 
@@ -173,8 +229,11 @@ object ExportPipeline {
       List()
     }
 
+    // val (pageOutputs, imageOutputs) = exportPagesAndImages(
+    //    master, world, pagesToExport, imagesToExport, projConf)
+
     val (pageOutputs, imageOutputs) = exportPagesAndImages(
-        master, world, pagesToExport, imagesToExport, projConf)
+        exportPages, exportImages, pagesToExport, imagesToExport, localContentPath)
 
     println("--export finished")
 
@@ -188,19 +247,13 @@ object ExportPipeline {
 
 
   def exportPagesAndImages(
-      master: CollectionItem,
-      world:  List[WorldItem],
+      // master: CollectionItem,
+      // world:  List[WorldItem],
+      exportPages: ExportPages,
+      exportImages: ExportImages,
       pagesToExport:  List[WorldItem],
       imagesToExport: List[WorldItem],
-      projConf: ProjectConfig): (List[String], FileOutputsMap) = {
-
-    val exportPages = new ExportPages(
-        master,
-        world,
-        projConf.localExportPath,
-        projConf.license,
-        projConf.navbars,
-        projConf.editLinks)
+      localContentPath: String): (List[String], FileOutputsMap) = {
 
     val pageOutputs = List(
         exportPages.createMasterPage(),
@@ -209,11 +262,7 @@ object ExportPipeline {
         exportPages.createStatsPage()) ++ exportPages.exportPagesList(pagesToExport)
 
     val imageOutputs = if (imagesToExport.nonEmpty) {
-      val exportImages = new ExportImages(
-        world,
-        projConf.localExportPath,
-        projConf.license)
-      exportImages.exportAllImages(imagesToExport, projConf.localContentPath)
+      exportImages.exportAllImages(imagesToExport, localContentPath)
     } else {
       ExportImages.getEmptyFileOutputsMap
     }
