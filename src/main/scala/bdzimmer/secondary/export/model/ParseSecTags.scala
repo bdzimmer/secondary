@@ -19,9 +19,6 @@ case class SecTag(kind: String, value: String, args: List[String])
 
 object SecTags {
 
-  // upper CamelCase looks weird, but it's convention for constants
-  // http://docs.scala-lang.org/style/naming-conventions.html
-
   val Link = "link"
   val Image = "image"
   val ImageResponsive = "image-responsive"
@@ -29,6 +26,7 @@ object SecTags {
   val Jumbotron = "jumbotron"
   val Marriage = "marriage"
   val Timeline = "timeline"
+  val Trip = "trip"  // not sure which category this should be in
 
   val Birth = "birth"
   val Death = "death"
@@ -44,7 +42,7 @@ object SecTags {
 
   val ItemTagKinds = List(
       Link, Image, ImageResponsive,
-      FamilyTree, Jumbotron, Marriage, Timeline)
+      FamilyTree, Jumbotron, Marriage, Timeline, Trip)
 
   val EventTagKinds = List(Birth, Death, Event)
   val TaskTagKinds = List(Thought, Todo, Started, Done, Blocked)

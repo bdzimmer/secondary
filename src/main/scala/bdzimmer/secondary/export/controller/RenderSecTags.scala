@@ -13,7 +13,7 @@ import bdzimmer.secondary.export.view.{Markdown, Tags}
 
 
 class RenderSecTags(
-    val itemByString: Map[String, WorldItem], // for generating links
+    val itemByString: Map[String, WorldItem], // for generating links etc
     val characters: List[CharacterItem],      // for family trees
     disableTrees: Boolean = false) {
 
@@ -78,6 +78,7 @@ class RenderSecTags(
     case SecTags.Jumbotron       => RenderSecTags.jumbotron(item, ParseSecTags.parseArgs(args))
     case SecTags.Marriage        => RenderSecTags.marriage(item, ParseSecTags.parseArgs(args))
     case SecTags.Timeline        => RenderSecTags.timeline(item, ParseSecTags.parseArgs(args))
+    case SecTags.Trip            => trip(item, ParseSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
     case _                       => RenderSecTags.genLink(kind.capitalize, item)
@@ -102,6 +103,36 @@ class RenderSecTags(
         case _ => ""
       }
     }
+  }
+
+
+  // experimentation with a trip tag
+  def trip(item: WorldItem, args: Map[String, String]): String = {
+    val startLocation = args.getOrElse("startloc",  "Earth")
+    val endLocation   = args.getOrElse("endloc",    "Mars")
+    val startDate     = args.getOrElse("startdate", "2016-01-01 12:00:00")
+    val endDate       = args.getOrElse("enddate",   "2016-02-01 12:00:00")
+    val mass          = args.getOrElse("mass",      "1000") // tonnes
+    val accel         = args.getOrElse("accel",     "0.25") // AU / day^2
+    val passengers    = args.getOrElse("passengers", "").split(";\\s+").toList.map(x => itemByString.get(x)).flatten
+
+    val shipName = Markdown.processLine(item.name)
+    val passengersString = if (passengers.isEmpty) {
+      ""
+    } else {
+      " with " + passengers.map(_.name).mkString(", ")
+    }
+
+    // for now, generate a text summary
+    shipName + " travels from " + startLocation + " to " + endLocation + passengersString + "." +
+    Tags.listGroup(
+      List(
+        RenderSecTags.genShow(
+          startDate, shipName + " departs from " + startLocation + "."),
+        RenderSecTags.genShow(
+          endDate,   shipName + " arrives at "   + endLocation + ".")).map(Tags.listItem(_))
+    )
+
   }
 
 }
@@ -184,7 +215,6 @@ object RenderSecTags {
     }
 
   }
-
 
   def tagString(tag: SecTag): String = {
     genShow(tag.kind.capitalize, tag.value)
