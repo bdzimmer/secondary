@@ -14,7 +14,7 @@ object Genealogy {
   val DescendantTags = Set("son", "daughter", "child", "descendant")
   val MarriageTags = Set("marriage")
 
-  val timeline = new Timeline(Timeline.DefaultMonths)
+  val dtp = new DateTupleParser(DateTime.DefaultMonths)
 
 
   // get a text description of a character's lifespan
@@ -22,8 +22,8 @@ object Genealogy {
     val birthOpt = character.tags.filter(_.kind.equals(SecTags.Birth)).headOption
     val deathOpt = character.tags.filter(_.kind.equals(SecTags.Death)).headOption
 
-    val birth = birthOpt.fold("")(x => timeline.parseDateTuple(x.value)._1.toString)
-    val death = deathOpt.fold("")(x => " - " + timeline.parseDateTuple(x.value)._1)
+    val birth = birthOpt.fold("")(x => dtp.parse(x.value)._1.toString)
+    val death = deathOpt.fold("")(x => " - " + dtp.parse(x.value)._1)
 
     birth + death
   }

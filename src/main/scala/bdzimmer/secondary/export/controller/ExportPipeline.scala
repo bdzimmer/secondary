@@ -221,9 +221,11 @@ object ExportPipeline {
       val imagesToExport = pagesToExport.collect({case x: ImageItem => x})
 
       logList("refs to export",  refsToExport.map(_.id))
-      logList("image to export", imagesToExport.map(_.id))
+      logList("images to export", imagesToExport.map(_.id))
 
-      refsToExport ++ imagesToExport
+      // there may be overlap between the above two lists, for instance if a tileset file is modified
+      // and the description is also update, so the "distinct" here should prevent duplicate work.
+      (refsToExport ++ imagesToExport).distinct
 
     } else {
       List()

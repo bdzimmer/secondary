@@ -162,11 +162,12 @@ private object WorldLoaderFlat {
     case "!location"    => new PlaceItemBean()
     case "!character"   => new CharacterItemBean()
     case "!person"      => new CharacterItemBean()
-    case "!image"       => new ImageItemBean()
+    case "!image"       => new ImageFileItemBean()
     case "!tileset"     => new TilesetItemBean()
     case "!spritesheet" => new SpritesheetItemBean()
     case "!map"         => new MapItemBean()
     case "!include"     => new SrcIncludeBean()
+    case "!trip"        => new TripItemBean()
     case _              => new ThingItemBean()
   }
 

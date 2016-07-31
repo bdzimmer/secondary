@@ -125,7 +125,7 @@ class Driver {
             case Pass(ds)  => ds.downloadInput()
             case Fail(msg) => DriveSync.driveError(msg)
           }
-					*/
+          */
 
           val world = new ExportPipeline(projConf).run()
 
@@ -134,7 +134,7 @@ class Driver {
             case Pass(ds)  => ds.uploadOutput()
             case Fail(msg) => DriveSync.driveError(msg)
           }
-					*/
+          */
 
           world
 
@@ -199,7 +199,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.05.22"
+  val Title = "Secondary - create worlds from text - v2016.07.31"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

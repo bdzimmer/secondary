@@ -11,8 +11,9 @@ You'll need sbt and JDK 7 or greater.
 Clone the repositories for Secondary and its dependencies.
 
     git clone https://github.com/bdzimmer/secondary.git
-    git clone https://github.com/bdzimmer/pixel-editor.git
     git clone https://github.com/bdzimmer/util-scala.git
+    git clone https://github.com/bdzimmer/pixel-editor.git
+    git clone https://github.com/bdzimmer/orbits.git
 
 Run tests, build documentation, and build the JAR.
 

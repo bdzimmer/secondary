@@ -41,9 +41,11 @@ lazy val root = (project in file("."))
   .settings(Defaults.itSettings: _*)
   .dependsOn(utilscala)
   .dependsOn(pixeleditor)
+  .dependsOn(orbits)
 
 lazy val utilscala   = RootProject(file("../util-scala"))
 lazy val pixeleditor = RootProject(file("../pixel-editor"))
+lazy val orbits      = RootProject(file("../orbits"))
 
 // import into Eclipse as a Scala project
 EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala

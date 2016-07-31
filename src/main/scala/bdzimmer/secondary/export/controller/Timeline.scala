@@ -14,11 +14,10 @@ import bdzimmer.util.{Result, Pass, Fail}
 
 import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.{Markdown, Tags}
+import bdzimmer.secondary.export.controller.DateTime.DateTuple
 
 
-class Timeline(months: List[String]) {
-
-  type DateTuple = (Int, Option[Int], Option[Int])
+class Timeline(dtp: DateTupleParser) {
 
   def getHtml(item: WorldItem, format: String): String = {
 
@@ -29,7 +28,7 @@ class Timeline(months: List[String]) {
           case Nil => "empty " + tag.kind.capitalize
           case _ => tag.args.mkString(" ")
         }
-        (parseDateTuple(tag.value), desc, it)
+        (dtp.parse(tag.value), desc, it)
       })
     }).flatten.sortBy(_._1)
 
@@ -49,7 +48,7 @@ class Timeline(months: List[String]) {
       curYear.groupBy(_._1._2).toList.sortBy(_._1).map({case(month, curMonth) => {
 
         // the endline is required for the markdown processing
-        month.map(x => Tags.b(months(x).capitalize)).getOrElse("") + "\n\n\n" +
+        month.map(x => Tags.b(dtp.month(x).capitalize)).getOrElse("") + "\n\n\n" +
         Tags.table(None, curMonth.map({case(date, desc, src) => {
           List(date._3.map(x => Tags.b(x.toString) + Timeline.ColumnSeparator).getOrElse(""),
                Markdown.processLine(desc) + Tags.nbsp + ExportPages.glyphLinkPage(src))
@@ -68,7 +67,7 @@ class Timeline(months: List[String]) {
       curYear.groupBy(_._1._2).toList.sortBy(_._1).map({case(month, curMonth) => {
 
         pIndent(
-            month.map(x => Tags.b(months(x).capitalize) + Tags.nbsp).getOrElse("") +
+            month.map(x => Tags.b(dtp.month(x).capitalize) + Tags.nbsp).getOrElse("") +
             eventStrings(curMonth, date => date._3.map(x => Tags.b(x + ". ")).getOrElse(""))
         )
 
@@ -84,7 +83,7 @@ class Timeline(months: List[String]) {
       List(
           Tags.b(year.toString) + Timeline.ColumnSeparator,
           eventStrings(curYear, date => {
-            Tags.b(date._2.map(x => months(x).capitalize + " ").getOrElse("") + date._3.map(_ + ". ").getOrElse(""))
+            Tags.b(date._2.map(x => dtp.month(x).capitalize + " ").getOrElse("") + date._3.map(_ + ". ").getOrElse(""))
           }))
 
     }}), tdStyle = Some(Timeline.TableStyle), None, None) + Tags.br
@@ -100,7 +99,7 @@ class Timeline(months: List[String]) {
       Markdown.processLine(desc) + Tags.nbsp +
       ExportPages.glyphLinkPage(src) + Tags.nbsp
     }}).mkString
-		*/
+    */
 
     // group events together that ocurred on the same day
     events.groupBy(_._1).toList.sortBy(_._1).map({case(date, eventsOfDate) => {
@@ -122,55 +121,16 @@ class Timeline(months: List[String]) {
   private def renderNaive(events: List[(DateTuple, String, WorldItem)]): String = {
     events.map({case(date, desc, src) => {
       Tags.p(
-          renderDateTuple(date) + " - "
+          dtp.render(date) + " - "
           + Markdown.processLine(desc) + Tags.nbsp
           + ExportPages.glyphLinkPage(src))
     }}).mkString("")
   }
 
-
-  def parseDateTuple(date: String): DateTuple = {
-
-    val parseResult = date.split("\\s*[,\\s]+").toList match {
-      case month :: day :: year :: Nil => Result(
-          (year.toInt, Some(parseMonth(month)), Some(day.toInt)))
-      case month :: year :: Nil => Result(
-          (year.toInt, Some(parseMonth(month)), None))
-      case year :: Nil => Result((year.toInt, None, None))
-      case _ => Fail("Invalid date specification")
-    }
-
-    parseResult match {
-      case Pass(x) => x
-      case Fail(msg) => (0, Some(0), Some(0)) // default date for now
-    }
-
-  }
-
-
-  private def parseMonth(month: String): Int = {
-    val index = months.indexWhere(x => x.contains(month.toLowerCase))
-    if (index == -1) 0 else index
-  }
-
-
-  private def renderDateTuple(date: DateTuple): String = date match {
-    case (year, Some(month), Some(day)) =>  months(month).capitalize + " " + day + ", " + year
-    case (year, Some(month), None) => months(month).capitalize + " " + year
-    case (year, None, None) => year.toString
-    case _ => "Invalid DateTuple"
-  }
-
-
 }
 
 
 object Timeline {
-
-  val DefaultMonths = List(
-      "january", "february", "march", "april",
-      "may", "june", "july", "august",
-      "september", "october", "november", "december")
 
   val DayTableFormat = "dayTable"
   val MonthDayParagraphFormat = "monthDayParagraph"

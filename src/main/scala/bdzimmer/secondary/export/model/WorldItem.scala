@@ -68,14 +68,17 @@ trait WorldItemBean {
   def getVal(): WorldItem
 }
 
-// represents a reference to a piece of content
-// that exists in its own file.
+
+// the item generates or references an image
+trait ImageItemBean extends WorldItemBean
+
+// a reference to a piece of content that exists in its own file.
 trait RefItemBean extends WorldItemBean {
   @BeanProperty var filename: String = ""
 }
 
-// a piece of content that is a tileset with attributes
-trait TileRefItemBean extends RefItemBean {
+// the referenced piece of content is a tileset with attributes
+trait TileRefItemBean extends ImageItemBean with RefItemBean {
   @BeanProperty var tiletype: String = ""
 }
 
@@ -101,12 +104,19 @@ class PlaceItemBean extends WorldItemBean {
       srcfilename, remoteid, pst.getAllTags(notes))
 }
 
-class ImageItemBean extends RefItemBean {
-  def getVal(): ImageItem = ImageItem(
+class ImageFileItemBean extends ImageItemBean with RefItemBean {
+  def getVal(): ImageFileItem = ImageFileItem(
       id, name, description, notes,
       srcfilename, remoteid,
       pst.getAllTags(notes),
       filename)
+}
+
+class TripItemBean extends ImageItemBean {
+  def getVal(): TripItem = TripItem(
+      id, name, description, notes,
+      srcfilename, remoteid,
+      pst.getAllTags(notes))
 }
 
 class CharacterItemBean extends WorldItemBean {
@@ -142,13 +152,14 @@ class SpritesheetItemBean extends TileRefItemBean {
       filename, tiletype)
 }
 
-class MapItemBean extends RefItemBean {
+class MapItemBean extends ImageItemBean with RefItemBean {
   def getVal(): MapItem = MapItem(
       id, name, description, notes,
       srcfilename, remoteid,
       pst.getAllTags(notes),
       filename)
 }
+
 
 // reference to another source file
 // as far as I know, the getVal function here will never be called.
@@ -172,11 +183,14 @@ trait WorldItem {
     val tags: List[SecTag]
 }
 
+
+trait ImageItem extends WorldItem
+
 trait RefItem extends WorldItem {
   val filename: String
 }
 
-trait TileRefItem extends RefItem {
+trait TileRefItem extends ImageItem with RefItem {
   val tiletype: String
 }
 
@@ -189,15 +203,19 @@ case class ThingItem(
     id: String, name: String, description: String, notes: String,
     srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
-// for now, PlaceItem has no fields that distinguish it from ThingItem
+// for now, PlaceItem and TripItem have no fields that distinguish them from ThingItem
 case class PlaceItem(
     id: String, name: String, description: String, notes: String,
     srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
 
-case class ImageItem(
+case class ImageFileItem(
     id: String, name: String, description: String, notes: String,
     srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String) extends RefItem
+    filename: String) extends ImageItem with RefItem
+
+case class TripItem(
+    id: String, name: String, description: String, notes: String,
+    srcfilename: String, remoteid: String, tags: List[SecTag]) extends ImageItem
 
 case class CharacterItem(
     id: String, name: String, nameParts: Option[List[String]],
@@ -209,39 +227,24 @@ case class CharacterItem(
 case class TilesetItem(
     id: String, name: String, description: String, notes: String,
     srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String, tiletype: String) extends TileRefItem
+    filename: String, tiletype: String) extends ImageItem with TileRefItem
 
 case class SpritesheetItem(
     id: String, name: String, description: String, notes: String,
     srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String, tiletype: String) extends TileRefItem
+    filename: String, tiletype: String) extends ImageItem with TileRefItem
 
 case class MapItem(
     id: String, name: String, description: String, notes: String,
     srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String) extends RefItem
+    filename: String) extends ImageItem with RefItem
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////
 
 
 object WorldItem {
-
-  /**
-   * Filter a list of WorldItems by type.
-   *
-   * @tparam A               type of WorldItem to keep
-   * @param  items           list of  WorldItem to filter
-   * @return a list of the WorldItems of type A in the list
-   *
-   */
-  /*
-  def filterList[A <: WorldItem : ClassTag](items: List[WorldItem]): List[A] = items.headOption match {
-    case Some(x: A) => x :: filterList[A](items.tail)
-    case Some(_)    =>      filterList[A](items.tail)
-    case None       => Nil
-  }
-	*/
 
   // create a list of all world items in a hierarchy
   def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {

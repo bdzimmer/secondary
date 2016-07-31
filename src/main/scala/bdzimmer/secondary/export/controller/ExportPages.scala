@@ -37,8 +37,6 @@ class ExportPages(
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
-  // val refItems = world.collect({case x: RefItem => x})
-
   // map of ids and names of items to the actual item object
   val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
 
@@ -62,11 +60,9 @@ class ExportPages(
   // the main collection for each each item
   val groups = master.children.flatMap(group => WorldItem.collectionToList(group).map(item => (item.id, group))).toMap
 
-  // only the characters - used by RenderSecTags for FamilyTrees
-  // and eventually other character-specific tags
   val characters = world.collect({case x: CharacterItem => x})
-
   val np = new RenderSecTags(itemByString, characters)
+
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
     items map(item => exportPageDispatch(item)) filter (!_.equals(""))
@@ -76,9 +72,10 @@ class ExportPages(
   def exportPageDispatch(item: WorldItem): String = item match {
     case x: CollectionItem => createCollectionPage(x)
     case x: CharacterItem  => createCharacterPage(x)
-    case x: ImageItem      => createImagePage(x)
-    case x: MapItem        => createMapPage(x)
-    case x: TileRefItem    => createTilePage(x)
+    case x: ImageFileItem  => createImagePage(x)
+    case x: MapItem        => createPixelArtPage(x)
+    case x: TileRefItem    => createPixelArtPage(x)
+    case x: TripItem       => createImagePage(x)
     case _                 => createItemPage(item)
   }
 
@@ -269,45 +266,23 @@ class ExportPages(
   }
 
 
+  private def createPixelArtPage(item: ImageItem): String = {
 
-  private def createMapPage(map: MapItem): String = {
-
-    val relFilePath = ExportPages.itemPageName(map)
+    val relFilePath = ExportPages.itemPageName(item)
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        map.name,
-        map.description,
-        pageNavbar(Some(map)),
+        item.name,
+        item.description,
+        pageNavbar(Some(item)),
 
-        column(Column12, ExportImages.pixelImageLinkResponsive(map) + hr) +
-        column(Column12, np.transform(map.notes) + refItems(map)),
+        column(Column12, ExportImages.pixelImageLinkResponsive(item) + hr) +
+        column(Column12, np.transform(item.notes) + refItems(item)),
 
         license)
 
     relFilePath
   }
-
-
-
-  private def createTilePage(tileset: TileRefItem): String = {
-
-    val relFilePath = ExportPages.itemPageName(tileset)
-
-    PageTemplates.createArticlePage(
-        location / relFilePath,
-        tileset.name,
-        tileset.description,
-        pageNavbar(Some(tileset)),
-
-        column(Column12, ExportImages.pixelImageLinkResponsive(tileset) + hr) +
-        column(Column12, np.transform(tileset.notes) + refItems(tileset)),
-
-        license)
-
-    relFilePath
-  }
-
 
 
   private def createCollectionPage(collection: CollectionItem): String = {
@@ -336,37 +311,41 @@ class ExportPages(
 
 
 
-  private def createImagePage(imageItem: ImageItem): String = {
+  private def createImagePage(item: ImageItem): String = {
 
-    val relFilePath = ExportPages.itemPageName(imageItem)
+    val relFilePath = ExportPages.itemPageName(item)
 
-    val wikiNameOption = (imageItem.filename.startsWith("wikimedia:") match {
-      case true  => Some(imageItem.filename.split(":")(1))
-      case false => None
-    })
-
-    val licenseDescription = (for {
-      wikiName <- wikiNameOption
-      json <- ImageDownloader.getWikimediaJson(wikiName)
-      wm <- ImageDownloader.parseWikimediaJson(json)
-      description =
-        "Artist: " + wm.artist + br +
-        "License: " + wm.license + br +
-        (if (wm.attribution) "Attribution required." + br else "") +
-        link("Source", wm.descriptionurl) + hr
-    } yield description).getOrElse("")
+    val imageDescription = item match {
+      case imageFileItem: ImageFileItem => {
+        val wikiNameOption = (imageFileItem.filename.startsWith("wikimedia:") match {
+          case true  => Some(imageFileItem.filename.split(":")(1))
+          case false => None
+        })
+        val imageDescription = (for {
+          wikiName <- wikiNameOption // todo: pull this out of the for comprehension
+          json <- ImageDownloader.getWikimediaJson(wikiName)
+          wm <- ImageDownloader.parseWikimediaJson(json)
+          description =
+            "Artist: " + wm.artist + br +
+            "License: " + wm.license + br +
+            (if (wm.attribution) "Attribution required." + br else "") +
+            link("Source", wm.descriptionurl) + hr
+        } yield description).getOrElse("")
+      }
+      case _ => ""
+    }
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        imageItem.name, imageItem.description,
-        pageNavbar(Some(imageItem)),
+        item.name, item.description,
+        pageNavbar(Some(item)),
 
-        column(Column8, image(ExportImages.imageItemImagePath(imageItem), responsive = true)) +
+        column(Column8, image(ExportImages.imagePath(item), responsive = true)) +
         column(Column4, "") +
         column(Column12,
             hr +
-            licenseDescription +
-            np.transform(imageItem.notes) + refItems(imageItem)),
+            imageDescription +
+            np.transform(item.notes) + refItems(item)),
         license)
 
     relFilePath

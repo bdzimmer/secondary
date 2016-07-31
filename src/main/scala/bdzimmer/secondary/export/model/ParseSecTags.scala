@@ -26,7 +26,7 @@ object SecTags {
   val Jumbotron = "jumbotron"
   val Marriage = "marriage"
   val Timeline = "timeline"
-  val Trip = "trip"  // not sure which category this should be in
+  val Flight = "flight"  // not sure which category this should be in
 
   val Birth = "birth"
   val Death = "death"
@@ -42,7 +42,7 @@ object SecTags {
 
   val ItemTagKinds = List(
       Link, Image, ImageResponsive,
-      FamilyTree, Jumbotron, Marriage, Timeline, Trip)
+      FamilyTree, Jumbotron, Marriage, Timeline, Flight)
 
   val EventTagKinds = List(Birth, Death, Event)
   val TaskTagKinds = List(Thought, Todo, Started, Done, Blocked)

@@ -20,6 +20,8 @@ import bdzimmer.secondary.export.model._
 import bdzimmer.secondary.export.view.Markdown
 import bdzimmer.secondary.export.view.Tags._
 
+import bdzimmer.orbits.{Flight, MeeusPlanets, Spacecraft}
+
 import bdzimmer.util.StringUtils._
 
 
@@ -29,6 +31,10 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   val imagesLocation = location / ExportImages.ImagesDir
   new File(imagesLocation).mkdir
 
+  val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
+  val characters = world.collect({case x: CharacterItem => x})
+  val np = new RenderSecTags(itemByString, characters)
+
   // TODO: rename metaItems to refItems
   val metaItems = world.collect({case x: RefItem => x})
 
@@ -37,7 +43,7 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     // export tileset / spritesheet and map images
 
     // for maps, tilesets, and spritesheets, filename is a datafile that gets converted
-    // to images of various scales which are saved as standard image files, probably PNG.
+    // to images of various scales which are saved as standard image files, probably png.
     // These scaled standard image files become the outputs.
 
     val mapImageOutputs = (items.collect({case x: MapItem => x})
@@ -46,25 +52,20 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
     val tileImageOutputs = (items.collect({case x: TileRefItem => x})
         map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
 
-    // // export individual tile images
-    // (filterList[TileMetaItem](items)
-    //    map(x => Export.exportIndividualTileImages(x, contentDir, location)))
-
-    // export individual tile images for sprite sheets
-    // val spritesheetImageOutputs = (WorldItem.filterList[SpritesheetItem](items)
-    //    map(x => (x.filename,  ExportImages.exportIndividualTileImages(x, contentDir, location))))
-
     // In the case of ImageItems, the filename is already an image. It either exists
     // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
     // prefix.
-    val imageOutputs = (items.collect({case x: ImageItem => x})
-        map(x => prepareImageItemOutputs(x, contentDir)))
+    val imageFileOutputs = (items.collect({case x: ImageFileItem => x})
+        map(x => prepareImageFileItemOutputs(x, contentDir)))
+
+    // TripItems generate images of interplanetary flights from tags in their notes.
+    val tripOutputs = (items.collect({case x: TripItem => x})
+        map(x => prepareTripItemOutputs(x, contentDir)))
 
     // we can't just call toMap on all of these lists and then merge them, because
     // the lists may contain duplicate keys themselves.
 
-    // skip adding spritesheet outputs to list, since we don't want to upload them
-    val allImageOutputsList = mapImageOutputs ++ tileImageOutputs ++ imageOutputs
+    val allImageOutputsList = mapImageOutputs ++ tileImageOutputs ++ imageFileOutputs ++ tripOutputs
 
     val allImageOutputs = (allImageOutputsList
         .map(x => List(x).toMap)
@@ -76,22 +77,22 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
 
   // download or copy image files to the output location
-  def prepareImageItemOutputs(imageItem: ImageItem, contentDir: String): (String, List[String]) = {
+  def prepareImageFileItemOutputs(imageFileItem: ImageFileItem, contentDir: String): (String, List[String]) = {
 
-    val ext = FilenameUtils.getExtension(imageItem.filename)
-    val relativeName = ExportImages.ImagesDir / imageItem.id + "." + ext
+    val ext = FilenameUtils.getExtension(imageFileItem.filename)
+    val relativeName = ExportImages.ImagesDir / imageFileItem.id + "." + ext
     val absoluteName = location / relativeName
     val dstFile = new File(absoluteName)
 
     // todo: change to if / else
-    val (resultSrc, resultDst) = imageItem.filename.startsWith("wikimedia:") match {
+    val (resultSrc, resultDst) = imageFileItem.filename.startsWith("wikimedia:") match {
 
       case false => {
         // local file - copy to images folder
         // source is original local file
 
-        val srcFilename = imageItem.filename
-        val srcAbsFilename = contentDir / imageItem.filename
+        val srcFilename = imageFileItem.filename
+        val srcAbsFilename = contentDir / imageFileItem.filename
         val srcFile = new File(srcAbsFilename)
 
         if (!dstFile.exists && srcFile.exists) {
@@ -106,15 +107,15 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
       case true => {
         // wikimedia file - download to images folder
         // source is scrcfilename!
-        val srcFilename = imageItem.srcfilename
+        val srcFilename = imageFileItem.srcfilename
 
         // only download if it doesn't already exist in the scratch location
         if (!dstFile.exists) {
           println("\t\t\tdownloading to " + relativeName)
           val outputName = for {
-            json <- ImageDownloader.getWikimediaJson(imageItem.filename.split(":")(1))
+            json <- ImageDownloader.getWikimediaJson(imageFileItem.filename.split(":")(1))
             wm <- ImageDownloader.parseWikimediaJson(json)
-            imagePrefix = imagesLocation / imageItem.id
+            imagePrefix = imagesLocation / imageFileItem.id
             _ = ImageDownloader.downloadImage(wm, imagePrefix)
           } yield relativeName
           (srcFilename, outputName)
@@ -132,6 +133,48 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
 
     (resultSrc, resultDst.toList)
   }
+
+
+  def prepareTripItemOutputs(tripItem: TripItem, contentDir: String): (String, List[String]) = {
+
+    val src = tripItem.srcfilename
+    val flightTags = tripItem.tags.filter(_.kind.equals(SecTags.Flight))
+
+    // build list of valid flightparams from flight tags in the trip
+    val flightParams = flightTags.map(tag => {
+      itemByString.get(tag.value).map(item => {
+        np.flightParams(item, ParseSecTags.parseArgs(tag.args))
+      })
+    }).flatten
+
+    // for now, only render the first flight in the trip
+    val dst =  for {
+
+      fp <- flightParams.headOption
+      startLoc <- MeeusPlanets.Planets.get(fp.startLocation)
+      endLoc <- MeeusPlanets.Planets.get(fp.endLocation)
+
+    } yield {
+
+      val im = Flight.drawRoughFlight(
+          Spacecraft(fp.ship.name, fp.mass, fp.accel),
+          fp.startLocation,
+          fp.endLocation,
+          startLoc, endLoc,
+          fp.startDate,
+          fp.endDate)
+
+      val relativeName = ExportImages.ImagesDir / tripItem.id + ".png"
+      val outputImage = new java.io.File(location / relativeName);
+      ImageIO.write(im, "png", outputImage)
+      println("done!")
+      relativeName
+    }
+
+    (src, dst.toList)
+
+  }
+
 
 }
 
@@ -313,8 +356,12 @@ object ExportImages {
   }
 
 
-  def imageItemImagePath(imageItem: ImageItem): String = {
-    ImagesDir / imageItem.id + "." + FilenameUtils.getExtension(imageItem.filename)
+  def imagePath(item: ImageItem): String = {
+    val ext = item match {
+      case x: ImageFileItem => FilenameUtils.getExtension(x.filename)
+      case _ => "png"
+    }
+    ImagesDir / item.id + "." + ext
   }
 
 
@@ -333,7 +380,8 @@ object ExportImages {
         val imageFile = pixelImagePathScale(x, 1)
         imageSprite(imageFile, 0, 0, 192, 192)
       }
-      case x: ImageItem => image(imageItemImagePath(x), responsive, maxWidth)
+      case x: ImageFileItem => image(imagePath(x), responsive, maxWidth)
+      case x: TripItem => image(imagePath(x), responsive, maxWidth)
       case _ => ""
     }
 
@@ -350,7 +398,8 @@ object ExportImages {
   // I believe this is only used for jumbotron images.
   def itemImagePath(item: WorldItem): String = item match {
     case x: MapItem => pixelImagePathScale(x, 4)
-    case x: ImageItem => imageItemImagePath(x)
+    case x: ImageFileItem => imagePath(x)
+    case x: TripItem => imagePath(x)
     case _ => ""
   }
 

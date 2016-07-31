@@ -3,6 +3,7 @@
 package bdzimmer.secondary.export.controller
 
 import scala.util.matching.Regex
+import scala.util.Try
 
 import org.pegdown.ast.AnchorLinkNode
 
@@ -10,6 +11,19 @@ import bdzimmer.util.{Result, Pass, Fail}
 
 import bdzimmer.secondary.export.model.{CharacterItem, RefItem, WorldItem, ParseSecTags, SecTag, SecTags}
 import bdzimmer.secondary.export.view.{Markdown, Tags}
+
+import bdzimmer.orbits.CalendarDateTime
+
+
+case class FlightParams(
+    ship: WorldItem,
+    startLocation: String,
+    endLocation: String,
+    startDate: CalendarDateTime,
+    endDate: CalendarDateTime,
+    mass: Double,
+    accel: Double,
+    passengers: List[WorldItem])
 
 
 class RenderSecTags(
@@ -67,7 +81,6 @@ class RenderSecTags(
   }
 
 
-
   // generate text for tags that reference WorldItems
   def processItemTag(kind: String, item: WorldItem, args: List[String]): String = kind match {
 
@@ -78,7 +91,7 @@ class RenderSecTags(
     case SecTags.Jumbotron       => RenderSecTags.jumbotron(item, ParseSecTags.parseArgs(args))
     case SecTags.Marriage        => RenderSecTags.marriage(item, ParseSecTags.parseArgs(args))
     case SecTags.Timeline        => RenderSecTags.timeline(item, ParseSecTags.parseArgs(args))
-    case SecTags.Trip            => trip(item, ParseSecTags.parseArgs(args))
+    case SecTags.Flight          => flight(item, ParseSecTags.parseArgs(args))
 
     // tags that aren't recognized are displayed along with links
     case _                       => RenderSecTags.genLink(kind.capitalize, item)
@@ -106,34 +119,54 @@ class RenderSecTags(
   }
 
 
-  // experimentation with a trip tag
-  def trip(item: WorldItem, args: Map[String, String]): String = {
+  def flightParams(item: WorldItem, args: Map[String, String]): FlightParams = {
+
+    val defaultStartDate = CalendarDateTime(2016, 1, 1, 12, 0, 0.0)
+    val defaultEndDate   = CalendarDateTime(2016, 2, 1, 12, 0, 0.0)
+
     val startLocation = args.getOrElse("startloc",  "Earth")
     val endLocation   = args.getOrElse("endloc",    "Mars")
-    val startDate     = args.getOrElse("startdate", "2016-01-01 12:00:00")
-    val endDate       = args.getOrElse("enddate",   "2016-02-01 12:00:00")
-    val mass          = args.getOrElse("mass",      "1000") // tonnes
-    val accel         = args.getOrElse("accel",     "0.25") // AU / day^2
+    val startDate     = args.get("startdate").map(DateTime.parse(_)).getOrElse(defaultStartDate)
+    val endDate       = args.get("enddate").map(DateTime.parse(_)).getOrElse(defaultEndDate)
+    val mass          = args.get("mass").flatMap(x => Try(x.toDouble).toOption).getOrElse(1000.0) // tonnes
+    val accel         = args.get("accel").flatMap(x => Try(x.toDouble).toOption).getOrElse(0.25)  // AU / day^2
     val passengers    = args.getOrElse("passengers", "").split(";\\s+").toList.map(x => itemByString.get(x)).flatten
 
-    val shipName = Markdown.processLine(item.name)
-    val passengersString = if (passengers.isEmpty) {
+    FlightParams(
+      item,
+      startLocation, endLocation,
+      startDate, endDate,
+      mass, accel,
+      passengers)
+  }
+
+
+  // experimentation with a flight tag
+  def flight(item: WorldItem, args: Map[String, String]): String = {
+
+    val fp = flightParams(item, args)
+
+    val shipName = fp.ship.name
+    val passengersString = if (fp.passengers.isEmpty) {
       ""
     } else {
-      " with " + passengers.map(_.name).mkString(", ")
+      " with " + fp.passengers.map(_.name).mkString(", ")
     }
 
     // for now, generate a text summary
-    shipName + " travels from " + startLocation + " to " + endLocation + passengersString + "." +
+    shipName + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
     Tags.listGroup(
       List(
         RenderSecTags.genShow(
-          startDate, shipName + " departs from " + startLocation + "."),
+          fp.startDate.dateTimeString, shipName + " departs from " + fp.startLocation + "."),
         RenderSecTags.genShow(
-          endDate,   shipName + " arrives at "   + endLocation + ".")).map(Tags.listItem(_))
+          fp.endDate.dateTimeString,   shipName + " arrives at "   + fp.endLocation   + ".")
+      ).map(Tags.listItem(_))
     )
 
   }
+
+
 
 }
 
@@ -197,7 +230,7 @@ object RenderSecTags {
   }
 
   def timeline(item: WorldItem, args: Map[String, String]): String = {
-    val timeline = new Timeline(Timeline.DefaultMonths)
+    val timeline = new Timeline(DateTime.DefaultParser)
     val format = args.getOrElse("format", Timeline.MonthDayParagraphFormat)
     timeline.getHtml(item, format)
   }
