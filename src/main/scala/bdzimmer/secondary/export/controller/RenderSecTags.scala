@@ -128,8 +128,27 @@ class RenderSecTags(
     val endLocation   = args.getOrElse("endloc",    "Mars")
     val startDate     = args.get("startdate").map(DateTime.parse(_)).getOrElse(defaultStartDate)
     val endDate       = args.get("enddate").map(DateTime.parse(_)).getOrElse(defaultEndDate)
-    val mass          = args.get("mass").flatMap(x => Try(x.toDouble).toOption).getOrElse(1000.0) // tonnes
-    val accel         = args.get("accel").flatMap(x => Try(x.toDouble).toOption).getOrElse(0.25)  // AU / day^2
+
+    // val mass          = args.get("mass").flatMap(x => Try(x.toDouble).toOption).getOrElse(1000.0) // tonnes
+    // val accel         = args.get("accel").flatMap(x => Try(x.toDouble).toOption).getOrElse(0.25)  // AU / day^2
+
+    // get mass and acceleration from tags in the ship
+    // assumes mass in tonnes and acceleration in AU / day
+
+    val mass = (for {
+      massTag <- item.tags.filter(_.kind.equals(SecTags.Mass)).headOption
+      mass  <- Try(massTag.value.split("\\s+")(0).toDouble).toOption
+    } yield {
+      mass
+    }).getOrElse(1000.0) // tonnes
+
+    val accel = (for {
+      accelTag <- item.tags.filter(_.kind.equals(SecTags.Acceleration)).headOption
+      accel  <- Try(accelTag.value.split("\\s+")(0).toDouble).toOption
+    } yield {
+      accel
+    }).getOrElse(0.25) // AU / day^2
+
     val passengers    = args.getOrElse("passengers", "").split(";\\s+").toList.map(x => itemByString.get(x)).flatten
 
     FlightParams(
@@ -141,7 +160,6 @@ class RenderSecTags(
   }
 
 
-  // experimentation with a flight tag
   def flight(item: WorldItem, args: Map[String, String]): String = {
 
     val fp = flightParams(item, args)
@@ -150,11 +168,11 @@ class RenderSecTags(
     val passengersString = if (fp.passengers.isEmpty) {
       ""
     } else {
-      " with " + fp.passengers.map(_.name).mkString(", ")
+      " with " + fp.passengers.map(x => ExportPages.textLinkPage(x)).mkString(", ")
     }
 
-    // for now, generate a text summary
-    shipName + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
+    // generate a text summary
+    ExportPages.textLinkPage(fp.ship) + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
     Tags.listGroup(
       List(
         RenderSecTags.genShow(
@@ -165,8 +183,6 @@ class RenderSecTags(
     )
 
   }
-
-
 
 }
 

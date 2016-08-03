@@ -1,10 +1,5 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// 2015-09-12: Refactoring.
-// 2015-09-17: WIP further refactoring.
-// 2015-10-20: Changes for YAML parse error handling.
-// 2016-01-16: Big refactor.
-
 package bdzimmer.secondary.export.controller
 
 import java.io.{File, FileOutputStream}
@@ -79,10 +74,15 @@ class ExportPipeline(projConf: ProjectConfig)  {
           // items that have been modified
           val modifiedItems = world.filter(x => modifiedIds.contains(x.id))
 
-          // items that are referenced by modified items
+          // items that modified items reference
           // this will keep "referenced by" lists up to date
           // I don't think this is usually important; so this may be something to make optional
           val modifiedItemsReferences = modifiedItems.flatMap(x => exportPages.references.get(x.id)).flatten
+
+          // items that modified items are referenced by
+          // updates link names, flight predictions, etc.
+          // This is potentially more important than above in terms of keeping things up to date.
+          val modifiedItemsReferencedsBy = modifiedItems.flatMap(x => exportPages.referencedBy.get(x.id)).flatten
 
           // items with timelines that contain events from modified items
           val timelineItems = (world
@@ -101,7 +101,7 @@ class ExportPipeline(projConf: ProjectConfig)  {
 
           // TODO: also find family trees that need refreshing
 
-          val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ timelineItemsRefresh).distinct
+          val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedsBy ++ timelineItemsRefresh).distinct
 
           val modifiedRefs = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
 

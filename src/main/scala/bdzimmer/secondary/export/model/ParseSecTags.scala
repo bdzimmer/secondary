@@ -1,13 +1,5 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Functionality for parsing markdown and special Secondary tags.
-
-// 2015-08-30: Created. Link and general tags.
-// 2015-09-01: Image tags.
-// 2015-09-02: Tags for jumbotron background image and text color.
-// 2015-11-06: Family tree tags.
-// 2015-11-09: Added list of args to SecTags.
-
 package bdzimmer.secondary.export.model
 
 import scala.util.matching.Regex
@@ -26,17 +18,14 @@ object SecTags {
   val Jumbotron = "jumbotron"
   val Marriage = "marriage"
   val Timeline = "timeline"
-  val Flight = "flight"  // not sure which category this should be in
+  val Flight = "flight"
 
   val Birth = "birth"
   val Death = "death"
   val Event = "event"
 
-  val Thought = "thought"
-  val Todo    = "todo"
-  val Started = "started"
-  val Done    = "done"
-  val Blocked = "blocked"
+  val Mass = "mass"
+  val Acceleration = "acceleration"
 
   val Demo = "demo"
 
@@ -45,8 +34,9 @@ object SecTags {
       FamilyTree, Jumbotron, Marriage, Timeline, Flight)
 
   val EventTagKinds = List(Birth, Death, Event)
-  val TaskTagKinds = List(Thought, Todo, Started, Done, Blocked)
-  val OtherTagKinds = Demo +: (EventTagKinds ++ TaskTagKinds)
+  val TaskTagKinds = List("thought", "todo", "started", "done", "blocked")
+  val SpacecraftPropTagKinds = List(Mass, Acceleration)
+  val OtherTagKinds = Demo +: (EventTagKinds ++ TaskTagKinds ++ SpacecraftPropTagKinds)
 
   val NonItemTagKinds = EventTagKinds ++ TaskTagKinds ++ OtherTagKinds
 
