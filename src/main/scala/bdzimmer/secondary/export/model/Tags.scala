@@ -23,10 +23,9 @@ object SecTags {
   val Mass = "mass"
   val Acceleration = "acceleration"
 
-  val Demo = "demo"
-
   val Thought = "thought"
   val Todo = "todo"
+  val Started = "started"
   val Done = "done"
   val Blocked = "blocked"
 
@@ -39,6 +38,8 @@ object SecTags {
   val Daughter = "daughter"
   val Child = "child"
   val Descendant = "descendant"
+
+  val Demo = "demo"
 
 }
 
@@ -125,12 +126,6 @@ object Tags {
     unit: String  // TODO: real unit type
   ) extends ParsedTag
 
-  // other stuff
-
-  case class Demo(
-    value: String,
-    body: String
-  ) extends ParsedTag
 
   // tasks
 
@@ -163,6 +158,11 @@ object Tags {
     character: CharacterItem,
     date: Option[String] // TODO: real date type
   ) extends GenealogyTag
+
+  case class Demo(
+    kind: String,
+    body: String
+  ) extends ParsedTag
 
   // error tags
 

@@ -143,7 +143,7 @@ object ParseTags {
       }
 
       // TODO: convert date strings to date objects
-      case SecTags.Thought | SecTags.Todo | SecTags.Done | SecTags.Blocked => {
+      case SecTags.Thought | SecTags.Todo | SecTags.Started | SecTags.Done | SecTags.Blocked => {
         val log   = args.get("log")
         val start = args.get("start")
         val done  = args.get("done")
@@ -170,6 +170,15 @@ object ParseTags {
           case character: CharacterItem => Some(Marriage(character, None))
           case _ => None
         }).getOrElse(ParseError(tag, s"character '${tag.value}' does not exist"))
+      }
+
+      case SecTags.Demo => {
+        val body = tag.args match {
+          case x :: Nil => x
+          case x :: xs  => s"$x | ${xs.mkString(" | ")}"
+          case _        => "..."
+        }
+        Demo(tag.value, body)
       }
 
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")

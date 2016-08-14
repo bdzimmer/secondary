@@ -147,6 +147,8 @@ class RenderTags(
     case x: Tags.Descendant => genLink(x.kind.capitalize, x.character)
     case x: Tags.Marriage   => genLink("Marriage", x.character) // TODO: show marriage date
 
+    case demo: Tags.Demo    => s"{{${demo.kind}: ${demo.body}}}"
+
     case x: Tags.GenError   => Html.b("{{Error: " + x.msg + "}}")
     case x: Tags.ParseError => Html.b("{{Parse error: " + x.msg + "}}")
 
