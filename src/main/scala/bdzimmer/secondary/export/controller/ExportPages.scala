@@ -15,6 +15,7 @@ package bdzimmer.secondary.export.controller
 import java.io.File
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils
 
@@ -322,22 +323,28 @@ class ExportPages(
 
     val relFilePath = ExportPages.itemPageName(imageItem)
 
+    // TODO: download the wikimedia JSON to a file when image is downloaded.
+    // That way, an internet connection will only be required for the first export
+    // of a wikimedia image.
+
     val imageDescription = imageItem match {
       case imageFileItem: ImageFileItem => {
-        val wikiNameOption = (imageFileItem.filename.startsWith("wikimedia:") match {
-          case true  => Some(imageFileItem.filename.split(":")(1))
-          case false => None
-        })
-        val imageDescription = (for {
-          wikiName <- wikiNameOption // todo: pull this out of the for comprehension
-          json <- ImageDownloader.getWikimediaJson(wikiName)
-          wm <- ImageDownloader.parseWikimediaJson(json)
-          description =
-            "Artist: " + wm.artist + br +
-            "License: " + wm.license + br +
-            (if (wm.attribution) "Attribution required." + br else "") +
-            link("Source", wm.descriptionurl) + hr
-        } yield description).getOrElse("")
+        if (imageFileItem.filename.startsWith("wikimedia:")) {
+          (for {
+            wikiName <- Try(imageFileItem.filename.split(":")(1)).toOption
+            json     <- ImageDownloader.getWikimediaJson(wikiName)
+            wm       <- ImageDownloader.parseWikimediaJson(json)
+
+            description =
+              "Artist: " + wm.artist + br +
+              "License: " + wm.license + br +
+              (if (wm.attribution) "Attribution required." + br else "") +
+              link("Source", wm.descriptionurl) + hr
+
+          } yield description).getOrElse("")
+        } else {
+          ""
+        }
       }
       case _ => ""
     }
