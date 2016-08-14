@@ -27,7 +27,7 @@ class ImageDownloaderSuite extends FunSuite {
     assert(resultJson.isDefined)
 
     // for manual examination of JSON
-    // resultJson.map(x => FileUtils.writeStringToFile(new File("json.txt"), x, "UTF-8"))
+    resultJson.foreach(x => FileUtils.writeStringToFile(new File("json.txt"), x, "UTF-8"))
 
     val meta = resultJson.flatMap(ImageDownloader.parseWikimediaJson(_))
     assert(meta.isDefined)

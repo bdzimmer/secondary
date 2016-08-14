@@ -5,16 +5,12 @@
 // I'm using this in a context where the results will be fed into a markdown
 // renderer, so there's some specific things going on with newline usage.
 
-// Ben Zimmer
-
-
-
 package bdzimmer.secondary.export.view
 
 import scala.collection.immutable.Seq
 
 
-object Tags {
+object Html {
 
   val Column3 = 3
   val Column4 = 4

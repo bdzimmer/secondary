@@ -2,11 +2,16 @@
 
 // Functions for deriving lifespans and family relationships from characters' tags.
 
+// TODO: Geneaology still uses RawTags instead of ParsedTags - need to fix
+
 package bdzimmer.secondary.export.controller
 
 import scala.collection.immutable.Seq
 
-import bdzimmer.secondary.export.model.{CharacterItem, SecTag, SecTags}
+import bdzimmer.secondary.export.model.Tags.RawTag
+import bdzimmer.secondary.export.model.SecTags
+import bdzimmer.secondary.export.model.WorldItems.CharacterItem
+
 
 object Genealogy {
 
@@ -19,8 +24,8 @@ object Genealogy {
 
   // get a text description of a character's lifespan
   def lifespan(character: CharacterItem): String = {
-    val birthOpt = character.tags.filter(_.kind.equals(SecTags.Birth)).headOption
-    val deathOpt = character.tags.filter(_.kind.equals(SecTags.Death)).headOption
+    val birthOpt = character.tags.values.filter(_.kind.equals(SecTags.Birth)).headOption
+    val deathOpt = character.tags.values.filter(_.kind.equals(SecTags.Death)).headOption
 
     val birth = birthOpt.fold("")(x => dtp.parse(x.value)._1.toString)
     val death = deathOpt.fold("")(x => " - " + dtp.parse(x.value)._1)
@@ -79,7 +84,8 @@ object Genealogy {
     // outward-directed relationships
     val outCharacters = for {
       char <- allCharacters
-      outTag <- filterTags(character.tags, outTagKinds)
+      tagValues = character.tags.values.toList
+      outTag <- filterTags(tagValues, outTagKinds)
       tagChar <- tagCharacter(outTag, allCharacters)
       if tagChar.id.equals(char.id)
     } yield (tagChar, outTag.kind)
@@ -87,7 +93,8 @@ object Genealogy {
     // inward-directed relationships
     val inCharacters = for {
       char <- allCharacters
-      inTag <- filterTags(char.tags, inTagKinds)
+      tagValues = char.tags.values.toList
+      inTag <- filterTags(tagValues, inTagKinds)
       tagChar <- tagCharacter(inTag, allCharacters)
       if tagChar.id.equals(character.id)
     } yield (char, inTag.kind)
@@ -100,15 +107,15 @@ object Genealogy {
     if (x.equals("ancestor") || x.equals("descendant")) x else "parent"
   }
 
-  private def filterTags(tags: Seq[SecTag], kinds: Set[String]): Seq[SecTag] = {
+  private def filterTags(tags: Seq[RawTag], kinds: Set[String]): Seq[RawTag] = {
     tags.filter(x => kinds.contains(x.kind))
   }
 
-  private def filterTags(tags: Seq[SecTag], kind: String): Seq[SecTag] = {
+  private def filterTags(tags: Seq[RawTag], kind: String): Seq[RawTag] = {
     tags.filter(x => x.kind.equals(kind))
   }
 
-  private def tagCharacter(tag: SecTag, allCharacters: Seq[CharacterItem]): Option[CharacterItem] = {
+  private def tagCharacter(tag: RawTag, allCharacters: Seq[CharacterItem]): Option[CharacterItem] = {
     allCharacters.filter(x => {
       x.id.equals(tag.value) || x.name.equals(tag.value)
     }).headOption

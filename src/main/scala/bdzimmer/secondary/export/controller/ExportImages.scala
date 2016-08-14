@@ -12,13 +12,14 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
-import bdzimmer.pixeleditor.model.{ContentStructure, DosGraphics, Map, TileAttributes, TileOptions}
+import bdzimmer.pixeleditor.model.{ContentStructure, DosGraphics, TileAttributes, TileOptions}
 import bdzimmer.pixeleditor.model.Color
 import bdzimmer.pixeleditor.controller.OldTilesetLoader
 
-import bdzimmer.secondary.export.model._
+import bdzimmer.secondary.export.model.Tags
+import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Markdown
-import bdzimmer.secondary.export.view.Tags._
+import bdzimmer.secondary.export.view.Html._
 
 import bdzimmer.orbits.{Flight, MeeusPlanets, Spacecraft}
 
@@ -26,17 +27,17 @@ import bdzimmer.util.StringUtils._
 
 
 
-class ExportImages(world: List[WorldItem], val location: String, license: String) {
+class ExportImages(
+    world: List[WorldItem],
+    tags: Map[String, Map[Int, Tags.ParsedTag]],
+    val location: String,
+    license: String) {
 
   val imagesLocation = location / ExportImages.ImagesDir
   new File(imagesLocation).mkdir
 
-  val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-  val characters = world.collect({case x: CharacterItem => x})
-  val np = new RenderSecTags(itemByString, characters)
+  val np = new RenderTags(tags, world.collect({case x: CharacterItem => x}))
 
-  // TODO: rename metaItems to refItems
-  val metaItems = world.collect({case x: RefItem => x})
 
   def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
 
@@ -138,14 +139,10 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
   def prepareTripItemOutputs(tripItem: TripItem, contentDir: String): (String, List[String]) = {
 
     val src = tripItem.srcfilename
-    val flightTags = tripItem.tags.filter(_.kind.equals(SecTags.Flight))
 
-    // build list of valid flightparams from flight tags in the trip
-    val flightParams = flightTags.map(tag => {
-      itemByString.get(tag.value).map(item => {
-        np.flightParams(item, ParseSecTags.parseArgs(tag.args))
-      })
-    }).flatten
+    val flightParams = tags.getOrElse(tripItem.id, Map()).values.collect({
+      case x: Tags.Flight => np.flightParams(x)
+    }).toList
 
     // for now, only render the first flight in the trip
     val dst =  for {
@@ -167,7 +164,6 @@ class ExportImages(world: List[WorldItem], val location: String, license: String
       val relativeName = ExportImages.ImagesDir / tripItem.id + ".png"
       val outputImage = new java.io.File(location / relativeName);
       ImageIO.write(im, "png", outputImage)
-      println("done!")
       relativeName
     }
 
@@ -300,7 +296,7 @@ object ExportImages {
    */
   def getMapImage(inputFile: String, tilesDir: String): BufferedImage = {
 
-    val map = new Map(new File(inputFile))
+    val map = new bdzimmer.pixeleditor.model.Map(new File(inputFile))
 
     val tiles = new OldTilesetLoader(
         tilesDir / map.tileFileName + ".til",

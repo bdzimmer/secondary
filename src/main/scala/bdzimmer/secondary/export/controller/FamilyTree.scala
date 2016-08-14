@@ -2,16 +2,17 @@
 
 // Generate family trees using tags in characters.
 
-// 2015-10-05: Created. Spouse lines not supported yet.
-// 2015-10-07: Updates for previous and ancestor vs. parent relationships.
-// 2015-01-08: WIP marriages.
 
 package bdzimmer.secondary.export.controller
 
-import bdzimmer.secondary.export.model.{CharacterItem, SecTag}
-import bdzimmer.secondary.export.view.{Tags, WebResource}
+import bdzimmer.secondary.export.model.WorldItems.CharacterItem
+import bdzimmer.secondary.export.view.{Html, WebResource}
 
-case class TreeEntry(
+
+object FamilyTree {
+
+
+  case class TreeEntry(
     id: String,
     name: String,
     description: String,
@@ -20,12 +21,12 @@ case class TreeEntry(
     children: Seq[TreeEntry],
     marriages: Seq[Marriage])
 
-// marriages are weird because they sort of turn spouses into siblings
-case class Marriage(
-    hidden: TreeEntry,
-    spouse: TreeEntry)
 
-object FamilyTree {
+  // marriages are weird because they sort of turn spouses into siblings
+  case class Marriage(
+      hidden: TreeEntry,
+      spouse: TreeEntry)
+
 
   val TreeStyles =
     s"""<script src="${WebResource.D3.localRelFilename}" charset="utf-8"></script>""" + "\n" +
@@ -40,10 +41,10 @@ object FamilyTree {
 
 
   // for now, all of the family trees
-  def getAllJs(characters: List[CharacterItem], np: RenderSecTags): String = {
+  def getAllJs(characters: List[CharacterItem], np: RenderTags): String = {
 
     def isRoot(char: CharacterItem): Boolean = {
-      val charTagKinds = char.tags.map(_.kind).toSet
+      val charTagKinds = char.tags.values.map(_.kind).toSet
       Genealogy.AncestorTags.intersect(charTagKinds).size == 0
     }
 
@@ -52,12 +53,12 @@ object FamilyTree {
     val nonRootChars = characters.filter(!isRoot(_))
 
     val trees = rootChars.map(x => getJs(x, characters, np))
-    TreeStyles + trees.mkString("\n" + Tags.hr + "\n")
+    TreeStyles + trees.mkString("\n" + Html.hr + "\n")
 
   }
 
 
-  def getJs(character: CharacterItem, characters: List[CharacterItem], np: RenderSecTags): String = {
+  def getJs(character: CharacterItem, characters: List[CharacterItem], np: RenderTags): String = {
 
     // add a hidden parent to a tree
     def wrapTree(te: TreeEntry): String = {
@@ -94,7 +95,7 @@ object FamilyTree {
       char: CharacterItem,
       allCharacters: List[CharacterItem],
       parentType: String,
-      np: RenderSecTags): TreeEntry = {
+      np: RenderTags): TreeEntry = {
 
     val distinctChildren = Genealogy.findDistinctChildren(char, allCharacters)
 
@@ -126,8 +127,10 @@ object FamilyTree {
       }})
     }}).flatten
 
+    val tags = np.stringToTags.get(char.id).getOrElse(Map())
+
     val description = np.transform(
-        char.notes.split("\n").filter(_.length > 0).headOption.getOrElse("")).replaceAll("\"", "\\\\\"")
+        char.notes, tags).split("\n").filter(_.length > 0).headOption.getOrElse("").replaceAll("\"", "\\\\\"")
 
     // println(char.name)
     // println("single parent children: " + singleParentChildren.map(_.name))

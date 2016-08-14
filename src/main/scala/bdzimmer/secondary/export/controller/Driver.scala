@@ -28,7 +28,7 @@ import org.apache.commons.io.FileUtils
 import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.export.model.{CollectionItem, ProjectConfig, ProjectStructure, WorldItem}
+import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItems}
 import bdzimmer.secondary.export.view.ConfigurationGUI
 import bdzimmer.pixeleditor.view.Main
 import bdzimmer.pixeleditor.model.AssetMetadataUtils
@@ -40,7 +40,7 @@ class Driver {
   val projectDir = System.getProperty("user.dir")
   val projConf = ProjectConfig(projectDir)
 
-  var loadedWorld: Result[String, CollectionItem] = Fail("World not loaded!")
+  var loadedWorld: Result[String, WorldItems.CollectionItem] = Fail("World not loaded!")
 
   def run(args: Array[String]): Unit = {
     val command = args.headOption.getOrElse(Driver.DefaultCommand)
@@ -97,7 +97,7 @@ class Driver {
       val master = WorldLoader.loadWorld(projConf) match {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
-          AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItem.assetMetadata(master))
+          AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItems.assetMetadata(master))
           new Main(projConf.mappedContentPathActual, "Secondary Editor", outputFilename)
         }
         case Fail(msg) => println(msg)
@@ -162,7 +162,7 @@ class Driver {
   // edit the source file associated with an object by name or id
   private def editItemByName(name: String): Unit = loadedWorld match {
     case Pass(master) => {
-      val world = WorldItem.collectionToList(master)
+      val world = WorldItems.collectionToList(master)
       world.filter(item => item.id.equals(name) || item.name.equals(name)).headOption match {
         case Some(item) => editItem(item)
         case None       => println("No such item!")
@@ -172,7 +172,7 @@ class Driver {
   }
 
   // edit an item's source file locally or in Drive
-  private def editItem(item: WorldItem): Unit = {
+  private def editItem(item: WorldItems.WorldItem): Unit = {
     val srcFile = new File(projConf.localContentPath / item.srcfilename)
     val idMatcher =  s"\\s*id:\\s*${item.id}"
     val lineNumber = FileUtils.readLines(srcFile).asScala.zipWithIndex.find(x => {
@@ -199,7 +199,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2016.07.31"
+  val Title = "Secondary - create worlds from text - v2016.08.14"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 

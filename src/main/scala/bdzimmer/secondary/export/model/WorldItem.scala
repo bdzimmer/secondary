@@ -23,7 +23,7 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.ClassTag
 
-import bdzimmer.secondary.export.model.{ParseSecTags => pst}
+import bdzimmer.secondary.export.controller.{ExtractRawTags => pst}
 import bdzimmer.pixeleditor.model.AssetMetadata
 
 
@@ -35,216 +35,224 @@ object NonNullString {
 
 // bean version of world items -- for loading from YAML
 
-trait WorldItemBean {
+object WorldItemBeans {
 
-  var id: String = ""
-  def getId(): String = id
-  def setId(id: String): Unit = {this.id = NonNullString(id)}
+  import WorldItems._
 
-  var name: String = ""
-  def getName(): String = name
-  def setName(name: String): Unit = {this.name = NonNullString(name)}
+  trait WorldItemBean {
 
-  var description: String = ""
-  def getDescription(): String = description
-  def setDescription(description: String): Unit = {
-    this.description = NonNullString(description)
+    var id: String = ""
+    def getId(): String = id
+    def setId(id: String): Unit = {this.id = NonNullString(id)}
+
+    var name: String = ""
+    def getName(): String = name
+    def setName(name: String): Unit = {this.name = NonNullString(name)}
+
+    var description: String = ""
+    def getDescription(): String = description
+    def setDescription(description: String): Unit = {
+      this.description = NonNullString(description)
+    }
+
+    var notes: String = ""
+    def getNotes(): String = notes
+    def setNotes(notes: String): Unit = {this.notes = NonNullString(notes)}
+
+    // used by new parser
+    var path: String = ""
+    def getPath(): String = path
+    def setPath(path: String): Unit = {this.path = NonNullString(path)}
+
+
+    var srcfilename: String = ""
+    var remoteid: String = ""
+
+    // function to get immutable version
+    def getVal(): WorldItem
   }
 
-  var notes: String = ""
-  def getNotes(): String = notes
-  def setNotes(notes: String): Unit = {this.notes = NonNullString(notes)}
 
-  // used by new parser
-  var path: String = ""
-  def getPath(): String = path
-  def setPath(path: String): Unit = {this.path = NonNullString(path)}
+  // the item generates or references an image
+  trait ImageItemBean extends WorldItemBean
 
-
-  var srcfilename: String = ""
-  var remoteid: String = ""
-
-  // function to get immutable version
-  def getVal(): WorldItem
-}
-
-
-// the item generates or references an image
-trait ImageItemBean extends WorldItemBean
-
-// a reference to a piece of content that exists in its own file.
-trait RefItemBean extends WorldItemBean {
-  @BeanProperty var filename: String = ""
-}
-
-// the referenced piece of content is a tileset with attributes
-trait TileRefItemBean extends ImageItemBean with RefItemBean {
-  @BeanProperty var tiletype: String = ""
-}
-
-class CollectionItemBean extends WorldItemBean {
-   @BeanProperty var children: java.util.List[WorldItemBean] = new java.util.LinkedList[WorldItemBean]()
-
-   def getVal(): CollectionItem = CollectionItem (
-       id, name, description, notes,
-       srcfilename, remoteid,
-       pst.getAllTags(notes),
-       children.asScala.map(_.getVal).toList)
-}
-
-class ThingItemBean extends WorldItemBean {
-  def getVal(): ThingItem = ThingItem(
-      id, name, description, notes,
-      srcfilename, remoteid, pst.getAllTags(notes))
-}
-
-class PlaceItemBean extends WorldItemBean {
-  def getVal(): PlaceItem = PlaceItem(
-      id, name, description, notes,
-      srcfilename, remoteid, pst.getAllTags(notes))
-}
-
-class ImageFileItemBean extends ImageItemBean with RefItemBean {
-  def getVal(): ImageFileItem = ImageFileItem(
-      id, name, description, notes,
-      srcfilename, remoteid,
-      pst.getAllTags(notes),
-      filename)
-}
-
-class TripItemBean extends ImageItemBean {
-  def getVal(): TripItem = TripItem(
-      id, name, description, notes,
-      srcfilename, remoteid,
-      pst.getAllTags(notes))
-}
-
-class CharacterItemBean extends WorldItemBean {
-
-  def getVal(): CharacterItem = {
-
-    val (cleanedName, nameParts) = WorldItem.cleanName(name)
-
-    CharacterItem(
-      id, cleanedName, nameParts,
-      description, notes,
-      srcfilename, remoteid,
-      pst.getAllTags(notes))
+  // a reference to a piece of content that exists in its own file.
+  trait RefItemBean extends WorldItemBean {
+    @BeanProperty var filename: String = ""
   }
 
+  // the referenced piece of content is a tileset with attributes
+  trait TileRefItemBean extends ImageItemBean with RefItemBean {
+    @BeanProperty var tiletype: String = ""
+  }
+
+  class CollectionItemBean extends WorldItemBean {
+     @BeanProperty var children: java.util.List[WorldItemBean] = new java.util.LinkedList[WorldItemBean]()
+
+     def getVal(): CollectionItem = CollectionItem (
+         id, name, description, notes,
+         srcfilename, remoteid,
+         pst.getAllTags(notes),
+         children.asScala.map(_.getVal).toList)
+  }
+
+  class ThingItemBean extends WorldItemBean {
+    def getVal(): ThingItem = ThingItem(
+        id, name, description, notes,
+        srcfilename, remoteid, pst.getAllTags(notes))
+  }
+
+  class PlaceItemBean extends WorldItemBean {
+    def getVal(): PlaceItem = PlaceItem(
+        id, name, description, notes,
+        srcfilename, remoteid, pst.getAllTags(notes))
+  }
+
+  class ImageFileItemBean extends ImageItemBean with RefItemBean {
+    def getVal(): ImageFileItem = ImageFileItem(
+        id, name, description, notes,
+        srcfilename, remoteid,
+        pst.getAllTags(notes),
+        filename)
+  }
+
+  class TripItemBean extends ImageItemBean {
+    def getVal(): TripItem = TripItem(
+        id, name, description, notes,
+        srcfilename, remoteid,
+        pst.getAllTags(notes))
+  }
+
+  class CharacterItemBean extends WorldItemBean {
+
+    def getVal(): CharacterItem = {
+
+      val (cleanedName, nameParts) = WorldItems.cleanName(name)
+
+      CharacterItem(
+        id, cleanedName, nameParts,
+        description, notes,
+        srcfilename, remoteid,
+        pst.getAllTags(notes))
+    }
+
+  }
+
+  ///
+
+  class TilesetItemBean extends TileRefItemBean {
+    def getVal(): TilesetItem = TilesetItem(
+        id, name, description, notes,
+        srcfilename, remoteid,
+        pst.getAllTags(notes),
+        filename, tiletype)
+  }
+
+  class SpritesheetItemBean extends TileRefItemBean {
+    def getVal(): SpritesheetItem = SpritesheetItem(
+        id, name, description, notes,
+        srcfilename, remoteid,
+        pst.getAllTags(notes),
+        filename, tiletype)
+  }
+
+  class MapItemBean extends ImageItemBean with RefItemBean {
+    def getVal(): MapItem = MapItem(
+        id, name, description, notes,
+        srcfilename, remoteid,
+        pst.getAllTags(notes),
+        filename)
+  }
+
+
+  // reference to another source file
+  // as far as I know, the getVal function here will never be called.
+  class SrcIncludeBean extends RefItemBean {
+    def getVal(): ThingItem = ThingItem(
+        id, name, description, notes,
+        srcfilename, remoteid, pst.getAllTags(notes))
+  }
+
+
 }
 
-///
-
-class TilesetItemBean extends TileRefItemBean {
-  def getVal(): TilesetItem = TilesetItem(
-      id, name, description, notes,
-      srcfilename, remoteid,
-      pst.getAllTags(notes),
-      filename, tiletype)
-}
-
-class SpritesheetItemBean extends TileRefItemBean {
-  def getVal(): SpritesheetItem = SpritesheetItem(
-      id, name, description, notes,
-      srcfilename, remoteid,
-      pst.getAllTags(notes),
-      filename, tiletype)
-}
-
-class MapItemBean extends ImageItemBean with RefItemBean {
-  def getVal(): MapItem = MapItem(
-      id, name, description, notes,
-      srcfilename, remoteid,
-      pst.getAllTags(notes),
-      filename)
-}
-
-
-// reference to another source file
-// as far as I know, the getVal function here will never be called.
-class SrcIncludeBean extends RefItemBean {
-  def getVal(): ThingItem = ThingItem(
-      id, name, description, notes,
-      srcfilename, remoteid, pst.getAllTags(notes))
-}
 
 // immutable versions ///////////////////////////////////////////////////////////////////
 
-// all inheritance done with traits; nothing descends from case classes
 
-trait WorldItem {
-    val id: String
-    val name: String
-    val description: String
-    val notes: String
-    val srcfilename: String
-    val remoteid: String
-    val tags: List[SecTag]
-}
+object WorldItems {
 
+  import Tags.RawTag
 
-trait ImageItem extends WorldItem
+  // all inheritance done with traits; nothing descends from case classes
 
-trait RefItem extends WorldItem {
-  val filename: String
-}
-
-trait TileRefItem extends ImageItem with RefItem {
-  val tiletype: String
-}
-
-case class CollectionItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag],
-    val children: List[WorldItem]) extends WorldItem
-
-case class ThingItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
-
-// for now, PlaceItem and TripItem have no fields that distinguish them from ThingItem
-case class PlaceItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
-
-case class ImageFileItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String) extends ImageItem with RefItem
-
-case class TripItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag]) extends ImageItem
-
-case class CharacterItem(
-    id: String, name: String, nameParts: Option[List[String]],
-    description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag]) extends WorldItem
-
-/// items for pixel art content ///
-
-case class TilesetItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String, tiletype: String) extends ImageItem with TileRefItem
-
-case class SpritesheetItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String, tiletype: String) extends ImageItem with TileRefItem
-
-case class MapItem(
-    id: String, name: String, description: String, notes: String,
-    srcfilename: String, remoteid: String, tags: List[SecTag],
-    filename: String) extends ImageItem with RefItem
+  trait WorldItem {
+      val id: String
+      val name: String
+      val description: String
+      val notes: String
+      val srcfilename: String
+      val remoteid: String
+      val tags: Map[Int, RawTag]
+  }
 
 
+  trait ImageItem extends WorldItem
 
-////////////////////////////////////////////////////////////////////////////////////
+  trait RefItem extends WorldItem {
+    val filename: String
+  }
+
+  trait TileRefItem extends ImageItem with RefItem {
+    val tiletype: String
+  }
+
+  case class CollectionItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
+      val children: List[WorldItem]) extends WorldItem
+
+  case class ThingItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends WorldItem
+
+  // for now, PlaceItem and TripItem have no fields that distinguish them from ThingItem
+  case class PlaceItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends WorldItem
+
+  case class ImageFileItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
+      filename: String) extends ImageItem with RefItem
+
+  case class TripItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends ImageItem
+
+  case class CharacterItem(
+      id: String, name: String, nameParts: Option[List[String]],
+      description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends WorldItem
+
+  /// items for pixel art content ///
+
+  case class TilesetItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
+      filename: String, tiletype: String) extends ImageItem with TileRefItem
+
+  case class SpritesheetItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
+      filename: String, tiletype: String) extends ImageItem with TileRefItem
+
+  case class MapItem(
+      id: String, name: String, description: String, notes: String,
+      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
+      filename: String) extends ImageItem with RefItem
 
 
-object WorldItem {
 
   // create a list of all world items in a hierarchy
   def collectionToList(worldItem: WorldItem): List[WorldItem] = worldItem match {

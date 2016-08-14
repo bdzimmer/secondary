@@ -12,11 +12,13 @@ import scala.util.{Try, Success, Failure}
 import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 import org.apache.commons.compress.archivers.zip.ZipFile
 
-import bdzimmer.util.{Result, Pass, Fail}
-import bdzimmer.util.StringUtils._
-import bdzimmer.secondary.export.model._
+import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItems, Tags}
+import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.{Styles}
 import bdzimmer.secondary.export.view.WebResource
+
+import bdzimmer.util.{Result, Pass, Fail}
+import bdzimmer.util.StringUtils._
 
 
 class ExportPipeline(projConf: ProjectConfig)  {
@@ -49,16 +51,21 @@ class ExportPipeline(projConf: ProjectConfig)  {
     loadedWorld match {
       case Pass(master) => {
 
-        val world = WorldItem.collectionToList(master)
+        val world = WorldItems.collectionToList(master)
         val (newRefStatus, refStatusChanges)   = downloadRefs(world)
         val (newItemStatus, itemStatusChanges) = loadItemStatus(world)
 
         // only export the things that have changed
         if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
 
+          // parse all of the tags
+          val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
+          val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+
           val exportPages = new ExportPages(
               master,
               world,
+              tags,
               projConf.localExportPath,
               projConf.license,
               projConf.navbars,
@@ -66,6 +73,7 @@ class ExportPipeline(projConf: ProjectConfig)  {
 
           val exportImages = new ExportImages(
               world,
+              tags,
               projConf.localExportPath,
               projConf.license)
 
@@ -85,15 +93,27 @@ class ExportPipeline(projConf: ProjectConfig)  {
           val modifiedItemsReferencedsBy = modifiedItems.flatMap(x => exportPages.referencedBy.get(x.id)).flatten
 
           // items with timelines that contain events from modified items
+
+          /*
           val timelineItems = (world
               .flatMap(item =>
-                  item.tags.filter(_.kind.equals(SecTags.Timeline))  // timeline tags in each item
+                  item.tags.values.filter(_.kind.equals(SecTags.Timeline))  // timeline tags in each item
                   .flatMap(tag =>                                    // find the item each timeline tag is based on
-                      exportPages.itemByString.get(tag.value).map(x => (item, x))))).distinct
+                      stringToItem.get(tag.value).map(x => (item, x))))).distinct
+					*/
+
+          // not exactly sure if the logic is correct here
+          val timelineItems = (for {
+            item     <- world
+            itemTags =  tags.get(item.id).map(_.values).getOrElse(List())
+            timeline <- itemTags.collect({case x: Tags.Timeline => x})
+          } yield {
+            (item, timeline.root)
+          }).distinct
 
           val timelineItemsRefresh = (timelineItems
               .filter(itemPair =>
-                  WorldItem.collectionToList(itemPair._2).exists(x => modifiedIds.contains(x.id)))
+                  WorldItems.collectionToList(itemPair._2).exists(x => modifiedIds.contains(x.id)))
               .map(_._1)).distinct
 
           // timelineItems.foreach(x => println("items with timelines: " + x._1.id))
@@ -175,11 +195,17 @@ object ExportPipeline {
     val loadedWorld = WorldLoader.loadWorld(projConf)
     loadedWorld match {
       case Pass(master) => {
-        val world = WorldItem.collectionToList(master)
+
+        val world = WorldItems.collectionToList(master)
+
+        // parse all of the tags
+        val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
+        val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
 
         val exportPages = new ExportPages(
           master,
           world,
+          tags,
           projConf.localExportPath,
           projConf.license,
           projConf.navbars,
@@ -187,6 +213,7 @@ object ExportPipeline {
 
         val exportImages = new ExportImages(
           world,
+          tags,
           projConf.localExportPath,
           projConf.license)
 

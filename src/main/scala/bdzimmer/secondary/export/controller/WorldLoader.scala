@@ -1,13 +1,6 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
-// Class for loading WorldItem hierarchies from YAML files.
-
-// 2015-07-26: Refactored from WorldItem file.
-// 2015-08-16: Reads beans, converts to immutable case classes.
-// 2015-09-04: Switched to FileUtils instead of Source.
-// 2015-10-21: Error handling for YAML parsing.
-// 2015-11-06: YAML includes instead of main collections.
-// 2016-04-09: Include flat format from YAML files; flat master.
+// Class for loading WorldItem hierarchies from the file system.
 
 package bdzimmer.secondary.export.controller
 
@@ -23,7 +16,9 @@ import org.apache.commons.io.FileUtils
 import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.export.model._
+import bdzimmer.secondary.export.model.{ProjectConfig, WorldItems}
+import bdzimmer.secondary.export.model.WorldItems._
+import bdzimmer.secondary.export.model.WorldItemBeans._
 
 
 private object WorldLoaderFlat {
@@ -265,7 +260,7 @@ object WorldLoader {
   def validate(world: CollectionItem): Result[String, CollectionItem] = {
 
     // check for duplicate IDs
-    val worldList = WorldItem.collectionToList(world)
+    val worldList = WorldItems.collectionToList(world)
     val duplicateIDs = worldList.groupBy(_.id).toList.sortBy(_._1).filter(_._2.length > 1)
     duplicateIDs.length match {
       case 0 => Pass(world)

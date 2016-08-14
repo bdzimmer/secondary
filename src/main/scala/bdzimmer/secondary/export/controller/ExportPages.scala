@@ -18,54 +18,56 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 
 import org.apache.commons.io.FilenameUtils
 
-import bdzimmer.secondary.export.model._
-import bdzimmer.secondary.export.view.Tags._
+import bdzimmer.secondary.export.model.{Tags, WorldItems}
+import bdzimmer.secondary.export.model.WorldItems._
+import bdzimmer.secondary.export.view.Html._
 import bdzimmer.secondary.export.view.{Markdown, PageTemplates}
 
-import bdzimmer.util.Fail
+import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
 
 class ExportPages(
     master: CollectionItem,
     world: List[WorldItem],
+    tags: Map[String, Map[Int, Tags.ParsedTag]],
     val location: String,
     license: String,
     navbars: Boolean,
     editLinks: Boolean) {
 
-
   // derive some data structures that are used repeatedly throughout the rendering process
-
-  // map of ids and names of items to the actual item object
-  val itemByString = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
 
   // outward references
   val references = world.map(item =>
-    (item.id,
-     item.tags
-     .filter(tag => !SecTags.NonItemTagKinds.contains(tag.kind))
-     .flatMap(tag => itemByString.get(tag.value)))).toMap
+    (item.id, itemToTags(item).values.flatMap(x => Tags.item(x)).toList)).toMap
 
   // inward references
   val referencedBy = world.map(item => {
     (item.id, world.filter(otherItem =>
       !otherItem.id.equals(item.id) &&
-      otherItem.tags.exists(x =>
-        !SecTags.NonItemTagKinds.contains(x.kind) &&
-        (item.id.equals(x.value) || item.name.equals(x.value))
-    )))
+      itemToTags(otherItem).values.flatMap(x => Tags.item(x)).exists(x => item.id.equals(x.id))
+    ))
   }).toMap
 
   // the main collection for each each item
-  val groups = master.children.flatMap(group => WorldItem.collectionToList(group).map(item => (item.id, group))).toMap
+  val groups = master.children.flatMap(group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
 
-  val characters = world.collect({case x: CharacterItem => x})
-  val np = new RenderSecTags(itemByString, characters)
+  val stringToTags = (
+         world.map(x => (x.id,   tags.get(x.id)))
+      ++ world.map(x => (x.name, tags.get(x.id)))
+  ).collect({case (x, Some(y)) => (x, y)}).toMap
+
+  val np = new RenderTags(stringToTags, world.collect({case x: CharacterItem => x}))
+
+
+  private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
+    tags.get(item.id).getOrElse(Map())
+  }
 
 
   def exportPagesList(items: List[WorldItem]): List[String] = {
-    items map(item => exportPageDispatch(item)) filter (!_.equals(""))
+    items.map(item => exportPageDispatch(item)).filter(!_.equals(""))
   }
 
 
@@ -93,7 +95,7 @@ class ExportPages(
         masterNavbar,
 
         column(Column12,
-            np.transform(master.notes) +
+            np.transform(master.notes, itemToTags(master)) +
             (if (master.children.length > 0) {
               hr +
               master.children.collect({case curCollection: CollectionItem => {
@@ -114,7 +116,6 @@ class ExportPages(
     relFilePath
 
   }
-
 
 
   def createTasksPage(): String = {
@@ -138,16 +139,26 @@ class ExportPages(
 
     // get task strings
     def getTask(item: WorldItem)(prefixes: List[String]): List[String] = {
-      item.tags.filter(x => prefixes.contains(x.kind)).map(_.value)
+      item.tags.values.filter(x => prefixes.contains(x.kind)).map(_.value).toList
     }
 
     // get invalid tags
     def getInvalidTags(item: WorldItem): List[String] = {
-      item.tags.map(np.validateTag(_)).collect({case Fail(x) => x})
+      // item.tags.values.map(np.validateTag(_)).collect({case Fail(x) => x}).toList
+      itemToTags(item).values.collect({case x: Tags.ParseError => s"${x.msg} in tag '${x.tag.kind}'"}).toList
     }
 
-    val allTasks = (world
-        .flatMap(item => item.tags.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item, groups.getOrElse(item.id, master)))))
+    // val allTasks = (world
+    //     .flatMap(item => item.tags.values.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item, groups.getOrElse(item.id, master)))))
+
+
+
+    val allTasks = for {
+      item    <- world
+      taskTag <- itemToTags(item).values.collect({case x: Tags.Task => x})
+    } yield {
+      (taskTag, item, groups.getOrElse(item.id, master))
+    }
 
     PageTemplates.createArticlePage(
         location / relFilePath,
@@ -172,7 +183,6 @@ class ExportPages(
 
     relFilePath
   }
-
 
 
   def createIndexPage(): String = {
@@ -219,7 +229,6 @@ class ExportPages(
   }
 
 
-
   def createStatsPage(): String = {
 
     val relFilePath = ExportPages.StatsPageFile
@@ -232,7 +241,7 @@ class ExportPages(
         column(Column12, {
 
           val wordCount = world.map(_.notes.split("\\s").length).sum
-          val tagCount  = world.map(_.tags.length).sum
+          val tagCount  = world.map(_.tags.size).sum
 
           h4("Counts") +
           p(b("Items: ") + world.length) +
@@ -246,7 +255,6 @@ class ExportPages(
   }
 
 
-
   private def createCharacterPage(character: CharacterItem): String = {
 
     val relFilePath = ExportPages.itemPageName(character)
@@ -257,7 +265,7 @@ class ExportPages(
         character.description,
         pageNavbar(Some(character)),
 
-        column(Column12, np.transform(character.notes) + refItems(character)),
+        column(Column12, np.transform(character.notes, itemToTags(character)) + refItems(character)),
 
         license)
 
@@ -266,18 +274,18 @@ class ExportPages(
   }
 
 
-  private def createPixelArtPage(item: ImageItem): String = {
+  private def createPixelArtPage(imageItem: ImageItem): String = {
 
-    val relFilePath = ExportPages.itemPageName(item)
+    val relFilePath = ExportPages.itemPageName(imageItem)
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        item.name,
-        item.description,
-        pageNavbar(Some(item)),
+        imageItem.name,
+        imageItem.description,
+        pageNavbar(Some(imageItem)),
 
-        column(Column12, ExportImages.pixelImageLinkResponsive(item) + hr) +
-        column(Column12, np.transform(item.notes) + refItems(item)),
+        column(Column12, ExportImages.pixelImageLinkResponsive(imageItem) + hr) +
+        column(Column12, np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
 
         license)
 
@@ -296,7 +304,7 @@ class ExportPages(
         pageNavbar(Some(collection)),
 
         column(Column12,
-            np.transform(collection.notes) + refItems(collection) + hr +
+            np.transform(collection.notes, itemToTags(collection)) + refItems(collection) + hr +
             (if (collection.children.length > 0) {
               h4("Subarticles") +
               listGroup(collection.children.map(x => ExportPages.getCollectionLinksCollapsible(x)))
@@ -310,12 +318,11 @@ class ExportPages(
   }
 
 
+  private def createImagePage(imageItem: ImageItem): String = {
 
-  private def createImagePage(item: ImageItem): String = {
+    val relFilePath = ExportPages.itemPageName(imageItem)
 
-    val relFilePath = ExportPages.itemPageName(item)
-
-    val imageDescription = item match {
+    val imageDescription = imageItem match {
       case imageFileItem: ImageFileItem => {
         val wikiNameOption = (imageFileItem.filename.startsWith("wikimedia:") match {
           case true  => Some(imageFileItem.filename.split(":")(1))
@@ -337,15 +344,15 @@ class ExportPages(
 
     PageTemplates.createArticlePage(
         location / relFilePath,
-        item.name, item.description,
-        pageNavbar(Some(item)),
+        imageItem.name, imageItem.description,
+        pageNavbar(Some(imageItem)),
 
-        column(Column8, image(ExportImages.imagePath(item), responsive = true)) +
+        column(Column8, image(ExportImages.imagePath(imageItem), responsive = true)) +
         column(Column4, "") +
         column(Column12,
             hr +
             imageDescription +
-            np.transform(item.notes) + refItems(item)),
+            np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
         license)
 
     relFilePath
@@ -360,7 +367,7 @@ class ExportPages(
         location / relFilePath,
         item.name, item.description,
         pageNavbar(Some(item)),
-        column(Column12, np.transform(item.notes) + refItems(item)),
+        column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item)),
         license)
 
     relFilePath

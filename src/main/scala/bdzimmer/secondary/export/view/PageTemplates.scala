@@ -9,7 +9,7 @@
 
 package bdzimmer.secondary.export.view
 
-import bdzimmer.secondary.export.view.Tags._
+import bdzimmer.secondary.export.view.Html._
 
 
 // Static class for generating Bootstrap HTML.
