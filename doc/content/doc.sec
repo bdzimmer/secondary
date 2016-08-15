@@ -83,26 +83,17 @@ Insert an image.
 
 **Usage**
 
-`{{demo: image | item | link=true}}`
+`{{demo: image | item | link=true | responsive=false}}`
 
 * **item**: name or id of image item
-* **link**: should the image link link back to its page?
+* **link**: add a link from the image back to its page
+* **responsive**: resize the image to fit the width of the page
 
-The image will be right aligned with a maximum width of 320px.
+If the image is not responsive, it will be right aligned with a maximum width of 320px.
 
 **Example**
 
 `{{demo: image | image_red_riding_hood}}`
-
-***
-
-#### image-responsive
-
-Insert a responsive image that fills the width of the page.
-
-`{{demo: image-responsive | item}}`
-
-See {{link: Tags | image}} for more details.
 
 ***
 
@@ -318,6 +309,7 @@ path: genealogy
 !character
 id: mr_darcy
 name: Mr. | Darcy
+path: genealogy
 
 !character
 id: georgiana
