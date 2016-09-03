@@ -12,7 +12,7 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
-import bdzimmer.pixeleditor.model.{ContentStructure, DosGraphics, TileAttributes, TileOptions}
+import bdzimmer.pixeleditor.model.{ContentStructure, IndexedGraphics, TileAttributes, TileOptions}
 import bdzimmer.pixeleditor.model.Color
 import bdzimmer.pixeleditor.controller.OldTilesetLoader
 
