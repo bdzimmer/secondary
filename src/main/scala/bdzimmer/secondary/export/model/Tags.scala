@@ -40,6 +40,7 @@ object SecTags {
   val Descendant = "descendant"
 
   val Demo = "demo"
+  val MarkovText = "markovtext"
 
 }
 
@@ -159,9 +160,19 @@ object Tags {
     date: Option[String] // TODO: real date type
   ) extends GenealogyTag
 
+  // other stuff
+
   case class Demo(
     kind: String,
     body: String
+  ) extends ParsedTag
+
+  case class MarkovText(
+    items: List[WorldItem],
+    externalWorks: List[String],
+    order: Int,
+    count: Int,
+    seed: Int
   ) extends ParsedTag
 
   // error tags

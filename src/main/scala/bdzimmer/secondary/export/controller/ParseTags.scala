@@ -2,6 +2,8 @@
 
 package bdzimmer.secondary.export.controller
 
+import bdzimmer.util.StringUtils.StringConvertSafe
+
 
 object ExtractRawTags {
 
@@ -179,6 +181,14 @@ object ParseTags {
           case _        => "..."
         }
         Demo(tag.value, body)
+      }
+
+      case SecTags.MarkovText => {
+        val items = tag.value.split(";\\s+").toList.map(x => stringToItem.get(x)).flatten
+        val order = args.get("order").flatMap(x => Try(x.toInt).toOption).getOrElse(2)
+        val count = args.get("count").flatMap(x => Try(x.toInt).toOption).getOrElse(5)
+        val seed  = args.get("seed").flatMap(x  => Try(x.toInt).toOption).getOrElse(0)
+        MarkovText(items, List(), order, count, seed)
       }
 
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")

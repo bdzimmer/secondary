@@ -5,7 +5,9 @@ package bdzimmer.secondary.export.controller
 import scala.collection.immutable.Seq
 import scala.util.matching.Regex
 
-import bdzimmer.secondary.export.model.{Tags, SecTags}
+import scala.util.Random
+
+import bdzimmer.secondary.export.model.{Tags, SecTags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
 import bdzimmer.secondary.export.view.{Markdown, Html}
 
@@ -48,6 +50,16 @@ class RenderTags(
 
     val pp = Markdown.getPegDown
     pp.markdownToHtml(updatedText)
+  }
+
+  // transform prose for the Markov text generator
+  private def transformProse(text: String, tags: Map[Int, Tags.ParsedTag]): String = {
+    ExtractRawTags.matcher.replaceAllIn(text, m => {
+       val tag = tags.getOrElse(
+         m.start, Tags.GenError(s"tag not found in map for position '${m.start}'"))
+       // if the tag references an item, render the name, otherwise don't return anything.
+       Tags.item(tag).fold("")(_.name)
+    })
   }
 
 
@@ -148,6 +160,40 @@ class RenderTags(
     case x: Tags.Marriage   => genLink("Marriage", x.character) // TODO: show marriage date
 
     case demo: Tags.Demo    => s"{{${demo.kind}: ${demo.body}}}"
+
+    case x: Tags.MarkovText => {
+
+      //// build a corpus from the content of the tags and subtags described
+
+      // get all unique tags and subtags referenced
+      val items = x.items.flatMap(x => WorldItems.collectionToList(x)).distinct
+
+      val proseMatcher = "^[A-Z]".r
+
+      val itemText = items.map(item => {
+        val tagPositions = stringToTags.get(item.id).getOrElse(Map())
+        val renderedText = transformProse(item.notes, tagPositions)
+
+        // remove non-prose lines and markdown leftovers
+        val filteredText = renderedText.split("\n")
+          .filter(line => proseMatcher.pattern.matcher(line).find)
+          .filter(line => line.contains("."))  // get rid of non-sentences
+          .mkString(" ")
+          .replace("*", "")
+
+        filteredText
+
+      }).mkString(" ")
+
+      val model = MarkovText.fit(itemText, x.order)
+
+      // model.foreach(println(_))
+
+      //// generate sentences
+      val rnd = new Random(x.seed)
+      (0 until x.count).map(x => MarkovText.predict(model, rnd).capitalize).mkString(" ")
+
+    }
 
     case x: Tags.GenError   => Html.b("{{Error: " + x.msg + "}}")
     case x: Tags.ParseError => Html.b("{{Parse error: " + x.msg + "}}")
