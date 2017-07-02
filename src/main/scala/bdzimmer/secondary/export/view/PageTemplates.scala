@@ -17,7 +17,11 @@ object PageTemplates {
 
   val Column12 = 12
 
-  val NavbarSeparator = nbsp + nbsp + "&middot;" + nbsp + nbsp
+  val NavbarSeparator = " " + nbsp + "&middot;" + nbsp + " "
+
+  val RightArrow = " " + "&raquo;" + nbsp + " "
+
+  val LeftArrow = " " + nbsp + "&laquo;" + " "
 
   def createPage(outputFile: String, title: String, styles: String, body: String): Unit = {
 
@@ -91,6 +95,7 @@ object PageTemplates {
       container(
         column(Column12, navbar.getOrElse("")) +
         body +
+        column(Column12, hr + navbar.getOrElse("")) +
         column(Column12, hr + centered(license))
       )
     )

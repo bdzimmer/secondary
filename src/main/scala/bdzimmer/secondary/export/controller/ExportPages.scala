@@ -51,6 +51,21 @@ class ExportPages(
     ))
   }).toMap
 
+  // previous, next, and parent items
+  val collections = world.collect({case x: CollectionItem => x})
+
+  val previous = collections.map(collection => {
+    collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
+  }).flatten.toMap
+
+  val next = collections.map(collection => {
+    collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
+  }).flatten.toMap
+
+  val parent = collections.map(collection => {
+    collection.children.map(x => (x.id, collection))
+  }).flatten.toMap
+
   // the main collection for each each item
   val groups = master.children.flatMap(group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
 
@@ -402,13 +417,24 @@ class ExportPages(
   // get a navbar for an article page for a world item
   private def pageNavbar(item: Option[WorldItem]): Option[String] = navbars match {
     case true => {
+
+      // previous / parent / next
+      val relLinks = item.map(x => List(
+          previous.get(x.id).map(y => PageTemplates.LeftArrow + ExportPages.textLinkPage(y)),
+          parent.get(x.id).map(ExportPages.textLinkPage),
+          next.get(x.id).map(y => ExportPages.textLinkPage(y) + PageTemplates.RightArrow)
+      ).flatten).toList.flatten
+
+      // normal edit bar
       val links = List(link("Home", ExportPages.MasterPageFile))
-      val linksWidthEdit = editLinks match {
-        case true  => links ++ item.map(x => link("Edit",  ExportPages.notepadURL(x)))
-        case false => links
-      }
+      //val linksWidthEdit = editLinks match {
+      //  case true  => links ++ item.map(x => link("Edit",  ExportPages.notepadURL(x)))
+      //  case false => links
+      //}
+
       val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
-      val bar = (linksWidthEdit ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
+      val bar = (links ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
+
       Some(bar)
     }
     case false => None
