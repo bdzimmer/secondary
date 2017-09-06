@@ -189,23 +189,22 @@ object Tags {
   case class ParseError(tag: RawTag, msg: String) extends ErrorTag
 
 
-  // this establishes the rules for what constitutes a tag referencing another item
-  // TODO: consider better ways to do this, including returning a list
-  // several tags reference multiple items, and many tags imply recursion
-  // (such as timelines, family trees, etc.)
-  def item(tag: ParsedTag): Option[WorldItem] = tag match {
-    case x: Link       => Some(x.item)
-    case x: Image      => Some(x.item)
-    case x: FamilyTree => Some(x.root) // TODO: recursion
-    case x: Jumbotron  => Some(x.item)
-    case x: Timeline   => Some(x.root) // TODO: recursion
-    case x: Flight     => Some(x.ship) // TODO: passengers
-    case x: Ancestor   => Some(x.character)
-    case x: Descendant => Some(x.character)
-    case x: Marriage   => Some(x.character)
-    // TODO: MarkovText
-    case x: WordCount  => Some(x.item) // TODO: recursion
-    case _ => None
+  // establishes rules for how tags reference other items
+  // used to determine related item outputs that need to be regenerated as items change
+
+  def items(tag: ParsedTag): List[WorldItem] = tag match {
+    case x: Link       => List(x.item)
+    case x: Image      => List(x.item)
+    case x: FamilyTree => List(x.root) // TODO: recursion through ancestor / descendant relationships
+    case x: Jumbotron  => List(x.item)
+    case x: Timeline   => List(x.root)
+    case x: Flight     => x.ship :: x.passengers
+    case x: Ancestor   => List(x.character)
+    case x: Descendant => List(x.character)
+    case x: Marriage   => List(x.character)
+    // TODO: MarkovText would go here, but I don't want those to automatically update.
+    case x: WordCount  => List(x.item)
+    case _ => List()
   }
 
 }

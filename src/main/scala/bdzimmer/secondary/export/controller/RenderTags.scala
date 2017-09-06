@@ -58,7 +58,8 @@ class RenderTags(
        val tag = tags.getOrElse(
          m.start, Tags.GenError(s"tag not found in map for position '${m.start}'"))
        // if the tag references an item, render the name, otherwise don't return anything.
-       Tags.item(tag).fold("")(_.name)
+       // Tags.item(tag).fold("")(_.name)
+       Tags.items(tag).map(_.name).mkString(", ")
     })
   }
 

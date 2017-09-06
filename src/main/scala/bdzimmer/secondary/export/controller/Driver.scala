@@ -127,7 +127,7 @@ class Driver {
           }
           */
 
-          val world = new ExportPipeline(projConf).run()
+          val world = new ExportProcess(projConf).run()
 
           /*
           driveSync match  {
@@ -139,7 +139,7 @@ class Driver {
           world
 
         }
-        case _ => new ExportPipeline(projConf).run()
+        case _ => new ExportProcess(projConf).run()
       }
       val totalTime = (System.currentTimeMillis - startTime) / 1000.0
       println("completed in " + totalTime + " sec")

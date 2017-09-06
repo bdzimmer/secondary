@@ -21,7 +21,7 @@ import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
 
-class ExportPipeline(projConf: ProjectConfig)  {
+class ExportProcess(projConf: ProjectConfig)  {
 
   val metaStatusFile = projConf.projectDir / ProjectStructure.MetaStatusFile
   val refStatusFile  = projConf.projectDir / ProjectStructure.RefStatusFile
@@ -89,18 +89,16 @@ class ExportPipeline(projConf: ProjectConfig)  {
 
           // items that modified items are referenced by
           // updates link names, flight predictions, etc.
-          // This is potentially more important than above in terms of keeping things up to date.
-          val modifiedItemsReferencedsBy = modifiedItems.flatMap(x => exportPages.referencedBy.get(x.id)).flatten
+          // This is more important than above in terms of keeping things up to date.
+          val modifiedItemsReferencedBy = modifiedItems.flatMap(x => exportPages.referencedBy.get(x.id)).flatten
 
-          // items with timelines that contain events from modified items
+
+          // I believe this logic is unnecessary since a change to an item will propagate up
+          // to its parents.
 
           /*
-          val timelineItems = (world
-              .flatMap(item =>
-                  item.tags.values.filter(_.kind.equals(SecTags.Timeline))  // timeline tags in each item
-                  .flatMap(tag =>                                    // find the item each timeline tag is based on
-                      stringToItem.get(tag.value).map(x => (item, x))))).distinct
-					*/
+
+          // items with timelines that contain events from modified items
 
           // not exactly sure if the logic is correct here
           val timelineItems = (for {
@@ -119,9 +117,14 @@ class ExportPipeline(projConf: ProjectConfig)  {
           // timelineItems.foreach(x => println("items with timelines: " + x._1.id))
           // timelineItemsRefresh.foreach(x => println("items with timelines to refresh: " + x.id))
 
-          // TODO: also find family trees that need refreshing
+          */
 
-          val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedsBy ++ timelineItemsRefresh).distinct
+          modifiedItems.foreach(x             => println("modified item:      " + x.id))
+          modifiedItemsReferences.foreach(x   => println("modified item refs: " + x.id))
+          modifiedItemsReferencedBy.foreach(x => println("modified item refd: " + x.id))
+
+          // val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedsBy ++ timelineItemsRefresh).distinct
+          val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedBy).distinct
 
           val modifiedRefs = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
 

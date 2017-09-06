@@ -41,13 +41,13 @@ class ExportPages(
 
   // outward references
   val references = world.map(item =>
-    (item.id, itemToTags(item).values.flatMap(x => Tags.item(x)).toList)).toMap
+    (item.id, itemToTags(item).values.flatMap(x => Tags.items(x)).toList)).toMap
 
   // inward references
   val referencedBy = world.map(item => {
     (item.id, world.filter(otherItem =>
       !otherItem.id.equals(item.id) &&
-      itemToTags(otherItem).values.flatMap(x => Tags.item(x)).exists(x => item.id.equals(x.id))
+      itemToTags(otherItem).values.flatMap(x => Tags.items(x)).exists(x => item.id.equals(x.id))
     ))
   }).toMap
 
@@ -99,6 +99,8 @@ class ExportPages(
 
 
   /// /// ///
+
+  // TODO: rewrite these so they don't actually create the files on disk
 
   def createMasterPage(): String = {
 
@@ -163,11 +165,6 @@ class ExportPages(
       // item.tags.values.map(np.validateTag(_)).collect({case Fail(x) => x}).toList
       itemToTags(item).values.collect({case x: Tags.ParseError => s"${x.msg} in tag '${x.tag.kind}'"}).toList
     }
-
-    // val allTasks = (world
-    //     .flatMap(item => item.tags.values.filter(x => SecTags.TaskTagKinds.contains(x.kind)).map(x => (x, item, groups.getOrElse(item.id, master)))))
-
-
 
     val allTasks = for {
       item    <- world
