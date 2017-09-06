@@ -41,6 +41,7 @@ object SecTags {
 
   val Demo = "demo"
   val MarkovText = "markovtext"
+  val WordCount = "wordcount"
 
 }
 
@@ -175,6 +176,11 @@ object Tags {
     seed: Int
   ) extends ParsedTag
 
+  case class WordCount(
+    item: WorldItem,
+    recursive: Boolean
+  ) extends ParsedTag
+
   // error tags
 
   trait ErrorTag extends ParsedTag
@@ -185,17 +191,20 @@ object Tags {
 
   // this establishes the rules for what constitutes a tag referencing another item
   // TODO: consider better ways to do this, including returning a list
-  // (would allow tags to reference multiple items)
+  // several tags reference multiple items, and many tags imply recursion
+  // (such as timelines, family trees, etc.)
   def item(tag: ParsedTag): Option[WorldItem] = tag match {
     case x: Link       => Some(x.item)
     case x: Image      => Some(x.item)
-    case x: FamilyTree => Some(x.root)
+    case x: FamilyTree => Some(x.root) // TODO: recursion
     case x: Jumbotron  => Some(x.item)
-    case x: Timeline   => Some(x.root)
-    case x: Flight     => Some(x.ship)
+    case x: Timeline   => Some(x.root) // TODO: recursion
+    case x: Flight     => Some(x.ship) // TODO: passengers
     case x: Ancestor   => Some(x.character)
     case x: Descendant => Some(x.character)
     case x: Marriage   => Some(x.character)
+    // TODO: MarkovText
+    case x: WordCount  => Some(x.item) // TODO: recursion
     case _ => None
   }
 

@@ -191,6 +191,13 @@ object ParseTags {
         MarkovText(items, List(), order, count, seed)
       }
 
+      case SecTags.WordCount => {
+        stringToItem.get(tag.value).map(item => {
+          val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
+          WordCount(item, recursive)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")
 
     }
