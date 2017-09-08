@@ -146,10 +146,11 @@ object ParseTags {
 
       // TODO: convert date strings to date objects
       case SecTags.Thought | SecTags.Todo | SecTags.Started | SecTags.Done | SecTags.Blocked => {
-        val log   = args.get("log")
-        val start = args.get("start")
-        val done  = args.get("done")
-        Task(tag.kind, tag.value, log, start, done)
+        val log    = args.get("log")
+        val start  = args.get("start")
+        val done   = args.get("done")
+        val points = args.get("points").map(_.toIntSafe(1)).getOrElse(1)
+        Task(tag.kind, tag.value, log, start, done, points)
       }
 
       case SecTags.Father | SecTags.Mother | SecTags.Parent | SecTags.Ancestor => {
@@ -195,6 +196,15 @@ object ParseTags {
         stringToItem.get(tag.value).map(item => {
           val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
           WordCount(item, recursive)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
+      case SecTags.BurnDown => {
+        stringToItem.get(tag.value).map(item => {
+          val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
+          val startDate = args.get("startdate").map(DateTime.parse(_))
+          val endDate   = args.get("enddate").map(DateTime.parse(_))
+          BurnDown(item, recursive, startDate, endDate)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 

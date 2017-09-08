@@ -42,6 +42,7 @@ object SecTags {
   val Demo = "demo"
   val MarkovText = "markovtext"
   val WordCount = "wordcount"
+  val BurnDown = "burndown"
 
 }
 
@@ -136,7 +137,8 @@ object Tags {
     desc: String,
     log: Option[String],
     start: Option[String],
-    done: Option[String]
+    done: Option[String],
+    points: Int
   ) extends ParsedTag
 
 
@@ -179,6 +181,13 @@ object Tags {
   case class WordCount(
     item: WorldItem,
     recursive: Boolean
+  ) extends ParsedTag
+
+  case class BurnDown(
+    item: WorldItem,
+    recursive: Boolean,
+    startDate: Option[CalendarDateTime],
+    endDate: Option[CalendarDateTime]
   ) extends ParsedTag
 
   // error tags

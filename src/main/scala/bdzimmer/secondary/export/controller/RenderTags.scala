@@ -7,6 +7,9 @@ import scala.util.matching.Regex
 
 import scala.util.Random
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import bdzimmer.secondary.export.model.{Tags, SecTags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
 import bdzimmer.secondary.export.view.{Markdown, Html}
@@ -212,6 +215,26 @@ class RenderTags(
       }).mkString("\n")
 
       notes.split("\\s+").length.toString
+    }
+
+    case x: Tags.BurnDown => {
+      val items = if (x.recursive) {
+        WorldItems.collectionToList(x.item)
+      } else {
+        List(x.item)
+      }
+
+      val tasks = (items
+          .flatMap(item => stringToTags.get(item.id))
+          .flatMap(_.values.collect({case tag: Tags.Task => tag})))
+
+      val (points, dates) = BurnDownImage.pointsAndDates(
+          tasks,
+          x.startDate.getOrElse(CalendarDateTime(2017, 1, 1, 0, 0, 0)),
+          x.endDate.getOrElse(CalendarDateTime(2017, 1, 14, 0, 0, 0)))
+
+      BurnDownImage.image(points, dates)
+
     }
 
     case x: Tags.GenError   => Html.b("{{Error: " + x.msg + "}}")
