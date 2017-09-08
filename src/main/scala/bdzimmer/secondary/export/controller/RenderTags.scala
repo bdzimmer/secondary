@@ -7,9 +7,6 @@ import scala.util.matching.Regex
 
 import scala.util.Random
 
-import java.text.SimpleDateFormat
-import java.util.Calendar
-
 import bdzimmer.secondary.export.model.{Tags, SecTags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
 import bdzimmer.secondary.export.view.{Markdown, Html}
