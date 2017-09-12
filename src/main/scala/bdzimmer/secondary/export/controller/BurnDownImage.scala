@@ -23,14 +23,13 @@ import bdzimmer.secondary.export.view.Html
 
 object BurnDownImage {
 
-  def pointsAndDates(
+  def taskRanges(
       tasks: List[Task],
       startDate: CalendarDateTime,
-      endDate: CalendarDateTime): (List[Int], List[CalendarDateTime])  = {
+      endDate: CalendarDateTime): List[(CalendarDateTime, Option[CalendarDateTime], Task)] = {
 
     val startCalendar = toCalendar(startDate)
     val endCalendar = toCalendar(endDate)
-
     val defaultDate = CalendarDateTime(2017, 1, 1, 0, 0, 0)
 
     val taskRangesAll = tasks.flatMap(task => {
@@ -54,6 +53,20 @@ object BurnDownImage {
         r => diff(toCalendar(r._1), startCalendar) >= 0
         & r._2.map(x => diff(endCalendar, toCalendar(x)) >= 0).getOrElse(true))
 
+    taskRanges
+  }
+
+
+  def pointsAndDates(
+      taskRanges: List[(CalendarDateTime, Option[CalendarDateTime], Task)],
+      startDate: CalendarDateTime,
+      endDate: CalendarDateTime,
+      addDuring: Boolean = true): (List[Int], List[CalendarDateTime])  = {
+
+    val startCalendar = toCalendar(startDate)
+    val endCalendar = toCalendar(endDate)
+    val defaultDate = CalendarDateTime(2017, 1, 1, 0, 0, 0)
+
     val burnDownLength = diff(endCalendar, startCalendar).toInt + 1
 
     val points = scala.collection.mutable.ArrayBuffer.fill[Int](burnDownLength)(0)
@@ -67,13 +80,14 @@ object BurnDownImage {
     while (idx < burnDownLength) {
 
       for ((start, end, task) <- taskRanges) {
-        if (diff(toCalendar(start), curCalendar) == 0) {
+        if ((idx == 0 || addDuring) && diff(toCalendar(start), curCalendar) == 0) {
           curPoints += task.points
+          println(idx + " " + toCalendarDateTime(curCalendar).dateString() + " " + task + " logged " + curPoints)
         }
         if (task.kind.equals(SecTags.Done)) {
           if (end.map(x => diff(toCalendar(x), curCalendar) == 0).getOrElse(false)) {
             curPoints -= task.points
-            // println(idx, task)
+            println(idx + " " + toCalendarDateTime(curCalendar).dateString() + " " + task + " done " + curPoints)
           }
         }
       }
@@ -94,7 +108,7 @@ object BurnDownImage {
   def ascii(points: List[Int], dates: List[CalendarDateTime]): String = {
     // create range tuples of the tasks that contain their start, end, and points
 
-    // TODO: logic for negative ranges
+    // TODO: logic for ranges that go negative
     val maxPoints = points.max
 
     val res = "<!--burn down in code block-->\n" + points.zip(dates).map(x =>
@@ -107,74 +121,83 @@ object BurnDownImage {
   }
 
 
-  def image(points: List[Int], dates: List[CalendarDateTime]): String = {
-    // create range tuples of the tasks that contain their start, end, and points
-
-    // TODO: logic for negative ranges
-    // TODO: use total work rather than max work remaining somehow
-    val maxPoints = points.max
+  def image(
+      points: List[Int], dates: List[CalendarDateTime],
+      workScheduled: Int, workCompleted: Int): String = {
 
     val image = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB)
 
-    val xmargin = 40
-    val ymargin = 10
-    val graphHeight = 380
-    val graphWidth = 580
+    if (points.length > 0) {
 
-    val gr = image.createGraphics()
-    gr.setRenderingHint(
-        RenderingHints.KEY_ANTIALIASING,
-        RenderingHints.VALUE_ANTIALIAS_ON)
+      // val pointsDiff = points.zip(0 +: points).map(x => x._1 - x._2)
+      // val workScheduled = pointsDiff.filter(x => x > 0).sum
+      // val workCompleted = 0 - pointsDiff.filter(x => x < 0).sum
+      val workMin = math.min(workScheduled - workCompleted, 0)
 
-    val dateX = 0.0 to graphWidth by (graphWidth / (dates.length - 1.0))
-    val pointY = 0.0 to graphHeight by (graphHeight / (maxPoints))
+      val xmargin = 40
+      val ymargin = 10
+      val graphHeight = 380
+      val graphWidth = 580
 
-    // draw axis lablels
+      val gr = image.createGraphics()
+      gr.setRenderingHint(
+          RenderingHints.KEY_ANTIALIASING,
+          RenderingHints.VALUE_ANTIALIAS_ON)
 
-    gr.rotate(math.Pi / 2)
-    gr.setColor(Color.BLACK)
-    for ((date, x) <- dates.zip(dateX)) {
-      gr.drawString(date.dateString, ymargin + graphHeight + 2,  - xmargin - x.toInt + 2)
-    }
-    gr.rotate(0.0 - math.Pi / 2)
+      val dateX = 0.0 to graphWidth by (graphWidth / (dates.length - 1.0))
+      def pointY(x: Int): Int = ((x - workMin) * (graphHeight / (workScheduled - workMin).toDouble)).toInt
 
-    for ((point, y) <- (0 to maxPoints).zip(pointY)) {
-      gr.drawString(point.toString.padTo(4, " ").mkString, xmargin - 20, ymargin + graphHeight - y.toInt)
-    }
+      // draw axis lablels
 
-    // draw vertical and horizontal lines
-    gr.setColor(Color.GRAY)
-    for (x <- dateX) {
-      gr.drawLine(xmargin + x.toInt, ymargin, xmargin + x.toInt, ymargin + graphHeight)
-    }
-    for (y <- pointY) {
-      gr.drawLine(xmargin, ymargin + graphHeight - y.toInt, xmargin + graphWidth, ymargin + graphHeight - y.toInt)
-    }
+      gr.rotate(math.Pi / 2)
+      gr.setColor(Color.BLACK)
+      for ((date, x) <- dates.zip(dateX)) {
+        gr.drawString(date.dateString, ymargin + graphHeight + 2,  - xmargin - x.toInt + 3)
+      }
+      gr.rotate(0.0 - math.Pi / 2)
 
-    // draw burn down lines
+      for (point <- (workMin to workScheduled)) {
+        gr.drawString(
+            point.toString.padTo(4, " ").mkString,
+            xmargin - 20, ymargin + graphHeight - pointY(point).toInt + 3)
+      }
 
-    gr.setStroke(new BasicStroke(3))
+      // draw vertical and horizontal lines
+      gr.setColor(Color.GRAY)
+      for (x <- dateX) {
+        gr.drawLine(xmargin + x.toInt, ymargin, xmargin + x.toInt, ymargin + graphHeight)
+      }
+      for (y <- (workMin to workScheduled).map(pointY)) {
+        gr.drawLine(xmargin, ymargin + graphHeight - y.toInt, xmargin + graphWidth, ymargin + graphHeight - y.toInt)
+      }
 
-    // ideal
-    gr.setColor(Color.BLUE)
-    gr.drawLine(
-        xmargin, ymargin + graphHeight - pointY.last.toInt,
-        xmargin + graphWidth, ymargin + graphHeight)
+      // draw burn down lines
 
-    // actual
-    gr.setColor(Color.RED)
-    for (idx <- 0 until (points.length - 1)) {
-      val x = dateX(idx)
-      val y = pointY(points(idx))
-      val nextx = dateX(idx + 1)
-      val nexty = pointY(points(idx + 1))
+      gr.setStroke(new BasicStroke(3))
+
+      // ideal
+      gr.setColor(Color.BLUE)
       gr.drawLine(
-          xmargin + x.toInt, ymargin + graphHeight - y.toInt,
-          xmargin + nextx.toInt, ymargin + graphHeight - nexty.toInt)
+          xmargin, ymargin + graphHeight - pointY(workScheduled),
+          xmargin + graphWidth, ymargin + graphHeight - pointY(0))
+
+      // actual
+      gr.setColor(Color.RED)
+      for (idx <- 0 until (points.length - 1)) {
+        val x = dateX(idx)
+        val y = pointY(points(idx))
+        val nextx = dateX(idx + 1)
+        val nexty = pointY(points(idx + 1))
+        gr.drawLine(
+            xmargin + x.toInt, ymargin + graphHeight - y.toInt,
+            xmargin + nextx.toInt, ymargin + graphHeight - nexty.toInt)
+      }
+
     }
 
     val imageString = imageToBase64(image, "png")
     Html.image("data:image/png;base64," + imageString)
+
   }
 
 
@@ -206,6 +229,11 @@ object BurnDownImage {
         x.get(Calendar.HOUR),
         x.get(Calendar.MINUTE),
         x.get(Calendar.SECOND))
+  }
+
+  def isWeekend(x: Calendar): Boolean = {
+    val dayOfWeek = x.get(Calendar.DAY_OF_WEEK)
+    (dayOfWeek == Calendar.SUNDAY) || (dayOfWeek == Calendar.SATURDAY)
   }
 
 

@@ -201,10 +201,11 @@ object ParseTags {
 
       case SecTags.BurnDown => {
         stringToItem.get(tag.value).map(item => {
-          val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
           val startDate = args.get("startdate").map(DateTime.parse(_))
           val endDate   = args.get("enddate").map(DateTime.parse(_))
-          BurnDown(item, recursive, startDate, endDate)
+          val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
+          val weekends  = args.get("weekends").map(_.toBooleanSafe).getOrElse(false)
+          BurnDown(item, startDate, endDate, recursive, weekends)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 

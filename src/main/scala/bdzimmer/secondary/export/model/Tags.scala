@@ -185,9 +185,10 @@ object Tags {
 
   case class BurnDown(
     item: WorldItem,
-    recursive: Boolean,
     startDate: Option[CalendarDateTime],
-    endDate: Option[CalendarDateTime]
+    endDate: Option[CalendarDateTime],
+    recursive: Boolean,
+    weekends: Boolean
   ) extends ParsedTag
 
   // error tags
