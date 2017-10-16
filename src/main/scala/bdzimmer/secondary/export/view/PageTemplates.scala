@@ -96,7 +96,7 @@ object PageTemplates {
         column(Column12, navbar.getOrElse("")) +
         body +
         column(Column12, hr + navbar.getOrElse("")) +
-        column(Column12, hr + centered(license))
+        column(Column12, centered(license))
       )
     )
 
