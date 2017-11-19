@@ -1,12 +1,5 @@
 // Copyright (c) 2015 Ben Zimmer. All rights reserved.
 
-// Page templates. Originally part of the old "Bootstrap" class.
-// Ben Zimmer
-
-// 2015-08-10: Created in refactor.
-// 2015-09-02: All pages use jumbotron.
-// 2015-09-06: Google Fonts and link to custom stylesheet in main page template.
-
 package bdzimmer.secondary.export.view
 
 import bdzimmer.secondary.export.view.Html._
@@ -18,14 +11,14 @@ object PageTemplates {
   val Column12 = 12
 
   val NavbarSeparator = " " + nbsp + "&middot;" + nbsp + " "
-
   val RightArrow = " " + "&raquo;" + nbsp + " "
-
   val LeftArrow = " " + nbsp + "&laquo;" + " "
 
-  def createPage(outputFile: String, title: String, styles: String, body: String): Unit = {
 
-    val pageText = s"""
+
+  def page(title: String, styles: String, body: String): String = {
+
+    s"""
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -68,6 +61,46 @@ object PageTemplates {
 </html>
   """
 
+  }
+
+
+  def articlePage(
+      title:       String,
+      description: String,
+      navbar:      Option[String],
+      body:        String,
+      license:     String): String = {
+
+    page(
+      title,
+      "",
+
+      jumboTron(
+          container(
+              column(Column12,
+                  "<h1>%s</h1><h3>%s</h3>".format(
+                      Markdown.processLine(title),
+                      Markdown.processLine(description))))) +
+
+      container(
+        column(Column12, navbar.getOrElse("")) +
+        body +
+        column(Column12, hr + navbar.getOrElse("")) +
+        column(Column12, centered(license))
+      )
+    )
+
+  }
+
+
+
+
+
+  // old interface where these functions actually did file IO
+
+  /*
+  def createPage(outputFile: String, title: String, styles: String, body: String): Unit = {
+    val pageText = page(title, styles, body)
     val fileWriter = new java.io.FileWriter(outputFile, false)
     fileWriter.write(pageText)
     fileWriter.close()
@@ -101,5 +134,7 @@ object PageTemplates {
     )
 
   }
+  *
+  */
 
 }

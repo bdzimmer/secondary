@@ -70,20 +70,20 @@ class RenderTags(
     case link: Tags.Link => link.anchor match {
       case Some(anchor) => {
         val name = link.displayText.getOrElse(link.item.name)
-        ExportPages.textLinkPage(link.item, anchor, name)
+        RenderPages.textLinkPage(link.item, anchor, name)
       }
-      case None => ExportPages.textLinkPage(link.item)
+      case None => RenderPages.textLinkPage(link.item)
     }
 
     case image: Tags.Image => {
       // TODO: improve this logic
       if (image.responsive) {
-        ExportPages.panel(ExportImages.imageLinkPage(image.item, true), false)
+        RenderPages.panel(RenderImages.imageLinkPage(image.item, true), false)
       } else {
         if (image.link) {
-          ExportPages.panel(ExportImages.imageLinkPage(image.item, false, 320), true)
+          RenderPages.panel(RenderImages.imageLinkPage(image.item, false, 320), true)
         } else {
-          ExportPages.panel(ExportImages.imageLinkPage(image.item, false, 320, false), true)
+          RenderPages.panel(RenderImages.imageLinkPage(image.item, false, 320, false), true)
         }
       }
     }
@@ -106,7 +106,7 @@ class RenderTags(
 
     case jumbotron: Tags.Jumbotron => {
 
-      val imagePath = ExportImages.itemImagePath(jumbotron.item)
+      val imagePath = RenderImages.itemImagePath(jumbotron.item)
 
       // TODO: move this style chunk somewhere else
       s"""
@@ -134,11 +134,11 @@ class RenderTags(
       val passengersString = if (fp.passengers.isEmpty) {
         ""
       } else {
-        " with " + fp.passengers.map(x => ExportPages.textLinkPage(x)).mkString(", ")
+        " with " + fp.passengers.map(x => RenderPages.textLinkPage(x)).mkString(", ")
       }
 
       // generate a text summary
-      ExportPages.textLinkPage(fp.ship) + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
+      RenderPages.textLinkPage(fp.ship) + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
       Html.listGroup(
         List(
           genShow(
@@ -307,7 +307,7 @@ class RenderTags(
 
 
   private def genLink(name: String, item: WorldItem): String = {
-    s"""<b>${name}: </b>""" + ExportPages.textLinkPage(item) + Html.brInline
+    s"""<b>${name}: </b>""" + RenderPages.textLinkPage(item) + Html.brInline
   }
 
 }

@@ -10,7 +10,7 @@ import bdzimmer.secondary.export.model.WorldItems.WorldItem
 import bdzimmer.secondary.export.model.Tags.Task
 import bdzimmer.secondary.export.view.{Markdown, Html, WebResource}
 
-// TODO: some kind of actual date class for dates
+// TODO: actual date class for dates
 case class TaskTableItem(
     kind: String,
     desc: String,
@@ -47,8 +47,8 @@ object Tasks {
 
      val body = tasks.sortBy(_.log).map(task => {
        List(
-           ExportPages.textLinkPage(task.group),
-           ExportPages.textLinkPage(task.item),
+           RenderPages.textLinkPage(task.group),
+           RenderPages.textLinkPage(task.item),
            Html.b(task.kind.capitalize),
            Markdown.processLine(task.desc),
            task.log.getOrElse(""),

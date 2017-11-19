@@ -51,7 +51,7 @@ class Timeline(
         month.map(x => Html.b(dtp.month(x).capitalize)).getOrElse("") + "\n\n\n" +
         Html.table(None, curMonth.map({case(date, desc, src) => {
           List(date._3.map(x => Html.b(x.toString) + Timeline.ColumnSeparator).getOrElse(""),
-               Markdown.processLine(desc) + Html.nbsp + ExportPages.glyphLinkPage(src))
+               Markdown.processLine(desc) + Html.nbsp + RenderPages.glyphLinkPage(src))
         }}), tdStyle = Some(Timeline.TableStyle), None, None) + Html.br
 
       }}).mkString
@@ -98,7 +98,7 @@ class Timeline(
       dateFormat(date) +
       eventsOfDate.map({case(date, desc, src) => {
         Markdown.processLine(desc) + Html.nbsp +
-        ExportPages.glyphLinkPage(src) + Html.nbsp
+        RenderPages.glyphLinkPage(src) + Html.nbsp
       }}).mkString
     }}).mkString
 
@@ -115,7 +115,7 @@ class Timeline(
       Html.p(
           dtp.render(date) + " - "
           + Markdown.processLine(desc) + Html.nbsp
-          + ExportPages.glyphLinkPage(src))
+          + RenderPages.glyphLinkPage(src))
     }}).mkString("")
   }
 

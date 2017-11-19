@@ -1,41 +1,23 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2017 Ben Zimmer. All rights reserved.
 
-// Class for page exports. Refactored from Export.
-
-// 2015-08-09: Created.
-// 2015-08-27: Image page creation.
-// 2015-08-31: Enhanced character image functionality.
-// 2015-09-01: More on above.
-// 2015-09-02: More image functions for jumbotron functionality (needs cleaning up).
-//             Master page and article pages all use the same template.
-// 2015-09-08: Tasks page uses tags.
+// Render HTML pages for items.
 
 package bdzimmer.secondary.export.controller
 
-import java.io.File
-
-import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.util.Try
-
-import org.apache.commons.io.FilenameUtils
 
 import bdzimmer.secondary.export.model.{Tags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Html._
 import bdzimmer.secondary.export.view.{Markdown, PageTemplates}
 
-import bdzimmer.util.{Result, Pass, Fail}
-import bdzimmer.util.StringUtils._
 
-
-class ExportPages(
+class RenderPages(
     master: CollectionItem,
     world: List[WorldItem],
     tags: Map[String, Map[Int, Tags.ParsedTag]],
-    val location: String,
     license: String,
-    navbars: Boolean,
-    editLinks: Boolean) {
+    navbars: Boolean) {
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
@@ -82,19 +64,15 @@ class ExportPages(
   }
 
 
-  def exportPagesList(items: List[WorldItem]): List[String] = {
-    items.map(item => exportPageDispatch(item)).filter(!_.equals(""))
-  }
-
-
-  def exportPageDispatch(item: WorldItem): String = item match {
-    case x: CollectionItem => createCollectionPage(x)
-    case x: CharacterItem  => createCharacterPage(x)
-    case x: ImageFileItem  => createImagePage(x)
-    case x: MapItem        => createPixelArtPage(x)
-    case x: TileRefItem    => createPixelArtPage(x)
-    case x: TripItem       => createImagePage(x)
-    case _                 => createItemPage(item)
+  // generate page contents
+  def itemPageDispatch(item: WorldItem) = item match {
+    case x: CollectionItem => collectionPage(x)
+    case x: CharacterItem  => characterPage(x)
+    case x: ImageFileItem  => imagePage(x)
+    case x: TripItem       => imagePage(x)
+    case x: MapItem        => pixelArtPage(x)
+    case x: TileRefItem    => pixelArtPage(x)
+    case _                 => itemPage(item)
   }
 
 
@@ -102,12 +80,9 @@ class ExportPages(
 
   // TODO: rewrite these so they don't actually create the files on disk
 
-  def createMasterPage(): String = {
+  def masterPage(): String = {
 
-    val relFilePath = ExportPages.MasterPageFile
-
-    PageTemplates.createArticlePage(
-        location / relFilePath,
+    PageTemplates.articlePage(
         master.name,
         master.description,
         masterNavbar,
@@ -119,9 +94,9 @@ class ExportPages(
               master.children.collect({case curCollection: CollectionItem => {
                   column(Column6,
                       """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
-                      ExportPages.glyphLinkPage(curCollection) + "\n" +
+                      RenderPages.glyphLinkPage(curCollection) + "\n" +
                       listGroup(curCollection.children.map(x =>
-                        ExportPages.getCollectionLinksCollapsible(x))))
+                        RenderPages.getCollectionLinksCollapsible(x))))
               }}).grouped(2).map(_.mkString("\n") +
               """<div class="clearfix"></div>""" + "\n").mkString("\n")
             } else {
@@ -131,19 +106,10 @@ class ExportPages(
 
         license)
 
-    relFilePath
-
   }
 
 
-  def createTasksPage(): String = {
-
-    val relFilePath = ExportPages.TasksPageFile
-
-    def linkWithEdit(x: WorldItem): String = {
-      (if (editLinks) ExportPages.notepadLink(x) + nbsp else "") +
-      ExportPages.textLinkPage(x)
-    }
+  def tasksPage(): String = {
 
     def taskList(todoFunc: WorldItem => List[String]): String = {
       listGroup(world
@@ -151,7 +117,7 @@ class ExportPages(
               .filter(_._2.length > 0)
               .map(x => {
                 listItem(
-                    linkWithEdit(x._1) +
+                    RenderPages.textLinkPage(x._1) +
                     listGroup(x._2.map(text => listItem(Markdown.processLine(text)))))}))
     }
 
@@ -173,8 +139,7 @@ class ExportPages(
       (taskTag, item, groups.getOrElse(item.id, master))
     }
 
-    PageTemplates.createArticlePage(
-        location / relFilePath,
+    PageTemplates.articlePage(
         "Tasks", "",  pageNavbar(None),
 
         column(12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2, x._3)))) +
@@ -186,7 +151,7 @@ class ExportPages(
             h4("Empty Notes") +
             listGroup(world
               .filter(_.notes.equals(""))
-              .map(x => listItem(linkWithEdit(x))))
+              .map(x => listItem(RenderPages.textLinkPage(x))))
         ) +
 
         // Invalid tags
@@ -194,13 +159,10 @@ class ExportPages(
 
         license)
 
-    relFilePath
   }
 
 
-  def createIndexPage(): String = {
-
-    val relFilePath = ExportPages.IndexPageFile
+  def indexPage(): String = {
 
     def getName(item: WorldItem): String = item match {
       case x: CharacterItem => x.nameParts match {
@@ -214,9 +176,7 @@ class ExportPages(
       case _ => item.name
     }
 
-    PageTemplates.createArticlePage(
-
-        location / relFilePath,
+    PageTemplates.articlePage(
         "Index", "", pageNavbar(None),
 
         column(Column6, {
@@ -232,23 +192,20 @@ class ExportPages(
                 .map(x => (getName(x), x))
                 .sortBy(_._1)
                 .map(x => listItem(
-                    link(Markdown.processLine(x._1), ExportPages.itemPageName(x._2)))))
+                    link(Markdown.processLine(x._1), RenderPages.itemPageName(x._2)))))
           }}).mkString(br)
         }),
 
         license)
 
-    relFilePath
   }
 
 
-  def createStatsPage(): String = {
+  def statsPage(): String = {
 
-    val relFilePath = ExportPages.StatsPageFile
+    val relFilePath = RenderPages.StatsPageFile
 
-    PageTemplates.createArticlePage(
-
-        location / relFilePath,
+    PageTemplates.articlePage(
         "Stats", "",  pageNavbar(None),
 
         column(Column12, {
@@ -264,54 +221,12 @@ class ExportPages(
 
         license)
 
-    relFilePath
   }
 
 
-  private def createCharacterPage(character: CharacterItem): String = {
+  private def collectionPage(collection: CollectionItem): String = {
 
-    val relFilePath = ExportPages.itemPageName(character)
-
-    PageTemplates.createArticlePage(
-        location / relFilePath,
-        character.name,
-        character.description,
-        pageNavbar(Some(character)),
-
-        column(Column12, np.transform(character.notes, itemToTags(character)) + refItems(character)),
-
-        license)
-
-
-    relFilePath
-  }
-
-
-  private def createPixelArtPage(imageItem: ImageItem): String = {
-
-    val relFilePath = ExportPages.itemPageName(imageItem)
-
-    PageTemplates.createArticlePage(
-        location / relFilePath,
-        imageItem.name,
-        imageItem.description,
-        pageNavbar(Some(imageItem)),
-
-        column(Column12, ExportImages.pixelImageLinkResponsive(imageItem) + hr) +
-        column(Column12, np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
-
-        license)
-
-    relFilePath
-  }
-
-
-  private def createCollectionPage(collection: CollectionItem): String = {
-
-    val relFilePath = ExportPages.itemPageName(collection)
-
-    PageTemplates.createArticlePage(
-        location / relFilePath,
+    PageTemplates.articlePage(
         collection.name,
         collection.description,
         pageNavbar(Some(collection)),
@@ -320,20 +235,29 @@ class ExportPages(
             np.transform(collection.notes, itemToTags(collection)) + refItems(collection) + hr +
             (if (collection.children.length > 0) {
               h4("Subarticles") +
-              listGroup(collection.children.map(x => ExportPages.getCollectionLinksCollapsible(x)))
+              listGroup(collection.children.map(x => RenderPages.getCollectionLinksCollapsible(x)))
             } else {
               ""
             })),
 
         license)
-
-    relFilePath
   }
 
 
-  private def createImagePage(imageItem: ImageItem): String = {
+  private def characterPage(character: CharacterItem): String = {
 
-    val relFilePath = ExportPages.itemPageName(imageItem)
+    PageTemplates.articlePage(
+        character.name,
+        character.description,
+        pageNavbar(Some(character)),
+
+        column(Column12, np.transform(character.notes, itemToTags(character)) + refItems(character)),
+
+        license)
+  }
+
+
+  private def imagePage(imageItem: ImageItem): String = {
 
     // TODO: download the wikimedia JSON to a file when image is downloaded.
     // That way, an internet connection will only be required for the first export
@@ -361,50 +285,52 @@ class ExportPages(
       case _ => ""
     }
 
-    PageTemplates.createArticlePage(
-        location / relFilePath,
+    PageTemplates.articlePage(
         imageItem.name, imageItem.description,
         pageNavbar(Some(imageItem)),
 
-        column(Column8, image(ExportImages.imagePath(imageItem), responsive = true)) +
+        column(Column8, image(RenderImages.imagePath(imageItem), responsive = true)) +
         column(Column4, "") +
         column(Column12,
             hr +
             imageDescription +
             np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
         license)
-
-    relFilePath
   }
 
 
-  private def createItemPage(item: WorldItem): String = {
+  private def pixelArtPage(imageItem: ImageItem): String = {
 
-    val relFilePath = ExportPages.itemPageName(item)
+    PageTemplates.articlePage(
+        imageItem.name,
+        imageItem.description,
+        pageNavbar(Some(imageItem)),
 
-    PageTemplates.createArticlePage(
-        location / relFilePath,
+        column(Column12, RenderImages.pixelImageLinkResponsive(imageItem) + hr) +
+        column(Column12, np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
+
+        license)
+  }
+
+
+  private def itemPage(item: WorldItem): String = {
+
+    PageTemplates.articlePage(
         item.name, item.description,
         pageNavbar(Some(item)),
         column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item)),
         license)
-
-    relFilePath
   }
 
 
   private def masterNavbar(): Option[String] = navbars match {
     case true => {
       val links = List(
-          link("Index", ExportPages.IndexPageFile),
-          link("Tasks", ExportPages.TasksPageFile),
-          link("Stats", ExportPages.StatsPageFile))
-      val linksWidthEdit = editLinks match {
-        case true  => links :+ link("Edit",  ExportPages.notepadURL(master))
-        case false => links
-      }
-      val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
-      val bar = (linksWidthEdit ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
+          link("Index", RenderPages.IndexPageFile),
+          link("Tasks", RenderPages.TasksPageFile),
+          link("Stats", RenderPages.StatsPageFile))
+      val mainCollectionLinks = master.children.map(RenderPages.textLinkPage)
+      val bar = (links ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
       Some(bar)
     }
     case false => None
@@ -417,19 +343,13 @@ class ExportPages(
 
       // previous / parent / next
       val relLinks = item.map(x => List(
-          previous.get(x.id).map(y => PageTemplates.LeftArrow + ExportPages.textLinkPage(y)),
-          parent.get(x.id).map(ExportPages.textLinkPage),
-          next.get(x.id).map(y => ExportPages.textLinkPage(y) + PageTemplates.RightArrow)
+          previous.get(x.id).map(y => PageTemplates.LeftArrow + RenderPages.textLinkPage(y)),
+          parent.get(x.id).map(RenderPages.textLinkPage),
+          next.get(x.id).map(y => RenderPages.textLinkPage(y) + PageTemplates.RightArrow)
       ).flatten).toList.flatten
 
-      // normal edit bar
-      val links = List(link("Home", ExportPages.MasterPageFile))
-      //val linksWidthEdit = editLinks match {
-      //  case true  => links ++ item.map(x => link("Edit",  ExportPages.notepadURL(x)))
-      //  case false => links
-      //}
-
-      val mainCollectionLinks = master.children.map(ExportPages.textLinkPage)
+      val links = List(link("Home", RenderPages.MasterPageFile))
+      val mainCollectionLinks = master.children.map(RenderPages.textLinkPage)
       val bar = (links ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
 
       Some(bar)
@@ -446,7 +366,7 @@ class ExportPages(
 
     if (refs.length > 0) {
        h4("Referenced By") +
-       listGroup(refs.sortBy(_.name).map(x => listItem(ExportPages.textLinkPage(x))))
+       listGroup(refs.sortBy(_.name).map(x => listItem(RenderPages.textLinkPage(x))))
     } else {
       ""
     }
@@ -457,13 +377,14 @@ class ExportPages(
 
 
 
-object ExportPages {
+object RenderPages {
 
   // constants
   val MasterPageFile = "index.html"
   val IndexPageFile  = "indexpage.html"
   val TasksPageFile  = "tasks.html"
   val StatsPageFile  = "stats.html"
+
 
   // recursively generate nested lists of links from a CollectionItem
   def getCollectionLinks(item: WorldItem): String =  item match {

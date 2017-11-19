@@ -27,13 +27,13 @@ import bdzimmer.util.StringUtils._
 
 
 
-class ExportImages(
+class RenderImages(
     world: List[WorldItem],
     tags: Map[String, Map[Int, Tags.ParsedTag]],
     val location: String,
     license: String) {
 
-  val imagesLocation = location / ExportImages.ImagesDir
+  val imagesLocation = location / RenderImages.ImagesDir
   new File(imagesLocation).mkdir
 
   val np = new RenderTags(tags, world.collect({case x: CharacterItem => x}))
@@ -48,10 +48,10 @@ class ExportImages(
     // These scaled standard image files become the outputs.
 
     val mapImageOutputs = (items.collect({case x: MapItem => x})
-        map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
+        map(x => (x.filename, RenderImages.exportImage(x, contentDir, location))))
 
     val tileImageOutputs = (items.collect({case x: TileRefItem => x})
-        map(x => (x.filename, ExportImages.exportImage(x, contentDir, location))))
+        map(x => (x.filename, RenderImages.exportImage(x, contentDir, location))))
 
     // In the case of ImageItems, the filename is already an image. It either exists
     // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
@@ -70,7 +70,7 @@ class ExportImages(
 
     val allImageOutputs = (allImageOutputsList
         .map(x => List(x).toMap)
-        .foldLeft(ExportImages.getEmptyFileOutputsMap)(ExportImages.mergeFileOutputsMaps(_, _)))
+        .foldLeft(RenderImages.getEmptyFileOutputsMap)(RenderImages.mergeFileOutputsMaps(_, _)))
 
     allImageOutputs
 
@@ -81,7 +81,7 @@ class ExportImages(
   def prepareImageFileItemOutputs(imageFileItem: ImageFileItem, contentDir: String): (String, List[String]) = {
 
     val ext = FilenameUtils.getExtension(imageFileItem.filename)
-    val relativeName = ExportImages.ImagesDir / imageFileItem.id + "." + ext
+    val relativeName = RenderImages.ImagesDir / imageFileItem.id + "." + ext
     val absoluteName = location / relativeName
     val dstFile = new File(absoluteName)
 
@@ -161,7 +161,7 @@ class ExportImages(
           fp.startDate,
           fp.endDate)
 
-      val relativeName = ExportImages.ImagesDir / tripItem.id + ".png"
+      val relativeName = RenderImages.ImagesDir / tripItem.id + ".png"
       val outputImage = new java.io.File(location / relativeName);
       ImageIO.write(im, "png", outputImage)
       relativeName
@@ -176,7 +176,7 @@ class ExportImages(
 
 
 
-object ExportImages {
+object RenderImages {
 
   // constants
 
@@ -210,10 +210,10 @@ object ExportImages {
       case x: TileRefItem => {
         TileOptions.types.get(x.tiletype) match {
           case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
-          case None => ExportImages.imageMessage("Invalid tile type.")
+          case None => imageMessage("Invalid tile type.")
         }
       }
-      case _ => ExportImages.imageMessage("MetaItem type not supported.")
+      case _ => imageMessage("MetaItem type not supported.")
     }
 
     // various scales to output

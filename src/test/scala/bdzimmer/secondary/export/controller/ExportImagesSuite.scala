@@ -24,7 +24,7 @@ class ExportImagesSuite extends FunSuite {
     val outputFile = new File("amex.png")
 
     val tileAttrs = TileOptions.types.get("Tiles").get  // I don't even care
-    val image = ExportImages.getTilesetImage(inputFilename, tileAttrs)
+    val image = RenderImages.getTilesetImage(inputFilename, tileAttrs)
     ImageIO.write(image, "png", outputFile)
 
     val loadedImage = ImageIO.read(outputFile)
@@ -39,7 +39,7 @@ class ExportImagesSuite extends FunSuite {
     val inputFilename = resourceDir / "albion.map"
     val outputFile = new File("albion.png")
 
-    val image = ExportImages.getMapImage(inputFilename, resourceDir)
+    val image = RenderImages.getMapImage(inputFilename, resourceDir)
     ImageIO.write(image, "png", outputFile)
 
     val loadedImage = ImageIO.read(outputFile)

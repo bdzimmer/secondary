@@ -5,16 +5,14 @@ package bdzimmer.secondary.export.controller
 import java.io.{File, FileOutputStream}
 import java.net.{HttpURLConnection, URL}
 
-import scala.collection.JavaConverters._
-import scala.collection.{immutable => sci}
-import scala.util.{Try, Success, Failure}
+import scala.util.Try
 
 import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 import org.apache.commons.compress.archivers.zip.ZipFile
 
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItems, Tags}
 import bdzimmer.secondary.export.model.WorldItems._
-import bdzimmer.secondary.export.view.{Styles}
+import bdzimmer.secondary.export.view.Styles
 import bdzimmer.secondary.export.view.WebResource
 
 import bdzimmer.util.{Result, Pass, Fail}
@@ -27,12 +25,14 @@ class ExportProcess(projConf: ProjectConfig)  {
   val refStatusFile  = projConf.projectDir / ProjectStructure.RefStatusFile
   val itemStatusFile = projConf.projectDir / ProjectStructure.ItemStatusFile
 
+
   def downloadMeta(): (FileMap, FileMap) = {
     val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
     val newMetaStatus = WorldLoader.mergeFileMaps(oldMetaStatus, metaStatusChanges)
     (newMetaStatus, metaStatusChanges)
   }
+
 
   def downloadRefs(world: List[WorldItem]): (FileMap, FileMap) = {
     val oldRefStatus = WorldLoader.loadOrEmptyModifiedMap(refStatusFile)
@@ -41,8 +41,7 @@ class ExportProcess(projConf: ProjectConfig)  {
     (newRefStatus, refStatusChanges)
   }
 
-  // side-effecting operation that syncs the world down, exports, syncs up, and returns the world
-  // only exports if things have changed since last sync
+
   def run(): Result[String, CollectionItem] = {
 
     val (newMetaStatus, metaStatusChanges) = downloadMeta()
@@ -62,16 +61,14 @@ class ExportProcess(projConf: ProjectConfig)  {
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
           val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
 
-          val exportPages = new ExportPages(
+          val exportPages = new RenderPages(
               master,
               world,
               tags,
-              projConf.localExportPath,
               projConf.license,
-              projConf.navbars,
-              projConf.editLinks)
+              projConf.navbars)
 
-          val exportImages = new ExportImages(
+          val exportImages = new RenderImages(
               world,
               tags,
               projConf.localExportPath,
@@ -92,33 +89,6 @@ class ExportProcess(projConf: ProjectConfig)  {
           // This is more important than above in terms of keeping things up to date.
           val modifiedItemsReferencedBy = modifiedItems.flatMap(x => exportPages.referencedBy.get(x.id)).flatten
 
-
-          // I believe this logic is unnecessary since a change to an item will propagate up
-          // to its parents.
-
-          /*
-
-          // items with timelines that contain events from modified items
-
-          // not exactly sure if the logic is correct here
-          val timelineItems = (for {
-            item     <- world
-            itemTags =  tags.get(item.id).map(_.values).getOrElse(List())
-            timeline <- itemTags.collect({case x: Tags.Timeline => x})
-          } yield {
-            (item, timeline.root)
-          }).distinct
-
-          val timelineItemsRefresh = (timelineItems
-              .filter(itemPair =>
-                  WorldItems.collectionToList(itemPair._2).exists(x => modifiedIds.contains(x.id)))
-              .map(_._1)).distinct
-
-          // timelineItems.foreach(x => println("items with timelines: " + x._1.id))
-          // timelineItemsRefresh.foreach(x => println("items with timelines to refresh: " + x.id))
-
-          */
-
           modifiedItems.foreach(x             => println("modified item:      " + x.id))
           modifiedItemsReferences.foreach(x   => println("modified item refs: " + x.id))
           modifiedItemsReferencedBy.foreach(x => println("modified item refd: " + x.id))
@@ -129,7 +99,8 @@ class ExportProcess(projConf: ProjectConfig)  {
           val modifiedRefs = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
 
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
-               itemsToExport, modifiedRefs, exportPages, exportImages, images = true, projConf.localContentPath)
+               itemsToExport, modifiedRefs, exportPages, exportImages,
+               projConf.localExportPath, projConf.localContentPath)
 
           saveStatus(newMetaStatus, newRefStatus, newItemStatus)
         } else {
@@ -154,6 +125,7 @@ class ExportProcess(projConf: ProjectConfig)  {
     ExportPipeline.localFileUpdates(srcFiles, oldMetaStatus, projConf.localContentPath)
   }
 
+
   private def localReferencedFileStatusChanges(
       world: List[WorldItem],
       oldFileStatus: FileMap,
@@ -162,6 +134,7 @@ class ExportProcess(projConf: ProjectConfig)  {
     val imageFiles = ExportPipeline.getReferencedImages(world)
     ExportPipeline.localFileUpdates(imageFiles, oldFileStatus, projConf.localContentPath)
   }
+
 
   private def loadItemStatus(world: List[WorldItem]): (ItemMap, ItemMap) = {
     val oldItemStatus = WorldLoader.loadOrEmptyItemMap(itemStatusFile)
@@ -205,22 +178,22 @@ object ExportPipeline {
         val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
         val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
 
-        val exportPages = new ExportPages(
+        val exportPages = new RenderPages(
           master,
           world,
           tags,
-          projConf.localExportPath,
           projConf.license,
-          projConf.navbars,
-          projConf.editLinks)
+          projConf.navbars)
 
-        val exportImages = new ExportImages(
+        val exportImages = new RenderImages(
           world,
           tags,
           projConf.localExportPath,
           projConf.license)
 
-        ExportPipeline.exportPagesAndImages(exportPages, exportImages, world, world, projConf.localContentPath)
+        performExportPages(exportPages, world, projConf.localExportPath)
+        performExportImages(exportImages, world, projConf.localContentPath)
+
       }
       case Fail(msg) => println(msg)
     }
@@ -229,47 +202,35 @@ object ExportPipeline {
 
 
   // export content from local content location to export location
-  // using file timestamps to only process content that has changed
+  // based on lists of refs to export
   def export(
       pagesToExport: List[WorldItem],
       refsToExport:  List[RefItem],
-      // master: CollectionItem,
-      // world:  List[WorldItem],
-      exportPages: ExportPages,
-      exportImages: ExportImages,
-      images: Boolean = false,
+      exportPages: RenderPages,
+      exportImages: RenderImages,
+      localExportPath: String,
       localContentPath: String): (List[String], FileOutputsMap) = {
 
-    logList("pages to export", pagesToExport.map(_.id))
+    logList("page to export", pagesToExport.map(_.id))
 
-    val imagesToExport = if (images) {
+    // the images to export are:
+    // 1) the refitems in the whole collection whose referenced files were updated (refsToExport)
+    // 2) the imageitems whose metadata changed
 
-      // the images to export are:
-      // 1) the refitems in the whole collection whose referenced files were updated (refsToExport)
-      // 2) the imageitems whose metadata changed
+    val imagePagesToExport = pagesToExport.collect({case x: ImageItem => x})
 
-      val imagesToExport = pagesToExport.collect({case x: ImageItem => x})
+    logList("ref to export",  refsToExport.map(_.id))
+    logList("image to export", imagePagesToExport.map(_.id))
 
-      logList("refs to export",  refsToExport.map(_.id))
-      logList("images to export", imagesToExport.map(_.id))
+    // there may be overlap between the above two lists, for instance if a tileset file is modified
+    // and the description is also updated, so the "distinct" here should prevent duplicate work.
+    val imagesToExport = (refsToExport ++ imagePagesToExport).distinct
 
-      // there may be overlap between the above two lists, for instance if a tileset file is modified
-      // and the description is also update, so the "distinct" here should prevent duplicate work.
-      (refsToExport ++ imagesToExport).distinct
-
-    } else {
-      List()
-    }
-
-    // val (pageOutputs, imageOutputs) = exportPagesAndImages(
-    //    master, world, pagesToExport, imagesToExport, projConf)
-
-    val (pageOutputs, imageOutputs) = exportPagesAndImages(
-        exportPages, exportImages, pagesToExport, imagesToExport, localContentPath)
+    val pageOutputs = performExportPages(exportPages, pagesToExport, localExportPath)
+    val imageOutputs = performExportImages(exportImages, imagesToExport, localContentPath)
 
     println("--export finished")
 
-    logList("page created", pageOutputs)
     imageOutputs.foreach{case (k, v) => {
       logList("image created", v.map(k + " -> " + _))
     }}
@@ -278,28 +239,70 @@ object ExportPipeline {
   }
 
 
-  def exportPagesAndImages(
-      // master: CollectionItem,
-      // world:  List[WorldItem],
-      exportPages: ExportPages,
-      exportImages: ExportImages,
-      pagesToExport:  List[WorldItem],
+  def performExportPages(
+      exportPages: RenderPages,
+      pagesToExport: List[WorldItem],
+      localExportPath: String): List[String] = {
+
+    val pageOutputs = scala.collection.mutable.Buffer[String]()
+
+    // create master and summary pages that are always exported
+
+    writePage(
+      localExportPath / RenderPages.MasterPageFile,
+      exportPages.masterPage())
+    pageOutputs += RenderPages.MasterPageFile
+
+    writePage(
+      localExportPath / RenderPages.TasksPageFile,
+      exportPages.tasksPage())
+    pageOutputs += RenderPages.TasksPageFile
+
+    writePage(
+      localExportPath / RenderPages.IndexPageFile,
+      exportPages.indexPage())
+    pageOutputs += RenderPages.IndexPageFile
+
+    writePage(
+      localExportPath / RenderPages.StatsPageFile,
+      exportPages.statsPage())
+    pageOutputs += RenderPages.StatsPageFile
+
+    logList("project page created", pageOutputs)
+
+    // create other pages
+    pagesToExport.foreach(item => {
+      val pageFilename = RenderPages.itemPageName(item)
+
+      writePage(
+        localExportPath / pageFilename,
+        exportPages.itemPageDispatch(item))
+
+      println("page created: " + pageFilename)
+
+      if (pageFilename.length > 0) {
+        pageOutputs += pageFilename
+      }
+    })
+
+    pageOutputs.toList
+  }
+
+
+  def performExportImages(
+      exportImages: RenderImages,
       imagesToExport: List[WorldItem],
-      localContentPath: String): (List[String], FileOutputsMap) = {
+      localContentPath: String): FileOutputsMap = {
 
-    val pageOutputs = List(
-        exportPages.createMasterPage(),
-        exportPages.createTasksPage(),
-        exportPages.createIndexPage(),
-        exportPages.createStatsPage()) ++ exportPages.exportPagesList(pagesToExport)
-
+    // TODO: move file IO here from ExportIamges
     val imageOutputs = if (imagesToExport.nonEmpty) {
       exportImages.exportAllImages(imagesToExport, localContentPath)
     } else {
-      ExportImages.getEmptyFileOutputsMap
+      RenderImages.getEmptyFileOutputsMap
     }
 
-    (pageOutputs, imageOutputs)
+    imageOutputs
+
   }
 
 
@@ -409,6 +412,7 @@ object ExportPipeline {
     uniqueFiles.filter(x => !x.startsWith("wikimedia:"))
   }
 
+
   // files is names of files relative to local content directory
   def localFileUpdates(
       files: List[String],
@@ -424,8 +428,17 @@ object ExportPipeline {
     }}).map(x => (x._1, ("", x._2))).toMap
   }
 
-  def logList(prefix: String, list: List[String]): Unit = {
+
+  def logList(prefix: String, list: scala.collection.Seq[String]): Unit = {
     list.foreach(x => println(prefix + ": " + x))
   }
+
+
+  private def writePage(outputFile: String, contents: String): Unit = {
+    val fileWriter = new java.io.FileWriter(outputFile, false)
+    fileWriter.write(contents)
+    fileWriter.close()
+  }
+
 
 }
