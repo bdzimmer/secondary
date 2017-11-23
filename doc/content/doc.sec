@@ -25,7 +25,7 @@ name: Tags
 path: Documentation
 
 ### Overview
-***
+---
 
 A key feature of Secondary is a special set of tags that you can use in the notes of any item. Some of these function like tags in wiki markup, while others have purposes that are more specific to worldbuilding. Tags take the following form:
 
@@ -37,11 +37,28 @@ For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in 
 
 
 ### Item Tags
-***
+---
 
 Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
 
-***
+---
+
+#### anchor
+
+Add an anchor that can be referenced via a {{link: Tags | link}} tag.
+
+**Usage**
+
+`{{demo: anchor | description | id=anchor}}`
+
+* **description**: text to enclose in the anchor
+* **id**: unique id (within the page) for the anchor
+
+**Example**
+
+`{{demo: anchor | This is an anchor with id "anchor-tag". | id=anchor-tag}}` &rarr; {{anchor: This is an anchor with id "anchor-tag". | id=anchor-tag}}
+
+---
 
 #### familytree
 
@@ -73,7 +90,7 @@ For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes 
 
 See {{link: Genealogy Examples}} for further details.
 
-***
+---
 
 #### image
 
@@ -95,7 +112,7 @@ If the image is not responsive, it will be right aligned with a maximum width of
 
 `{{demo: image | image_red_riding_hood}}`
 
-***
+---
 
 #### jumbotron
 
@@ -118,7 +135,7 @@ Set the background image, image position, and text color of the article jumbotro
 
 See jumbotron at top of page.
 
-***
+---
 
 #### link
 
@@ -126,12 +143,16 @@ Create a link to an item.
 
 **Usage**
 
-`{{demo: link | item | anchor}}`
+`{{demo: link | item | heading}}`
+
+`{{demo: link | item | description | id}}`
 
 * **item**: name or id of item
-* **anchor** (optional): name of anchor within item's notes; anchors are automatically generated for headings
+* **heading** (optional): name of heading within item's notes
+* **description**: text to display
+* **id**: id of anchor generated with {{link: Tags | anchor}} tag
 
-Because link is the most often used tag, `link:` is optional if it is being used without an anchor argument.
+Because link is the most often used tag, `link:` is optional if it is being used without an heading argument or description and id arguments.
 
 **Examples**
 
@@ -139,7 +160,9 @@ Because link is the most often used tag, `link:` is optional if it is being used
 
 `{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
 
-***
+`{{demo: link | Tags | Link to anchor with id "anchor-tag" | anchor-tag}}` &rarr; {{link: Tags | Link to anchor with id "anchor-tag" | anchor-tag}}
+
+---
 
 #### timeline
 
@@ -168,7 +191,7 @@ This timeline tag gathers event tags from the examples in the next section.
 <br />
 
 ### Event Tags
-***
+---
 
 Event tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
 
@@ -178,7 +201,7 @@ Event tags describe events, which can be gathered into a timeline with the {{lin
 
 The parts of the date must be separated by at least one comma or a whitespace character, with additional whitespace allowed.
 
-***
+---
 
 #### birth / death
 
@@ -201,7 +224,7 @@ Birth and death tags may be added to any page, but it only make sense to add the
 
 {{death: November 23, 1926 | Angell dies after "a careless push" from a sailor.}}
 
-***
+---
 
 #### event
 
@@ -227,13 +250,13 @@ Describe an event.
 <br />
 
 ### Task Tags
-***
+---
 
 Task tags describe thoughts and work items in various stages of completion. Tasks are gathered from the entire world hierarchy into tables and outlines on the Tasks page of the generated site.
 
-***
+---
 
-#### thought / todo / started / done
+#### thought / todo / started / done / blocked
 
 Describe a task.
 
@@ -241,7 +264,7 @@ Describe a task.
 
 `{{demo: task_type | description | log=None | start=None | done=None}}`
 
-* **task_type**: thought, todo, started, or done
+* **task_type**: thought, todo, started, done, or blocked
 * **description**: description of the task
 * **log**: date that the task was first recorded
 * **start**: planned or actual start date

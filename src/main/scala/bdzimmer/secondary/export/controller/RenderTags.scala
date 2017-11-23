@@ -261,6 +261,8 @@ class RenderTags(
 
     }
 
+    case x: Tags.Anchor => Html.anchor(x.desc, x.id)
+
     case x: Tags.GenError   => Html.b("{{Error: " + x.msg + "}}")
     case x: Tags.ParseError => Html.b("{{Parse error: " + x.msg + "}}")
 

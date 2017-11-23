@@ -43,6 +43,7 @@ object SecTags {
   val MarkovText = "markovtext"
   val WordCount = "wordcount"
   val BurnDown = "burndown"
+  val Anchor = "anchor"
 
 }
 
@@ -189,6 +190,11 @@ object Tags {
     endDate: Option[CalendarDateTime],
     recursive: Boolean,
     weekends: Boolean
+  ) extends ParsedTag
+
+  case class Anchor(
+    desc: String,
+    id: String
   ) extends ParsedTag
 
   // error tags

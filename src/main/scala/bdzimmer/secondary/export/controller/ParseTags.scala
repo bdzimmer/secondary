@@ -66,12 +66,15 @@ object ParseTags {
 
     tag.kind match {
 
+      // TODO: verify anchors and return an error if invalid
       case SecTags.Link => {
         stringToItem.get(tag.value).map(item =>
-          if (tag.args.length > 0) {
+          if (tag.args.length == 1) {
             val anchorText = tag.args.mkString(" ")
             val anchorName = new AnchorLinkNode(anchorText).getName
             Link(item, Some(anchorText), Some(anchorName))
+          } else if (tag.args.length == 2) {
+            Link(item, Some(tag.args(0)), Some(tag.args(1)))
           } else {
             Link(item, None, None)
           }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
@@ -207,6 +210,10 @@ object ParseTags {
           val weekends  = args.get("weekends").map(_.toBooleanSafe).getOrElse(false)
           BurnDown(item, startDate, endDate, recursive, weekends)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
+      case SecTags.Anchor => {
+        Anchor(tag.value, args.getOrElse("id", "anchor"))
       }
 
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")

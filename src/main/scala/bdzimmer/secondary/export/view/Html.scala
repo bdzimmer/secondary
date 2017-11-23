@@ -74,8 +74,9 @@ object Html {
   }
 
 
-  def anchor(name: String): String = {
-    s"""<a name="${name}"></a>"""
+  // TODO: maybe a better name for this?
+  def anchor(desc: String, id: String): String = {
+     """<span id="%s">%s</span>""".format(id, desc)
   }
 
 
