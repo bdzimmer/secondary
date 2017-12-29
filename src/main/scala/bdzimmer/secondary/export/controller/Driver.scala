@@ -1,16 +1,6 @@
-// Copyright (c) 2016 Ben Zimmer. All rights reserved.
+// Copyright (c) 2017 Ben Zimmer. All rights reserved.
 
-// Entry point for world builder export process.
-
-// 2015-08-14: Configuration loaded from properties in user's home directory.
-// 2015-08-22: Reworked DriverConfig. Style fixes.
-// 2015-08-30: Further configuration updates.
-// 2015-09-12: Per-project configs. Commands.
-// 2015-09-15: Interactive mode.
-// 2016-01-12: Edit item command.
-// 2016-01-13: Explore command.
-// 2016-01-16: Styles command.
-
+// Entry point for Secondary application.
 
 package bdzimmer.secondary.export.controller
 
@@ -29,7 +19,7 @@ import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
 import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItems}
-import bdzimmer.secondary.export.view.ConfigurationGUI
+import bdzimmer.secondary.export.view.{ConfigurationGUI, ScreenshotUtility}
 import bdzimmer.pixeleditor.view.Main
 import bdzimmer.pixeleditor.model.AssetMetadataUtils
 
@@ -145,6 +135,7 @@ class Driver {
       println("completed in " + totalTime + " sec")
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
     }
+    case DriverCommands.Screenshot => new ScreenshotUtility(projConf.localContentPath)
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
     case DriverCommands.Help   => Driver.showCommands
@@ -199,7 +190,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2017.11.18"
+  val Title = "Secondary - create worlds from text - v2017.12.29"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
@@ -209,7 +200,7 @@ object Driver {
   }
 
 
-   // show help at the command line
+  // show help at the command line
   private def showUsage(): Unit = {
     println(Title)
     println()
@@ -217,7 +208,7 @@ object Driver {
     println("  secondary <command>")
     println()
     println("Commands:")
-    showCommands
+    showCommands()
     println("If no command is provided, Secondary will start in interactive mode.")
   }
 
@@ -246,6 +237,7 @@ object DriverCommands {
   val Editor      = "editor"
   val Explore     = "explore"
   val Export      = "export"
+  val Screenshot  = "screenshot"
   val Server      = "server"
   val Styles      = "styles"
   val Interactive = "interactive"
@@ -258,6 +250,7 @@ object DriverCommands {
       (Editor,      "start editor (alpha)"),
       (Explore,     "explore project content dir"),
       (Export,      "export"),
+      (Screenshot,  "screenshot utility"),
       (Server,      "server mode"),
       (Styles,      "add stylesheets"),
       (Help,        "show usage / commands"))
