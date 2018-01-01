@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Ben Zimmer. All rights reserved.
+// Copyright (c) 2018 Ben Zimmer. All rights reserved.
 
 // Render HTML pages for items.
 
@@ -16,6 +16,7 @@ class RenderPages(
     master: CollectionItem,
     world: List[WorldItem],
     tags: Map[String, Map[Int, Tags.ParsedTag]],
+    wikiCache: FilesystemCache,
     license: String,
     navbars: Boolean) {
 
@@ -77,8 +78,6 @@ class RenderPages(
 
 
   /// /// ///
-
-  // TODO: rewrite these so they don't actually create the files on disk
 
   def masterPage(): String = {
 
@@ -268,11 +267,12 @@ class RenderPages(
         if (imageFileItem.filename.startsWith("wikimedia:")) {
           (for {
             wikiName <- Try(imageFileItem.filename.split(":")(1)).toOption
-            json     <- ImageDownloader.getWikimediaJson(wikiName)
+            // json     <- ImageDownloader.getWikimediaJson(wikiName)
+            json     <- wikiCache(wikiName)
             wm       <- ImageDownloader.parseWikimediaJson(json)
 
             description =
-              "Artist: " + wm.artist + br +
+              "Artist: "  + wm.artist  + br +
               "License: " + wm.license + br +
               (if (wm.attribution) "Attribution required." + br else "") +
               link("Source", wm.descriptionurl) + hr

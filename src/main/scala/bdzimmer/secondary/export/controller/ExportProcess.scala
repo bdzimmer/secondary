@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2018 Ben Zimmer. All rights reserved.
 
 package bdzimmer.secondary.export.controller
 
@@ -25,8 +25,12 @@ class ExportProcess(projConf: ProjectConfig)  {
   val refStatusFile  = projConf.projectDir / ProjectStructure.RefStatusFile
   val itemStatusFile = projConf.projectDir / ProjectStructure.ItemStatusFile
 
+  val wikiCache = new FilesystemCache(
+      projConf.projectDir / "wikicache",
+      ".json",
+      ImageDownloader.getWikimediaJson)
 
-  def downloadMeta(): (FileMap, FileMap) = {
+  def loadMeta(): (FileMap, FileMap) = {
     val oldMetaStatus = WorldLoader.loadOrEmptyModifiedMap(metaStatusFile)
     val metaStatusChanges = localMetaStatusChanges(oldMetaStatus, projConf)
     val newMetaStatus = WorldLoader.mergeFileMaps(oldMetaStatus, metaStatusChanges)
@@ -34,7 +38,7 @@ class ExportProcess(projConf: ProjectConfig)  {
   }
 
 
-  def downloadRefs(world: List[WorldItem]): (FileMap, FileMap) = {
+  def loadRefs(world: List[WorldItem]): (FileMap, FileMap) = {
     val oldRefStatus = WorldLoader.loadOrEmptyModifiedMap(refStatusFile)
     val refStatusChanges = localReferencedFileStatusChanges(world, oldRefStatus, projConf)
     val newRefStatus = WorldLoader.mergeFileMaps(oldRefStatus, refStatusChanges)
@@ -44,14 +48,19 @@ class ExportProcess(projConf: ProjectConfig)  {
 
   def run(): Result[String, CollectionItem] = {
 
-    val (newMetaStatus, metaStatusChanges) = downloadMeta()
+    if (!projConf.localExportPathFile.exists()) {
+      println("creating export directory: " + projConf.localExportPath)
+      projConf.localExportPathFile.mkdirs()
+    }
+
+    val (newMetaStatus, metaStatusChanges) = loadMeta()
     val loadedWorld = WorldLoader.loadWorld(projConf, newMetaStatus)
 
     loadedWorld match {
       case Pass(master) => {
 
         val world = WorldItems.collectionToList(master)
-        val (newRefStatus, refStatusChanges)   = downloadRefs(world)
+        val (newRefStatus,  refStatusChanges)  = loadRefs(world)
         val (newItemStatus, itemStatusChanges) = loadItemStatus(world)
 
         // only export the things that have changed
@@ -65,12 +74,14 @@ class ExportProcess(projConf: ProjectConfig)  {
               master,
               world,
               tags,
+              wikiCache,
               projConf.license,
               projConf.navbars)
 
           val exportImages = new RenderImages(
               world,
               tags,
+              wikiCache,
               projConf.localExportPath,
               projConf.license)
 
@@ -166,7 +177,11 @@ object ExportPipeline {
   // simple export - local export everything without regard to what has changed
   def exportAll(projConf: ProjectConfig): Result[String, CollectionItem] = {
     FileUtils.deleteDirectory(projConf.localExportPathFile)
-    projConf.localExportPathFile.mkdirs
+    projConf.localExportPathFile.mkdirs()
+    val wikiCache = new FilesystemCache(
+      projConf.projectDir / "wikicache",
+      ".json",
+      ImageDownloader.getWikimediaJson)
 
     val loadedWorld = WorldLoader.loadWorld(projConf)
     loadedWorld match {
@@ -182,12 +197,14 @@ object ExportPipeline {
           master,
           world,
           tags,
+          wikiCache,
           projConf.license,
           projConf.navbars)
 
         val exportImages = new RenderImages(
           world,
           tags,
+          wikiCache,
           projConf.localExportPath,
           projConf.license)
 

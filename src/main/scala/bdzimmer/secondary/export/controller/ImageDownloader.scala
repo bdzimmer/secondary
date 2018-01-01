@@ -1,12 +1,6 @@
-// Copyright (c) 2016 Ben Zimmer. All rights reserved.
+// Copyright (c) 2018 Ben Zimmer. All rights reserved.
 
 // Object with functions for getting metadata and images from Wikimedia.
-
-// 2015-08-22: Created.
-// 2015-08-23: Metadata retrieval and image downloads.
-// 2015-08-24: Extension awareness in image downloader. JSON parsing fixes.
-// 2015-09-02: JSON parsing fixes.
-// 2016-04-30: Rewrote JSON parsing with Jackson.
 
 package bdzimmer.secondary.export.controller
 
@@ -21,6 +15,9 @@ import scala.util.Try
 import com.fasterxml.jackson.core.{JsonFactory, JsonParser, JsonToken}
 
 import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
+
+import bdzimmer.util.StringUtils._
+
 
 
 case class WikimediaMeta(
@@ -50,10 +47,16 @@ object ImageDownloader {
 
     // I think we can always assume a "File:" prefix
     val queryString = WikipediaURL + MetaDataQuery + "File:" + filename
-    // println(queryString)
-    val is = new URL(queryString).openStream
-    val result = Try(IOUtils.toString(is))
-    IOUtils.closeQuietly(is)
+    println("reading wikimedia json\n\t" + queryString)
+    val result = Try({
+      val is = new URL(queryString).openStream
+      val json = IOUtils.toString(is)
+      IOUtils.closeQuietly(is)
+      json
+    })
+    if (result.isFailure) {
+      println("read failed")
+    }
     result.toOption
 
   }
@@ -201,13 +204,17 @@ object ImageDownloader {
 
 
   // download the image referenced by a metadata object
-  def downloadImage(wm: WikimediaMeta, outputName: String): String = {
-    val outputExtension = FilenameUtils.getExtension(wm.url)
-    val outputFilename = outputName + "." + outputExtension
+  def downloadImage(wm: WikimediaMeta, outputFilename: String): Option[String] = {
+    // val outputExtension = FilenameUtils.getExtension(wm.url)
+    // val outputFilename = outputName + "." + outputExtension
     val outputFile = new File(outputFilename)
-    println(wm.url)
-    FileUtils.copyURLToFile(new java.net.URL(wm.url), outputFile)
-    outputFilename
+    println("downloading\n\t" + wm.url + "\n\t" + outputFilename)
+
+    val download = Try(FileUtils.copyURLToFile(new java.net.URL(wm.url), outputFile))
+    if (download.isFailure) {
+      println("download failed")
+    }
+    download.toOption.map(_ => outputFilename)
   }
 
 
@@ -218,7 +225,7 @@ object ImageDownloader {
       val img = ImageIO.read(inputImageFile)
 
       if (img.getWidth > maxWidth) {
-        println("downsizing " + inputImage + " to " + outputImage)
+        println("downsizing\n\t" + inputImage + "\n\t" + outputImage)
         val scaledHeight = img.getHeight * (maxWidth / img.getWidth.toFloat)
         val scaledImage = img.getScaledInstance(maxWidth, scaledHeight.toInt, Image.SCALE_SMOOTH)
         val scaledBufferedImage = new BufferedImage(
@@ -228,8 +235,35 @@ object ImageDownloader {
         scaledBufferedImage.getGraphics.drawImage(scaledImage, 0, 0, null)
         ImageIO.write(scaledBufferedImage, ext, new File(outputImage))
       } else {
+        println("copying\n\t" + inputImage + "\n\t" + outputImage)
         if (!inputImage.equals(outputImage)) FileUtils.copyFile(inputImageFile, new File(outputImage))
       }
+    }
+  }
+
+}
+
+
+
+class FilesystemCache(val dir: String, suffix: String, process: String => Option[String]) {
+  // cache strings to files in the file system
+  // probably not threadsafe
+
+  val dirFile = new File(dir)
+  if (!dirFile.exists) {
+    println("creating filesystem cache (" + suffix + "): " + dir)
+    dirFile.mkdirs()
+  }
+
+  def apply(key: String): Option[String] = {
+    val file = new File(dir / key + suffix)
+    if (file.exists) {
+      Some(FileUtils.readFileToString(file))
+    } else {
+      process(key).map(x => {
+        FileUtils.writeStringToFile(file, x)
+        x
+      })
     }
   }
 

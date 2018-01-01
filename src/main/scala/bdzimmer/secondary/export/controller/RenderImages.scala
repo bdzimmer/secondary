@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2018 Ben Zimmer. All rights reserved.
 
 package bdzimmer.secondary.export.controller
 
@@ -30,6 +30,7 @@ import bdzimmer.util.StringUtils._
 class RenderImages(
     world: List[WorldItem],
     tags: Map[String, Map[Int, Tags.ParsedTag]],
+    wikiCache: FilesystemCache,
     val location: String,
     license: String) {
 
@@ -80,56 +81,62 @@ class RenderImages(
   // download or copy image files to the output location
   def prepareImageFileItemOutputs(imageFileItem: ImageFileItem, contentDir: String): (String, List[String]) = {
 
+    // where does the image ultimately have to end up?
     val ext = FilenameUtils.getExtension(imageFileItem.filename)
-    val relativeName = RenderImages.ImagesDir / imageFileItem.id + "." + ext
-    val absoluteName = location / relativeName
-    val dstFile = new File(absoluteName)
+    val dstRelativeName = RenderImages.ImagesDir / imageFileItem.id + "." + ext
+    val dstAbsoluteName = location / dstRelativeName
+    val dstFile = new File(dstAbsoluteName)
 
-    // todo: change to if / else
-    val (resultSrc, resultDst) = imageFileItem.filename.startsWith("wikimedia:") match {
+    // source is original file in content directory
+    val srcFilename = imageFileItem.filename
 
-      case false => {
-        // local file - copy to images folder
-        // source is original local file
+    // resultSrc is relative
+    // resultToCopyAbs is absolute and will be None if the file already exists in the output
+    // location or something goes wrong in the downloading
 
-        val srcFilename = imageFileItem.filename
-        val srcAbsFilename = contentDir / imageFileItem.filename
-        val srcFile = new File(srcAbsFilename)
+    val (resultSrc, resultToCopyAbs) = if (!imageFileItem.filename.startsWith("wikimedia:")) {
 
-        if (!dstFile.exists && srcFile.exists) {
-          println("\t\t\tcopying to " + relativeName)
-          FileUtils.copyFile(srcFile, dstFile)
-          (srcFilename, Some(relativeName))
-        } else {
-          (srcFilename, None)
-        }
+      // local file - copy to output web image directory
+
+      val srcAbsFilename = contentDir / imageFileItem.filename
+      val srcFile = new File(srcAbsFilename)
+
+      if (!dstFile.exists && srcFile.exists) {
+        (srcFilename, Some(srcAbsFilename))
+      } else {
+        (srcFilename, None)
       }
 
-      case true => {
-        // wikimedia file - download to images folder
-        // source is scrcfilename!
-        val srcFilename = imageFileItem.srcfilename
+    } else {
 
-        // only download if it doesn't already exist in the scratch location
-        if (!dstFile.exists) {
-          println("\t\t\tdownloading to " + relativeName)
-          val outputName = for {
-            json <- ImageDownloader.getWikimediaJson(imageFileItem.filename.split(":")(1))
-            wm <- ImageDownloader.parseWikimediaJson(json)
-            imagePrefix = imagesLocation / imageFileItem.id
-            _ = ImageDownloader.downloadImage(wm, imagePrefix)
-          } yield relativeName
-          (srcFilename, outputName)
-        } else {
-          (srcFilename, None)
-        }
+      // wikimedia file - download to cache folder if not already there,
+      // then copy to images folder.
+
+      val wikiName = imageFileItem.filename.split(":")(1)
+      val cachedFilename = wikiCache.dir / wikiName
+      val cachedFile = new File(cachedFilename)
+
+      // only download if it doesn't already exist in the cache location
+      if (!cachedFile.exists) {
+        val wikiMeta = for {
+          json     <- wikiCache(wikiName)
+          wm       <- ImageDownloader.parseWikimediaJson(json)
+        } yield wm
+        wikiMeta.foreach(x => ImageDownloader.downloadImage(x, cachedFilename))
       }
+
+      if (!dstFile.exists && cachedFile.exists) {
+        (srcFilename, Some(cachedFilename))
+      } else {
+        (srcFilename, None)
+      }
+
     }
 
-    // todo: change to foreach
-    resultDst.map(filename => {
-      // downsize image (in place) if necessary
-      ImageDownloader.downsizeImage(location / filename, location / filename, ext)
+    val resultDst = resultToCopyAbs.map(x => {
+      // copy and downsize image if necessary
+      ImageDownloader.downsizeImage(x, dstAbsoluteName, ext)
+      dstRelativeName
     })
 
     (resultSrc, resultDst.toList)

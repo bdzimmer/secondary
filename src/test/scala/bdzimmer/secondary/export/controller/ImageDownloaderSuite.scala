@@ -1,11 +1,7 @@
-// Copyright (c) 2015 Ben Zimmer. All rights reserved.
+// Copyright (c) 2018 Ben Zimmer. All rights reserved.
 
 // Tests for ImageDownloader.
 
-// 2015-08-22: Created.
-// 2015-08-23: Tests for getting metadata and downloading an image file.
-// 2015-08-24: Revised tests.
-// 2015-09-02: Updates for JSON parsing fixes.
 
 package bdzimmer.secondary.export.controller
 
@@ -27,7 +23,11 @@ class ImageDownloaderSuite extends FunSuite {
     assert(resultJson.isDefined)
 
     // for manual examination of JSON
-    resultJson.foreach(x => FileUtils.writeStringToFile(new File("json.txt"), x, "UTF-8"))
+    val jsonFile = new File("json.txt")
+    if (jsonFile.exists()) {
+      jsonFile.delete()
+    }
+    resultJson.foreach(x => FileUtils.writeStringToFile(jsonFile, x, "UTF-8"))
 
     val meta = resultJson.flatMap(ImageDownloader.parseWikimediaJson(_))
     assert(meta.isDefined)
@@ -37,28 +37,34 @@ class ImageDownloaderSuite extends FunSuite {
 
   test("download image") {
 
-    val outputName = "output"
-
-    val outputFilename = for {
-      json <- ImageDownloader.getWikimediaJson(inputFile)
-      wm <- ImageDownloader.parseWikimediaJson(json)
-    } yield {
-      ImageDownloader.downloadImage(wm, outputName)
+    val outputFilename = "output.jpg"
+    val outputFile = new File(outputFilename)
+    if (outputFile.exists()) {
+      outputFile.delete()
     }
 
-    assert(outputFilename.isDefined)
-    outputFilename.map(x => assert(FilenameUtils.getBaseName(x).equals(outputName)))
-    outputFilename.map(x => new java.io.File(outputName).exists)
-    outputFilename.map(x => ImageDownloader.downsizeImage("output.jpg", "downsized.jpg", "jpg", 800))
+    val resultFilename = for {
+      json <- ImageDownloader.getWikimediaJson(inputFile)
+      wm   <- ImageDownloader.parseWikimediaJson(json)
+      name <- ImageDownloader.downloadImage(wm, outputFilename)
+    } yield name
+
+    assert(resultFilename.isDefined)
+    assert(outputFile.exists())
+
+    val downsizedFilename = "downsized.jpg"
+    val downsizedFile = new File(downsizedFilename)
+
+    resultFilename.foreach(x => ImageDownloader.downsizeImage(
+        outputFilename, downsizedFilename, "jpg", 800))
+    assert(downsizedFile.exists())
 
   }
 
 
   test("parse bad JSON") {
-
     val meta = ImageDownloader.parseWikimediaJson("""{"baloney": 0}""")
     assert(meta.isEmpty)
-
   }
 
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Ben Zimmer. All rights reserved.
+// Copyright (c) 2018 Ben Zimmer. All rights reserved.
 
 // Entry point for Secondary application.
 
@@ -190,7 +190,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2017.12.29"
+  val Title = "Secondary - create worlds from text - v2018.01.01"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 60
 
