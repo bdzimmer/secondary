@@ -270,20 +270,20 @@ object ExportPipeline {
       exportPages.masterPage())
     pageOutputs += RenderPages.MasterPageFile
 
-    writePage(
-      localExportPath / RenderPages.TasksPageFile,
-      exportPages.tasksPage())
-    pageOutputs += RenderPages.TasksPageFile
+    // writePage(
+    //   localExportPath / RenderPages.TasksPageFile,
+    //   exportPages.tasksPage())
+    // pageOutputs += RenderPages.TasksPageFile
 
-    writePage(
-      localExportPath / RenderPages.IndexPageFile,
-      exportPages.indexPage())
-    pageOutputs += RenderPages.IndexPageFile
+    // writePage(
+    //   localExportPath / RenderPages.IndexPageFile,
+    //   exportPages.indexPage())
+    // pageOutputs += RenderPages.IndexPageFile
 
-    writePage(
-      localExportPath / RenderPages.StatsPageFile,
-      exportPages.statsPage())
-    pageOutputs += RenderPages.StatsPageFile
+    // writePage(
+    //   localExportPath / RenderPages.StatsPageFile,
+    //   exportPages.statsPage())
+    // pageOutputs += RenderPages.StatsPageFile
 
     logList("project page created", pageOutputs)
 

@@ -23,6 +23,44 @@ import bdzimmer.secondary.export.view.Html
 
 object BurnDownImage {
 
+  def render(
+      tasks: List[Task],
+      startDate: CalendarDateTime,
+      endDate: CalendarDateTime,
+      weekends: Boolean): String = {
+
+    val taskRanges = BurnDownImage.taskRanges(tasks, startDate, endDate)
+
+    val (points, dates) = BurnDownImage.pointsAndDates(
+        taskRanges, startDate, endDate, false)
+
+    val (pointsFiltered, datesFiltered) = if (!weekends) {
+      points.zip(dates).filter(x => {
+        !BurnDownImage.isWeekend(BurnDownImage.toCalendar(x._2))
+      }).unzip
+    } else {
+      (points, dates)
+    }
+
+    // there are a number of valid ways to compute workScheduled here
+
+    // this makes a chart that doesn't go negative - use with addDuring = true above
+    // val workScheduled = taskRanges.map(_._3.points).sum
+
+    // this is more appropriate for scrum - only sum work scheduled on start date
+    // use with addDuring = false above
+    val workScheduled = taskRanges.filter(_._1.equals(startDate)).map(_._3.points).sum
+    val workCompleted = taskRanges.map(_._3).filter(_.kind.equals(SecTags.Done)).map(_.points).sum
+
+    println("work scheduled: " + workScheduled)
+    println("work completed: " + workCompleted)
+
+    BurnDownImage.image(
+        pointsFiltered, datesFiltered, workScheduled, workCompleted)
+
+
+  }
+
   def taskRanges(
       tasks: List[Task],
       startDate: CalendarDateTime,

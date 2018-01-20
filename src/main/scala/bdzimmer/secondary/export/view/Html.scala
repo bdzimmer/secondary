@@ -32,6 +32,17 @@ object Html {
   }
 
 
+  def row(body: String): String = {
+    val content = """
+<div class="row">
+  %s
+</div>
+"""
+
+    content.format(body)
+  }
+
+
   def jumboTron(body: String): String = {
     val content = """
 <div class="jumbotron">

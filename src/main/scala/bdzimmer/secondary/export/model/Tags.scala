@@ -45,6 +45,10 @@ object SecTags {
   val BurnDown = "burndown"
   val Anchor = "anchor"
 
+  val Index = "index"
+  val Tasks = "tasks"
+  val Stats = "stats"
+
 }
 
 
@@ -197,13 +201,24 @@ object Tags {
     id: String
   ) extends ParsedTag
 
+  case class Index(
+    item: WorldItem
+  ) extends ParsedTag
+
+  case class Tasks(
+    item: WorldItem
+  ) extends ParsedTag
+
+  case class Stats(
+    item: WorldItem
+  ) extends ParsedTag
+
   // error tags
 
   trait ErrorTag extends ParsedTag
 
   case class GenError(msg: String) extends ErrorTag
   case class ParseError(tag: RawTag, msg: String) extends ErrorTag
-
 
   // establishes rules for how tags reference other items
   // used to determine related item outputs that need to be regenerated as items change
@@ -218,8 +233,15 @@ object Tags {
     case x: Ancestor   => List(x.character)
     case x: Descendant => List(x.character)
     case x: Marriage   => List(x.character)
-    // TODO: MarkovText would go here, but I don't want those to automatically update.
+    // MarkovText would go here, but I don't want those to automatically update.
+
+    // just a reminder to self that this by itself establishes the proper
+    // recursive dependency, since hashes of items change when the hashes of their
+    // children change
     case x: WordCount  => List(x.item)
+    case x: Index      => List(x.item)
+    case x: Tasks      => List(x.item)
+    case x: Stats      => List(x.item)
     case _ => List()
   }
 

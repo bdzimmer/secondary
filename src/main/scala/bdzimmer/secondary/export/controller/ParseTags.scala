@@ -216,6 +216,24 @@ object ParseTags {
         Anchor(tag.value, args.getOrElse("id", "anchor"))
       }
 
+      case SecTags.Index => {
+        stringToItem.get(tag.value).map(item => {
+          Index(item)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
+      case SecTags.Tasks => {
+        stringToItem.get(tag.value).map(item => {
+          Tasks(item)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
+      case SecTags.Stats => {
+        stringToItem.get(tag.value).map(item => {
+          Stats(item)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")
 
     }

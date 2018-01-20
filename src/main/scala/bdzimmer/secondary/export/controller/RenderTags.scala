@@ -215,53 +215,32 @@ class RenderTags(
     }
 
     case x: Tags.BurnDown => {
-      val items = if (x.recursive) {
-        WorldItems.collectionToList(x.item)
-      } else {
-        List(x.item)
+      val items = x.recursive match {
+        case true  => WorldItems.collectionToList(x.item)
+        case false => List(x.item)
       }
-
-      // TODO: most of this should be moved inside BurnDownImage
-
       val tasks = (items
           .flatMap(item => stringToTags.get(item.id))
           .flatMap(_.values.collect({case tag: Tags.Task => tag})))
-
-      val startDate = x.startDate.getOrElse(CalendarDateTime(2017, 1, 1, 0, 0, 0))
-      val endDate = x.endDate.getOrElse(CalendarDateTime(2017, 1, 14, 0, 0, 0))
-
-      val taskRanges = BurnDownImage.taskRanges(tasks, startDate, endDate)
-
-      val (points, dates) = BurnDownImage.pointsAndDates(
-          taskRanges, startDate, endDate, false)
-
-      val (pointsFiltered, datesFiltered) = if (!x.weekends) {
-        points.zip(dates).filter(x => {
-          !BurnDownImage.isWeekend(BurnDownImage.toCalendar(x._2))
-        }).unzip
-      } else {
-        (points, dates)
-      }
-
-      // there are a number of valid ways to compute workScheduled here
-
-      // this makes a chart that doesn't go negative - use with addDuring = true above
-      // val workScheduled = taskRanges.map(_._3.points).sum
-
-      // this is more appropriate for scrum - only sum work scheduled on start date
-      // use with addDuring = false above
-      val workScheduled = taskRanges.filter(_._1.equals(startDate)).map(_._3.points).sum
-      val workCompleted = taskRanges.map(_._3).filter(_.kind.equals(SecTags.Done)).map(_.points).sum
-
-      println("work scheduled: " + workScheduled)
-      println("work completed: " + workCompleted)
-
-      BurnDownImage.image(
-          pointsFiltered, datesFiltered, workScheduled, workCompleted)
-
+      BurnDownImage.render(
+          tasks,
+          x.startDate.getOrElse(CalendarDateTime(2017, 1, 1, 0, 0, 0)),
+          x.endDate.getOrElse(CalendarDateTime(2017, 1, 14, 0, 0, 0)),
+          x.weekends)
     }
 
     case x: Tags.Anchor => Html.anchor(x.desc, x.id)
+
+    case x: Tags.Index => Index.render(
+        WorldItems.collectionToList(x.item).drop(1))
+
+    case x: Tags.Tasks => {
+      Tasks.render(x.item, stringToTags)
+    }
+
+    case x: Tags.Stats => {
+      Stats.render(x.item)
+    }
 
     case x: Tags.GenError   => Html.b("{{Error: " + x.msg + "}}")
     case x: Tags.ParseError => Html.b("{{Parse error: " + x.msg + "}}")
