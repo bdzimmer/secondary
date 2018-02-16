@@ -18,31 +18,15 @@ import bdzimmer.secondary.export.model.ConfigurationModel._
 
 class ProjectConfig(
     val projectDir: String,
-    val mode: String,
-    val driveClientIdFile: String,
-    val driveAccessTokenFile: String,
-    val driveInputPath: String,
-    val driveOutputPath: String,
-    val mappedContentPath: String,
     val masterName: String,
     val license: String,
     val navbars: Boolean,
-    val editLinks: Boolean) {
+    val hiddenItems: String) {
 
-  // additional attributes derived from the above
-  // val driveInputPathList = driveInputPath.split(slash).toList
-  // val driveOutputPathList = driveOutputPath.split(slash).toList
-
-  val localExportPath  = projectDir / ProjectStructure.WebDir
-  val localContentPath = projectDir / ProjectStructure.ContentDir
-  val localExportPathFile = new File(localExportPath)
+  val localExportPath      = projectDir / ProjectStructure.WebDir
+  val localContentPath     = projectDir / ProjectStructure.ContentDir
+  val localExportPathFile  = new File(localExportPath)
   val localContentPathFile = new File(localContentPath)
-
-  val mappedContentPathActual = if (mode.equals("local")) {
-    localContentPath
-  } else {
-    mappedContentPath
-  }
 
 }
 
@@ -50,37 +34,24 @@ class ProjectConfig(
 
 object ProjectConfig {
 
-  val mode = ChooseConfigField("mode", "drive", List("drive", "local"), "Export mode")
-
-  val driveClientIdFile    = TextConfigField("driveClientIdFile", "client_secret.json", "Drive client id file")
-  val driveAccessTokenFile = TextConfigField("driveAccessTokenFile", "access_token.json", "Drive access token file")
-  val driveInputPath       = TextConfigField("driveInputPath", "secondary/content", "Drive input path")
-  val driveOutputPath      = TextConfigField("driveOutputPath", "secondary/web", "Drive output path")
-  val mappedContentPath    = TextConfigField("mappedContentPath", "", "Mapped content path")
-
-  val masterName           = TextConfigField("masterName", "master", "Master name")
-
-  val license              = TextConfigField("license", "Copyright &copy 2016. All rights reserved.", "License text")
-  val navbars              = BoolConfigField("navbars", "true", "Navbars")
-  val editLinks            = BoolConfigField("editlinks", "true", "Edit Links")
+  val masterName  = TextConfigField("masterName", "master", "Master name")
+  val license     = TextConfigField("license", "Copyright &copy 2018. All rights reserved.", "License text")
+  val navbars     = BoolConfigField("navbars", "true", "Navbars")
+  val hiddenItems = TextConfigField("hiddenitems", "", "Hidden items")
 
   val requiredProperties: List[ConfigField] =  List(
-      mode,
-      driveClientIdFile,
-      driveAccessTokenFile,
-      driveInputPath,
-      driveOutputPath,
-      mappedContentPath,
       masterName,
       license,
       navbars,
-      editLinks)
+      hiddenItems)
 
+      
   def getProperties(projectDir: String): PropertiesWrapper = {
     val propFilename = projectDir / ProjectStructure.ConfigurationFile
     new PropertiesWrapper(propFilename)
   }
 
+  
   def apply(projectDir: String): ProjectConfig = {
 
     val prop = getProperties(projectDir)
@@ -89,7 +60,7 @@ object ProjectConfig {
       !prop.prop.keySet().contains(x.key)
     })
 
-    missing foreach(x => {
+    missing.foreach(x => {
       System.err.println(
           s"property ${x.key} missing from driver configuration\n" +
           s"\tusing default value: '${x.default}'")
@@ -100,16 +71,10 @@ object ProjectConfig {
     }
 
     new ProjectConfig(
-        projectDir = projectDir,
-        mode                 = getProp(mode),
-        driveClientIdFile    = getProp(driveClientIdFile),
-        driveAccessTokenFile = getProp(driveAccessTokenFile),
-        driveInputPath       = getProp(driveInputPath),
-        driveOutputPath      = getProp(driveOutputPath),
-        mappedContentPath    = getProp(mappedContentPath),
-        masterName           = getProp(masterName),
-        license              = getProp(license),
-        navbars              = getProp(navbars).toBooleanSafe,
-        editLinks            = getProp(editLinks).toBooleanSafe)
+        projectDir  = projectDir,
+        masterName  = getProp(masterName),
+        license     = getProp(license),
+        navbars     = getProp(navbars).toBooleanSafe,
+        hiddenItems = getProp(hiddenItems))
   }
 }

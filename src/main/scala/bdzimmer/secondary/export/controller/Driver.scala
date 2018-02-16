@@ -88,7 +88,7 @@ class Driver {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItems.assetMetadata(master))
-          new Main(projConf.mappedContentPathActual, "Secondary Editor", outputFilename)
+          new Main(projConf.localContentPath, "Secondary Editor", outputFilename)
         }
         case Fail(msg) => println(msg)
       }
@@ -96,41 +96,7 @@ class Driver {
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
       val startTime = System.currentTimeMillis
-      val result = projConf.mode match {
-        case "drive" => {
-
-          /*
-          val driveSync = DriveSync(
-            projConf.driveClientIdFile,
-            projConf.driveAccessTokenFile,
-            projConf.localContentPath,
-            projConf.localExportPath,
-            projConf.driveInputPath,
-            projConf.driveOutputPath,
-            projConf.projectDir / "drivecontentstatus.txt",
-            projConf.projectDir / "localwebstatus.txt")
-
-
-          driveSync match  {
-            case Pass(ds)  => ds.downloadInput()
-            case Fail(msg) => DriveSync.driveError(msg)
-          }
-          */
-
-          val world = new ExportProcess(projConf).run()
-
-          /*
-          driveSync match  {
-            case Pass(ds)  => ds.uploadOutput()
-            case Fail(msg) => DriveSync.driveError(msg)
-          }
-          */
-
-          world
-
-        }
-        case _ => new ExportProcess(projConf).run()
-      }
+      val result = new ExportProcess(projConf).run()
       val totalTime = (System.currentTimeMillis - startTime) / 1000.0
       println("completed in " + totalTime + " sec")
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
