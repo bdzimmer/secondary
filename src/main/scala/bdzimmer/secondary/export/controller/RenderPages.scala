@@ -9,6 +9,7 @@ import scala.util.Try
 import bdzimmer.secondary.export.model.{ Tags, WorldItems }
 import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Html._
+import bdzimmer.secondary.export.view.Bootstrap._
 import bdzimmer.secondary.export.view.{ Markdown, PageTemplates }
 
 

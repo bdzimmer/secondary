@@ -241,6 +241,22 @@ class RenderTags(
     case x: Tags.Stats => {
       Stats.render(x.item)
     }
+    
+    case x: Tags.Gallery => {
+      x.item match {
+        case collection: WorldItems.CollectionItem => {
+          val images = if (x.recursive) {
+            collection.children.map(
+                WorldItems.collectionToList(_).collect(
+                    {case image: WorldItems.ImageItem => image})).flatten
+          } else {
+            collection.children.collect({case image: WorldItems.ImageItem => image})
+          }
+          ImageGallery.render(images)
+        }
+        case _ => ""
+      }
+    }
 
     case x: Tags.GenError   => Html.b("{{Error: " + x.msg + "}}")
     case x: Tags.ParseError => Html.b("{{Parse error: " + x.msg + "}}")

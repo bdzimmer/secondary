@@ -10,7 +10,8 @@ import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CollectionItem}
 import bdzimmer.secondary.export.model.WorldItems
 import bdzimmer.secondary.export.model.Tags.Task
 import bdzimmer.secondary.export.model.Tags
-import bdzimmer.secondary.export.view.{Markdown, Html, WebResource}
+import bdzimmer.secondary.export.view.{Markdown, Html, Bootstrap, WebResource}
+
 
 // TODO: actual date class for dates
 case class TaskTableItem(
@@ -65,14 +66,14 @@ object Tasks {
                   Html.listGroup(x._2.map(text => Html.listItem(Markdown.processLine(text)))))}))
     }
 
-    Html.row(
+    Bootstrap.row(
 
       // Task table
-      Html.column(Html.Column12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2, x._3)))) +
+      Bootstrap.column(Bootstrap.Column12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2, x._3)))) +
 
       // Empty notes
-      Html.column(
-          Html.Column6,
+      Bootstrap.column(
+          Bootstrap.Column6,
           Html.h4("Empty Notes") +
           Html.listGroup(items
             .filter(_.notes.equals(""))
@@ -80,8 +81,8 @@ object Tasks {
       ) +
 
       // Invalid tags
-      Html.column(
-          Html.Column6,
+      Bootstrap.column(
+          Bootstrap.Column6,
           Html.h4("Invalid Tags") +
           taskList(getInvalidTags))
     )

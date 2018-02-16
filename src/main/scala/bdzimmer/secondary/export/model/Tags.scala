@@ -48,6 +48,8 @@ object SecTags {
   val Index = "index"
   val Tasks = "tasks"
   val Stats = "stats"
+  
+  val Gallery = "gallery"
 
 }
 
@@ -211,6 +213,12 @@ object Tags {
 
   case class Stats(
     item: WorldItem
+  ) extends ParsedTag
+  
+  case class Gallery(
+    item: WorldItem,
+    size: Integer,
+    recursive: Boolean
   ) extends ParsedTag
 
   // error tags

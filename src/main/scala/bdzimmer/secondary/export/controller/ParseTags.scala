@@ -233,6 +233,15 @@ object ParseTags {
           Stats(item)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
+      
+      // TODO: function that builds the standard parse error
+      case SecTags.Gallery => {
+        stringToItem.get(tag.value).map(item => {
+          val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
+          val size = args.get("size").map(_.toIntSafe(4)).getOrElse(4)
+          Gallery(item, size, recursive)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
 
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")
 

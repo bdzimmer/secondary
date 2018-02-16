@@ -3,9 +3,9 @@
 package bdzimmer.secondary.export.view
 
 import bdzimmer.secondary.export.view.Html._
+import bdzimmer.secondary.export.view.Bootstrap._
 
 
-// Static class for generating Bootstrap HTML.
 object PageTemplates {
 
   val Column12 = 12
@@ -13,7 +13,6 @@ object PageTemplates {
   val NavbarSeparator = " " + nbsp + "&middot;" + nbsp + " "
   val RightArrow = " " + "&raquo;" + nbsp + " "
   val LeftArrow = " " + nbsp + "&laquo;" + " "
-
 
 
   def page(title: String, styles: String, body: String): String = {
@@ -75,7 +74,7 @@ object PageTemplates {
       title,
       "",
 
-      jumboTron(
+      jumbotron(
           container(
               column(Column12,
                   "<h1>%s</h1><h3>%s</h3>".format(

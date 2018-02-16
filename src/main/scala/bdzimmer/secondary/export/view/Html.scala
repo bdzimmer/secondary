@@ -12,62 +12,14 @@ import scala.collection.immutable.Seq
 
 object Html {
 
-  val Column3 = 3
-  val Column4 = 4
-  val Column6 = 6
-  val Column8 = 8
-  val Column12 = 12
-
   val ImageMaxWidthDefault = 480
-
-
-  def container(body: String): String = {
-    val content = """
-<div class="container">
-  %s
-</div>
-"""
-
-    content.format(body)
-  }
-
-
-  def row(body: String): String = {
-    val content = """
-<div class="row">
-  %s
-</div>
-"""
-
-    content.format(body)
-  }
-
-
-  def jumboTron(body: String): String = {
-    val content = """
-<div class="jumbotron">
-  %s
-</div>
-"""
-
-    content.format(body)
-  }
-
-
-  def column(size: Int, body: String): String = {
-    val content = """
-<div class="col-md-%d">
-  %s
-</div>"""
-
-    content.format(size, body)
-  }
 
 
   def listGroup(items: Seq[String]): String = {
     """<ul>""" + "\n" + items.mkString("\n") +  """</ul>"""
   }
 
+  
   def listItem(item: String, className: String = ""): String = {
     val classAttr = if (className.equals("")) {
       className
@@ -76,7 +28,6 @@ object Html {
     }
 
     s"""<li${classAttr}>${item}</li>"""
-
   }
 
 
@@ -92,6 +43,8 @@ object Html {
 
 
   def image(file: String, responsive: Boolean = false, maxWidth: Int = ImageMaxWidthDefault): String = {
+    // TODO: build a better style string given more parameters
+    // TODO: or split into multiple functions
     responsive match {
       // case false => s"""<img src="$file" style="max-width:$maxWidth;height:auto"/>"""
       // TODO: not sure if setting both max-width and max-height is doing what I think
