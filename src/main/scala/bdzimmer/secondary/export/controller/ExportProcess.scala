@@ -65,10 +65,13 @@ class ExportProcess(projConf: ProjectConfig)  {
 
         // only export the things that have changed
         if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
-
+          
           // parse all of the tags
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
           val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+          val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
+            stringToItem.get(x).map(WorldItems.collectionToList(_))
+          }).flatten.distinct
 
           val exportPages = new RenderPages(
               master,
@@ -76,7 +79,10 @@ class ExportProcess(projConf: ProjectConfig)  {
               tags,
               wikiCache,
               projConf.license,
-              projConf.navbars)
+              projConf.navbars,
+              projConf.subarticles,
+              projConf.relativeLinks,
+              hiddenItems)
 
           val exportImages = new RenderImages(
               world,
@@ -192,6 +198,9 @@ object ExportPipeline {
         // parse all of the tags
         val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
         val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+        val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
+          stringToItem.get(x).map(WorldItems.collectionToList(_))
+        }).flatten.distinct
 
         val exportPages = new RenderPages(
           master,
@@ -199,7 +208,10 @@ object ExportPipeline {
           tags,
           wikiCache,
           projConf.license,
-          projConf.navbars)
+          projConf.navbars,
+          projConf.subarticles,
+          projConf.relativeLinks,
+          hiddenItems)
 
         val exportImages = new RenderImages(
           world,

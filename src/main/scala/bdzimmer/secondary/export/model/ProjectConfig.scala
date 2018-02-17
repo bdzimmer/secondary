@@ -21,6 +21,8 @@ class ProjectConfig(
     val masterName: String,
     val license: String,
     val navbars: Boolean,
+    val subarticles: Boolean,
+    val relativeLinks: Boolean,
     val hiddenItems: String) {
 
   val localExportPath      = projectDir / ProjectStructure.WebDir
@@ -34,15 +36,19 @@ class ProjectConfig(
 
 object ProjectConfig {
 
-  val masterName  = TextConfigField("masterName", "master", "Master name")
-  val license     = TextConfigField("license", "Copyright &copy 2018. All rights reserved.", "License text")
-  val navbars     = BoolConfigField("navbars", "true", "Navbars")
-  val hiddenItems = TextConfigField("hiddenitems", "", "Hidden items")
+  val masterName    = TextConfigField("masterName", "master", "Master name")
+  val license       = TextConfigField("license", "Copyright &copy 2018. All rights reserved.", "License text")
+  val navbars       = BoolConfigField("navbars", "true", "Navbars")
+  val subarticles   = BoolConfigField("subarticles", "true", "Subarticles")
+  val relativeLinks = BoolConfigField("relativelinks", "true", "Relative links")
+  val hiddenItems   = TextConfigField("hiddenitems", "", "Hidden items")
 
   val requiredProperties: List[ConfigField] =  List(
       masterName,
       license,
       navbars,
+      subarticles,
+      relativeLinks,
       hiddenItems)
 
       
@@ -71,10 +77,12 @@ object ProjectConfig {
     }
 
     new ProjectConfig(
-        projectDir  = projectDir,
-        masterName  = getProp(masterName),
-        license     = getProp(license),
-        navbars     = getProp(navbars).toBooleanSafe,
-        hiddenItems = getProp(hiddenItems))
+        projectDir    = projectDir,
+        masterName    = getProp(masterName),
+        license       = getProp(license),
+        navbars       = getProp(navbars).toBooleanSafe,
+        subarticles   = getProp(subarticles).toBooleanSafe,
+        relativeLinks = getProp(relativeLinks).toBooleanSafe,
+        hiddenItems   = getProp(hiddenItems))
   }
 }

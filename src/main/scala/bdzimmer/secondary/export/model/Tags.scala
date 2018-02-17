@@ -218,6 +218,7 @@ object Tags {
   case class Gallery(
     item: WorldItem,
     size: Integer,
+    showCaptions: Boolean,
     recursive: Boolean
   ) extends ParsedTag
 

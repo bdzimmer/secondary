@@ -245,14 +245,12 @@ class RenderTags(
     case x: Tags.Gallery => {
       x.item match {
         case collection: WorldItems.CollectionItem => {
-          val images = if (x.recursive) {
-            collection.children.map(
-                WorldItems.collectionToList(_).collect(
-                    {case image: WorldItems.ImageItem => image})).flatten
+          val images = (if (x.recursive) {
+            WorldItems.collectionToList(collection).drop(1)
           } else {
-            collection.children.collect({case image: WorldItems.ImageItem => image})
-          }
-          ImageGallery.render(images)
+            collection.children
+          }).collect({case image: WorldItems.ImageItem => image})
+          ImageGallery.render(images, x.size, x.showCaptions)
         }
         case _ => ""
       }

@@ -19,7 +19,10 @@ class RenderPages(
     tags: Map[String, Map[Int, Tags.ParsedTag]],
     wikiCache: FilesystemCache,
     license: String,
-    navbars: Boolean) {
+    navbars: Boolean,
+    subarticles: Boolean,
+    relativeLinks: Boolean,
+    hiddenItems: List[WorldItem]) {
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
@@ -58,10 +61,12 @@ class RenderPages(
 
   val np = new RenderTags(stringToTags, world.collect({ case x: CharacterItem => x }))
 
+  val hiddenItemIds = hiddenItems.map(_.id).toSet
+  
   private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
     tags.get(item.id).getOrElse(Map())
   }
-
+  
 
   // generate page contents
   def itemPageDispatch(item: WorldItem) = item match {
@@ -87,13 +92,15 @@ class RenderPages(
         np.transform(master.notes, itemToTags(master)) +
           (if (master.children.length > 0) {
             hr +
-              master.children.collect({
+              master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
                 case curCollection: CollectionItem => {
                   column(Column6,
                     """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
                       RenderPages.glyphLinkPage(curCollection) + "\n" +
-                      listGroup(curCollection.children.map(x =>
-                        RenderPages.getCollectionLinksCollapsible(x))))
+                      listGroup(
+                        curCollection.children
+                        .filter(x => !hiddenItemIds.contains(x.id))
+                        .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
                 }
               }).grouped(2).map(_.mkString("\n") +
                 """<div class="clearfix"></div>""" + "\n").mkString("\n")
@@ -115,9 +122,12 @@ class RenderPages(
 
       column(Column12,
         np.transform(collection.notes, itemToTags(collection)) + refItems(collection) + hr +
-          (if (collection.children.length > 0) {
+          (if (collection.children.length > 0 && subarticles) {
             h4("Subarticles") +
-              listGroup(collection.children.map(x => RenderPages.getCollectionLinksCollapsible(x)))
+              listGroup(
+                  collection.children
+                  .filter(x => !hiddenItemIds.contains(x.id))
+                  .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds)))
           } else {
             ""
           })),
@@ -209,7 +219,7 @@ class RenderPages(
   private def pageNavbar(item: WorldItem): Option[String] = navbars match {
     case true => {
 
-      val relLinks = if (!master.equals(item) && !master.children.contains(item)) {
+      val relLinks = if (relativeLinks && !master.equals(item) && !master.children.contains(item)) {
         // previous / parent / next
         List(
           previous.get(item.id).map(y => PageTemplates.LeftArrow + RenderPages.textLinkPage(y)),
@@ -220,7 +230,7 @@ class RenderPages(
       }
 
       val home = List(link("Home", RenderPages.MasterPageFile))
-      val mainCollectionLinks = master.children.map(RenderPages.textLinkPage)
+      val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.id)).map(RenderPages.textLinkPage)
       val bar = (home ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
 
       Some(bar)
@@ -251,6 +261,7 @@ object RenderPages {
 
   val MasterPageFile = "index.html"
 
+  /*
   // recursively generate nested lists of links from a CollectionItem
   def getCollectionLinks(item: WorldItem): String = item match {
     case x: CollectionItem => listItem(textLinkPage(x) + listGroup(x.children.map(x => getCollectionLinks(x))))
@@ -268,18 +279,24 @@ object RenderPages {
       textLinkPage(item) +
         (if (item.description.length > 0) " - " + Markdown.processLine(item.description) else ""))
   }
+  * 
+  */
 
 
   // recursively generated collapsible lists
-  def getCollectionLinksCollapsible(item: WorldItem): String = item match {
+  def getCollectionLinksCollapsible(item: WorldItem, hiddenItemIds: Set[String]): String = item match {
     case x: CollectionItem => {
 
       val collapsibleLink = s"""<input type="checkbox" id="${x.id}" class="swivel" />""" +
         "\n" + textLinkPage(x) + s"""<label for="${x.id}"></label>"""
 
       listItem(
-        collapsibleLink + listGroup(x.children.map(x => getCollectionLinksCollapsible(x))),
-        className = "swivel")
+        collapsibleLink +
+        listGroup(
+            x.children
+            .filter(x => !hiddenItemIds.contains(x.id))
+            .map(x => getCollectionLinksCollapsible(x, hiddenItemIds))),
+            className = "swivel")
 
     }
     case _ => listItem(textLinkPage(item))

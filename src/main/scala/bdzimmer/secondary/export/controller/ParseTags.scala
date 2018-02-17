@@ -239,7 +239,8 @@ object ParseTags {
         stringToItem.get(tag.value).map(item => {
           val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
           val size = args.get("size").map(_.toIntSafe(4)).getOrElse(4)
-          Gallery(item, size, recursive)
+          val showCaptions = args.get("showcaptions").map(_.toBooleanSafe).getOrElse(true)
+          Gallery(item, size, showCaptions, recursive)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 

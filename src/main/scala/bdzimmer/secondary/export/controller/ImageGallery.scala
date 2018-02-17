@@ -10,7 +10,7 @@ import bdzimmer.secondary.export.view.{Html, Bootstrap, Markdown}
 
 object ImageGallery {
   
-  def render(images: List[ImageItem]): String = {
+  def render(images: List[ImageItem], size: Int, showCaptions: Boolean): String = {
     Bootstrap.row(
       s"""
 <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -18,7 +18,7 @@ object ImageGallery {
     <div class="modal-content" style="height:100%">              
       <div class="modal-body" style="height:80%;background-color:#000000">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <img src="" class="imagepreview img-responsive center-block" style="max-height:100%">
+        <img src="" class="imagepreview img-responsive center-block" style="max-height:98%">
       </div> 
       <div class="modal-footer" style="height:20%">
         <div class="col-xs-12">
@@ -28,22 +28,42 @@ object ImageGallery {
     </div>
   </div>
 </div>""" +
+"""<style>
+body.modal-open {
+    position: relative;
+}
+</style>  
+""" +
 """<script>
 $(function() {
     $('.pop').on('click', function() {
         $('.imagepreview').attr('src', $(this).find('img').attr('src'));
-        $('.imagedescription').text($(this).find('img').attr('alt'));
+        var description = $(this).find('img').attr('alt');
+        if (description.length > 0) {
+            $('.imagedescription').text(description);
+            $('.modal-body').css("height", "80%")
+            $('.modal-footer').css("height", "20%")
+            $('.modal-footer').css("padding", "15px")
+        } else {
+            $('.modal-body').css("height", "100%")
+            $('.modal-footer').css("height", "0%")
+            $('.modal-footer').css("padding", "0px")
+        }
         $('#imagemodal').modal('show');   
     });     
 });
 </script>""" + 
       images.map(image => {
         val imageSrc = RenderImages.imagePath(image)
-        val caption = s"""<div class="caption">${Markdown.processLine(image.name)}</div>"""
+        val caption = if (showCaptions) {
+            s"""<div class="caption">${Markdown.processLine(image.name)}</div>"""
+        } else {
+            ""
+        }
         Bootstrap.column(
-          Bootstrap.Column3,
+          size,
           ("""<div class="thumbnail">""" +
-          s"""<a href="#" class="pop">""" +
+          s"""<a class="pop">""" +
           s"""<img src="${imageSrc}" alt="${image.notes}" style="width:100%"/>""" +
           caption +
           """</a>""" +
