@@ -158,7 +158,7 @@ object Driver {
 
   val Title = "Secondary - create worlds from text - v2018.01.01"
   val DefaultCommand = DriverCommands.Interactive
-  val ServerRefreshSeconds = 60
+  val ServerRefreshSeconds = 10
 
   def main(args: Array[String]): Unit = {
     val driver = new Driver()

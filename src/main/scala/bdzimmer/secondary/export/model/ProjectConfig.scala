@@ -23,7 +23,8 @@ class ProjectConfig(
     val navbars: Boolean,
     val subarticles: Boolean,
     val relativeLinks: Boolean,
-    val hiddenItems: String) {
+    val hiddenItems: String,
+    val unifiedJumbotron: Boolean) {
 
   val localExportPath      = projectDir / ProjectStructure.WebDir
   val localContentPath     = projectDir / ProjectStructure.ContentDir
@@ -36,12 +37,13 @@ class ProjectConfig(
 
 object ProjectConfig {
 
-  val masterName    = TextConfigField("masterName", "master", "Master name")
-  val license       = TextConfigField("license", "Copyright &copy 2018. All rights reserved.", "License text")
-  val navbars       = BoolConfigField("navbars", "true", "Navbars")
-  val subarticles   = BoolConfigField("subarticles", "true", "Subarticles")
-  val relativeLinks = BoolConfigField("relativelinks", "true", "Relative links")
-  val hiddenItems   = TextConfigField("hiddenitems", "", "Hidden items")
+  val masterName       = TextConfigField("masterName", "master", "Master name")
+  val license          = TextConfigField("license", "Copyright &copy 2018. All rights reserved.", "License text")
+  val navbars          = BoolConfigField("navbars", "true", "Navbars")
+  val subarticles      = BoolConfigField("subarticles", "true", "Subarticles")
+  val relativeLinks    = BoolConfigField("relativelinks", "true", "Relative links")
+  val hiddenItems      = TextConfigField("hiddenitems", "", "Hidden items")
+  val unifiedJumbotron = BoolConfigField("unifiedjumbotron", "false", "Unified Jumbotron") 
 
   val requiredProperties: List[ConfigField] =  List(
       masterName,
@@ -49,7 +51,8 @@ object ProjectConfig {
       navbars,
       subarticles,
       relativeLinks,
-      hiddenItems)
+      hiddenItems,
+      unifiedJumbotron)
 
       
   def getProperties(projectDir: String): PropertiesWrapper = {
@@ -77,12 +80,13 @@ object ProjectConfig {
     }
 
     new ProjectConfig(
-        projectDir    = projectDir,
-        masterName    = getProp(masterName),
-        license       = getProp(license),
-        navbars       = getProp(navbars).toBooleanSafe,
-        subarticles   = getProp(subarticles).toBooleanSafe,
-        relativeLinks = getProp(relativeLinks).toBooleanSafe,
-        hiddenItems   = getProp(hiddenItems))
+        projectDir       = projectDir,
+        masterName       = getProp(masterName),
+        license          = getProp(license),
+        navbars          = getProp(navbars).toBooleanSafe,
+        subarticles      = getProp(subarticles).toBooleanSafe,
+        relativeLinks    = getProp(relativeLinks).toBooleanSafe,
+        hiddenItems      = getProp(hiddenItems),
+        unifiedJumbotron = getProp(unifiedJumbotron).toBooleanSafe)
   }
 }

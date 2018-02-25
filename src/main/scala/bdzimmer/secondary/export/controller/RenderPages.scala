@@ -22,7 +22,8 @@ class RenderPages(
     navbars: Boolean,
     subarticles: Boolean,
     relativeLinks: Boolean,
-    hiddenItems: List[WorldItem]) {
+    hiddenItems: List[WorldItem],
+    unifiedJumbotron: Boolean) {
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
@@ -114,10 +115,15 @@ class RenderPages(
 
 
   private def collectionPage(collection: CollectionItem): String = {
+    
+    val (name, description) = unifiedJumbotron match {
+      case true  => (master.name, master.description)
+      case false => (collection.name, collection.description)
+    }
 
     PageTemplates.articlePage(
-      collection.name,
-      collection.description,
+      name,
+      description,
       pageNavbar(collection),
 
       column(Column12,
@@ -136,11 +142,18 @@ class RenderPages(
   }
 
 
+  // TODO: can characterPage be eliminated?
+  
   private def characterPage(character: CharacterItem): String = {
+    
+    val (name, description) = unifiedJumbotron match {
+      case true  => (master.name, master.description)
+      case false => (character.name, character.description)
+    }
 
     PageTemplates.articlePage(
-      character.name,
-      character.description,
+      name,
+      description,
       pageNavbar(character),
 
       column(Column12, np.transform(character.notes, itemToTags(character)) + refItems(character)),
@@ -176,9 +189,14 @@ class RenderPages(
       }
       case _ => ""
     }
+    
+    val (name, description) = unifiedJumbotron match {
+      case true  => (master.name, master.description)
+      case false => (imageItem.name, imageItem.description)
+    }
 
     PageTemplates.articlePage(
-      imageItem.name, imageItem.description,
+      name, description,
       pageNavbar(imageItem),
 
       column(Column8, image(RenderImages.imagePath(imageItem), responsive = true)) +
@@ -192,10 +210,15 @@ class RenderPages(
 
 
   private def pixelArtPage(imageItem: ImageItem): String = {
+    
+    val (name, description) = unifiedJumbotron match {
+      case true  => (master.name, master.description)
+      case false => (imageItem.name, imageItem.description)
+    }
 
     PageTemplates.articlePage(
-      imageItem.name,
-      imageItem.description,
+      name,
+      description,
       pageNavbar(imageItem),
 
       column(Column12, RenderImages.pixelImageLinkResponsive(imageItem) + hr) +
@@ -206,9 +229,14 @@ class RenderPages(
 
 
   private def itemPage(item: WorldItem): String = {
+    
+    val (name, description) = unifiedJumbotron match {
+      case true  => (master.name, master.description)
+      case false => (item.name, item.description)
+    }
 
     PageTemplates.articlePage(
-      item.name, item.description,
+      name, description,
       pageNavbar(item),
       column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item)),
       license)
