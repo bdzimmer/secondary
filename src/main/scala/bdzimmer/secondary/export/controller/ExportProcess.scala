@@ -417,6 +417,10 @@ object ExportPipeline {
     copy(WebResource.TreeJs)
     copy(WebResource.TreeCss)
 
+    // copy search files from JAR
+    copy(WebResource.SearchJs)
+    copy(WebResource.SearchCss)
+    
     // download other stylesheets and scripts used into appropriate directories
     download(WebResource.BootstrapZip)
     extractArchive(

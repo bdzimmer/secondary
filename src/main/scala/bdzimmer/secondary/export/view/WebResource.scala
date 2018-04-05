@@ -24,6 +24,7 @@ object WebResource {
   val FontsRelDirname  = "fonts"
   val ImagesRelDirname = "images"
   val TreeRelDirname   = "tree"
+  val SearchRelDirname = "search"
 
   // generated stylesheet and other scripts that aren't web resources
 
@@ -39,6 +40,14 @@ object WebResource {
   val TreeCss = new WebResource(
       getClass.getResource("/tree/tree.css"),
       TreeRelDirname)
+  
+  val SearchJs = new WebResource(
+      getClass.getResource("/search/search.js"),
+      SearchRelDirname)
+  
+  val SearchCss = new WebResource(
+      getClass.getResource("/search/search.css"),
+      SearchRelDirname)
 
   // web resources to download from the internet
 

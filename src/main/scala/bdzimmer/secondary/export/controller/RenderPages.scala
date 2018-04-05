@@ -83,6 +83,8 @@ class RenderPages(
   /// /// ///
 
   def masterPage(): String = {
+    
+    println("hello!")
 
     PageTemplates.articlePage(
       master.name,
@@ -92,19 +94,18 @@ class RenderPages(
       column(Column12,
         np.transform(master.notes, itemToTags(master)) +
           (if (master.children.length > 0) {
-            hr +
-              master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
-                case curCollection: CollectionItem => {
-                  column(Column6,
-                    """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
-                      RenderPages.glyphLinkPage(curCollection) + "\n" +
-                      listGroup(
-                        curCollection.children
-                        .filter(x => !hiddenItemIds.contains(x.id))
-                        .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
-                }
-              }).grouped(2).map(_.mkString("\n") +
-                """<div class="clearfix"></div>""" + "\n").mkString("\n")
+            master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
+              case curCollection: CollectionItem => {
+                column(Column6,
+                  """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
+                    RenderPages.glyphLinkPage(curCollection) + "\n" +
+                    listGroup(
+                      curCollection.children
+                      .filter(x => !hiddenItemIds.contains(x.id))
+                      .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
+              }
+            }).grouped(2).map(_.mkString("\n") +
+            """<div class="clearfix"></div>""" + "\n").mkString("\n")
           } else {
             ""
           })),
@@ -256,10 +257,16 @@ class RenderPages(
       } else {
         List()
       }
+      
+      val search = if (master.equals(item)) {
+        List(Search.render("master", world))
+      } else {
+        List()
+      }
 
       val home = List(link("Home", RenderPages.MasterPageFile))
       val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.id)).map(RenderPages.textLinkPage)
-      val bar = (home ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + hr
+      val bar = (home ++ relLinks ++ mainCollectionLinks ++ search).mkString(PageTemplates.NavbarSeparator) + hr
 
       Some(bar)
     }

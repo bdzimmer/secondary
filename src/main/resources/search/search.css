@@ -1,0 +1,18 @@
+.search-custom {
+  position: relative;
+  display: inline-block;
+}
+
+.search-custom-content {
+  display: none;
+  position: absolute;
+  background-color: #ffffff;
+  border: 1px solid #808080;
+  border-top: none;
+  z-index: 1;
+  width: 100%;
+}
+
+.search-custom-content a {
+  display: block;
+}
