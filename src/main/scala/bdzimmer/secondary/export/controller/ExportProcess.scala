@@ -83,7 +83,8 @@ class ExportProcess(projConf: ProjectConfig)  {
               projConf.subarticles,
               projConf.relativeLinks,
               hiddenItems,
-              projConf.unifiedJumbotron)
+              projConf.unifiedJumbotron,
+              projConf.search)
 
           val exportImages = new RenderImages(
               world,
@@ -213,7 +214,8 @@ object ExportPipeline {
           projConf.subarticles,
           projConf.relativeLinks,
           hiddenItems,
-          projConf.unifiedJumbotron)
+          projConf.unifiedJumbotron,
+          projConf.search)
 
         val exportImages = new RenderImages(
           world,

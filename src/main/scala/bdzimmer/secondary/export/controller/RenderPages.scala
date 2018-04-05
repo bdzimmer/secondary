@@ -23,7 +23,8 @@ class RenderPages(
     subarticles: Boolean,
     relativeLinks: Boolean,
     hiddenItems: List[WorldItem],
-    unifiedJumbotron: Boolean) {
+    unifiedJumbotron: Boolean,
+    search: Boolean) {
 
   // derive some data structures that are used repeatedly throughout the rendering process
 
@@ -84,12 +85,10 @@ class RenderPages(
 
   def masterPage(): String = {
     
-    println("hello!")
-
     PageTemplates.articlePage(
       master.name,
       master.description,
-      pageNavbar(master),
+      pageNavbar(master, search),
 
       column(Column12,
         np.transform(master.notes, itemToTags(master)) +
@@ -109,7 +108,8 @@ class RenderPages(
           } else {
             ""
           })),
-
+          
+      pageNavbar(master, false),
       license)
 
   }
@@ -122,10 +122,12 @@ class RenderPages(
       case false => (collection.name, collection.description)
     }
 
+    val navbar = pageNavbar(collection, false)
+    
     PageTemplates.articlePage(
       name,
       description,
-      pageNavbar(collection),
+      navbar,
 
       column(Column12,
         np.transform(collection.notes, itemToTags(collection)) + refItems(collection) + hr +
@@ -139,6 +141,7 @@ class RenderPages(
             ""
           })),
 
+      navbar,
       license)
   }
 
@@ -151,14 +154,17 @@ class RenderPages(
       case true  => (master.name, master.description)
       case false => (character.name, character.description)
     }
+    
+    val navbar = pageNavbar(character, false)
 
     PageTemplates.articlePage(
       name,
       description,
-      pageNavbar(character),
+      navbar,
 
       column(Column12, np.transform(character.notes, itemToTags(character)) + refItems(character)),
 
+      navbar,
       license)
   }
 
@@ -195,10 +201,12 @@ class RenderPages(
       case true  => (master.name, master.description)
       case false => (imageItem.name, imageItem.description)
     }
+    
+    val navbar = pageNavbar(imageItem, false)
 
     PageTemplates.articlePage(
       name, description,
-      pageNavbar(imageItem),
+      navbar,
 
       column(Column8, image(RenderImages.imagePath(imageItem), responsive = true)) +
         column(Column4, "") +
@@ -206,6 +214,8 @@ class RenderPages(
           hr +
             imageDescription +
             np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
+            
+      navbar,
       license)
   }
 
@@ -216,15 +226,18 @@ class RenderPages(
       case true  => (master.name, master.description)
       case false => (imageItem.name, imageItem.description)
     }
+    
+    val navbar = pageNavbar(imageItem, false)
 
     PageTemplates.articlePage(
       name,
       description,
-      pageNavbar(imageItem),
+      navbar,
 
       column(Column12, RenderImages.pixelImageLinkResponsive(imageItem) + hr) +
         column(Column12, np.transform(imageItem.notes, itemToTags(imageItem)) + refItems(imageItem)),
 
+      navbar,
       license)
   }
 
@@ -236,16 +249,19 @@ class RenderPages(
       case false => (item.name, item.description)
     }
 
+    val navbar = pageNavbar(item, false)
+    
     PageTemplates.articlePage(
       name, description,
-      pageNavbar(item),
+      navbar,
       column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item)),
+      navbar,
       license)
   }
 
 
   // get a navbar for an article page for a world item
-  private def pageNavbar(item: WorldItem): Option[String] = navbars match {
+  private def pageNavbar(item: WorldItem, search: Boolean): Option[String] = navbars match {
     case true => {
 
       val relLinks = if (relativeLinks && !master.equals(item) && !master.children.contains(item)) {
@@ -258,15 +274,15 @@ class RenderPages(
         List()
       }
       
-      val search = if (master.equals(item)) {
-        List(Search.render("master", world))
+      val searchBar = if (search && master.equals(item)) {
+        Search.render("master", world)
       } else {
-        List()
+        ""
       }
 
       val home = List(link("Home", RenderPages.MasterPageFile))
       val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.id)).map(RenderPages.textLinkPage)
-      val bar = (home ++ relLinks ++ mainCollectionLinks ++ search).mkString(PageTemplates.NavbarSeparator) + hr
+      val bar = (home ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + searchBar + hr
 
       Some(bar)
     }
@@ -321,9 +337,12 @@ object RenderPages {
   // recursively generated collapsible lists
   def getCollectionLinksCollapsible(item: WorldItem, hiddenItemIds: Set[String]): String = item match {
     case x: CollectionItem => {
-
-      val collapsibleLink = s"""<input type="checkbox" id="${x.id}" class="swivel" />""" +
-        "\n" + textLinkPage(x) + s"""<label for="${x.id}"></label>"""
+    
+      // TODO: think about this
+      val id = x.id + "-swivel"
+      
+      val collapsibleLink = s"""<input type="checkbox" id="${id}" class="swivel" />""" +
+        "\n" + textLinkPage(x) + s"""<label for="${id}"></label>"""
 
       listItem(
         collapsibleLink +

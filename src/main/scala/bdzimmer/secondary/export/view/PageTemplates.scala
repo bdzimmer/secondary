@@ -66,8 +66,9 @@ object PageTemplates {
   def articlePage(
       title:       String,
       description: String,
-      navbar:      Option[String],
+      navbarUpper: Option[String],
       body:        String,
+      navbarLower: Option[String],
       license:     String): String = {
 
     page(
@@ -82,58 +83,13 @@ object PageTemplates {
                       Markdown.processLine(description))))) +
 
       container(
-        column(Column12, navbar.getOrElse("")) +
+        column(Column12, navbarUpper.getOrElse("")) +
         body +
-        column(Column12, hr + navbar.getOrElse("")) +
+        column(Column12, hr + navbarLower.getOrElse("")) +
         column(Column12, centered(license))
       )
     )
 
   }
-
-
-
-
-
-  // old interface where these functions actually did file IO
-
-  /*
-  def createPage(outputFile: String, title: String, styles: String, body: String): Unit = {
-    val pageText = page(title, styles, body)
-    val fileWriter = new java.io.FileWriter(outputFile, false)
-    fileWriter.write(pageText)
-    fileWriter.close()
-  }
-
-
-  def createArticlePage(
-      outputFile: String,
-      title: String, description: String, navbar: Option[String],
-      body: String, license: String): Unit = {
-
-    createPage(
-      outputFile,
-      title,
-
-      "",
-
-      jumboTron(
-          container(
-              column(Column12,
-                  "<h1>%s</h1><h3>%s</h3>".format(
-                      Markdown.processLine(title),
-                      Markdown.processLine(description))))) +
-
-      container(
-        column(Column12, navbar.getOrElse("")) +
-        body +
-        column(Column12, hr + navbar.getOrElse("")) +
-        column(Column12, centered(license))
-      )
-    )
-
-  }
-  *
-  */
 
 }

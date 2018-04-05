@@ -1,6 +1,11 @@
 .search-custom {
   position: relative;
   display: inline-block;
+  float: right;
+}
+
+.search-custom input {
+  height: 32px;
 }
 
 .search-custom-content {

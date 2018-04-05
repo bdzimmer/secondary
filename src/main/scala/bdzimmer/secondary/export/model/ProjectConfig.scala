@@ -24,7 +24,8 @@ class ProjectConfig(
     val subarticles: Boolean,
     val relativeLinks: Boolean,
     val hiddenItems: String,
-    val unifiedJumbotron: Boolean) {
+    val unifiedJumbotron: Boolean,
+    val search: Boolean) {
 
   val localExportPath      = projectDir / ProjectStructure.WebDir
   val localContentPath     = projectDir / ProjectStructure.ContentDir
@@ -43,7 +44,8 @@ object ProjectConfig {
   val subarticles      = BoolConfigField("subarticles", "true", "Subarticles")
   val relativeLinks    = BoolConfigField("relativelinks", "true", "Relative links")
   val hiddenItems      = TextConfigField("hiddenitems", "", "Hidden items")
-  val unifiedJumbotron = BoolConfigField("unifiedjumbotron", "false", "Unified Jumbotron") 
+  val unifiedJumbotron = BoolConfigField("unifiedjumbotron", "false", "Unified Jumbotron")
+  val search            = BoolConfigField("search", "true", "Search")
 
   val requiredProperties: List[ConfigField] =  List(
       masterName,
@@ -52,7 +54,8 @@ object ProjectConfig {
       subarticles,
       relativeLinks,
       hiddenItems,
-      unifiedJumbotron)
+      unifiedJumbotron,
+      search)
 
       
   def getProperties(projectDir: String): PropertiesWrapper = {
@@ -87,6 +90,7 @@ object ProjectConfig {
         subarticles      = getProp(subarticles).toBooleanSafe,
         relativeLinks    = getProp(relativeLinks).toBooleanSafe,
         hiddenItems      = getProp(hiddenItems),
-        unifiedJumbotron = getProp(unifiedJumbotron).toBooleanSafe)
+        unifiedJumbotron = getProp(unifiedJumbotron).toBooleanSafe,
+        search           = getProp(search).toBooleanSafe)
   }
 }

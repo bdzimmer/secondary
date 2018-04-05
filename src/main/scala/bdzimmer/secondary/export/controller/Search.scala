@@ -27,8 +27,9 @@ object Search {
     
     
   def itemToJs(item: WorldItem): String = {
+    // TODO: think about what logic makes sense here
     val tags = item match {
-      case x: WorldItems.CharacterItem => x.nameParts.getOrElse(List(x.name))
+      case x: WorldItems.CharacterItem => x.nameParts.getOrElse(List()) ++ List(item.name) 
       case _                           => List(item.name)
     }
     
