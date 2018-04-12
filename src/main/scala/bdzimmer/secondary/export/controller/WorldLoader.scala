@@ -34,9 +34,10 @@ private object WorldLoaderFlat {
       // load the world from sec files
       worldList <- loadFile(masterFilename, inputDir, fileStatus, List(masterFilename))
       world <- wire(worldList)                     // wire up using paths attributes and harden
-      result <- WorldLoader.validate(world.getVal) // validate
+      checkedDuplicates <- WorldLoader.checkDuplicates(world.getVal) // validate
+      checkedEmptyIds <- WorldLoader.checkEmptyIds(checkedDuplicates)
     } yield {
-      result
+      checkedEmptyIds
     }
 
   }
@@ -85,6 +86,14 @@ private object WorldLoaderFlat {
     val inNotes = 2
     val Trimmer = """^(.*?)\s*$""".r
 
+    def nameToId(id: String): String = {
+      // remove all punctuation and trim trailing whitespace
+      // (there shouldn't be any leading whitespace)
+      val Trimmer(trimmed) = id.replaceAll("\\p{P}", "") // annoying syntax
+      // replace whitespace with underscore; convert to lowercase
+      trimmed.replaceAll("\\s+", "_").toLowerCase
+    }
+
     val items = scala.collection.mutable.Buffer[WorldItemBean]()
 
     Result({
@@ -109,6 +118,9 @@ private object WorldLoaderFlat {
           if (item != null) {
             if (notes.size > 0) {
               item.notes = notes.mkString("\n")
+            }
+            if (item.id.equals("") && !item.name.equals("")) {
+              item.id = nameToId(item.name)
             }
             items += item
             notes.clear()
@@ -137,6 +149,9 @@ private object WorldLoaderFlat {
       if (item != null) {
         if (notes.size > 0) {
           item.notes = notes.mkString("\n")
+        }
+        if (item.id.equals("") && !item.name.equals("")) {
+          item.id = nameToId(item.name)
         }
         items += item
       }
@@ -181,6 +196,7 @@ private object WorldLoaderFlat {
         case "description" => item.setDescription(propVal)
         case "notes"       => item.setNotes(propVal)
         case "path"        => item.setPath(propVal)
+        case "parent"      => item.setPath(propVal)
         case "filename"    => item match {
           case x: RefItemBean => x.setFilename(propVal)
           case _              => field
@@ -204,7 +220,6 @@ private object WorldLoaderFlat {
 
 
   // wire up the world using the path fields of the beans
-  // assumes that the head of the list is a collection
   def wire(worldList: List[WorldItemBean]): Result[String, CollectionItemBean] = {
 
     val worldMap = (worldList.map(x => (x.id, x)) ++ worldList.map(x => (x.name, x))).toMap
@@ -230,7 +245,6 @@ private object WorldLoaderFlat {
       if (errors.length > 0) {
         Fail(errors.mkString("\n"))
       } else {
-        // worldMap.get("master") match {
         worldList.headOption match {
           case Some(master: CollectionItemBean) => Pass(master)
           case Some(_) => Fail("head item not a collection")
@@ -257,8 +271,7 @@ object WorldLoader {
   }
 
 
-  def validate(world: CollectionItem): Result[String, CollectionItem] = {
-
+  def checkDuplicates(world: CollectionItem): Result[String, CollectionItem] = {
     // check for duplicate IDs
     val worldList = WorldItems.collectionToList(world)
     val duplicateIDs = worldList.groupBy(_.id).toList.sortBy(_._1).filter(_._2.length > 1)
@@ -274,6 +287,21 @@ object WorldLoader {
 
   }
 
+  
+  def checkEmptyIds(world: CollectionItem): Result[String, CollectionItem] = {
+    // check for empty IDs
+    val worldList = WorldItems.collectionToList(world)
+    val emptyIds = worldList.filter(_.id.length == 0)
+    emptyIds.length match {
+      case 0 => Pass(world)
+      case _ => Fail(
+        "Empty ids found\n" +
+        "\tpresent in files: " + emptyIds.map(_.srcfilename).distinct.mkString(", ")
+      )
+    }
+  }
+  
+  
   def logParseError(filename: String, message: String): String = {
     s"***\nParsing error in ${filename}:\n\n${message}\n***\n"
   }
