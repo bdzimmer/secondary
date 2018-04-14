@@ -21,7 +21,9 @@ import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.model.WorldItemBeans._
 
 
-private object WorldLoaderFlat {
+object WorldLoaderFlat {
+
+  val Trimmer = """^(.*?)\s*$""".r
 
   def loadWorld(
       inputDir: String,
@@ -84,15 +86,6 @@ private object WorldLoaderFlat {
     val inNothing = 0
     val inHeader = 1
     val inNotes = 2
-    val Trimmer = """^(.*?)\s*$""".r
-
-    def nameToId(id: String): String = {
-      // remove all punctuation and trim trailing whitespace
-      // (there shouldn't be any leading whitespace)
-      val Trimmer(trimmed) = id.replaceAll("\\p{P}", "") // annoying syntax
-      // replace whitespace with underscore; convert to lowercase
-      trimmed.replaceAll("\\s+", "_").toLowerCase
-    }
 
     val items = scala.collection.mutable.Buffer[WorldItemBean]()
 
@@ -163,6 +156,14 @@ private object WorldLoaderFlat {
 
   }
 
+  def nameToId(id: String): String = {
+    // remove all punctuation and trim trailing whitespace
+    // (there shouldn't be any leading whitespace)
+    val noPunctuation = id.replaceAll("[^A-Za-z0-9\\s]", "")
+    val Trimmer(trimmed) = noPunctuation // annoying syntax
+    // replace whitespace with underscore; convert to lowercase
+    trimmed.replaceAll("\\s+", "_").toLowerCase
+  }
 
   def itemBeanFactory(typeName: String): WorldItemBean = typeName match {
     case "!collection"  => new CollectionItemBean()
@@ -287,7 +288,7 @@ object WorldLoader {
 
   }
 
-  
+
   def checkEmptyIds(world: CollectionItem): Result[String, CollectionItem] = {
     // check for empty IDs
     val worldList = WorldItems.collectionToList(world)
@@ -300,8 +301,8 @@ object WorldLoader {
       )
     }
   }
-  
-  
+
+
   def logParseError(filename: String, message: String): String = {
     s"***\nParsing error in ${filename}:\n\n${message}\n***\n"
   }
