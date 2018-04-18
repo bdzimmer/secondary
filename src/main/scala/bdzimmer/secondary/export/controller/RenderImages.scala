@@ -21,7 +21,7 @@ import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Markdown
 import bdzimmer.secondary.export.view.Html._
 
-import bdzimmer.orbits.{Flight, MeeusPlanets, Spacecraft}
+import bdzimmer.orbits.{RenderFlight, MeeusPlanets, Spacecraft}
 
 import bdzimmer.util.StringUtils._
 
@@ -29,7 +29,7 @@ import bdzimmer.util.StringUtils._
 
 class RenderImages(
     world: List[WorldItem],
-    tags: Map[String, Map[Int, Tags.ParsedTag]],
+    stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
     wikiCache: FilesystemCache,
     val location: String,
     license: String) {
@@ -37,7 +37,7 @@ class RenderImages(
   val imagesLocation = location / RenderImages.ImagesDir
   new File(imagesLocation).mkdir
 
-  val np = new RenderTags(tags, world.collect({case x: CharacterItem => x}))
+  val np = new RenderTags(stringToTags, world.collect({case x: CharacterItem => x}))
 
 
   def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
@@ -147,8 +147,8 @@ class RenderImages(
 
     val src = tripItem.srcfilename
 
-    val flightParams = tags.getOrElse(tripItem.id, Map()).values.collect({
-      case x: Tags.Flight => np.flightParams(x)
+    val flightParams = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+      case x: Tags.Flight => Flight.flightParams(x, stringToTags)
     }).toList
 
     // for now, only render the first flight in the trip
@@ -160,7 +160,7 @@ class RenderImages(
 
     } yield {
 
-      val im = Flight.drawRoughFlight(
+      val im = RenderFlight.drawRoughFlight(
           Spacecraft(fp.ship.name, fp.mass, fp.accel),
           fp.startLocation,
           fp.endLocation,

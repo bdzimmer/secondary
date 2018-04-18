@@ -20,8 +20,11 @@ import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItems}
 import bdzimmer.secondary.export.view.{ConfigurationGUI, ScreenshotUtility}
+import bdzimmer.secondary.export.model.Tags
+
 import bdzimmer.pixeleditor.view.Main
 import bdzimmer.pixeleditor.model.AssetMetadataUtils
+import bdzimmer.orbits.Editor
 
 
 class Driver {
@@ -100,6 +103,56 @@ class Driver {
       val totalTime = (System.currentTimeMillis - startTime) / 1000.0
       println("completed in " + totalTime + " sec")
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
+    }
+    case DriverCommands.Orbits => {
+      val master = WorldLoader.loadWorld(projConf) match {
+        case Pass(master) => {
+
+          val world = WorldItems.collectionToList(master)
+          val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
+          val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+
+          val flights = world.collect({
+            case tripItem: WorldItems.TripItem => {
+              stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+                case x: Tags.Flight => Flight.flightParams(x, stringToTags)
+              }).toList
+            }
+          }).flatten // probably a way to avoid this flatten
+
+          val ships = world.filter(x => {
+            // probably a better way to write this
+            // ships are all items that have at least one spacecraft property tag
+            stringToTags.getOrElse(x.id, Map()).values.collect({case x: Tags.SpacecraftProperty => x}).headOption.isDefined
+          })
+
+          val orbitsShips = ships.map(x => (x, Flight.spacecraft(x, stringToTags))).map(x => (x._1.id, bdzimmer.orbits.Spacecraft(x._1.name, x._2._1, x._2._2))).toMap
+          // val defaultShip = bdzimmer.orbits.Spacecraft("undefined", 0.0, 0.0)
+
+          // a flight will not appear if the ship, orig, or destination is invalid
+          val orbitsFlights = for {
+            x <- flights
+            flightShip <- orbitsShips.get(x.ship.id)
+            orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.startLocation)
+            dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.endLocation)
+          } yield {
+            bdzimmer.orbits.FlightParams(
+              ship=flightShip,
+              origName=x.startLocation,
+              destName=x.endLocation,
+              orig=orig,
+              dest=dest,
+              startDate=x.startDate,
+              endDate=x.endDate,
+              passengers=x.passengers.map(_.name),
+              description="")
+          }
+
+          new Editor(orbitsFlights, orbitsShips.values.toList)
+        }
+        case Fail(msg) => println(msg)
+      }
+
     }
     case DriverCommands.Screenshot => new ScreenshotUtility(projConf.localContentPath)
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
@@ -203,9 +256,11 @@ object DriverCommands {
   val Editor      = "editor"
   val Explore     = "explore"
   val Export      = "export"
+  val Orbits      = "orbits"
   val Screenshot  = "screenshot"
   val Server      = "server"
   val Styles      = "styles"
+
   val Interactive = "interactive"
   val Help        = "help"
 
@@ -213,9 +268,10 @@ object DriverCommands {
       (Browse,      "browse exported project web site"),
       (Configure,   "edit project configuration"),
       (Edit,        "edit the source file for an item"),
-      (Editor,      "start editor (alpha)"),
+      (Editor,      "pixel editor (alpha)"),
       (Explore,     "explore project content dir"),
       (Export,      "export"),
+      (Orbits,      "orbits editor (alpha)"),
       (Screenshot,  "screenshot utility"),
       (Server,      "server mode"),
       (Styles,      "add stylesheets"),

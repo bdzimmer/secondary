@@ -65,10 +65,10 @@ class ExportProcess(projConf: ProjectConfig)  {
 
         // only export the things that have changed
         if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
-          
+
           // parse all of the tags
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-          val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+          val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
           val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
             stringToItem.get(x).map(WorldItems.collectionToList(_))
           }).flatten.distinct
@@ -76,7 +76,7 @@ class ExportProcess(projConf: ProjectConfig)  {
           val exportPages = new RenderPages(
               master,
               world,
-              tags,
+              stringToTags,
               wikiCache,
               projConf.license,
               projConf.navbars,
@@ -88,7 +88,7 @@ class ExportProcess(projConf: ProjectConfig)  {
 
           val exportImages = new RenderImages(
               world,
-              tags,
+              stringToTags,
               wikiCache,
               projConf.localExportPath,
               projConf.license)
@@ -199,7 +199,7 @@ object ExportPipeline {
 
         // parse all of the tags
         val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-        val tags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+        val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
         val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
           stringToItem.get(x).map(WorldItems.collectionToList(_))
         }).flatten.distinct
@@ -207,7 +207,7 @@ object ExportPipeline {
         val exportPages = new RenderPages(
           master,
           world,
-          tags,
+          stringToTags,
           wikiCache,
           projConf.license,
           projConf.navbars,
@@ -219,7 +219,7 @@ object ExportPipeline {
 
         val exportImages = new RenderImages(
           world,
-          tags,
+          stringToTags,
           wikiCache,
           projConf.localExportPath,
           projConf.license)
@@ -422,7 +422,7 @@ object ExportPipeline {
     // copy search files from JAR
     copy(WebResource.SearchJs)
     copy(WebResource.SearchCss)
-    
+
     // download other stylesheets and scripts used into appropriate directories
     download(WebResource.BootstrapZip)
     extractArchive(

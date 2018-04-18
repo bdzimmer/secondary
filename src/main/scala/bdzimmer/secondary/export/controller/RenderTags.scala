@@ -127,27 +127,8 @@ class RenderTags(
     }
 
     case flight: Tags.Flight => {
-
-      val fp = flightParams(flight)
-
-      val shipName = fp.ship.name
-      val passengersString = if (fp.passengers.isEmpty) {
-        ""
-      } else {
-        " with " + fp.passengers.map(x => RenderPages.textLinkPage(x)).mkString(", ")
-      }
-
-      // generate a text summary
-      RenderPages.textLinkPage(fp.ship) + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
-      Html.listGroup(
-        List(
-          genShow(
-            fp.startDate.dateTimeString, shipName + " departs from " + fp.startLocation + "."),
-          genShow(
-            fp.endDate.dateTimeString,   shipName + " arrives at "   + fp.endLocation   + ".")
-        ).map(Html.listItem(_))
-      )
-
+      val fp = Flight.flightParams(flight, stringToTags)
+      Flight.render(fp)
     }
 
     case event: Tags.EventTag => genShow(event.date, event.desc)
@@ -241,7 +222,7 @@ class RenderTags(
     case x: Tags.Stats => {
       Stats.render(x.item)
     }
-    
+
     case x: Tags.Gallery => {
       x.item match {
         case collection: WorldItems.CollectionItem => {
@@ -260,39 +241,6 @@ class RenderTags(
     case x: Tags.ParseError => Html.b("{{Parse error: " + x.msg + "}}")
 
     case _ => "" // TODO: get rid of this if possible
-  }
-
-
-  def flightParams(flight: Tags.Flight): FlightParams = {
-
-    // TODO: handle units
-
-    val mass = (for {
-      shipTags <- stringToTags.get(flight.ship.id)
-      massTag <- shipTags.values.collect({
-        case x: Tags.SpacecraftProperty => x
-      }).filter(_.kind.equals(SecTags.Mass)).headOption
-    } yield {
-      massTag.value
-    }).getOrElse(1000.0) // tonnes
-
-    val accel = (for {
-      shipTags <- stringToTags.get(flight.ship.id)
-      accelTag <- shipTags.values.collect({
-        case x: Tags.SpacecraftProperty => x
-      }).filter(_.kind.equals(SecTags.Acceleration)).headOption
-    } yield {
-      accelTag.value
-    }).getOrElse(0.25) // AU / day^2
-
-    val fp = FlightParams(
-      flight.ship,
-      flight.startLocation, flight.endLocation,
-      flight.startDate, flight.endDate,
-      mass, accel,
-      flight.passengers)
-
-    fp
   }
 
 
