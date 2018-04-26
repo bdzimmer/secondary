@@ -43,7 +43,8 @@ object Flight {
       flight.endDate,
       mass,
       accel,
-      flight.passengers)
+      flight.passengers,
+      flight.faction)
   }
 
 

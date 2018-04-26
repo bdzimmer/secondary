@@ -48,7 +48,7 @@ object SecTags {
   val Index = "index"
   val Tasks = "tasks"
   val Stats = "stats"
-  
+
   val Gallery = "gallery"
 
 }
@@ -103,7 +103,8 @@ object Tags {
     endLocation: String,
     startDate: CalendarDateTime,
     endDate: CalendarDateTime,
-    passengers: List[WorldItem]
+    passengers: List[WorldItem],
+    faction: String
   ) extends ParsedTag
 
   // events
@@ -214,7 +215,7 @@ object Tags {
   case class Stats(
     item: WorldItem
   ) extends ParsedTag
-  
+
   case class Gallery(
     item: WorldItem,
     size: Integer,

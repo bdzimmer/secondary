@@ -125,8 +125,9 @@ object ParseTags {
           val startDate     = args.get("startdate").map(DateTime.parse(_)).getOrElse(defaultStartDate)
           val endDate       = args.get("enddate").map(DateTime.parse(_)).getOrElse(defaultEndDate)
           val passengers    = args.getOrElse("passengers", "").split(";\\s+").toList.map(x => stringToItem.get(x)).flatten
+          val faction       = args.getOrElse("faction", "none")
 
-          Flight(item, startLocation, endLocation, startDate, endDate, passengers)
+          Flight(item, startLocation, endLocation, startDate, endDate, passengers, faction)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
@@ -233,7 +234,7 @@ object ParseTags {
           Stats(item)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
-      
+
       // TODO: function that builds the standard parse error
       case SecTags.Gallery => {
         stringToItem.get(tag.value).map(item => {

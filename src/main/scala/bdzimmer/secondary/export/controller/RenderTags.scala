@@ -23,7 +23,8 @@ case class FlightParams(
     endDate: CalendarDateTime,
     mass: Double,
     accel: Double,
-    passengers: List[WorldItem])
+    passengers: List[WorldItem],
+    faction: String)
 
 
 class RenderTags(

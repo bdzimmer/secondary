@@ -118,7 +118,7 @@ class Driver {
                 case x: Tags.Flight => Flight.flightParams(x, stringToTags)
               }).toList
             }
-          }).flatten // probably a way to avoid this flatten
+          }).flatten.sortBy(_.startDate.julian) // probably a way to avoid this flatten
 
           val ships = world.filter(x => {
             // probably a better way to write this
@@ -145,6 +145,7 @@ class Driver {
               startDate=x.startDate,
               endDate=x.endDate,
               passengers=x.passengers.map(_.name),
+              faction=x.faction,
               description="")
           }
 
