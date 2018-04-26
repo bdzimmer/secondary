@@ -162,6 +162,7 @@ class RenderImages(
 
       val im = RenderFlight.drawRoughFlight(
           Spacecraft(fp.ship.name, fp.mass, fp.accel),
+          fp.faction,
           fp.startLocation,
           fp.endLocation,
           startLoc, endLoc,
