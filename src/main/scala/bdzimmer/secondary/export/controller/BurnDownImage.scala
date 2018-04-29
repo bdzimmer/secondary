@@ -15,7 +15,7 @@ import javax.xml.bind.DatatypeConverter
 import java.nio.{ByteBuffer, ByteOrder}
 
 import bdzimmer.secondary.export.model.Tags.Task
-import bdzimmer.orbits.CalendarDateTime
+import bdzimmer.orbits.{DateTime, CalendarDateTime}
 
 import bdzimmer.secondary.export.model.SecTags
 import bdzimmer.secondary.export.view.Html

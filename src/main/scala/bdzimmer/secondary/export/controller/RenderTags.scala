@@ -11,7 +11,7 @@ import bdzimmer.secondary.export.model.{Tags, SecTags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
 import bdzimmer.secondary.export.view.{Markdown, Html}
 
-import bdzimmer.orbits.CalendarDateTime
+import bdzimmer.orbits.{DateTime, CalendarDateTime}
 import bdzimmer.util.{Result, Pass, Fail}
 
 
