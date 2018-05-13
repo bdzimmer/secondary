@@ -8,7 +8,7 @@ import bdzimmer.secondary.export.view.Html
 
 object Flight {
 
-  def render(fp: FlightParams): String = {
+  def render(fp: FlightParams, imagePath: String): String = {
      val shipName = fp.ship.name
       val passengersString = if (fp.passengers.isEmpty) {
         ""
@@ -16,8 +16,9 @@ object Flight {
         " with " + fp.passengers.map(x => RenderPages.textLinkPage(x)).mkString(", ")
       }
 
-      // generate a text summary
-      RenderPages.textLinkPage(fp.ship) + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + "." +
+      // generate image and text summary
+      Html.image(imagePath, responsive = true) + "\n" +
+      RenderPages.textLinkPage(fp.ship) + " travels from " + fp.startLocation + " to " + fp.endLocation + passengersString + ".\n" +
       Html.listGroup(
         List(
           genShow(
@@ -56,7 +57,7 @@ object Flight {
       shipTags <- stringToTags.get(ship.id)
       massTag <- shipTags.values.collect({
         case x: Tags.SpacecraftProperty => x
-      }).filter(_.kind.equals(SecTags.Mass)).headOption
+      }).find(x => x.kind.equals(SecTags.Mass))
     } yield {
       massTag.value
     }).getOrElse(1000.0) // tonnes
@@ -65,7 +66,7 @@ object Flight {
       shipTags <- stringToTags.get(ship.id)
       accelTag <- shipTags.values.collect({
         case x: Tags.SpacecraftProperty => x
-      }).filter(_.kind.equals(SecTags.Acceleration)).headOption
+      }).find(x => x.kind.equals(SecTags.Acceleration))
     } yield {
       accelTag.value
     }).getOrElse(0.25) // AU / day^2
@@ -76,7 +77,7 @@ object Flight {
 
 
   private def genShow(fst: String, snd: String): String = {
-    s"""<b>${fst}: </b> """ + snd + Html.brInline
+    s"""<b>$fst: </b> """ + snd + Html.brInline
   }
 
 

@@ -2,17 +2,15 @@
 
 package bdzimmer.secondary.export.controller
 
-import scala.collection.immutable.Seq
 import scala.util.matching.Regex
 
 import scala.util.Random
 
-import bdzimmer.secondary.export.model.{Tags, SecTags, WorldItems}
+import bdzimmer.secondary.export.model.{Tags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
 import bdzimmer.secondary.export.view.{Markdown, Html}
 
 import bdzimmer.orbits.{DateTime, CalendarDateTime}
-import bdzimmer.util.{Result, Pass, Fail}
 
 
 case class FlightParams(
@@ -113,7 +111,7 @@ class RenderTags(
       s"""
 <style>
   .jumbotron {
-    background-image: url("${imagePath}");
+    background-image: url("$imagePath");
     background-size: cover;
     background-position: ${jumbotron.xPos} ${jumbotron.yPos};
     color: ${jumbotron.color};
@@ -129,7 +127,7 @@ class RenderTags(
 
     case flight: Tags.Flight => {
       val fp = Flight.flightParams(flight, stringToTags)
-      Flight.render(fp)
+      Flight.render(fp, RenderImages.tagImagePath(flight))
     }
 
     case event: Tags.EventTag => genShow(event.date, event.desc)
@@ -154,7 +152,7 @@ class RenderTags(
       val proseMatcher = "^[A-Z]".r
 
       val itemText = items.map(item => {
-        val tagPositions = stringToTags.get(item.id).getOrElse(Map())
+        val tagPositions = stringToTags.getOrElse(item.id, Map())
         val renderedText = transformProse(item.notes, tagPositions)
 
         // remove non-prose lines and markdown leftovers
@@ -201,9 +199,9 @@ class RenderTags(
         case true  => WorldItems.collectionToList(x.item)
         case false => List(x.item)
       }
-      val tasks = (items
-          .flatMap(item => stringToTags.get(item.id))
-          .flatMap(_.values.collect({case tag: Tags.Task => tag})))
+      val tasks = items
+        .flatMap(item => stringToTags.get(item.id))
+        .flatMap(_.values.collect({case tag: Tags.Task => tag}))
       BurnDownImage.render(
           tasks,
           x.startDate.getOrElse(CalendarDateTime(2017, 1, 1, 0, 0, 0)),
@@ -246,12 +244,12 @@ class RenderTags(
 
 
   private def genShow(fst: String, snd: String): String = {
-    s"""<b>${fst}: </b> """ + snd + Html.brInline
+    s"""<b>$fst: </b> """ + snd + Html.brInline
   }
 
 
   private def genLink(name: String, item: WorldItem): String = {
-    s"""<b>${name}: </b>""" + RenderPages.textLinkPage(item) + Html.brInline
+    s"""<b>$name: </b>""" + RenderPages.textLinkPage(item) + Html.brInline
   }
 
 }

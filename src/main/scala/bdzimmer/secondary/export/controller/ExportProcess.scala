@@ -331,7 +331,7 @@ object ExportPipeline {
     val imageOutputs = if (imagesToExport.nonEmpty) {
       exportImages.exportAllImages(imagesToExport, localContentPath)
     } else {
-      RenderImages.getEmptyFileOutputsMap
+      RenderImages.emptyFileOutputsMap
     }
 
     imageOutputs

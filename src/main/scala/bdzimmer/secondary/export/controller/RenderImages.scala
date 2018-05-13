@@ -2,8 +2,6 @@
 
 package bdzimmer.secondary.export.controller
 
-import scala.util.Try
-
 import java.awt.RenderingHints          // scalastyle:ignore illegal.imports
 import java.awt.image.BufferedImage     // scalastyle:ignore illegal.imports
 import java.io.File
@@ -12,7 +10,7 @@ import javax.imageio.ImageIO
 
 import org.apache.commons.io.{FileUtils, FilenameUtils}
 
-import bdzimmer.pixeleditor.model.{ContentStructure, IndexedGraphics, TileAttributes, TileOptions}
+import bdzimmer.pixeleditor.model.{ContentStructure, TileAttributes, TileOptions}
 import bdzimmer.pixeleditor.model.Color
 import bdzimmer.pixeleditor.controller.OldTilesetLoader
 
@@ -69,9 +67,9 @@ class RenderImages(
 
     val allImageOutputsList = mapImageOutputs ++ tileImageOutputs ++ imageFileOutputs ++ tripOutputs
 
-    val allImageOutputs = (allImageOutputsList
+    val allImageOutputs = allImageOutputsList
         .map(x => List(x).toMap)
-        .foldLeft(RenderImages.getEmptyFileOutputsMap)(RenderImages.mergeFileOutputsMaps(_, _)))
+        .foldLeft(RenderImages.emptyFileOutputsMap)(RenderImages.mergeFileOutputsMaps(_, _))
 
     allImageOutputs
 
@@ -147,14 +145,20 @@ class RenderImages(
 
     val src = tripItem.srcfilename
 
-    val flightParams = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
-      case x: Tags.Flight => Flight.flightParams(x, stringToTags)
-    }).toList
+    // val flightParams = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+    //   case x: Tags.Flight => Flight.flightParams(x, stringToTags)
+    // }).toList
 
-    // for now, only render the first flight in the trip
-    val dst =  for {
+    // sort the flight tags by the order they appear in the item
+    val flightTags = stringToTags.getOrElse(tripItem.id, Map()).toList.sortBy(x => x._1).map(_._2).collect({
+      case x: Tags.Flight => x
+    })
 
-      fp <- flightParams.headOption
+    val dst = for {
+      // fp <- flightParams.headOption
+      tag <- flightTags
+      fp = Flight.flightParams(tag, stringToTags)
+
       startLoc <- MeeusPlanets.Planets.get(fp.startLocation)
       endLoc <- MeeusPlanets.Planets.get(fp.endLocation)
 
@@ -169,17 +173,22 @@ class RenderImages(
           fp.startDate,
           fp.endDate)
 
-      val relativeName = RenderImages.ImagesDir / tripItem.id + ".png"
-      val outputImage = new java.io.File(location / relativeName);
+      // val relativeName = RenderImages.ImagesDir / tripItem.id + ".png"
+      val relativeName = RenderImages.tagImagePath(tag)
+      val outputImage = new java.io.File(location / relativeName)
       ImageIO.write(im, "png", outputImage)
       relativeName
     }
 
-    (src, dst.toList)
+    // copy the first image to the default name
+    dst.headOption.foreach(x => {
+      val relativeName = RenderImages.ImagesDir / tripItem.id + ".png"
+      val outputImage = new java.io.File(location / relativeName)
+      FileUtils.copyFile(new File(location / x), outputImage)
+    })
 
+    (src, dst)
   }
-
-
 }
 
 
@@ -199,37 +208,28 @@ object RenderImages {
   }
 
 
-  /**
-  * Export an image of a world item
-  *
-  * @param refItem  worldItem to export
-  * @param inputDir   input directory to find filenames from
-  * @param outputDir  output directory to save images to
-  * @returns          names of files exported
-  */
+  // Export an image of a world item
   def exportImage(refItem: RefItem, inputDir: String, outputDir: String): List[String] = {
 
     val inputName = refItem.filename
 
     val image: BufferedImage = refItem match {
       case x: MapItem => getMapImage(
-          inputDir / inputName,
-          inputDir / ContentStructure.TileDir + slash)
-      case x: TileRefItem => {
-        TileOptions.types.get(x.tiletype) match {
-          case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
-          case None => imageMessage("Invalid tile type.")
-        }
+        inputDir / inputName,
+        inputDir / ContentStructure.TileDir + slash)
+      case x: TileRefItem => TileOptions.types.get(x.tiletype) match {
+        case Some(tiletype) => getTilesetImage(inputDir / inputName, tiletype)
+        case None => imageMessage("Invalid tile type.")
       }
       case _ => imageMessage("MetaItem type not supported.")
     }
 
     // various scales to output
     outputScales map (scaleFactor => {
-       val relativeName = ImagesDir / refItem.id + scalePostfix(scaleFactor) + ".png"
-       val absoluteName = outputDir / relativeName
-       ImageIO.write(rescaleImage(image, scaleFactor), "png", new File(absoluteName))
-       relativeName
+      val relativeName = ImagesDir / refItem.id + scalePostfix(scaleFactor) + ".png"
+      val absoluteName = outputDir / relativeName
+      ImageIO.write(rescaleImage(image, scaleFactor), "png", new File(absoluteName))
+      relativeName
     })
 
   }
@@ -284,7 +284,7 @@ object RenderImages {
       indexed: Boolean = true): BufferedImage = {
 
     val tileset = new OldTilesetLoader(inputFile, tileAttributes).load()
-    val curPal = tileset.palettes(0)
+    // val curPal = tileset.palettes(0)
 
     indexed match {
       case true  => tileset.image(0, transparent)
@@ -369,6 +369,14 @@ object RenderImages {
   }
 
 
+  def tagImagePath(tag: Tags.ParsedTag): String = {
+    tag match {
+      case _: Tags.Flight => ImagesDir / "flight_" + tag.hashCode.toHexString + ".png"
+      case _ => ""
+    }
+  }
+
+
   // generate HTML for a smaller image, with a link to the page
   // the attributes are kind of piling up on this function because of the many
   // different kinds of images and contexts where this is used.
@@ -412,7 +420,7 @@ object RenderImages {
 
   // functions for working with FileOutputsMaps
 
-  def getEmptyFileOutputsMap(): FileOutputsMap = {
+  def emptyFileOutputsMap: FileOutputsMap = {
     List.empty[(String, List[String])].toMap
   }
 

@@ -42,17 +42,17 @@ class RenderPages(
   // previous, next, and parent items
   val collections = world.collect({ case x: CollectionItem => x })
 
-  val previous = collections.map(collection => {
+  val previous = collections.flatMap(collection => {
     collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
-  }).flatten.toMap
+  }).toMap
 
-  val next = collections.map(collection => {
+  val next = collections.flatMap(collection => {
     collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
-  }).flatten.toMap
+  }).toMap
 
-  val parent = collections.map(collection => {
+  val parent = collections.flatMap(collection => {
     collection.children.map(x => (x.id, collection))
-  }).flatten.toMap
+  }).toMap
 
   // the main collection for each each item
   val groups = master.children.flatMap(group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
@@ -66,16 +66,15 @@ class RenderPages(
   val hiddenItemIds = hiddenItems.map(_.id).toSet
   
   private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
-    tags.get(item.id).getOrElse(Map())
+    tags.getOrElse(item.id, Map())
   }
   
 
   // generate page contents
-  def itemPageDispatch(item: WorldItem) = item match {
+  def itemPageDispatch(item: WorldItem): String = item match {
     case x: CollectionItem => collectionPage(x)
     case x: CharacterItem  => characterPage(x)
     case x: ImageFileItem  => imagePage(x)
-    case x: TripItem       => imagePage(x)
     case x: MapItem        => pixelArtPage(x)
     case x: TileRefItem    => pixelArtPage(x)
     case _                 => itemPage(item)
@@ -92,7 +91,7 @@ class RenderPages(
 
       column(Column12,
         np.transform(master.notes, itemToTags(master)) +
-          (if (master.children.length > 0) {
+          (if (master.children.nonEmpty) {
             master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
               case curCollection: CollectionItem => {
                 column(Column6,
@@ -131,7 +130,7 @@ class RenderPages(
 
       column(Column12,
         np.transform(collection.notes, itemToTags(collection)) + refItems(collection) + hr +
-          (if (collection.children.length > 0 && subarticles) {
+          (if (collection.children.nonEmpty && subarticles) {
             h4("Subarticles") +
               listGroup(
                   collection.children
@@ -296,7 +295,7 @@ class RenderPages(
       case None    => List()
     }
 
-    if (refs.length > 0) {
+    if (refs.nonEmpty) {
       h4("Referenced By") +
         listGroup(refs.sortBy(_.name).map(x => listItem(RenderPages.textLinkPage(x))))
     } else {
@@ -341,8 +340,8 @@ object RenderPages {
       // TODO: think about this
       val id = x.id + "-swivel"
       
-      val collapsibleLink = s"""<input type="checkbox" id="${id}" class="swivel" />""" +
-        "\n" + textLinkPage(x) + s"""<label for="${id}"></label>"""
+      val collapsibleLink = s"""<input type="checkbox" id="$id" class="swivel" />""" +
+        "\n" + textLinkPage(x) + s"""<label for="$id"></label>"""
 
       listItem(
         collapsibleLink +
@@ -365,8 +364,8 @@ object RenderPages {
 
     val borderStyle = if (border) "" else "border: 0; box-shadow: 0 0 0; border-radius: 0;"
 
-    (s"""<div class="panel panel-default${pullClass}" style="${leftMargin} ${borderStyle}"><div class="panel-body">${contents}""" +
-      """</div></div>""")
+    s"""<div class="panel panel-default$pullClass" style="$leftMargin $borderStyle"><div class="panel-body">$contents""" +
+      """</div></div>"""
   }
 
 
