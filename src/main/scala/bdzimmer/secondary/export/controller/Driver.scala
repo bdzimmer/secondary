@@ -24,7 +24,7 @@ import bdzimmer.secondary.export.model.Tags
 
 import bdzimmer.pixeleditor.view.Main
 import bdzimmer.pixeleditor.model.AssetMetadataUtils
-import bdzimmer.orbits.Editor
+import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 
 class Driver {
@@ -105,7 +105,7 @@ class Driver {
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
     }
     case DriverCommands.Orbits => {
-      val master = WorldLoader.loadWorld(projConf) match {
+      WorldLoader.loadWorld(projConf) match {
         case Pass(master) => {
 
           val world = WorldItems.collectionToList(master)
@@ -123,11 +123,23 @@ class Driver {
           val ships = world.filter(x => {
             // probably a better way to write this
             // ships are all items that have at least one spacecraft property tag
-            stringToTags.getOrElse(x.id, Map()).values.collect({case x: Tags.SpacecraftProperty => x}).headOption.isDefined
-          })
+            stringToTags.getOrElse(x.id, Map()).values.collect({case x: Tags.SpacecraftProperty => x}).headOption.isDefined})
 
-          val orbitsShips = ships.map(x => (x, Flight.spacecraft(x, stringToTags))).map(x => (x._1.id, bdzimmer.orbits.Spacecraft(x._1.name, x._2._1, x._2._2))).toMap
-          // val defaultShip = bdzimmer.orbits.Spacecraft("undefined", 0.0, 0.0)
+//           val orbitsShips = (ships
+//            .map(x => (x, Flight.spacecraft(x, stringToTags)))
+//            .map(x => (x._1.id, bdzimmer.orbits.Spacecraft(x._1.name, x._2._1, x._2._2)))
+//            .toMap)
+
+          val orbitsShips = (for {
+            shipItem <- ships
+            (mass, accel, vel) = Flight.spacecraft(shipItem, stringToTags)
+          } yield {
+            if (vel > ConstVelFlightFn.VelMin) {
+              (shipItem.id, bdzimmer.orbits.ConstVelCraft(shipItem.name, vel))
+            } else {
+              (shipItem.id, bdzimmer.orbits.ConstAccelCraft(shipItem.name, mass, accel))
+            }
+          }).toMap
 
           // a flight will not appear if the ship, orig, or destination is invalid
           val orbitsFlights = for {
@@ -158,7 +170,7 @@ class Driver {
     case DriverCommands.Screenshot => new ScreenshotUtility(projConf.localContentPath)
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
-    case DriverCommands.Help   => Driver.showCommands
+    case DriverCommands.Help   => Driver.showCommands()
     case _                     => println("Invalid command. Use 'help' for a list of commands.")
   }
 

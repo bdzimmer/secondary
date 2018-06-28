@@ -34,7 +34,7 @@ object Flight {
       flight: Tags.Flight,
       stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): FlightParams = {
 
-    val (mass, accel) = spacecraft(flight.ship, stringToTags)
+    val (mass, accel, vel) = spacecraft(flight.ship, stringToTags)
 
     FlightParams(
       flight.ship,
@@ -44,12 +44,13 @@ object Flight {
       flight.endDate,
       mass,
       accel,
+      vel,
       flight.passengers,
       flight.faction)
   }
 
 
-  def spacecraft(ship: WorldItems.WorldItem, stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): (Double, Double) = {
+  def spacecraft(ship: WorldItems.WorldItem, stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
 
     // TODO: handle specification of different units
 
@@ -71,7 +72,16 @@ object Flight {
       accelTag.value
     }).getOrElse(0.25) // AU / day^2
 
-    (mass, accel)
+    val vel = (for {
+      shipTags <- stringToTags.get(ship.id)
+      velTag <- shipTags.values.collect({
+        case x: Tags.SpacecraftProperty => x
+      }).find(x => x.kind.equals(SecTags.Velocity))
+    } yield {
+      velTag.value
+    }).getOrElse(0.0) // AU / day
+
+    (mass, accel, vel)
 
   }
 

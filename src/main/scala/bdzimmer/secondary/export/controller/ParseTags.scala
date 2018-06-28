@@ -138,7 +138,7 @@ object ParseTags {
       case SecTags.Birth => Birth(tag.value, tag.args.mkString(" "))
       case SecTags.Death => Death(tag.value, tag.args.mkString(" "))
 
-      case SecTags.Mass | SecTags.Acceleration => {
+      case SecTags.Mass | SecTags.Acceleration | SecTags.Velocity => {
         val parts = tag.value.split("\\s+")
         Try(parts(0).toDouble).toOption.map(value => {
           val unit = if (parts.length > 1) {

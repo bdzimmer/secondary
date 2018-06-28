@@ -14,15 +14,16 @@ import bdzimmer.orbits.{DateTime, CalendarDateTime}
 
 
 case class FlightParams(
-    ship: WorldItem,
-    startLocation: String,
-    endLocation: String,
-    startDate: CalendarDateTime,
-    endDate: CalendarDateTime,
-    mass: Double,
-    accel: Double,
-    passengers: List[WorldItem],
-    faction: String)
+  ship: WorldItem,
+  startLocation: String,
+  endLocation: String,
+  startDate: CalendarDateTime,
+  endDate: CalendarDateTime,
+  mass: Double,
+  accel: Double,
+  vel: Double,
+  passengers: List[WorldItem],
+  faction: String)
 
 
 class RenderTags(

@@ -22,6 +22,7 @@ object SecTags {
 
   val Mass = "mass"
   val Acceleration = "acceleration"
+  val Velocity = "velocity"
 
   val Thought = "thought"
   val Todo = "todo"

@@ -19,7 +19,7 @@ import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Markdown
 import bdzimmer.secondary.export.view.Html._
 
-import bdzimmer.orbits.{RenderFlight, MeeusPlanets, Spacecraft}
+import bdzimmer.orbits.{RenderFlight, MeeusPlanets, ConstAccelCraft, ConstVelCraft, ConstVelFlightFn}
 
 import bdzimmer.util.StringUtils._
 
@@ -164,8 +164,14 @@ class RenderImages(
 
     } yield {
 
-      val im = RenderFlight.drawRoughFlight(
-          Spacecraft(fp.ship.name, fp.mass, fp.accel),
+      val ship = if (fp.vel > ConstVelFlightFn.VelMin) {
+        ConstVelCraft(fp.ship.name, fp.vel)
+      } else {
+        ConstAccelCraft(fp.ship.name, fp.mass, fp.accel)
+      }
+
+      val im = RenderFlight.drawFlight(
+          ship,
           fp.faction,
           fp.startLocation,
           fp.endLocation,
