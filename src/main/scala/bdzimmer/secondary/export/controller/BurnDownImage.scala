@@ -120,12 +120,12 @@ object BurnDownImage {
       for ((start, end, task) <- taskRanges) {
         if ((idx == 0 || addDuring) && diff(toCalendar(start), curCalendar) == 0) {
           curPoints += task.points
-          println(idx + " " + toCalendarDateTime(curCalendar).dateString() + " " + task + " logged " + curPoints)
+          println(idx + " " + toCalendarDateTime(curCalendar).dateString + " " + task + " logged " + curPoints)
         }
         if (task.kind.equals(SecTags.Done)) {
           if (end.map(x => diff(toCalendar(x), curCalendar) == 0).getOrElse(false)) {
             curPoints -= task.points
-            println(idx + " " + toCalendarDateTime(curCalendar).dateString() + " " + task + " done " + curPoints)
+            println(idx + " " + toCalendarDateTime(curCalendar).dateString + " " + task + " done " + curPoints)
           }
         }
       }
@@ -150,7 +150,7 @@ object BurnDownImage {
     val maxPoints = points.max
 
     val res = "<!--burn down in code block-->\n" + points.zip(dates).map(x =>
-      ("    " + x._2.dateString() + " "
+      ("    " + x._2.dateString + " "
           + "[=]" * x._1 + "---" * (maxPoints - x._1) + " "
           + x._1)
     ).mkString("\n") + "\n"
