@@ -219,6 +219,10 @@ object ParseTags {
         Anchor(tag.value, args.getOrElse("id", "anchor"))
       }
 
+      case SecTags.Sidenote => {
+        Sidenote(tag.value, args.getOrElse("id", "anchor"))
+      }
+
       case SecTags.Index => {
         stringToItem.get(tag.value).map(item => {
           Index(item)

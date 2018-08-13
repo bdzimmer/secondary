@@ -8,7 +8,7 @@ import scala.util.Random
 
 import bdzimmer.secondary.export.model.{Tags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
-import bdzimmer.secondary.export.view.{Markdown, Html}
+import bdzimmer.secondary.export.view.{Markdown, Html, Bootstrap}
 
 import bdzimmer.orbits.{DateTime, CalendarDateTime}
 
@@ -211,6 +211,18 @@ class RenderTags(
     }
 
     case x: Tags.Anchor => Html.anchor(x.desc, x.id)
+
+    case x: Tags.Sidenote => {
+      // rendering sidenotes is handled at a higher level
+      /*
+      "</div>" +
+      Bootstrap.column(
+        Bootstrap.Column3,
+        body = s"""<p class="sidenote">${x.desc}</p>""") +
+      Bootstrap.columnOpen(Bootstrap.Column9)
+      */
+      ""
+    }
 
     case x: Tags.Index => Index.render(
         WorldItems.collectionToList(x.item).drop(1))

@@ -9,6 +9,7 @@ object Bootstrap {
   val Column4 = 4
   val Column6 = 6
   val Column8 = 8
+  val Column9 = 9
   val Column12 = 12
   
   

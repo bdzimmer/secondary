@@ -53,7 +53,7 @@ li.swivel label { margin-bottom: 0px; }
 
 
     s"""
-/* Copyright (c) 2016 Ben Zimmer. All rights reserved. */
+/* Copyright (c) 2018 Ben Zimmer. All rights reserved. */
 
 /* Set a custom font and increase the font size for everything. */
 
@@ -83,7 +83,13 @@ p, div {
 }
 
 p {
-  margin: ${BodyVerticalMargin}px 0px ${BodyVerticalMargin}px 0px;
+  /* margin: ${BodyVerticalMargin}px 0px ${BodyVerticalMargin}px 0px; */
+  margin: ${BodyVerticalMargin}px 0px 0px 0px;
+}
+
+p.sidenote {
+  font-size: 12px;
+  text-indent: 0px;
 }
 
 body {

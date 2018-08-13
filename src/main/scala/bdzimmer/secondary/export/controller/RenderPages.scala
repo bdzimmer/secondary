@@ -73,7 +73,6 @@ class RenderPages(
   // generate page contents
   def itemPageDispatch(item: WorldItem): String = item match {
     case x: CollectionItem => collectionPage(x)
-    case x: CharacterItem  => characterPage(x)
     case x: ImageFileItem  => imagePage(x)
     case x: MapItem        => pixelArtPage(x)
     case x: TileRefItem    => pixelArtPage(x)
@@ -144,28 +143,6 @@ class RenderPages(
       license)
   }
 
-
-  // TODO: can characterPage be eliminated?
-  
-  private def characterPage(character: CharacterItem): String = {
-    
-    val (name, description) = unifiedJumbotron match {
-      case true  => (master.name, master.description)
-      case false => (character.name, character.description)
-    }
-    
-    val navbar = pageNavbar(character, false)
-
-    PageTemplates.articlePage(
-      name,
-      description,
-      navbar,
-
-      column(Column12, np.transform(character.notes, itemToTags(character)) + refItems(character)),
-
-      navbar,
-      license)
-  }
 
 
   private def imagePage(imageItem: ImageItem): String = {
@@ -249,11 +226,38 @@ class RenderPages(
     }
 
     val navbar = pageNavbar(item, false)
-    
+
+    val tags = itemToTags(item)
+    // TODO: it seems like collect alone did not work here--why not?
+    val sidenoteTags = tags.filter(x => x._2.isInstanceOf[Tags.Sidenote]).collect({case x: (Int, Tags.Sidenote) => x})
+
+    val body = if (sidenoteTags.isEmpty) {
+      column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item))
+    } else {
+      // TODO: move this logic into a separate function
+
+      // advance each tag position to the previous end of line character
+      val sidenoteTagList = sidenoteTags.map(x => (item.notes.lastIndexOf('\n', x._1), x._2)).toList.sortBy(_._1)
+      val allPositions = List(0) ++ sidenoteTagList.map(_._1) ++ List(item.notes.length - 1)
+
+      // render by chunks
+      val chunks = allPositions.sliding(2).map(x => (x(0), item.notes.substring(x(0), x(1) - 1)))
+      chunks.zipWithIndex.map({case ((startIdx, chunk), idx) => {
+        val tags = itemToTags(item)
+        val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
+        val sidenoteBody = if (idx == 0) {
+          ""
+        } else {
+          s"""<p class="sidenote">${sidenoteTagList(idx - 1)._2.desc}</p>"""
+        }
+        column(Column9, np.transform(chunk, tagsMod)) + column(Column3, sidenoteBody)
+      }}).mkString("\n") + column(Column12, refItems(item))
+    }
+
     PageTemplates.articlePage(
       name, description,
       navbar,
-      column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item)),
+      body,
       navbar,
       license)
   }
