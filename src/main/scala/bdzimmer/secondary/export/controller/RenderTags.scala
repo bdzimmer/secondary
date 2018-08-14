@@ -221,7 +221,12 @@ class RenderTags(
         body = s"""<p class="sidenote">${x.desc}</p>""") +
       Bootstrap.columnOpen(Bootstrap.Column9)
       */
-      ""
+      if (x.id.equals("")) {
+        ""
+      } else {
+        s"""<sup>${x.id}</sup>"""
+      }
+
     }
 
     case x: Tags.Index => Index.render(

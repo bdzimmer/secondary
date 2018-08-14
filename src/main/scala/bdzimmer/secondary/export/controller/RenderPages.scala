@@ -237,6 +237,7 @@ class RenderPages(
       // TODO: move this logic into a separate function
 
       // advance each tag position to the previous end of line character
+      // TODO: handle multiple sidenote tags per paragraph
       val sidenoteTagList = sidenoteTags.map(x => (item.notes.lastIndexOf('\n', x._1), x._2)).toList.sortBy(_._1)
       val allPositions = List(0) ++ sidenoteTagList.map(_._1) ++ List(item.notes.length - 1)
 
@@ -248,8 +249,15 @@ class RenderPages(
         val sidenoteBody = if (idx == 0) {
           ""
         } else {
-          s"""<p class="sidenote">${sidenoteTagList(idx - 1)._2.desc}</p>"""
+          val tag = sidenoteTagList(idx - 1)._2
+          val id = if (tag.id.equals("")) {
+            ""
+          } else {
+            tag.id + ". "
+          }
+          s"""<p class="sidenote">${id}${tag.desc}</p>"""
         }
+        // TODO: probably want to np.transform the sidenoteBody as well
         column(Column9, np.transform(chunk, tagsMod)) + column(Column3, sidenoteBody)
       }}).mkString("\n") + column(Column12, refItems(item))
     }

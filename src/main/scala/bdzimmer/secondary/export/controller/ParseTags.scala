@@ -220,7 +220,7 @@ object ParseTags {
       }
 
       case SecTags.Sidenote => {
-        Sidenote(tag.value, args.getOrElse("id", "anchor"))
+        Sidenote(tag.value, args.getOrElse("id", ""))
       }
 
       case SecTags.Index => {
