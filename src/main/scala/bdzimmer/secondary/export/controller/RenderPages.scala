@@ -228,34 +228,40 @@ class RenderPages(
     val navbar = pageNavbar(item, false)
 
     val tags = itemToTags(item)
-    // TODO: it seems like collect alone did not work here--why not?
+    // TODO: find the right way to do this - type erasure issue
     val sidenoteTags = tags.filter(x => x._2.isInstanceOf[Tags.Sidenote]).collect({case x: (Int, Tags.Sidenote) => x})
 
     val body = if (sidenoteTags.isEmpty) {
       column(Column12, np.transform(item.notes, itemToTags(item)) + refItems(item))
     } else {
       // TODO: move this logic into a separate function
-
-      // advance each tag position to the previous end of line character
-      // TODO: handle multiple sidenote tags per paragraph
-      val sidenoteTagList = sidenoteTags.map(x => (item.notes.lastIndexOf('\n', x._1), x._2)).toList.sortBy(_._1)
+      val sidenoteTagList = sidenoteTags
+        .toList
+        .sortBy(_._1)
+        .map(x => (item.notes.lastIndexOf('\n', x._1), x._2)) // advance each tag position to the previous end of line character
+        .groupBy(_._1)
+        .mapValues(_.map(_._2))
+        .toList
+        .sortBy(_._1)
       val allPositions = List(0) ++ sidenoteTagList.map(_._1) ++ List(item.notes.length - 1)
 
       // render by chunks
+      val tags = itemToTags(item)
       val chunks = allPositions.sliding(2).map(x => (x(0), item.notes.substring(x(0), x(1) - 1)))
       chunks.zipWithIndex.map({case ((startIdx, chunk), idx) => {
-        val tags = itemToTags(item)
         val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
         val sidenoteBody = if (idx == 0) {
           ""
         } else {
-          val tag = sidenoteTagList(idx - 1)._2
-          val id = if (tag.id.equals("")) {
-            ""
-          } else {
-            tag.id + ". "
-          }
-          s"""<p class="sidenote">${id}${tag.desc}</p>"""
+          val tagsInPara = sidenoteTagList(idx - 1)._2
+          tagsInPara.map(tag => {
+            val id = if (tag.id.equals("")) {
+              ""
+            } else {
+              tag.id + ". "
+            }
+            s"""<p class="sidenote">${id}${tag.desc}</p>"""
+          }).mkString("\n")
         }
         // TODO: probably want to np.transform the sidenoteBody as well
         column(Column9, np.transform(chunk, tagsMod)) + column(Column3, sidenoteBody)

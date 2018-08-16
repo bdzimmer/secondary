@@ -84,12 +84,13 @@ p, div {
 
 p {
   /* margin: ${BodyVerticalMargin}px 0px ${BodyVerticalMargin}px 0px; */
-  margin: ${BodyVerticalMargin}px 0px 0px 0px;
+  margin: 0px 0px ${BodyVerticalMargin}px 0px;
 }
 
 p.sidenote {
   font-size: 12px;
   text-indent: 0px;
+  margin: 0px 0px 15px 0px;
 }
 
 body {
