@@ -342,6 +342,8 @@ object ExportPipeline {
   // generate stylesheets and download web resources into project web dir
   def addStyles(projConf: ProjectConfig): Unit = {
 
+    System.setProperty("https.protocols", "TLSv1.2")
+
     val outputDirFile = new File(projConf.localExportPath)
 
     def download(wr: WebResource): Unit = {

@@ -50,6 +50,8 @@ object SecTags {
   val Tasks = "tasks"
   val Stats = "stats"
 
+  val Sidenote = "sidenote"
+
   val Gallery = "gallery"
 
 }
@@ -222,6 +224,11 @@ object Tags {
     size: Integer,
     showCaptions: Boolean,
     recursive: Boolean
+  ) extends ParsedTag
+
+  case class Sidenote(
+    desc: String,
+    id: String
   ) extends ParsedTag
 
   // error tags
