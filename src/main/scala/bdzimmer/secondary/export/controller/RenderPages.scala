@@ -89,23 +89,24 @@ class RenderPages(
       pageNavbar(master, search),
 
       column(Column12,
-        np.transform(master.notes, itemToTags(master)) +
-          (if (master.children.nonEmpty) {
-            master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
-              case curCollection: CollectionItem => {
-                column(Column6,
-                  """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
-                    RenderPages.glyphLinkPage(curCollection) + "\n" +
-                    listGroup(
-                      curCollection.children
-                      .filter(x => !hiddenItemIds.contains(x.id))
-                      .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
-              }
-            }).grouped(2).map(_.mkString("\n") +
-            """<div class="clearfix"></div>""" + "\n").mkString("\n")
-          } else {
-            ""
-          })),
+        np.transform(master.notes, itemToTags(master))
+      ) +
+      (if (master.children.nonEmpty) {
+        master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
+          case curCollection: CollectionItem => {
+            column(Column6,
+              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
+                RenderPages.glyphLinkPage(curCollection) + "\n" +
+                listGroup(
+                  curCollection.children
+                  .filter(x => !hiddenItemIds.contains(x.id))
+                  .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
+          }
+        }).grouped(2).map(_.mkString("\n") +
+        """<div class="clearfix"></div>""" + "\n").mkString("\n")
+      } else {
+        ""
+      }),
           
       pageNavbar(master, false),
       license)
