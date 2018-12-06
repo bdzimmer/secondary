@@ -179,6 +179,7 @@ object WorldLoaderFlat {
     case "!map"         => new MapItemBean()
     case "!include"     => new SrcIncludeBean()
     case "!trip"        => new TripItemBean()
+    case "!book"        => new BookItemBean()
     case _              => new ThingItemBean()
   }
 
@@ -205,6 +206,18 @@ object WorldLoaderFlat {
         case "tiletype" => item match {
           case x: TileRefItemBean => x.setTiletype(propVal)
           case _                  => field
+        }
+        case "uniqueid" => item match {
+          case x: BookItemBean => x.setUniqueIdentifier(propVal)
+          case _               => field
+        }
+        case "firstname" => item match {
+          case x: BookItemBean => x.setFirstname(propVal)
+          case _               => field
+        }
+        case "lastname" => item match {
+          case x: BookItemBean => x.setLastname(propVal)
+          case _               => field
         }
         case _ => field
       }

@@ -174,6 +174,17 @@ object WorldItemBeans {
   }
 
 
+  class BookItemBean extends  WorldItemBean {
+    @BeanProperty var uniqueIdentifier: String = ""
+    @BeanProperty var firstname: String = ""
+    @BeanProperty var lastname: String = ""
+
+    def getVal(): BookItem = BookItem(
+      id, name, description, notes,
+      srcfilename, remoteid, pst.getAllTags(notes),
+      uniqueIdentifier, firstname, lastname)
+  }
+
 }
 
 
@@ -252,6 +263,12 @@ object WorldItems {
       srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
       filename: String) extends ImageItem with RefItem
 
+  /// book items
+
+  case class BookItem(
+     id: String, name: String, description: String, notes: String,
+     srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
+     uniqueIdentifier: String, firstname: String, lastname: String) extends WorldItem
 
 
   // create a list of all world items in a hierarchy
