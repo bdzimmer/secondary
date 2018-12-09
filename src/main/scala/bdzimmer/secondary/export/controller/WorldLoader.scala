@@ -211,13 +211,9 @@ object WorldLoaderFlat {
           case x: BookItemBean => x.setUniqueIdentifier(propVal)
           case _               => field
         }
-        case "firstname" => item match {
-          case x: BookItemBean => x.setFirstname(propVal)
-          case _               => field
-        }
-        case "lastname" => item match {
-          case x: BookItemBean => x.setLastname(propVal)
-          case _               => field
+        case "authorname" => item match {
+          case x: BookItemBean => x.setAuthorname(propVal)
+          case _ => field
         }
         case _ => field
       }

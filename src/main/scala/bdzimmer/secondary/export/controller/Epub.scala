@@ -12,7 +12,7 @@ import java.io.{FileOutputStream, BufferedOutputStream}
 import java.util.zip.{ZipOutputStream, ZipEntry, CRC32}
 import org.apache.commons.io.IOUtils
 
-import bdzimmer.secondary.export.model.Tags
+import bdzimmer.secondary.export.model.{Tags, WorldItems}
 
 object Epub {
 
@@ -41,6 +41,17 @@ object Epub {
       SectionInfo(x._1._2.toString, x._1._1, "<body>" + x._2 + "</body>"))
   }
 
+
+  def authorNameParts(authorname: String): (String, String) = {
+    val (name, parts) = WorldItems.cleanName(authorname)
+    parts match {
+      case None => ("", name)
+      case Some(ps) => ps match {
+        case fst :: rest => (fst, rest.mkString(" "))
+        case           _ => ("", name)
+      }
+    }
+  }
 
   val Mimetype = "application/epub+zip"
 

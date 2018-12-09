@@ -176,13 +176,12 @@ object WorldItemBeans {
 
   class BookItemBean extends  WorldItemBean {
     @BeanProperty var uniqueIdentifier: String = ""
-    @BeanProperty var firstname: String = ""
-    @BeanProperty var lastname: String = ""
+    @BeanProperty var authorname: String = ""
 
     def getVal(): BookItem = BookItem(
       id, name, description, notes,
       srcfilename, remoteid, pst.getAllTags(notes),
-      uniqueIdentifier, firstname, lastname)
+      uniqueIdentifier, authorname)
   }
 
 }
@@ -268,7 +267,7 @@ object WorldItems {
   case class BookItem(
      id: String, name: String, description: String, notes: String,
      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-     uniqueIdentifier: String, firstname: String, lastname: String) extends WorldItem
+     uniqueIdentifier: String, authorname: String) extends WorldItem
 
 
   // create a list of all world items in a hierarchy

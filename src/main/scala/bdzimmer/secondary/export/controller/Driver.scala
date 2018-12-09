@@ -116,12 +116,13 @@ class Driver {
         // title is name of first section
         val title = sections.headOption.map(_.name).getOrElse("empty")
         val filename = book.id + ".epub"
+        val (firstname, lastname) = Epub.authorNameParts(book.authorname)
         Epub.export(
           filename,
           book.uniqueIdentifier,
           title,
-          book.firstname,
-          book.lastname,
+          firstname,
+          lastname,
           sections)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0
         println("exported " + filename + " in " + totalTime + " sec")
