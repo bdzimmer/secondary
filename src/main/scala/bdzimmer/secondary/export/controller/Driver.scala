@@ -100,7 +100,6 @@ class Driver {
       val res = for {
         master <- WorldLoader.loadWorld(projConf)
         world = WorldItems.collectionToList(master)
-        // TODO: move this logic somewhere else
         stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
         stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
         rt = new RenderTags(stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }))
@@ -112,18 +111,7 @@ class Driver {
           Try(item.asInstanceOf[WorldItems.BookItem])).mapLeft(_ => "'" + itemId + "' not a book")
       } yield {
         val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-        val sections = Epub.sections(book.notes, tags, rt)
-        // title is name of first section
-        val title = sections.headOption.map(_.name).getOrElse("empty")
-        val filename = book.id + ".epub"
-        val (firstname, lastname) = Epub.authorNameParts(book.authorname)
-        Epub.export(
-          filename,
-          book.uniqueIdentifier,
-          title,
-          firstname,
-          lastname,
-          sections)
+        val filename = Epub.export(book, tags, rt, projConf.localExportPath)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0
         println("exported " + filename + " in " + totalTime + " sec")
       }

@@ -29,7 +29,9 @@ class EpubSuite extends FunSuite{
        List(
          Epub.SectionInfo("0", "Title Page", "<body>Test Book<br>B Z</body>"),
          Epub.SectionInfo("1", "Chapter 1", "<body>This is the content of chapter 1.</body>")
-       )
+       ),
+       None,
+       ""
      )
 
     assert(outputFile.exists())
