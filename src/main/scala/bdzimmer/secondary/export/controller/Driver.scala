@@ -5,7 +5,6 @@
 package bdzimmer.secondary.export.controller
 
 import java.awt.Desktop    // scalastyle:ignore illegal.imports
-import java.net.URI
 import java.io.{BufferedReader, File, InputStreamReader}
 
 import scala.annotation.tailrec
@@ -15,7 +14,7 @@ import scala.util.Try
 
 import org.apache.commons.io.FileUtils
 
-import bdzimmer.util.{Result, Pass, Fail, PropertiesWrapper}
+import bdzimmer.util.{Result, Pass, Fail}
 import bdzimmer.util.StringUtils._
 
 import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldItems}
@@ -96,6 +95,28 @@ class Driver {
         case Fail(msg) => println(msg)
       }
     }
+    case DriverCommands.Epub => {
+      val startTime = System.currentTimeMillis
+      val res = for {
+        master <- WorldLoader.loadWorld(projConf)
+        world = WorldItems.collectionToList(master)
+        stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
+        stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+        rt = new RenderTags(stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }))
+        itemId = args.mkString(" ")
+        item <- Result.fromOption(
+          stringToItem.get(itemId),
+          "invalid item name or id '" + itemId + "'")
+        book <- Result.fromTry(
+          Try(item.asInstanceOf[WorldItems.BookItem])).mapLeft(_ => "'" + itemId + "' not a book")
+      } yield {
+        val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
+        val filename = Epub.export(book, tags, rt, projConf.localExportPath)
+        val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+        println("exported " + filename + " in " + totalTime + " sec")
+      }
+      res.mapLeft(msg => println(msg))
+    }
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
       val startTime = System.currentTimeMillis
@@ -112,6 +133,8 @@ class Driver {
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
           val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
 
+          // TODO: move this logic somewhere else
+
           val flights = world.collect({
             case tripItem: WorldItems.TripItem => {
               stringToTags.getOrElse(tripItem.id, Map()).values.collect({
@@ -124,12 +147,6 @@ class Driver {
             // probably a better way to write this
             // ships are all items that have at least one spacecraft property tag
             stringToTags.getOrElse(x.id, Map()).values.collect({case x: Tags.SpacecraftProperty => x}).headOption.isDefined})
-
-//           val orbitsShips = (ships
-//            .map(x => (x, Flight.spacecraft(x, stringToTags)))
-//            .map(x => (x._1.id, bdzimmer.orbits.Spacecraft(x._1.name, x._2._1, x._2._2)))
-//            .toMap)
-
           val orbitsShips = (for {
             shipItem <- ships
             (mass, accel, vel) = Flight.spacecraft(shipItem, stringToTags)
@@ -222,7 +239,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2018.01.01"
+  val Title = "Secondary - create worlds from text - v2018.12.11"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 
@@ -267,6 +284,7 @@ object DriverCommands {
   val Configure   = "configure"
   val Edit        = "edit"
   val Editor      = "editor"
+  val Epub        = "epub"
   val Explore     = "explore"
   val Export      = "export"
   val Orbits      = "orbits"
@@ -282,6 +300,7 @@ object DriverCommands {
       (Configure,   "edit project configuration"),
       (Edit,        "edit the source file for an item"),
       (Editor,      "pixel editor (alpha)"),
+      (Epub,        "export a book to EPUB"),
       (Explore,     "explore project content dir"),
       (Export,      "export"),
       (Orbits,      "orbits editor (alpha)"),

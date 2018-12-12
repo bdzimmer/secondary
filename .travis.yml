@@ -2,7 +2,7 @@ language: scala
 scala:
   - 2.10.6
 jdk:
-  - oraclejdk7
+  - openjdk8
 
 install:
   - git clone https://github.com/bdzimmer/util-scala ../util-scala
