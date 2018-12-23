@@ -5,20 +5,18 @@
 package bdzimmer.secondary.export.controller
 
 import org.scalatest.FunSuite
-
 import java.io.File
 
+import bdzimmer.util.TempDirectory
+import bdzimmer.util.StringUtils._
 
-class EpubSuite extends FunSuite{
+
+class EpubSuite extends FunSuite with TempDirectory {
 
   test("export") {
 
-     val outputFilename = "test.epub"
+     val outputFilename = tempDirname / "test.epub"
      val outputFile = new File(outputFilename)
-
-     if (outputFile.exists) {
-       outputFile.delete()
-     }
 
      Epub.export(
        outputFilename,

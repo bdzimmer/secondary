@@ -8,12 +8,13 @@ import org.scalatest.FunSuite
 import java.io.File
 import javax.imageio.ImageIO
 
+import bdzimmer.util.TempDirectory
 import bdzimmer.util.StringUtils._
 
 import bdzimmer.pixeleditor.model.TileOptions
 
 
-class ExportImagesSuite extends FunSuite {
+class ExportImagesSuite extends FunSuite with TempDirectory {
 
   // directory with some sample images and map
   val resourceDir = getClass.getResource("/pixel").getPath
@@ -21,7 +22,7 @@ class ExportImagesSuite extends FunSuite {
   test("save tileset to png") {
 
     val inputFilename = resourceDir / "amex.til"
-    val outputFile = new File("amex.png")
+    val outputFile = new File(tempDirname / "amex.png")
 
     val tileAttrs = TileOptions.types.get("Tiles").get  // I don't even care
     val image = RenderImages.getTilesetImage(inputFilename, tileAttrs)
@@ -37,7 +38,7 @@ class ExportImagesSuite extends FunSuite {
   test("save map to png") {
 
     val inputFilename = resourceDir / "albion.map"
-    val outputFile = new File("albion.png")
+    val outputFile = new File(tempDirname / "albion.png")
 
     val image = RenderImages.getMapImage(inputFilename, resourceDir)
     ImageIO.write(image, "png", outputFile)

@@ -18,7 +18,7 @@ lazy val root = (project in file("."))
     version      := "2016.04.18",
     organization := "bdzimmer",
     scalaVersion := "2.10.6",
-    
+
     mainClass in (Compile, run) := Some("bdzimmer.secondary.export.Driver"),
 
     javacOptions  ++= Seq("-source", jvmSettings.javacSource, "-target", jvmSettings.javacTarget),
@@ -28,14 +28,14 @@ lazy val root = (project in file("."))
       "commons-io"         % "commons-io"                % "2.4",
       "org.apache.commons" % "commons-compress"          % "1.10",
       "org.pegdown"        % "pegdown"                   % "1.6.0",
-      "org.scala-lang"     % "scala-swing"               % "2.10+",
+      "org.scala-lang"     % "scala-swing"               % "2.10.7",
       "com.fasterxml.jackson.core" % "jackson-core"      % "2.1.3",
       "org.scalatest"     %% "scalatest"                 % "2.2.4" % "it,test"
     ),
-    
+
     unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_)),
     unmanagedSourceDirectories in Test <<= (scalaSource in Test)(Seq(_))
-    
+
    )
   .configs(IntegrationTest)
   .settings(Defaults.itSettings: _*)
