@@ -2,6 +2,10 @@
 /project/project/
 /project/target/
 /target/
+/dist/doc/
+/dist/secondary.jar
+/doc/web
+/doc/wikicache
 .project
 .cache
 .cache-main
