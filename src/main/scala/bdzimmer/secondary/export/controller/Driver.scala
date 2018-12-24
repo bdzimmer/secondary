@@ -34,12 +34,15 @@ class Driver {
 
   var loadedWorld: Result[String, WorldItems.CollectionItem] = Fail("World not loaded!")
 
-  def run(args: Array[String]): Unit = {
-    val command = args.headOption.getOrElse(Driver.DefaultCommand)
+  def run(argv: Array[String]): Unit = {
+    val (command, args) = argv.toList match {
+      case x :: xs => (x, xs)
+      case Nil     => (Driver.DefaultCommand, List())
+    }
     command match {
-      case DriverCommands.Interactive => runInteractive
-      case DriverCommands.Help        => Driver.showUsage
-      case _                          => runCommand(command, List())
+      case DriverCommands.Interactive => runInteractive()
+      case DriverCommands.Help        => Driver.showUsage()
+      case _                          => runCommand(command, args)
     }
   }
 
@@ -74,7 +77,7 @@ class Driver {
 
   // run a command
   private def runCommand(command: String, args: List[String]): Unit = command match {
-    case DriverCommands.Browse      => browseLocal
+    case DriverCommands.Browse      => browseLocal()
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(
@@ -86,7 +89,7 @@ class Driver {
       editItemByName(name)
     }
     case DriverCommands.Editor => {
-      val master = WorldLoader.loadWorld(projConf) match {
+      WorldLoader.loadWorld(projConf) match {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItems.assetMetadata(master))
@@ -219,7 +222,7 @@ class Driver {
       x._1.matches(idMatcher)
     }).fold(1)(_._2)
     // Desktop.getDesktop.open(srcFile)
-    val nppCommand = s"""notepad++ "${srcFile.getPath}" -n${lineNumber}"""
+    val nppCommand = s"""notepad++ "${srcFile.getPath}" -n$lineNumber"""
     Try(nppCommand.!!)
   }
 
@@ -239,13 +242,13 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2018.12.11"
+  val Title = "Secondary - create worlds from text - v2018.12.23"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 
-  def main(args: Array[String]): Unit = {
+  def main(argv: Array[String]): Unit = {
     val driver = new Driver()
-    driver.run(args)
+    driver.run(argv)
   }
 
 
