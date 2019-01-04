@@ -177,23 +177,7 @@ class RenderTags(
 
     }
 
-    case x: Tags.WordCount => {
-      val items = if (x.recursive) {
-        WorldItems.collectionToList(x.item)
-      } else {
-        List(x.item)
-      }
-
-      val notes = items.map(item => {
-        // calculating word count on notes transformed to prose is a
-        // little bit more accurate that raw notes but probably isn't
-        // necessary
-        val tagPositions = stringToTags.get(item.id).getOrElse(Map())
-        transformProse(item.notes, tagPositions)
-      }).mkString("\n")
-
-      notes.split("\\s+").length.toString
-    }
+    case x: Tags.WordCount => WordCount.calculate(x.item, x.recursive).toString
 
     case x: Tags.BurnDown => {
       val items = x.recursive match {

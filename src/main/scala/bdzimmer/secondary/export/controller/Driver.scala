@@ -189,6 +189,19 @@ class Driver {
     }
     case DriverCommands.Screenshot => new ScreenshotUtility(projConf.localContentPath)
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
+    case DriverCommands.Sprint => {
+      val name = args.mkString(" ")
+      WordCount.interactive(() => {
+        val masterOption = WorldLoader.loadWorld(projConf) match {
+          case Pass(x) => Some(x)
+          case Fail(_) => None
+        }
+        masterOption.flatMap(master => {
+          val world = WorldItems.collectionToList(master)
+          world.find(item => item.id.equals(name) || item.name.equals(name))
+        })
+      })
+    }
     case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
     case DriverCommands.Help   => Driver.showCommands()
     case _                     => println("Invalid command. Use 'help' for a list of commands.")
@@ -206,7 +219,7 @@ class Driver {
   private def editItemByName(name: String): Unit = loadedWorld match {
     case Pass(master) => {
       val world = WorldItems.collectionToList(master)
-      world.filter(item => item.id.equals(name) || item.name.equals(name)).headOption match {
+      world.find(item => item.id.equals(name) || item.name.equals(name)) match {
         case Some(item) => editItem(item)
         case None       => println("No such item!")
       }
@@ -293,6 +306,7 @@ object DriverCommands {
   val Orbits      = "orbits"
   val Screenshot  = "screenshot"
   val Server      = "server"
+  val Sprint      = "sprint"
   val Styles      = "styles"
 
   val Interactive = "interactive"
@@ -309,6 +323,7 @@ object DriverCommands {
       (Orbits,      "orbits editor (alpha)"),
       (Screenshot,  "screenshot utility"),
       (Server,      "server mode"),
+      (Sprint,      "interactive writing sprint tool"),
       (Styles,      "add stylesheets"),
       (Help,        "show usage / commands"))
 }
