@@ -38,11 +38,14 @@ object WordCount {
     @tailrec
     def loop(): Unit = {
       val key = System.in.read()
-      val curCount = getItem().map(WordCount.calculate(_, true)).getOrElse(0)
-      val totalTime = (System.currentTimeMillis - startTime) / 1000.0 / 3600.0
-      val wordChange = curCount - startCount
-      val wordsPerHour = wordChange / totalTime
-      println(wordChange + " words - " + totalTime + " hr - " + wordsPerHour + " wph")
+      if (key != 13) {
+        // ignore carriage returns
+        val curCount = getItem().map(WordCount.calculate(_, true)).getOrElse(0)
+        val totalTime = (System.currentTimeMillis - startTime) / 1000.0 / 3600.0
+        val wordChange = curCount - startCount
+        val wordsPerHour = wordChange / totalTime
+        println(wordChange + " words - " + totalTime + " hr - " + wordsPerHour + " wph")
+      }
       if (key != 113) {
         loop()
       }
