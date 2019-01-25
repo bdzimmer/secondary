@@ -223,6 +223,16 @@ object ParseTags {
         Sidenote(tag.value, args.getOrElse("id", ""))
       }
 
+      case SecTags.Snip => {
+        Snip(tag.value)
+      }
+
+      case SecTags.Quote => {
+        stringToItem.get(tag.value).map(item => {
+          Quote(item, args.getOrElse("id", ""))
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      }
+
       case SecTags.Index => {
         stringToItem.get(tag.value).map(item => {
           Index(item)
