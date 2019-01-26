@@ -234,7 +234,8 @@ object Tags {
   ) extends ParsedTag
 
   case class Snip(
-    id: String
+    id: String,
+    paragraphs: Int
   ) extends ParsedTag
 
   case class Quote(

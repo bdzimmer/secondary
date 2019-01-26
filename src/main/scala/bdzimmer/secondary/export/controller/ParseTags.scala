@@ -224,7 +224,7 @@ object ParseTags {
       }
 
       case SecTags.Snip => {
-        Snip(tag.value)
+        Snip(tag.value, args.getOrElse("paragraphs", "1").toIntSafe(1))
       }
 
       case SecTags.Quote => {
