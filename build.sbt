@@ -28,7 +28,6 @@ lazy val root = (project in file("."))
       "commons-io"         % "commons-io"                % "2.4",
       "org.apache.commons" % "commons-compress"          % "1.10",
       "org.pegdown"        % "pegdown"                   % "1.6.0",
-      "org.scala-lang"     % "scala-swing"               % "2.10.7",
       "com.fasterxml.jackson.core" % "jackson-core"      % "2.1.3",
       "org.scalatest"     %% "scalatest"                 % "2.2.4" % "it,test"
     ),

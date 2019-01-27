@@ -81,7 +81,7 @@ class Driver {
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(
-          prop, ProjectConfig.requiredProperties, "Secondary - Project Configuration").startup(Array())
+          prop, ProjectConfig.requiredProperties, "Secondary - Project Configuration")
       println("You must restart Secondary for configuration changes to take effect.")
     }
     case DriverCommands.Edit => {
