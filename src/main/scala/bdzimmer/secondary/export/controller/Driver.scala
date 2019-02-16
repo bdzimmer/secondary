@@ -123,7 +123,12 @@ class Driver {
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
       val startTime = System.currentTimeMillis
-      val result = new ExportProcess(projConf).run()
+      val result = if (args.mkString("").equals("force")) {
+        // TODO: refactor to force and update metas
+        ExportPipeline.exportAll(projConf)
+      } else {
+        new ExportProcess(projConf).run()
+      }
       val totalTime = (System.currentTimeMillis - startTime) / 1000.0
       println("completed in " + totalTime + " sec")
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
