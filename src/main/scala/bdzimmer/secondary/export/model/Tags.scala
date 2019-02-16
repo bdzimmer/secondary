@@ -51,6 +51,8 @@ object SecTags {
   val Stats = "stats"
 
   val Sidenote = "sidenote"
+  val Snip = "snip"
+  val Quote = "quote"
 
   val Gallery = "gallery"
 
@@ -231,6 +233,16 @@ object Tags {
     id: String
   ) extends ParsedTag
 
+  case class Snip(
+    id: String,
+    paragraphs: Int
+  ) extends ParsedTag
+
+  case class Quote(
+    item: WorldItem,
+    id: String
+  ) extends ParsedTag
+
   // error tags
 
   trait ErrorTag extends ParsedTag
@@ -251,6 +263,7 @@ object Tags {
     case x: Ancestor   => List(x.character)
     case x: Descendant => List(x.character)
     case x: Marriage   => List(x.character)
+    case x: Quote      => List(x.item)
     // MarkovText would go here, but I don't want those to automatically update.
 
     // just a reminder to self that this by itself establishes the proper

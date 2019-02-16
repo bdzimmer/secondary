@@ -210,7 +210,28 @@ class RenderTags(
       } else {
         s"""<sup>${x.id}</sup>"""
       }
+    }
 
+    case x: Tags.Snip => Html.anchor("", x.id) // TODO: is it ok for span to be empty?
+
+    case x: Tags.Quote => {
+      // TODO: snip or quote multiple paragraphs
+      (for {
+        tags <- stringToTags.get(x.item.id)
+        snips = tags.filter(x => x._2.isInstanceOf[Tags.Snip]).collect({case y: (Int, Tags.Snip) => y})
+        snip <- snips.find(y => y._2.id.equals(x.id))
+      } yield {
+        var startIdx = x.item.notes.indexOf('}', snip._1) + 2 // skip over the tag
+        "\n" +
+        (0 until snip._2.paragraphs).map(idx => {
+          val endIdx = x.item.notes.indexOf('\n', startIdx) // go until next paragraph
+          val paragraph = ExtractRawTags.matcher.replaceAllIn(x.item.notes.substring(startIdx, endIdx), _ => "")
+          // println(idx, paragraph)
+          startIdx = x.item.notes.indexOf('\n', endIdx + 1) + 1 // mutation
+          "> " + paragraph + "\n>\n"
+        }).mkString("\n") +
+        "> --" + RenderPages.textLinkPage(x.item, snip._2.id, x.item.name) + "\n"
+      }).getOrElse(s"{{Quote error: snip '${x.id}' not found in item '${x.item.id}'}}")
     }
 
     case x: Tags.Index => Index.render(
