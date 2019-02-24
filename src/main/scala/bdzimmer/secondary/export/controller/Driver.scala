@@ -91,13 +91,13 @@ class Driver {
       } yield {
         val dups = Dup.find(item.notes)
         val lines = item.notes.split("\n")
-        dups.foreach({case (lineIdx, column) => {
+        dups.foreach({case (lineIdx, (start, end)) => {
           val line = lines(lineIdx)
-          val start = Math.max(column - 10, 0)
+          val extractStart = Math.max(start - 10, 0)
           val prefix = if (start > 0) "..." else ""
-          val end = column + 20
-          val suffix = if (end < line.size) "..." else ""
-          println(lineIdx + ":" + prefix + line.substring(start, end) + suffix)
+          val extractEnd = Math.min(end + 10, line.length)
+          val suffix = if (end < line.length) "..." else ""
+          println(lineIdx + ":" + prefix + line.substring(extractStart, extractEnd) + suffix)
         }})
       }
       res.mapLeft(msg => println(msg))
@@ -278,7 +278,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2018.12.23"
+  val Title = "Secondary - create worlds from text - v2019.02.23"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 
