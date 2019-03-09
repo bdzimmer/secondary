@@ -84,6 +84,24 @@ class Driver {
           prop, ProjectConfig.requiredProperties, "Secondary - Project Configuration")
       println("You must restart Secondary for configuration changes to take effect.")
     }
+    case DriverCommands.Duplicate => {
+      val name = args.mkString(" ")
+      val res = for {
+        item <- Result.fromOption(findItem(name), "invalid item name or id '" + name + "'")
+      } yield {
+        val dups = Dup.find(item.notes)
+        val lines = item.notes.split("\n")
+        dups.foreach({case (lineIdx, (start, end)) => {
+          val line = lines(lineIdx)
+          val extractStart = Math.max(start - 10, 0)
+          val prefix = if (start > 0) "..." else ""
+          val extractEnd = Math.min(end + 10, line.length)
+          val suffix = if (end < line.length) "..." else ""
+          println(lineIdx + ":" + prefix + line.substring(extractStart, extractEnd) + suffix)
+        }})
+      }
+      res.mapLeft(msg => println(msg))
+    }
     case DriverCommands.Edit => {
       val name = args.mkString(" ")
       editItemByName(name)
@@ -194,22 +212,22 @@ class Driver {
     }
     case DriverCommands.Screenshot => new ScreenshotUtility(projConf.localContentPath)
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
-    case DriverCommands.Sprint => {
-      val name = args.mkString(" ")
-      WordCount.interactive(() => {
-        val masterOption = WorldLoader.loadWorld(projConf) match {
-          case Pass(x) => Some(x)
-          case Fail(_) => None
-        }
-        masterOption.flatMap(master => {
-          val world = WorldItems.collectionToList(master)
-          world.find(item => item.id.equals(name) || item.name.equals(name))
-        })
-      })
-    }
+    case DriverCommands.Sprint => WordCount.interactive(() => findItem(args.mkString(" ")))
     case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
     case DriverCommands.Help   => Driver.showCommands()
     case _                     => println("Invalid command. Use 'help' for a list of commands.")
+  }
+
+
+  private def findItem(name: String): Option[WorldItems.WorldItem] = {
+    val masterOption = WorldLoader.loadWorld(projConf) match {
+      case Pass(x) => Some(x)
+      case Fail(_) => None
+    }
+    masterOption.flatMap(master => {
+      val world = WorldItems.collectionToList(master)
+      world.find(item => item.id.equals(name) || item.name.equals(name))
+    })
   }
 
 
@@ -260,7 +278,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2018.12.23"
+  val Title = "Secondary - create worlds from text - v2019.02.23"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 
@@ -303,6 +321,7 @@ object DriverCommands {
 
   val Browse      = "browse"
   val Configure   = "configure"
+  val Duplicate   = "duplicate"
   val Edit        = "edit"
   val Editor      = "editor"
   val Epub        = "epub"
@@ -320,6 +339,7 @@ object DriverCommands {
   val CommandsDescriptions = List(
       (Browse,      "browse exported project web site"),
       (Configure,   "edit project configuration"),
+      (Duplicate,   "detect duplicate words"),
       (Edit,        "edit the source file for an item"),
       (Editor,      "pixel editor (alpha)"),
       (Epub,        "export a book to EPUB"),
