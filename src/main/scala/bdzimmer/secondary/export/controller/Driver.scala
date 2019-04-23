@@ -145,12 +145,13 @@ class Driver {
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
       val startTime = System.currentTimeMillis
-      val result = if (args.mkString("").equals("force")) {
-        // TODO: refactor to force and update metas
-        ExportPipeline.exportAll(projConf)
-      } else {
-        new ExportProcess(projConf).run()
+      if (args.mkString("").equals("force")) {
+        // delete status files
+        new File(ProjectStructure.ItemStatusFile).delete()
+        new File(ProjectStructure.MetaStatusFile).delete()
+        new File(ProjectStructure.RefStatusFile).delete()
       }
+      val result = new ExportProcess(projConf).run()
       val totalTime = (System.currentTimeMillis - startTime) / 1000.0
       println("completed in " + totalTime + " sec")
       loadedWorld = result.mapLeft(_ => "Failed to load world during export.")
@@ -282,7 +283,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2019.02.23"
+  val Title = "Secondary - create worlds from text - v2019.04.22"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 

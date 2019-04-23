@@ -34,7 +34,7 @@ class RenderImages(
 
   val imagesLocation = location / RenderImages.ImagesDir
   new File(imagesLocation).mkdir
-  
+
   def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
 
     // export tileset / spritesheet and map images
