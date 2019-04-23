@@ -61,7 +61,7 @@ class RenderPages(
     world.map(x => (x.id, tags.get(x.id)))
     ++ world.map(x => (x.name, tags.get(x.id)))).collect({ case (x, Some(y)) => (x, y) }).toMap
 
-  val np = new RenderTags(stringToTags, world.collect({ case x: CharacterItem => x }))
+  val np = new RenderTags(stringToTags, world.collect({ case x: CharacterItem => x }), false, false)
 
   val hiddenItemIds = hiddenItems.map(_.id).toSet
   

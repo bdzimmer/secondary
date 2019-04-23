@@ -123,7 +123,11 @@ class Driver {
         world = WorldItems.collectionToList(master)
         stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
         stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
-        rt = new RenderTags(stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }))
+        rt = new RenderTags(
+          stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }),
+          disableTrees = true,
+          ebookMode = true
+        )
         itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
