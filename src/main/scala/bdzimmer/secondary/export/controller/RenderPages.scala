@@ -10,7 +10,7 @@ import bdzimmer.secondary.export.model.{ Tags, WorldItems }
 import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Html._
 import bdzimmer.secondary.export.view.Bootstrap._
-import bdzimmer.secondary.export.view.{ Markdown, PageTemplates }
+import bdzimmer.secondary.export.view.{ Markdown, PageTemplates, Styles }
 
 
 class RenderPages(
@@ -220,7 +220,7 @@ class RenderPages(
 
 
   private def itemPage(item: WorldItem): String = {
-    
+
     val (name, description) = unifiedJumbotron match {
       case true  => (master.name, master.description)
       case false => (item.name, item.description)
@@ -244,11 +244,11 @@ class RenderPages(
         .mapValues(_.map(_._2))
         .toList
         .sortBy(_._1)
-      val allPositions = List(0) ++ sidenoteTagList.map(_._1) ++ List(item.notes.length - 1)
+      val allPositions = List(0) ++ sidenoteTagList.map(_._1) ++ List(item.notes.length)
 
       // render by chunks
       val tags = itemToTags(item)
-      val chunks = allPositions.sliding(2).map(x => (x(0), item.notes.substring(x(0), x(1) - 1)))
+      val chunks = allPositions.sliding(2).map(x => (x(0), item.notes.substring(x(0), x(1)))).toList
       chunks.zipWithIndex.map({case ((startIdx, chunk), idx) => {
         val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
         val sidenoteBody = if (idx == 0) {
@@ -267,7 +267,10 @@ class RenderPages(
         // TODO: probably want to np.transform the sidenoteBody as well
         column(Column9, np.transform(chunk, tagsMod)) + column(Column3, sidenoteBody)
       }}).mkString("\n") + column(Column12, refItems(item))
-    }
+    } + (item match {
+      case _: BookItem => "<style>" + Styles.BookStyle + "</style>"
+      case _           => ""
+    })
 
     PageTemplates.articlePage(
       name, description,
