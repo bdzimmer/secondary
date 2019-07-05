@@ -178,7 +178,12 @@ class RenderTags(
 
     }
 
-    case x: Tags.WordCount => WordCount.calculate(x.item, x.recursive).toString
+    case x: Tags.WordCount => if (x.sections) {
+      val sectionCounts = WordCount.calculateSections(x.item)
+      Html.listGroup(sectionCounts.map(x => Html.listItem(x._1 + ": " + x._2.toString)))
+    } else {
+      WordCount.calculate(x.item, x.recursive, x.sections).toString
+    }
 
     case x: Tags.BurnDown => {
       val items = x.recursive match {

@@ -10,7 +10,7 @@ import bdzimmer.secondary.export.model.WorldItems.WorldItem
 
 object WordCount {
 
-  def calculate(item: WorldItem, recursive: Boolean): Int = {
+  def calculate(item: WorldItem, recursive: Boolean, sections: Boolean): Int = {
     val items = if (recursive) {
       WorldItems.collectionToList(item)
     } else {
@@ -24,12 +24,23 @@ object WordCount {
       // transformProse(item.notes, tagPositions)
       item.notes
     }).mkString("\n")
-    notes.split("\\s+").length
+    count(notes)
+  }
+
+
+  def calculateSections(item: WorldItem): List[(String, Int)] = {
+    val (titles, chunks, _) = Epub.splitSections(item.notes)
+    titles.zip(chunks.map(x => count(x._2)))
+  }
+
+
+  def count(x: String): Int = {
+    x.split("\\s+").length
   }
 
 
   def interactive(getItem: () => Option[WorldItem]): Unit = {
-    val startCount = getItem().map(WordCount.calculate(_, true)).getOrElse(0)
+    val startCount = getItem().map(WordCount.calculate(_, true, false)).getOrElse(0)
     println("Interactive Wordcount Mode")
     println("Enter to update; q to quit")
     val startTime = System.currentTimeMillis
@@ -40,7 +51,7 @@ object WordCount {
       val key = System.in.read()
       if (key != 13) {
         // ignore carriage returns
-        val curCount = getItem().map(WordCount.calculate(_, true)).getOrElse(0)
+        val curCount = getItem().map(WordCount.calculate(_, true, false)).getOrElse(0)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0 / 3600.0
         val wordChange = curCount - startCount
         val wordsPerHour = wordChange / totalTime

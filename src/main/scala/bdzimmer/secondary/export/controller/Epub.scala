@@ -33,22 +33,16 @@ object Epub {
       tags: Map[Int, Tags.ParsedTag],
       rt: RenderTags): (List[SectionInfo], Option[Tags.Image]) = {
 
-    val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
-
-    val matches = matcher.findAllMatchIn(book).map(m => (m.start, m.end, m.group(1))).toList
-
-    // use _._2 if we want to exclude the chapter headings from the contents
-    val allPositions = matches.map(_._1) ++ List(book.length)
-    val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
-    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
+    val (titles, chunks, chunkRanges) = splitSections(book)
 
     val contents = chunks.map({case (startIdx, chunk) => {
       val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
       rt.transform(chunk, tagsMod)
     }})
 
-    val sections = matches.map(_._3).zipWithIndex.zip(contents).map(x =>
-      SectionInfo(x._1._2.toString, x._1._1, page(x._1._1, x._2, x._1._2 > 1)))
+    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
+      SectionInfo(secNumber.toString, secTitle, page(secTitle, secContent, secNumber > 1))
+    }})
 
     // find all image tags
     val imageTags = tags.collect({case x: (Int, Tags.Image) => x})
@@ -66,6 +60,23 @@ object Epub {
       case None    => (sections, None)
     }
   }
+
+
+  def splitSections(book: String): (List[String], List[(Int, String)], List[(Int, Int)]) = {
+
+    val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
+
+    val matches = matcher.findAllMatchIn(book).map(m => (m.start, m.end, m.group(1))).toList
+
+    // use _._2 if we want to exclude the chapter headings from the contents
+    val allPositions = matches.map(_._1) ++ List(book.length)
+    val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
+    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
+    val titles = matches.map(_._3)
+
+    (titles, chunks, chunkRanges)
+  }
+
 
   def coverPage(imageFilename: String): String = {
     //s"""<body><img id="coverimage" src="$imageFilename" alt="cover image" /></body>"""

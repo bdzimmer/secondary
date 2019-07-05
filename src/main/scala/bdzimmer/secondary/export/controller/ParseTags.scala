@@ -201,7 +201,8 @@ object ParseTags {
       case SecTags.WordCount => {
         stringToItem.get(tag.value).map(item => {
           val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
-          WordCount(item, recursive)
+          val sections = args.get("sections").map(_.toBooleanSafe).getOrElse(false)
+          WordCount(item, recursive, sections)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
@@ -227,10 +228,11 @@ object ParseTags {
         Snip(tag.value, args.getOrElse("paragraphs", "1").toIntSafe(1))
       }
 
-      case SecTags.Quote => {
-        stringToItem.get(tag.value).map(item => {
-          Quote(item, args.getOrElse("id", ""))
-        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+      case SecTags.Quote => for {
+        item <- stringToItem.getOrElse(
+          tag.value, ParseError(tag, s"item '${tag.value}' does not exist"))
+      } yield {
+        Quote(item, args.getOrElse("id", ""))
       }
 
       case SecTags.Index => {

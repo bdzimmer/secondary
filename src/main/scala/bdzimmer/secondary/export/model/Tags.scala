@@ -193,7 +193,8 @@ object Tags {
 
   case class WordCount(
     item: WorldItem,
-    recursive: Boolean
+    recursive: Boolean,
+    sections: Boolean
   ) extends ParsedTag
 
   case class BurnDown(
