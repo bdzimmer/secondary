@@ -17,6 +17,7 @@ import bdzimmer.util.StringUtils._
 import bdzimmer.secondary.export.model.{Tags, WorldItems}
 import bdzimmer.secondary.export.model.Tags.ParsedTag
 import bdzimmer.secondary.export.model.WorldItems.BookItem
+import bdzimmer.secondary.export.view.Styles
 
 
 object Epub {
@@ -37,9 +38,9 @@ object Epub {
     val matches = matcher.findAllMatchIn(book).map(m => (m.start, m.end, m.group(1))).toList
 
     // use _._2 if we want to exclude the chapter headings from the contents
-    val allPositions = matches.map(_._1) ++ List(book.length - 1)
+    val allPositions = matches.map(_._1) ++ List(book.length)
     val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
-    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2 - 1)))
+    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
 
     val contents = chunks.map({case (startIdx, chunk) => {
       val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
@@ -47,7 +48,7 @@ object Epub {
     }})
 
     val sections = matches.map(_._3).zipWithIndex.zip(contents).map(x =>
-      SectionInfo(x._1._2.toString, x._1._1, page(x._1._1, x._2)))
+      SectionInfo(x._1._2.toString, x._1._1, page(x._1._1, x._2, x._1._2 > 1)))
 
     // find all image tags
     val imageTags = tags.collect({case x: (Int, Tags.Image) => x})
@@ -69,10 +70,17 @@ object Epub {
   def coverPage(imageFilename: String): String = {
     //s"""<body><img id="coverimage" src="$imageFilename" alt="cover image" /></body>"""
     val imageTag = s"""<img id="coverimage" src="$imageFilename" alt="cover image" />"""
-    page("Cover", imageTag)
+    page("Cover", imageTag, false)
   }
 
-  def page(title: String, content: String): String = {
+  def page(title: String, content: String, chapter: Boolean): String = {
+
+    val chapterStyle = if (chapter) {
+      s"<style>${Styles.BookStyle}</style>"
+    } else {
+      ""
+    }
+
 s"""
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -80,6 +88,7 @@ s"""
     <head>
       <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
       <title>$title</title>
+      $chapterStyle
     </head>
     <body>
       $content

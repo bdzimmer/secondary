@@ -27,9 +27,10 @@ case class FlightParams(
 
 
 class RenderTags(
-  val stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
-  val characters: List[CharacterItem],
-  disableTrees: Boolean = false) {
+    val stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+    val characters: List[CharacterItem],
+    disableTrees: Boolean,
+    ebookMode: Boolean) {
 
   // transform markdown text with special tags to HTML
   def transform(text: String, tags: Map[Int, Tags.ParsedTag]): String = {
@@ -94,7 +95,7 @@ class RenderTags(
       } else {
         tree.root match {
           case character: CharacterItem => {
-            val safeRender = new RenderTags(stringToTags, characters, true)
+            val safeRender = new RenderTags(stringToTags, characters, true, ebookMode)
             val result = FamilyTree.TreeStyles + FamilyTree.getJs(
                 character, characters, safeRender)
             result
@@ -197,15 +198,7 @@ class RenderTags(
     case x: Tags.Anchor => Html.anchor(x.desc, x.id)
 
     case x: Tags.Sidenote => {
-      // rendering sidenotes is handled at a higher level
-      /*
-      "</div>" +
-      Bootstrap.column(
-        Bootstrap.Column3,
-        body = s"""<p class="sidenote">${x.desc}</p>""") +
-      Bootstrap.columnOpen(Bootstrap.Column9)
-      */
-      if (x.id.equals("")) {
+      if (ebookMode || x.id.equals("")) {
         ""
       } else {
         s"""<sup>${x.id}</sup>"""
