@@ -228,11 +228,10 @@ object ParseTags {
         Snip(tag.value, args.getOrElse("paragraphs", "1").toIntSafe(1))
       }
 
-      case SecTags.Quote => for {
-        item <- stringToItem.getOrElse(
-          tag.value, ParseError(tag, s"item '${tag.value}' does not exist"))
-      } yield {
-        Quote(item, args.getOrElse("id", ""))
+      case SecTags.Quote => {
+        stringToItem.get(tag.value).map(item => {
+          Quote(item, args.getOrElse("id", ""))
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
       case SecTags.Index => {
