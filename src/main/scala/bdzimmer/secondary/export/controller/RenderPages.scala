@@ -264,7 +264,7 @@ class RenderPages(
             s"""<p class="sidenote">${id}${tag.desc}</p>"""
           }).mkString("\n")
         }
-        // TODO: probably want to np.transform the sidenoteBody as well
+        // TODO: properly transform markdown in sidenotes
         column(Column9, np.transform(chunk, tagsMod)) + column(Column3, sidenoteBody)
       }}).mkString("\n") + column(Column12, refItems(item))
     } + (item match {

@@ -210,6 +210,26 @@ class RenderTags(
       }
     }
 
+    case x: Tags.Footnotes => {
+
+      val pp = Markdown.getPegDown
+
+      // Convert sidenotes to footnotes list
+      val tags = stringToTags.getOrElse(x.item.id, List())
+      val sidenotes = tags
+          .filter(x => x._2.isInstanceOf[Tags.Sidenote])
+          .collect({case y: (Int, Tags.Sidenote) => y})
+          .toList
+          .sortBy(_._2.id)
+
+      // TODO: remote extra paragraph tags
+
+      Html.listGroup(
+        sidenotes.map(x =>
+          Html.listItem(x._2.id + ". " + pp.markdownToHtml(x._2.desc))))
+
+    }
+
     case x: Tags.Snip => Html.anchor("", x.id) // TODO: is it ok for span to be empty?
 
     case x: Tags.Quote => {

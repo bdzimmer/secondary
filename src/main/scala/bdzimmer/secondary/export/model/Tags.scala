@@ -51,6 +51,7 @@ object SecTags {
   val Stats = "stats"
 
   val Sidenote = "sidenote"
+  val Footnotes = "footnotes"
   val Snip = "snip"
   val Quote = "quote"
 
@@ -232,6 +233,10 @@ object Tags {
   case class Sidenote(
     desc: String,
     id: String
+  ) extends ParsedTag
+
+  case class Footnotes(
+    item: WorldItem
   ) extends ParsedTag
 
   case class Snip(
