@@ -136,7 +136,9 @@ class RenderTags(
 
     case sp: Tags.SpacecraftProperty => genShow(sp.kind.capitalize, sp.value + " " + sp.unit)
 
-    case task: Tags.Task => genShow(task.kind.capitalize, task.desc)
+    case task: Tags.Task => genShow(
+      task.kind.capitalize,
+      Html.anchor(task.desc, task.hashCode.toString))
 
     case x: Tags.Ancestor   => genLink(x.kind.capitalize, x.character)
     case x: Tags.Descendant => genLink(x.kind.capitalize, x.character)
@@ -215,17 +217,23 @@ class RenderTags(
       // Convert sidenotes to footnotes list
       val tags = stringToTags.getOrElse(x.item.id, List())
       val sidenotes = tags
-          .filter(y => y._2.isInstanceOf[Tags.Sidenote])
-          .collect({case y: (Int, Tags.Sidenote) => y})
+          // .filter(y => y._2.isInstanceOf[Tags.Sidenote])
+          // .collect({case y: (Int, Tags.Sidenote) => y})
           .toList
           // .sortBy(y => scala.util.Try({y._2.id.toDouble}).toOption.getOrElse(0.0))
           .sortBy(_._1)
 
       Html.listGroup(
-        sidenotes.map({case (_, tag) =>
-          Html.listItem(
+        sidenotes.flatMap({case (_, y) => y match {
+          case tag: Tags.Sidenote => Some(
             Html.link(tag.id, RenderPages.itemPageName(x.item) + "#" + tag.id) + ". " +
-            Markdown.processLine(tag.desc))}))
+            Markdown.processLine(tag.desc))
+          case tag: Tags.Task => Some(
+            Html.link(tag.kind, RenderPages.itemPageName(x.item) + "#" + tag.hashCode) + ": " +
+              Markdown.processLine(tag.desc))
+          case _ => None
+        }}).map(y => Html.listItem(y, ""))
+      )
     }
 
     case x: Tags.Snip => Html.anchor("", x.id) // TODO: is it ok for span to be empty?
