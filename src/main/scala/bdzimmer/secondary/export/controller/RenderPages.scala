@@ -261,7 +261,8 @@ class RenderPages(
             } else {
               tag.id + ". "
             }
-            s"""<p class="sidenote">${id}${tag.desc}</p>"""
+            val descTransformed = Markdown.processLine(tag.desc)
+            s"""<p class="sidenote">$id$descTransformed</p>"""
           }).mkString("\n")
         }
         // TODO: properly transform markdown in sidenotes

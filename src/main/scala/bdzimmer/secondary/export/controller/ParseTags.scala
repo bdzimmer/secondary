@@ -23,22 +23,27 @@ object ExtractRawTags {
   // generate a tag from text
   def getTag(tagText: String): RawTag = {
 
-    tagText.split(":\\s+").toList match {
-      case kind :: text :: extra => text.split("\\s*\\|\\s*").toList match {
+    val idx = tagText.indexOf(":")
+
+    if (idx > -1) {
+      val kind = tagText.substring(0, idx)
+      val text = tagText.substring(idx + 1).trim()
+      text.split("\\s*\\|\\s*").toList match {
         case value :: args => RawTag(kind.toLowerCase, value, args)
         case _ => RawTag(kind.toLowerCase, text, List())
       }
-      case _ => RawTag("link", tagText, List())
+    } else {
+      RawTag("link", tagText, List())
     }
 
   }
 
 
   def parseArgs(args: List[String]): Map[String, String] = {
-    args.map(x => x.split("=").toList match {
+    args.flatMap(x => x.split("=").toList match {
       case fst :: snd :: xs => Some((fst, snd))
       case _ => None
-    }).flatten.toMap
+    }).toMap
   }
 
 }

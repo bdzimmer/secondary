@@ -206,28 +206,26 @@ class RenderTags(
       if (ebookMode || x.id.equals("")) {
         ""
       } else {
-        s"""<sup>${x.id}</sup>"""
+        s"""<sup>${x.id}</sup>""" + Html.anchor("", x.id)
       }
     }
 
     case x: Tags.Footnotes => {
 
-      val pp = Markdown.getPegDown
-
       // Convert sidenotes to footnotes list
       val tags = stringToTags.getOrElse(x.item.id, List())
       val sidenotes = tags
-          .filter(x => x._2.isInstanceOf[Tags.Sidenote])
+          .filter(y => y._2.isInstanceOf[Tags.Sidenote])
           .collect({case y: (Int, Tags.Sidenote) => y})
           .toList
-          .sortBy(_._2.id)
-
-      // TODO: remote extra paragraph tags
+          // .sortBy(y => scala.util.Try({y._2.id.toDouble}).toOption.getOrElse(0.0))
+          .sortBy(_._1)
 
       Html.listGroup(
-        sidenotes.map(x =>
-          Html.listItem(x._2.id + ". " + pp.markdownToHtml(x._2.desc))))
-
+        sidenotes.map({case (_, tag) =>
+          Html.listItem(
+            Html.link(tag.id, RenderPages.itemPageName(x.item) + "#" + tag.id) + ". " +
+            Markdown.processLine(tag.desc))}))
     }
 
     case x: Tags.Snip => Html.anchor("", x.id) // TODO: is it ok for span to be empty?
