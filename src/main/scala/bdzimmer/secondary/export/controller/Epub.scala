@@ -41,7 +41,7 @@ object Epub {
     }})
 
     val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
-      SectionInfo(secNumber.toString, secTitle, page(secTitle, secContent, secNumber > 1))
+      SectionInfo("section" + secNumber.toString, secTitle, page(secTitle, secContent, secNumber > 1))
     }})
 
     // find all image tags
