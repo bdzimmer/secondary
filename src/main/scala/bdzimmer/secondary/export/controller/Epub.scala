@@ -141,19 +141,24 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
 
     // format contents of content.opf file
 
-    // assumes cover image is png
+    val cover = if (coverImageFilename.isDefined) {
+      "<meta name=\"cover\" content=\"cover-image\"/>"
+    } else {
+      ""
+    }
 
     val manifestItems = sections.map(section => {
       s"""<item id="${section.id}" href="${section.id}.xhtml" media-type="application/xhtml+xml"/>"""
     }) ++ coverImageFilename.map(x => {
+      // assumes cover image is png
       s"""<item id="cover-image" href="$x" media-type="image/png"/>"""
     }).toList
 
     val manifest =
-      "<manifest>" +
-        manifestItems.mkString("") +
+      "<manifest>\n" +
+        manifestItems.mkString("\n") +
       """<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>""" +
-      "</manifest>"
+      "\n</manifest>"
 
     val spineItems = sections.map(section => {
       s"""<itemref idref="${section.id}" />"""
@@ -172,6 +177,7 @@ s"""<?xml version="1.0"?>
     <dc:language>en</dc:language>
     <dc:identifier id="$uniqueIdentifier" opf:scheme="NotISBN">$uniqueIdentifier</dc:identifier>
     <dc:creator opf:file-as="$lastname, $firstname" opf:role="aut">$firstname $lastname</dc:creator>
+    $cover
   </metadata>
 
   $manifest
@@ -188,8 +194,7 @@ s"""<?xml version="1.0"?>
     title: String,
     firstname: String,
     lastname: String,
-    sections: Seq[SectionInfo],
-    hasCover: Boolean): String = {
+    sections: Seq[SectionInfo]): String = {
 
     // format contents of toc.ncx file"""
 
@@ -205,11 +210,6 @@ s"""<?xml version="1.0"?>
         navmapItems.mkString("") +
         "</navMap>"
 
-    val cover = if (hasCover) {
-      "<meta name=\"cover\" content=\"cover-image\"/>"
-    } else {
-      ""
-    }
 
 s"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN"
@@ -225,7 +225,6 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     <meta name="dtb:depth" content="1"/> <!-- 1 or higher -->
     <meta name="dtb:totalPageCount" content="0"/> <!-- must be 0 -->
     <meta name="dtb:maxPageNumber" content="0"/> <!-- must be 0 -->
-    $cover
   </head>
 
   <docTitle>
@@ -260,6 +259,9 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     val (firstname, lastname) = Epub.authorNameParts(book.authorname)
 
     // cover page becomes new first section if cover image exists
+    // WIP: experimenting with disabling cover page; I think it causes a duplicate cover on KDP
+    // But it might be necessary to enable for Kobo.
+
     val cover = coverImageTag.map(
       x => Epub.SectionInfo("cover", "Cover", Epub.coverPage(RenderImages.itemImagePath(x.item))))
 
@@ -269,7 +271,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       title,
       firstname,
       lastname,
-      cover.toList ++ titlePage.toList ++ contentSections,
+      // cover.toList ++ titlePage.toList ++ contentSections,
+      titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       localExportPath)
     filename
@@ -299,8 +302,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       title,
       firstname,
       lastname,
-      sections,
-      coverImageFilename.isDefined)
+      sections)
 
     val fout = new FileOutputStream(outputFilename)
     val bout = new BufferedOutputStream(fout)
