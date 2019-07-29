@@ -4,16 +4,35 @@
 
 package bdzimmer.secondary.export.controller
 
+import bdzimmer.secondary.export.model.WorldItems.WorldItem
+import bdzimmer.secondary.export.model.Tags.ParsedTag
+
 
 object Basic {
 
+    def export(
+        filename: String,
+        item: WorldItem,
+        tags: Map[Int, ParsedTag],
+        renderTags: RenderTags,
+        localExportPath: String): Unit = {
 
+      val body = renderTags.transform(item.notes, tags)
 
-    def convert(): String = {
+      val contents = (
+s"""<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>${item.name}</title>
+  </head>
+  <body>
+    ${body}
+  </body>
+</html>""")
 
-      // TODO: additional formatting
-
-      ""
+      val fileWriter = new java.io.FileWriter(filename, false)
+      fileWriter.write(contents)
+      fileWriter.close()
     }
 
 }

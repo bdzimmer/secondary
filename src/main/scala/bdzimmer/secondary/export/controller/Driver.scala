@@ -77,7 +77,25 @@ class Driver {
 
   // run a command
   private def runCommand(command: String, args: List[String]): Unit = command match {
-    case DriverCommands.Browse      => browseLocal()
+    case DriverCommands.Browse => browseLocal()
+    case DriverCommands.Basic => {
+      val startTime = System.currentTimeMillis
+      val res = for {
+        stuff <- getRenderStuff()
+        (stringToItem, rt) = stuff
+        itemId = args.mkString(" ")
+        item <- Result.fromOption(
+          stringToItem.get(itemId),
+          "invalid item name or id '" + itemId + "'")
+      } yield {
+        val tags = item.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
+        val filename = item.id + ".htm"
+        Basic.export(filename, item, tags, rt, projConf.localExportPath)
+        val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+        println("exported " + filename + " in " + totalTime + " sec")
+      }
+      res.mapLeft(msg => println(msg))
+    }
     case DriverCommands.Configure => {
       val prop = ProjectConfig.getProperties(projConf.projectDir)
       new ConfigurationGUI(
@@ -119,15 +137,8 @@ class Driver {
     case DriverCommands.Epub => {
       val startTime = System.currentTimeMillis
       val res = for {
-        master <- WorldLoader.loadWorld(projConf)
-        world = WorldItems.collectionToList(master)
-        stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-        stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
-        rt = new RenderTags(
-          stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }),
-          disableTrees = true,
-          ebookMode = true
-        )
+        stuff <- getRenderStuff()
+        (stringToItem, rt) = stuff
         itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
@@ -136,7 +147,8 @@ class Driver {
           Try(item.asInstanceOf[WorldItems.BookItem])).mapLeft(_ => "'" + itemId + "' not a book")
       } yield {
         val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-        val filename = Epub.export(book, tags, rt, projConf.localExportPath)
+        val filename = book.id + ".epub"
+        Epub.export(filename, book, tags, rt, projConf.localExportPath)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0
         println("exported " + filename + " in " + totalTime + " sec")
       }
@@ -236,6 +248,24 @@ class Driver {
   }
 
 
+  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags)] = {
+    for {
+      master <- WorldLoader.loadWorld(projConf)
+      world = WorldItems.collectionToList(master)
+      stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
+      stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+      rt = new RenderTags(
+        stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }),
+        disableTrees = true,
+        ebookMode = true
+      )
+    } yield {
+      (stringToItem, rt)
+    }
+
+  }
+
+
   // browse to the local copy of the project website
   private def browseLocal(): Unit = {
     val filename = projConf.projectDir / ProjectStructure.WebDir / "index.html"
@@ -283,7 +313,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2019.07.14"
+  val Title = "Secondary - create worlds from text - v2019.07.28"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 
@@ -324,6 +354,7 @@ object Driver {
 
 object DriverCommands {
 
+  val Basic       = "basic"
   val Browse      = "browse"
   val Configure   = "configure"
   val Duplicate   = "duplicate"
@@ -342,6 +373,7 @@ object DriverCommands {
   val Help        = "help"
 
   val CommandsDescriptions = List(
+      (Basic,       "export an item to basic HTML"),
       (Browse,      "browse exported project web site"),
       (Configure,   "edit project configuration"),
       (Duplicate,   "detect duplicate words"),

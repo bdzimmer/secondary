@@ -45,7 +45,7 @@ object Epub {
     }})
 
     // find all image tags
-    val imageTags = tags.collect({case x: (Int, Tags.Image) => x})
+    val imageTags = tags.filter(x => x._2.isInstanceOf[Tags.Image]).collect({case x: (Int, Tags.Image) => x})
 
     // first image tag in first section is cover image
     val image = for {
@@ -243,10 +243,11 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
   }
 
   def export(
+      filename: String,
       book: BookItem,
       tags: Map[Int, ParsedTag],
       renderTags: RenderTags,
-      localExportPath: String): String = {
+      localExportPath: String): Unit = {
 
     val (sections, coverImageTag) = Epub.sections(book.notes, tags, renderTags)
     // title is name of first section
@@ -255,7 +256,6 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     // replace empty section names with "Content"
     val contentSections = sections.tail.map(x => if (x.name.equals("---")) x.copy(name="Content") else x)
 
-    val filename = book.id + ".epub"
     val (firstname, lastname) = Epub.authorNameParts(book.authorname)
 
     // cover page becomes new first section if cover image exists
@@ -275,7 +275,6 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       localExportPath)
-    filename
   }
 
 
