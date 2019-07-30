@@ -41,7 +41,7 @@ object Epub {
     }})
 
     val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
-      SectionInfo("section" + secNumber.toString, secTitle, page(secTitle, secContent, secNumber > 1))
+      SectionInfo("section" + secNumber.toString, secTitle, secContent)
     }})
 
     // find all image tags
@@ -288,6 +288,9 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       coverImageFilename: Option[String],
       imageDirname: String): Unit = {
 
+    // expects the first page to be the title page
+    // and remaining pages prose
+
     val contentOpf = formatContentOpf(
       uniqueIdentifier,
       title,
@@ -330,11 +333,13 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     IOUtils.write(tocNcx, zout, "UTF-8")
     zout.closeEntry()
 
-    for (section <- sections) {
+    sections.zipWithIndex.foreach({case (section, idx) => {
       zout.putNextEntry(new ZipEntry("OEBPS/" + section.id + ".xhtml"))
-      IOUtils.write(section.content, zout, "UTF-8")
+      IOUtils.write(
+        page(section.name, section.content, idx > 0),
+        zout, "UTF-8")
       zout.closeEntry()
-    }
+    }})
 
     // cover image
     coverImageFilename.foreach(x => {

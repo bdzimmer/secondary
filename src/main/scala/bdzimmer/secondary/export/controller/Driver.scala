@@ -90,7 +90,7 @@ class Driver {
       } yield {
         val tags = item.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
         val filename = item.id + ".htm"
-        Basic.export(filename, item, tags, rt, projConf.localExportPath)
+        Basic.export(filename, item.notes, item.name, tags, rt, projConf.localExportPath)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0
         println("exported " + filename + " in " + totalTime + " sec")
       }

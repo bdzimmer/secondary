@@ -4,7 +4,6 @@
 
 package bdzimmer.secondary.export.controller
 
-import bdzimmer.secondary.export.model.WorldItems.WorldItem
 import bdzimmer.secondary.export.model.Tags.ParsedTag
 
 
@@ -12,18 +11,26 @@ object Basic {
 
     def export(
         filename: String,
-        item: WorldItem,
+        notes: String,
+        title: String,
         tags: Map[Int, ParsedTag],
         renderTags: RenderTags,
         localExportPath: String): Unit = {
 
-      val body = renderTags.transform(item.notes, tags)
+      // get sections and ignore potential cover image
+      val (sections, _) = Epub.sections(notes, tags, renderTags)
+
+      // assume that the first section that comes back from sections
+      // is the title page and toss it
+      // TODO: detect whether there is a title page
+
+      val body = sections.tail.map(_.content).mkString("\n")
 
       val contents = (
 s"""<!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>${item.name}</title>
+    <title>${title}</title>
   </head>
   <body>
     ${body}
