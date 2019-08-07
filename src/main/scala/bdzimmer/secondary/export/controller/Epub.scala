@@ -87,7 +87,7 @@ object Epub {
   def page(title: String, content: String, chapter: Boolean): String = {
 
     val chapterStyle = if (chapter) {
-      s"<style>${Styles.BookStyle}</style>"
+      s"""<style type="text/css">${Styles.BookStyle}</style>"""
     } else {
       ""
     }

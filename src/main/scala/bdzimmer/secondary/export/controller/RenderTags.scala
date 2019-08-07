@@ -49,7 +49,7 @@ class RenderTags(
       Regex.quoteReplacement(render(tag))
     })
 
-    val pp = Markdown.getPegDown
+    val pp = Markdown.getPegDown(ebookMode)
     pp.markdownToHtml(updatedText)
   }
 
@@ -236,7 +236,11 @@ class RenderTags(
       )
     }
 
-    case x: Tags.Snip => Html.anchor("", x.id) // TODO: is it ok for span to be empty?
+    case x: Tags.Snip => if (!ebookMode) {
+      Html.anchor("", x.id)
+    } else {
+      ""
+    }
 
     case x: Tags.Quote => {
       // TODO: snip or quote multiple paragraphs
