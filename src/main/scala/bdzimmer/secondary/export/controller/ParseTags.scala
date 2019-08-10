@@ -11,7 +11,9 @@ object ExtractRawTags {
 
   import bdzimmer.secondary.export.model.Tags.RawTag
 
-  val matcher = "\\{\\{(.*?)\\}\\}".r
+  // val matcher = "\\{\\{(.*?)\\}\\}".r  // original matcher
+  val matcher = "(?s)\\{\\{(.*?)\\}\\}".r  // new multi-line capable matcher
+
 
   def getAllTags(text: String): Map[Int, RawTag] = {
     matcher.findAllMatchIn(text).map(m => {
