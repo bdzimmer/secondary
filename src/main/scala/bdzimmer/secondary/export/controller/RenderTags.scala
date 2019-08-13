@@ -49,7 +49,7 @@ class RenderTags(
       Regex.quoteReplacement(render(tag))
     })
 
-    val pp = Markdown.getPegDown
+    val pp = Markdown.getPegDown(ebookMode)
     pp.markdownToHtml(updatedText)
   }
 
@@ -136,7 +136,9 @@ class RenderTags(
 
     case sp: Tags.SpacecraftProperty => genShow(sp.kind.capitalize, sp.value + " " + sp.unit)
 
-    case task: Tags.Task => genShow(task.kind.capitalize, task.desc)
+    case task: Tags.Task => genShow(
+      task.kind.capitalize,
+      Html.anchor(task.desc, task.hashCode.toString))
 
     case x: Tags.Ancestor   => genLink(x.kind.capitalize, x.character)
     case x: Tags.Descendant => genLink(x.kind.capitalize, x.character)
@@ -178,7 +180,12 @@ class RenderTags(
 
     }
 
-    case x: Tags.WordCount => WordCount.calculate(x.item, x.recursive).toString
+    case x: Tags.WordCount => if (x.sections) {
+      val sectionCounts = WordCount.calculateSections(x.item)
+      Html.listGroup(sectionCounts.map(x => Html.listItem(x._1 + ": " + x._2.toString)))
+    } else {
+      WordCount.calculate(x.item, x.recursive, x.sections).toString
+    }
 
     case x: Tags.BurnDown => {
       val items = x.recursive match {
@@ -201,11 +208,39 @@ class RenderTags(
       if (ebookMode || x.id.equals("")) {
         ""
       } else {
-        s"""<sup>${x.id}</sup>"""
+        s"""<sup>${x.id}</sup>""" + Html.anchor("", x.id)
       }
     }
 
-    case x: Tags.Snip => Html.anchor("", x.id) // TODO: is it ok for span to be empty?
+    case x: Tags.Footnotes => {
+
+      // Convert sidenotes to footnotes list
+      val tags = stringToTags.getOrElse(x.item.id, List())
+      val sidenotes = tags
+          // .filter(y => y._2.isInstanceOf[Tags.Sidenote])
+          // .collect({case y: (Int, Tags.Sidenote) => y})
+          .toList
+          // .sortBy(y => scala.util.Try({y._2.id.toDouble}).toOption.getOrElse(0.0))
+          .sortBy(_._1)
+
+      Html.listGroup(
+        sidenotes.flatMap({case (_, y) => y match {
+          case tag: Tags.Sidenote => Some(
+            Html.link(tag.id, RenderPages.itemPageName(x.item) + "#" + tag.id) + ". " +
+            Markdown.processLine(tag.desc))
+          case tag: Tags.Task => Some(
+            Html.link(tag.kind, RenderPages.itemPageName(x.item) + "#" + tag.hashCode) + ": " +
+              Markdown.processLine(tag.desc))
+          case _ => None
+        }}).map(y => Html.listItem(y, ""))
+      )
+    }
+
+    case x: Tags.Snip => if (!ebookMode) {
+      Html.anchor("", x.id)
+    } else {
+      ""
+    }
 
     case x: Tags.Quote => {
       // TODO: snip or quote multiple paragraphs

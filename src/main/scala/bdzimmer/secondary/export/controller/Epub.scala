@@ -33,25 +33,19 @@ object Epub {
       tags: Map[Int, Tags.ParsedTag],
       rt: RenderTags): (List[SectionInfo], Option[Tags.Image]) = {
 
-    val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
-
-    val matches = matcher.findAllMatchIn(book).map(m => (m.start, m.end, m.group(1))).toList
-
-    // use _._2 if we want to exclude the chapter headings from the contents
-    val allPositions = matches.map(_._1) ++ List(book.length)
-    val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
-    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
+    val (titles, chunks, chunkRanges) = splitSections(book)
 
     val contents = chunks.map({case (startIdx, chunk) => {
       val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
       rt.transform(chunk, tagsMod)
     }})
 
-    val sections = matches.map(_._3).zipWithIndex.zip(contents).map(x =>
-      SectionInfo(x._1._2.toString, x._1._1, page(x._1._1, x._2, x._1._2 > 1)))
+    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
+      SectionInfo("section" + secNumber.toString, secTitle, secContent)
+    }})
 
     // find all image tags
-    val imageTags = tags.collect({case x: (Int, Tags.Image) => x})
+    val imageTags = tags.filter(x => x._2.isInstanceOf[Tags.Image]).collect({case x: (Int, Tags.Image) => x})
 
     // first image tag in first section is cover image
     val image = for {
@@ -67,6 +61,23 @@ object Epub {
     }
   }
 
+
+  def splitSections(book: String): (List[String], List[(Int, String)], List[(Int, Int)]) = {
+
+    val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
+
+    val matches = matcher.findAllMatchIn(book).map(m => (m.start, m.end, m.group(1))).toList
+
+    // use _._2 if we want to exclude the chapter headings from the contents
+    val allPositions = matches.map(_._1) ++ List(book.length)
+    val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
+    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
+    val titles = matches.map(_._3)
+
+    (titles, chunks, chunkRanges)
+  }
+
+
   def coverPage(imageFilename: String): String = {
     //s"""<body><img id="coverimage" src="$imageFilename" alt="cover image" /></body>"""
     val imageTag = s"""<img id="coverimage" src="$imageFilename" alt="cover image" />"""
@@ -76,13 +87,12 @@ object Epub {
   def page(title: String, content: String, chapter: Boolean): String = {
 
     val chapterStyle = if (chapter) {
-      s"<style>${Styles.BookStyle}</style>"
+      s"""<style type="text/css">${Styles.BookStyle}</style>"""
     } else {
       ""
     }
 
-s"""
-<?xml version="1.0" encoding="UTF-8" ?>
+s"""<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
   <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     <head>
@@ -112,8 +122,7 @@ s"""
   val Mimetype = "application/epub+zip"
 
   val ContainerXml =
-"""
-<?xml version="1.0" encoding="UTF-8" ?>
+"""<?xml version="1.0" encoding="UTF-8" ?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
@@ -132,19 +141,24 @@ s"""
 
     // format contents of content.opf file
 
-    // assumes cover image is png
+    val cover = if (coverImageFilename.isDefined) {
+      "<meta name=\"cover\" content=\"cover-image\"/>"
+    } else {
+      ""
+    }
 
     val manifestItems = sections.map(section => {
       s"""<item id="${section.id}" href="${section.id}.xhtml" media-type="application/xhtml+xml"/>"""
     }) ++ coverImageFilename.map(x => {
+      // assumes cover image is png
       s"""<item id="cover-image" href="$x" media-type="image/png"/>"""
     }).toList
 
     val manifest =
-      "<manifest>" +
-        manifestItems.mkString("") +
+      "<manifest>\n" +
+        manifestItems.mkString("\n") +
       """<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>""" +
-      "</manifest>"
+      "\n</manifest>"
 
     val spineItems = sections.map(section => {
       s"""<itemref idref="${section.id}" />"""
@@ -155,8 +169,7 @@ s"""
       spineItems.mkString("") +
       """</spine>"""
 
-s"""
-<?xml version="1.0"?>
+s"""<?xml version="1.0"?>
 <package version="2.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="$uniqueIdentifier">
 
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
@@ -164,6 +177,7 @@ s"""
     <dc:language>en</dc:language>
     <dc:identifier id="$uniqueIdentifier" opf:scheme="NotISBN">$uniqueIdentifier</dc:identifier>
     <dc:creator opf:file-as="$lastname, $firstname" opf:role="aut">$firstname $lastname</dc:creator>
+    $cover
   </metadata>
 
   $manifest
@@ -180,8 +194,7 @@ s"""
     title: String,
     firstname: String,
     lastname: String,
-    sections: Seq[SectionInfo],
-    hasCover: Boolean): String = {
+    sections: Seq[SectionInfo]): String = {
 
     // format contents of toc.ncx file"""
 
@@ -197,14 +210,8 @@ s"""
         navmapItems.mkString("") +
         "</navMap>"
 
-    val cover = if (hasCover) {
-      "<meta name=\"cover\" content=\"cover-image\"/>"
-    } else {
-      ""
-    }
 
-    s"""
-<?xml version="1.0" encoding="UTF-8"?>
+s"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN"
 "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
 
@@ -218,7 +225,6 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     <meta name="dtb:depth" content="1"/> <!-- 1 or higher -->
     <meta name="dtb:totalPageCount" content="0"/> <!-- must be 0 -->
     <meta name="dtb:maxPageNumber" content="0"/> <!-- must be 0 -->
-    $cover
   </head>
 
   <docTitle>
@@ -237,10 +243,11 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
   }
 
   def export(
+      filename: String,
       book: BookItem,
       tags: Map[Int, ParsedTag],
       renderTags: RenderTags,
-      localExportPath: String): String = {
+      localExportPath: String): Unit = {
 
     val (sections, coverImageTag) = Epub.sections(book.notes, tags, renderTags)
     // title is name of first section
@@ -249,10 +256,12 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     // replace empty section names with "Content"
     val contentSections = sections.tail.map(x => if (x.name.equals("---")) x.copy(name="Content") else x)
 
-    val filename = book.id + ".epub"
     val (firstname, lastname) = Epub.authorNameParts(book.authorname)
 
     // cover page becomes new first section if cover image exists
+    // WIP: experimenting with disabling cover page; I think it causes a duplicate cover on KDP
+    // But it might be necessary to enable for Kobo.
+
     val cover = coverImageTag.map(
       x => Epub.SectionInfo("cover", "Cover", Epub.coverPage(RenderImages.itemImagePath(x.item))))
 
@@ -262,10 +271,10 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       title,
       firstname,
       lastname,
-      cover.toList ++ titlePage.toList ++ contentSections,
+      // cover.toList ++ titlePage.toList ++ contentSections,
+      titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       localExportPath)
-    filename
   }
 
 
@@ -278,6 +287,9 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String],
       imageDirname: String): Unit = {
+
+    // expects the first page to be the title page
+    // and remaining pages prose
 
     val contentOpf = formatContentOpf(
       uniqueIdentifier,
@@ -292,8 +304,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       title,
       firstname,
       lastname,
-      sections,
-      coverImageFilename.isDefined)
+      sections)
 
     val fout = new FileOutputStream(outputFilename)
     val bout = new BufferedOutputStream(fout)
@@ -322,11 +333,13 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     IOUtils.write(tocNcx, zout, "UTF-8")
     zout.closeEntry()
 
-    for (section <- sections) {
+    sections.zipWithIndex.foreach({case (section, idx) => {
       zout.putNextEntry(new ZipEntry("OEBPS/" + section.id + ".xhtml"))
-      IOUtils.write(section.content, zout, "UTF-8")
+      IOUtils.write(
+        page(section.name, section.content, idx > 0),
+        zout, "UTF-8")
       zout.closeEntry()
-    }
+    }})
 
     // cover image
     coverImageFilename.foreach(x => {

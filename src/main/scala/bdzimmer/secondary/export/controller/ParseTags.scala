@@ -11,7 +11,9 @@ object ExtractRawTags {
 
   import bdzimmer.secondary.export.model.Tags.RawTag
 
-  val matcher = "\\{\\{(.*?)\\}\\}".r
+  // val matcher = "\\{\\{(.*?)\\}\\}".r  // original matcher
+  val matcher = "(?s)\\{\\{(.*?)\\}\\}".r  // new multi-line capable matcher
+
 
   def getAllTags(text: String): Map[Int, RawTag] = {
     matcher.findAllMatchIn(text).map(m => {
@@ -23,22 +25,27 @@ object ExtractRawTags {
   // generate a tag from text
   def getTag(tagText: String): RawTag = {
 
-    tagText.split(":\\s+").toList match {
-      case kind :: text :: extra => text.split("\\s*\\|\\s*").toList match {
+    val idx = tagText.indexOf(":")
+
+    if (idx > -1) {
+      val kind = tagText.substring(0, idx)
+      val text = tagText.substring(idx + 1).trim()
+      text.split("\\s*\\|\\s*").toList match {
         case value :: args => RawTag(kind.toLowerCase, value, args)
         case _ => RawTag(kind.toLowerCase, text, List())
       }
-      case _ => RawTag("link", tagText, List())
+    } else {
+      RawTag("link", tagText, List())
     }
 
   }
 
 
   def parseArgs(args: List[String]): Map[String, String] = {
-    args.map(x => x.split("=").toList match {
+    args.flatMap(x => x.split("=").toList match {
       case fst :: snd :: xs => Some((fst, snd))
       case _ => None
-    }).flatten.toMap
+    }).toMap
   }
 
 }
@@ -201,7 +208,8 @@ object ParseTags {
       case SecTags.WordCount => {
         stringToItem.get(tag.value).map(item => {
           val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
-          WordCount(item, recursive)
+          val sections = args.get("sections").map(_.toBooleanSafe).getOrElse(false)
+          WordCount(item, recursive, sections)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
@@ -221,6 +229,12 @@ object ParseTags {
 
       case SecTags.Sidenote => {
         Sidenote(tag.value, args.getOrElse("id", ""))
+      }
+
+      case SecTags.Footnotes => {
+        stringToItem.get(tag.value).map(item => {
+          Footnotes(item)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
       case SecTags.Snip => {
