@@ -2,6 +2,7 @@
 
 package bdzimmer.secondary.export.controller
 
+import bdzimmer.orbits.ConstVelFlightFn
 import bdzimmer.secondary.export.model.{SecTags, Tags, WorldItems}
 import bdzimmer.secondary.export.view.Html
 
@@ -50,7 +51,38 @@ object Flight {
   }
 
 
-  def spacecraft(ship: WorldItems.WorldItem, stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
+  def flightParamsOrbits(fp: FlightParams): Option[bdzimmer.orbits.FlightParams] = {
+
+    val ship = if (fp.vel > ConstVelFlightFn.VelMin) {
+      bdzimmer.orbits.ConstVelCraft(fp.ship.name, fp.vel)
+    } else {
+      bdzimmer.orbits.ConstAccelCraft(fp.ship.name, fp.mass, fp.accel)
+    }
+
+    for {
+      orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.startLocation)
+      dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.endLocation)
+    } yield {
+      bdzimmer.orbits.FlightParams(
+        ship=ship,
+        origName=fp.startLocation,
+        destName=fp.endLocation,
+        orig=orig,
+        dest=dest,
+        startDate=fp.startDate,
+        endDate=fp.endDate,
+        passengers=fp.passengers.map(_.name),
+        faction=fp.faction,
+        description="")
+    }
+
+  }
+
+
+
+  def spacecraft(
+      ship: WorldItems.WorldItem,
+      stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
 
     // TODO: handle specification of different units
 
@@ -84,6 +116,17 @@ object Flight {
     (mass, accel, vel)
 
   }
+
+
+  def epoch(
+      item: WorldItems.WorldItem,
+      stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): Option[Tags.FlightEpoch] = {
+
+    stringToTags.get(item.id).flatMap(_.values.collectFirst({case x: Tags.FlightEpoch => x}))
+
+  }
+
+
 
 
   private def genShow(fst: String, snd: String): String = {

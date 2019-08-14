@@ -127,12 +127,21 @@ class RenderTags(
       tr.getHtml(timeline.root, timeline.format)
     }
 
+    case event: Tags.EventTag => genShow(event.date, event.desc)
+
     case flight: Tags.Flight => {
       val fp = Flight.flightParams(flight, stringToTags)
       Flight.render(fp, RenderImages.tagImagePath(flight))
     }
 
-    case event: Tags.EventTag => genShow(event.date, event.desc)
+    case x: Tags.FlightEpoch => {
+      Html.b(x.name + ":") + " " + x.startDate.dateTimeString + " - " + x.endDate.dateTimeString
+    }
+
+    case x: Tags.FlightAnimation => {
+      // TODO: embed rendered video?
+      x.epoch + RenderPages.glyphLinkPage(x.item)
+    }
 
     case sp: Tags.SpacecraftProperty => genShow(sp.kind.capitalize, sp.value + " " + sp.unit)
 

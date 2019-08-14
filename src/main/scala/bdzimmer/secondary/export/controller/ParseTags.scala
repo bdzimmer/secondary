@@ -178,18 +178,20 @@ object ParseTags {
           Editor.CameraSettingsDefault.zPos)
         val intDefault = 1.0 / 24.0
 
-        val name = tag.value
-        val epoch = args.getOrElse("epoch", "default")
-        val camPos = args.get("camPos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
-        val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
-        val interval = args.get("interval").map(_.toDoubleSafe(intDefault)).getOrElse(intDefault)  // one hour
-        val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(Editor.Damping)
-        val visible = args.getOrElse("visible", "").split(";\\s+").toList
+        stringToItem.get(tag.value).map(item => {
+          val epoch = args.getOrElse("epoch", "default")
+          val camPos = args.get("campos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
+          val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(Editor.CameraSettingsDefault.zViewPos)
+          val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
+          val interval = args.get("interval").map(_.toDoubleSafe(intDefault)).getOrElse(intDefault)  // one hour
+          val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(Editor.Damping)
+          val visible = args.getOrElse("visible", "").split(";\\s+").toList
 
-        FlightAnimation(
-          name, epoch,
-          AnimationSettings(camPos, fps, interval, damping),
-          visible)
+          FlightAnimation(
+            item, epoch,
+            AnimationSettings(camPos, zViewPos, fps, interval, damping),
+            visible)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
 
       }
 

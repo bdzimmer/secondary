@@ -201,6 +201,8 @@ class Driver {
             }
           }).toMap
 
+          // TODO: use logic from secondary - Flight module
+
           // a flight will not appear if the ship, orig, or destination is invalid
           val orbitsFlights = for {
             x <- flights

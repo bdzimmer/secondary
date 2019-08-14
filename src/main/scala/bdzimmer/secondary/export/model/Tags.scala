@@ -153,7 +153,7 @@ object Tags {
 
   // obviously WIP
   case class FlightAnimation(
-    name: String,
+    item: WorldItem,
     epoch: String,
     settings: AnimationSettings,
     visible: List[String]

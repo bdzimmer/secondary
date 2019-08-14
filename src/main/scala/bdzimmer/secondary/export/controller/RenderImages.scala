@@ -2,25 +2,22 @@
 
 package bdzimmer.secondary.export.controller
 
-import java.awt.RenderingHints          // scalastyle:ignore illegal.imports
-import java.awt.image.BufferedImage     // scalastyle:ignore illegal.imports
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
 import java.io.File
 
 import javax.imageio.ImageIO
-
 import org.apache.commons.io.{FileUtils, FilenameUtils}
-
 import bdzimmer.pixeleditor.model.{ContentStructure, TileAttributes, TileOptions}
 import bdzimmer.pixeleditor.model.Color
 import bdzimmer.pixeleditor.controller.OldTilesetLoader
-
 import bdzimmer.secondary.export.model.Tags
 import bdzimmer.secondary.export.model.WorldItems._
 import bdzimmer.secondary.export.view.Markdown
 import bdzimmer.secondary.export.view.Html._
-
-import bdzimmer.orbits.{RenderFlight, MeeusPlanets, ConstAccelCraft, ConstVelCraft, ConstVelFlightFn}
-
+import bdzimmer.orbits.{
+  Animation, CalendarDateTime, ConstAccelCraft, ConstVelCraft, ConstVelFlightFn,
+  Editor, IO, MeeusPlanets, RenderFlight}
 import bdzimmer.util.StringUtils._
 
 
@@ -142,17 +139,48 @@ class RenderImages(
 
     val src = tripItem.srcfilename
 
-    // val flightParams = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
-    //   case x: Tags.Flight => Flight.flightParams(x, stringToTags)
-    // }).toList
-
     // sort the flight tags by the order they appear in the item
-    val flightTags = stringToTags.getOrElse(tripItem.id, Map()).toList.sortBy(x => x._1).map(_._2).collect({
-      case x: Tags.Flight => x
+    val tags = stringToTags.getOrElse(tripItem.id, Map()).toList.sortBy(x => x._1).map(_._2)
+
+    val flightTags = tags.collect({case x: Tags.Flight => x})
+    val animationTags = tags.collect({case x: Tags.FlightAnimation => x})
+
+    // render flight animations
+    // TODO: get these into the list of outputs
+
+    val factions = IO.loadFactions(Editor.FactionsFilename)
+
+    animationTags.foreach(anim => {
+      val epoch = Flight.epoch(anim.item, stringToTags).getOrElse(
+        Tags.FlightEpoch(
+          "default",
+          CalendarDateTime(2016, 1, 1, 12, 0, 0.0),
+          CalendarDateTime(2016, 2, 1, 12, 0, 0.0)))
+      val uniqueName = "flightanimation_" + anim.hashCode.toHexString
+      val outputDirname = location / "animations" / uniqueName
+      new File(outputDirname).mkdirs()
+      println("animation: " + outputDirname)
+
+
+      // load flights from the item
+      val flights = flightTags.flatMap(
+        tag => Flight.flightParamsOrbits(Flight.flightParams(tag, stringToTags)))
+
+      Animation.animateFlights(
+        flights,
+        epoch.startDate,
+        epoch.endDate,
+        factions,
+        Editor.ShowSettingsDefault,
+        anim.settings,
+        outputDirname
+      )
+
     })
 
+    // render flight images
+
     val dst = for {
-      // fp <- flightParams.headOption
       tag <- flightTags
       fp = Flight.flightParams(tag, stringToTags)
 
@@ -182,6 +210,8 @@ class RenderImages(
       ImageIO.write(im, "png", outputImage)
       relativeName
     }
+
+
 
     // copy the first image to the default name
     dst.headOption.foreach(x => {
