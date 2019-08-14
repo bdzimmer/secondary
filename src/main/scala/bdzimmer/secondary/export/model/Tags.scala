@@ -2,7 +2,7 @@
 
 package bdzimmer.secondary.export.model
 
-import bdzimmer.orbits.CalendarDateTime
+import bdzimmer.orbits.{CalendarDateTime, AnimationSettings}
 
 
 object SecTags {
@@ -14,15 +14,17 @@ object SecTags {
   val Jumbotron = "jumbotron"
   val Marriage = "marriage"
   val Timeline = "timeline"
-  val Flight = "flight"
 
   val Birth = "birth"
   val Death = "death"
   val Event = "event"
 
+  val Flight = "flight"
   val Mass = "mass"
   val Acceleration = "acceleration"
   val Velocity = "velocity"
+  val FlightEpoch = "flightepoch"
+  val FlightAnimation = "flightanimation"
 
   val Thought = "thought"
   val Todo = "todo"
@@ -103,16 +105,6 @@ object Tags {
     format: String
   ) extends ParsedTag
 
-  case class Flight(
-    ship: WorldItem,
-    startLocation: String,
-    endLocation: String,
-    startDate: CalendarDateTime,
-    endDate: CalendarDateTime,
-    passengers: List[WorldItem],
-    faction: String
-  ) extends ParsedTag
-
   // events
 
   trait EventTag extends ParsedTag {
@@ -135,14 +127,39 @@ object Tags {
     desc: String
   ) extends EventTag
 
-  // spacecraft properties
+  // space flight related tags
+
+  case class Flight(
+    ship: WorldItem,
+    startLocation: String,
+    endLocation: String,
+    startDate: CalendarDateTime,
+    endDate: CalendarDateTime,
+    passengers: List[WorldItem],
+    faction: String
+  ) extends ParsedTag
 
   case class SpacecraftProperty(
     kind: String,
     value: Double,
-    unit: String  // TODO: real unit type
+    unit: String  // TODO: real unit type(s)
   ) extends ParsedTag
 
+  case class FlightEpoch(
+    name: String,
+    startDate: CalendarDateTime,
+    endDate: CalendarDateTime
+  ) extends ParsedTag
+
+  // obviously WIP
+  case class FlightAnimation(
+    name: String,
+    epoch: String,
+    settings: AnimationSettings,
+    visible: List[String]
+    // TODO: other visualization options
+    // examples include faction filters
+  ) extends ParsedTag
 
   // tasks
 
@@ -177,7 +194,8 @@ object Tags {
     date: Option[String] // TODO: real date type
   ) extends GenealogyTag
 
-  // other stuff
+
+  //  miscellaneous tags
 
   case class Demo(
     kind: String,
