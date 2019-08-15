@@ -177,9 +177,13 @@ object ParseTags {
           Editor.CameraSettingsDefault.yPos,
           Editor.CameraSettingsDefault.zPos)
         val intDefault = 1.0 / 24.0
+        val widthDefault = 1280
+        val heightDefault = 720
 
         stringToItem.get(tag.value).map(item => {
           val epoch = args.getOrElse("epoch", "default")
+          val width = args.get("width").map(_.toIntSafe(widthDefault)).getOrElse(widthDefault)
+          val height = args.get("height").map(_.toIntSafe(heightDefault)).getOrElse(heightDefault)
           val camPos = args.get("campos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
           val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(Editor.CameraSettingsDefault.zViewPos)
           val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
@@ -189,7 +193,7 @@ object ParseTags {
 
           FlightAnimation(
             item, epoch,
-            AnimationSettings(camPos, zViewPos, fps, interval, damping),
+            AnimationSettings(width, height, camPos, zViewPos, fps, interval, damping),
             visible)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
 

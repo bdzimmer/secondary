@@ -144,14 +144,9 @@ class RenderTags(
       // TODO: embed rendered video?
       // x.epoch + RenderPages.glyphLinkPage(x.item)
 
-      // TODO: get dimensions from tag
-      val width = 1280 / 2
-      val height = 720 / 2
-
       // TODO: move this HTML to controller.Flight
-
 s"""
-<video width="$width" height="$height" controls>
+<video width="${x.settings.width / 2}" height="${x.settings.height / 2}" controls>
   <source src="${Flight.AnimationsDir / Flight.animationName(x) / "animation.mp4"}" type="video/mp4">
   Your browser does not support the video tag.
 </video>

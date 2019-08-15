@@ -166,6 +166,8 @@ object Flight {
       println("\tstartDate: " + epoch.startDate.dateTimeString)
       println("\tendDate:   " + epoch.endDate.dateTimeString)
       println("settings:")
+      println("\twidth:  " + anim.settings.width)
+      println("\theight: " + anim.settings.height)
       println("\tcamPos:   [ " +
         anim.settings.camPos.x + " " +
         anim.settings.camPos.y + " " +
