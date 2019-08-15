@@ -143,40 +143,6 @@ class RenderImages(
     val tags = stringToTags.getOrElse(tripItem.id, Map()).toList.sortBy(x => x._1).map(_._2)
 
     val flightTags = tags.collect({case x: Tags.Flight => x})
-    val animationTags = tags.collect({case x: Tags.FlightAnimation => x})
-
-    // render flight animations
-    // TODO: get these into the list of outputs
-
-    val factions = IO.loadFactions(Editor.FactionsFilename)
-
-    animationTags.foreach(anim => {
-      val epoch = Flight.epoch(anim.item, stringToTags).getOrElse(
-        Tags.FlightEpoch(
-          "default",
-          CalendarDateTime(2016, 1, 1, 12, 0, 0.0),
-          CalendarDateTime(2016, 2, 1, 12, 0, 0.0)))
-      val uniqueName = "flightanimation_" + anim.hashCode.toHexString
-      val outputDirname = location / "animations" / uniqueName
-      new File(outputDirname).mkdirs()
-      println("animation: " + outputDirname)
-
-
-      // load flights from the item
-      val flights = flightTags.flatMap(
-        tag => Flight.flightParamsOrbits(Flight.flightParams(tag, stringToTags)))
-
-      Animation.animateFlights(
-        flights,
-        epoch.startDate,
-        epoch.endDate,
-        factions,
-        Editor.ShowSettingsDefault,
-        anim.settings,
-        outputDirname
-      )
-
-    })
 
     // render flight images
 

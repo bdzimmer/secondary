@@ -185,7 +185,7 @@ object ParseTags {
           val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
           val interval = args.get("interval").map(_.toDoubleSafe(intDefault)).getOrElse(intDefault)  // one hour
           val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(Editor.Damping)
-          val visible = args.getOrElse("visible", "").split(";\\s+").toList
+          val visible = args.get("visible").map(_.split(";\\s+").toList).getOrElse(List())
 
           FlightAnimation(
             item, epoch,

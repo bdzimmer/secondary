@@ -12,6 +12,8 @@ import bdzimmer.secondary.export.view.{Markdown, Html, Bootstrap}
 
 import bdzimmer.orbits.{DateTime, CalendarDateTime}
 
+import bdzimmer.util.StringUtils._
+
 
 case class FlightParams(
   ship: WorldItem,
@@ -140,7 +142,20 @@ class RenderTags(
 
     case x: Tags.FlightAnimation => {
       // TODO: embed rendered video?
-      x.epoch + RenderPages.glyphLinkPage(x.item)
+      // x.epoch + RenderPages.glyphLinkPage(x.item)
+
+      // TODO: get dimensions from tag
+      val width = 1280 / 2
+      val height = 720 / 2
+
+      // TODO: move this HTML to controller.Flight
+
+s"""
+<video width="$width" height="$height" controls>
+  <source src="${Flight.AnimationsDir / Flight.animationName(x) / "animation.mp4"}" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+"""
     }
 
     case sp: Tags.SpacecraftProperty => genShow(sp.kind.capitalize, sp.value + " " + sp.unit)
