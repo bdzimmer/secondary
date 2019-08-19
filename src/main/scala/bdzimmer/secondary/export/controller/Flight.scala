@@ -176,6 +176,7 @@ object Flight {
       println("\tfps:      " + anim.settings.fps)
       println("\tinterval: " + anim.settings.interval)
       println("\tdamping:  " + anim.settings.damping)
+      println("status: " + anim.status)
       println("visible:")
       anim.visible.foreach(x => println("\t" + x))
       println()
@@ -191,7 +192,9 @@ object Flight {
         epoch.startDate,
         epoch.endDate,
         factions,
-        Editor.ShowSettingsDefault,
+        Editor.ShowSettingsDefault.copy(
+          flightStatus=anim.status
+        ),
         anim.settings,
         outputDirname
       )
