@@ -55,7 +55,6 @@ object ExtractRawTags {
 object ParseTags {
 
   import scala.util.Try
-  import org.pegdown.ast.AnchorLinkNode
 
   import bdzimmer.secondary.export.model.Tags._
   import bdzimmer.secondary.export.model.SecTags
@@ -80,8 +79,9 @@ object ParseTags {
         stringToItem.get(tag.value).map(item =>
           if (tag.args.length == 1) {
             val anchorText = tag.args.mkString(" ")
-            val anchorName = new AnchorLinkNode(anchorText).getName
-            Link(item, Some(anchorText), Some(anchorName))
+            // val anchorName = new AnchorLinkNode(anchorText).getName
+            // Link(item, Some(anchorText), Some(anchorName))
+            Link(item, Some(anchorText), Some(anchorText))
           } else if (tag.args.length == 2) {
             Link(item, Some(tag.args(0)), Some(tag.args(1)))
           } else {
