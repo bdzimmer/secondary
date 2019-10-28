@@ -2,11 +2,18 @@
 
 package bdzimmer.secondary.export.controller
 
+import java.io.File
+
+import bdzimmer.orbits.{Animation, CalendarDateTime, ConstVelFlightFn, Editor, IO}
 import bdzimmer.secondary.export.model.{SecTags, Tags, WorldItems}
 import bdzimmer.secondary.export.view.Html
 
+import bdzimmer.util.StringUtils._
+
 
 object Flight {
+
+  val AnimationsDir = "animations"
 
   def render(fp: FlightParams, imagePath: String): String = {
      val shipName = fp.ship.name
@@ -50,7 +57,37 @@ object Flight {
   }
 
 
-  def spacecraft(ship: WorldItems.WorldItem, stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
+  def flightParamsOrbits(fp: FlightParams): Option[bdzimmer.orbits.FlightParams] = {
+
+    val ship = if (fp.vel > ConstVelFlightFn.VelMin) {
+      bdzimmer.orbits.ConstVelCraft(fp.ship.name, fp.vel)
+    } else {
+      bdzimmer.orbits.ConstAccelCraft(fp.ship.name, fp.mass, fp.accel)
+    }
+
+    for {
+      orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.startLocation)
+      dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.endLocation)
+    } yield {
+      bdzimmer.orbits.FlightParams(
+        ship=ship,
+        origName=fp.startLocation,
+        destName=fp.endLocation,
+        orig=orig,
+        dest=dest,
+        startDate=fp.startDate,
+        endDate=fp.endDate,
+        passengers=fp.passengers.map(_.name),
+        faction=fp.faction,
+        description="")
+    }
+
+  }
+
+
+  def spacecraft(
+      ship: WorldItems.WorldItem,
+      stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
 
     // TODO: handle specification of different units
 
@@ -83,6 +120,92 @@ object Flight {
 
     (mass, accel, vel)
 
+  }
+
+
+  def epoch(
+      item: WorldItems.WorldItem,
+      stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): Option[Tags.FlightEpoch] = {
+
+    stringToTags.get(item.id).flatMap(_.values.collectFirst({case x: Tags.FlightEpoch => x}))
+
+  }
+
+
+  def animationToDisk(
+      item: WorldItems.WorldItem,
+      stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+      location: String): Unit = {
+
+    val tags = stringToTags.getOrElse(item.id, Map()).toList.sortBy(x => x._1).map(_._2)
+    val flightTags = tags.collect({case x: Tags.Flight => x})
+    val animationTags = tags.collect({case x: Tags.FlightAnimation => x})
+
+    val factions = IO.loadFactions(Editor.FactionsFilename)
+
+    animationTags.foreach(anim => {
+
+      val epoch = Flight.epoch(anim.item, stringToTags).getOrElse(
+        Tags.FlightEpoch(
+          "default",
+          CalendarDateTime(2016, 1, 1, 12, 0, 0.0),
+          CalendarDateTime(2016, 2, 1, 12, 0, 0.0)))
+      val uniqueName = animationName(anim)
+      val outputDirname = location / AnimationsDir / uniqueName
+      new File(outputDirname).mkdirs()
+
+      // This must always be updated to be a *complete* printout
+      // of the stuff in anim. These settings are complex, and it's
+      // important to be able to verify that I'm rendering what I
+      // think I am.
+
+      println("-----------------------")
+      println("item: " + anim.item.name + " (" + anim.item.id + ")")
+      println("epoch:")
+      println("\tname:      " + epoch.name)
+      println("\tstartDate: " + epoch.startDate.dateTimeString)
+      println("\tendDate:   " + epoch.endDate.dateTimeString)
+      println("settings:")
+      println("\twidth:  " + anim.settings.width)
+      println("\theight: " + anim.settings.height)
+      println("\tcamPos:   [ " +
+        anim.settings.camPos.x + " " +
+        anim.settings.camPos.y + " " +
+        anim.settings.camPos.z + " ]")
+      println("\tzViewPos: " + anim.settings.zViewPos)
+      println("\tfps:      " + anim.settings.fps)
+      println("\tinterval: " + anim.settings.interval)
+      println("\tdamping:  " + anim.settings.damping)
+      println("status: " + anim.status)
+      println("visible:")
+      anim.visible.foreach(x => println("\t" + x))
+      println()
+      println("output directory: " + outputDirname)
+      println("-----------------------")
+
+      // load flights from the item
+      val flights = flightTags.flatMap(
+        tag => Flight.flightParamsOrbits(Flight.flightParams(tag, stringToTags)))
+
+      Animation.animateFlights(
+        flights,
+        epoch.startDate,
+        epoch.endDate,
+        factions,
+        Editor.ShowSettingsDefault.copy(
+          flightStatus=anim.status
+        ),
+        anim.settings,
+        outputDirname
+      )
+
+    })
+
+  }
+
+
+  def animationName(anim: Tags.FlightAnimation): String = {
+    "flightanimation_" + anim.hashCode.toHexString
   }
 
 

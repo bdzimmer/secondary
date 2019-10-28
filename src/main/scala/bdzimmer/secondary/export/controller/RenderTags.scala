@@ -12,6 +12,8 @@ import bdzimmer.secondary.export.view.{Markdown, Html, Bootstrap}
 
 import bdzimmer.orbits.{DateTime, CalendarDateTime}
 
+import bdzimmer.util.StringUtils._
+
 
 case class FlightParams(
   ship: WorldItem,
@@ -127,12 +129,29 @@ class RenderTags(
       tr.getHtml(timeline.root, timeline.format)
     }
 
+    case event: Tags.EventTag => genShow(event.date, event.desc)
+
     case flight: Tags.Flight => {
       val fp = Flight.flightParams(flight, stringToTags)
       Flight.render(fp, RenderImages.tagImagePath(flight))
     }
 
-    case event: Tags.EventTag => genShow(event.date, event.desc)
+    case x: Tags.FlightEpoch => {
+      Html.b(x.name + ":") + " " + x.startDate.dateTimeString + " - " + x.endDate.dateTimeString
+    }
+
+    case x: Tags.FlightAnimation => {
+      // TODO: embed rendered video?
+      // x.epoch + RenderPages.glyphLinkPage(x.item)
+
+      // TODO: move this HTML to controller.Flight
+s"""
+<video width="${x.settings.width / 2}" height="${x.settings.height / 2}" controls>
+  <source src="${Flight.AnimationsDir / Flight.animationName(x) / "animation.mp4"}" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+"""
+    }
 
     case sp: Tags.SpacecraftProperty => genShow(sp.kind.capitalize, sp.value + " " + sp.unit)
 

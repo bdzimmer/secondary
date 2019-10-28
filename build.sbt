@@ -2,15 +2,11 @@
 
 // Secondary project build.sbt file
 
-val whichJvmSettings = sys.props.getOrElse("jvm", default = "7")
-val jvmSettings = whichJvmSettings match {
-  case "6" => JvmSettings("1.6", "1.6", "1.6")
-  case _   => JvmSettings("1.7", "1.7", "1.7")
-}
+val jvmSettings = JvmSettings("1.8", "1.8", "1.8")
 
 // JVM settings can be verified using the following command:
 // javap -verbose -cp secondary.jar bdzimmer.secondary.export.Driver
-// major version will be 50 for Java 1.6 and 51 for Java 1.7.
+// Major version will be 52 for Java 1.8.
 
 lazy val root = (project in file("."))
   .settings(
@@ -22,7 +18,7 @@ lazy val root = (project in file("."))
     mainClass in (Compile, run) := Some("bdzimmer.secondary.export.Driver"),
 
     javacOptions  ++= Seq("-source", jvmSettings.javacSource, "-target", jvmSettings.javacTarget),
-    scalacOptions ++= Seq(s"-target:jvm-${jvmSettings.scalacTarget}"),
+    scalacOptions ++= Seq(s"-target:jvm-1.7"),
 
     libraryDependencies ++= Seq(
       "commons-io"         % "commons-io"                % "2.4",
@@ -49,8 +45,8 @@ lazy val orbits      = RootProject(file("../orbits"))
 // import into Eclipse as a Scala project
 EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
 
-// use Java 1.7 in Eclipse
-EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE17)
+// use Java 1.8 in Eclipse
+EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE18)
 
 // use the version of Scala from sbt in Eclipse
 EclipseKeys.withBundledScalaContainers := false

@@ -77,12 +77,30 @@ class Driver {
 
   // run a command
   private def runCommand(command: String, args: List[String]): Unit = command match {
+
+    case DriverCommands.Animate => {
+      val startTime = System.currentTimeMillis
+      val res = for {
+        stuff <- getRenderStuff()
+        (stringToItem, rt, stringToTags) = stuff
+        itemId = args.mkString(" ")
+        item <- Result.fromOption(
+          stringToItem.get(itemId),
+          "invalid item name or id '" + itemId + "'")
+      } yield {
+        Flight.animationToDisk(item, stringToTags, projConf.localExportPath)
+        val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+        println("exported animation(s) in " + totalTime + " sec")
+      }
+      res.mapLeft(msg => println(msg))
+    }
+
     case DriverCommands.Browse => browseLocal()
     case DriverCommands.Basic => {
       val startTime = System.currentTimeMillis
       val res = for {
         stuff <- getRenderStuff()
-        (stringToItem, rt) = stuff
+        (stringToItem, rt, _) = stuff
         itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
@@ -138,7 +156,7 @@ class Driver {
       val startTime = System.currentTimeMillis
       val res = for {
         stuff <- getRenderStuff()
-        (stringToItem, rt) = stuff
+        (stringToItem, rt, _) = stuff
         itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
@@ -201,6 +219,8 @@ class Driver {
             }
           }).toMap
 
+          // TODO: use logic from secondary - Flight module
+
           // a flight will not appear if the ship, orig, or destination is invalid
           val orbitsFlights = for {
             x <- flights
@@ -248,7 +268,7 @@ class Driver {
   }
 
 
-  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags)] = {
+  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[String, Map[Int, Tags.ParsedTag]])] = {
     for {
       master <- WorldLoader.loadWorld(projConf)
       world = WorldItems.collectionToList(master)
@@ -260,7 +280,7 @@ class Driver {
         ebookMode = true
       )
     } yield {
-      (stringToItem, rt)
+      (stringToItem, rt, stringToTags)
     }
 
   }
@@ -313,7 +333,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2019.07.28"
+  val Title = "Secondary - create worlds from text - v2019.08.14"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 
@@ -354,6 +374,7 @@ object Driver {
 
 object DriverCommands {
 
+  val Animate     = "animate"
   val Basic       = "basic"
   val Browse      = "browse"
   val Configure   = "configure"
@@ -373,19 +394,20 @@ object DriverCommands {
   val Help        = "help"
 
   val CommandsDescriptions = List(
-      (Basic,       "export an item to basic HTML"),
-      (Browse,      "browse exported project web site"),
-      (Configure,   "edit project configuration"),
-      (Duplicate,   "detect duplicate words"),
-      (Edit,        "edit the source file for an item"),
-      (Editor,      "pixel editor (alpha)"),
-      (Epub,        "export a book to EPUB"),
-      (Explore,     "explore project content dir"),
-      (Export,      "export"),
-      (Orbits,      "orbits editor (alpha)"),
-      (Screenshot,  "screenshot utility"),
-      (Server,      "server mode"),
-      (Sprint,      "interactive writing sprint tool"),
-      (Styles,      "add stylesheets"),
-      (Help,        "show usage / commands"))
+    (Animate,     "render flight animation"),
+    (Basic,       "export an item to basic HTML"),
+    (Browse,      "browse exported project web site"),
+    (Configure,   "edit project configuration"),
+    (Duplicate,   "detect duplicate words"),
+    (Edit,        "edit the source file for an item"),
+    (Editor,      "pixel editor (alpha)"),
+    (Epub,        "export a book to EPUB"),
+    (Explore,     "explore project content dir"),
+    (Export,      "export"),
+    (Orbits,      "orbits editor (alpha)"),
+    (Screenshot,  "screenshot utility"),
+    (Server,      "server mode"),
+    (Sprint,      "interactive writing sprint tool"),
+    (Styles,      "add stylesheets"),
+    (Help,        "show usage / commands"))
 }

@@ -2,7 +2,7 @@
 
 package bdzimmer.secondary.export.controller
 
-import bdzimmer.orbits.DateTime
+import bdzimmer.orbits.{DateTime, Vec3, Editor, AnimationSettings}
 
 import bdzimmer.util.StringUtils.StringConvertSafe
 
@@ -124,7 +124,16 @@ object ParseTags {
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
-      // TODO: separate flight params extraction
+      // TODO: convert dates strings to date objects here
+      case SecTags.Birth => Birth(tag.value, tag.args.mkString(" "))
+      case SecTags.Death => Death(tag.value, tag.args.mkString(" "))
+      case SecTags.Event => Event(tag.value, tag.args.mkString(" "))
+
+      // ~~~~ ~~~~ space flight tags ~~~~
+
+      // TODO: update documentation with defaults
+      // important to have documentation of defaults for complex tags
+
       case SecTags.Flight => {
         stringToItem.get(tag.value).map(item => {
           val defaultStartDate = CalendarDateTime(2016, 1, 1, 12, 0, 0.0)
@@ -140,11 +149,6 @@ object ParseTags {
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
-      // TODO: convert dates strings to date objects
-      case SecTags.Event => Event(tag.value, tag.args.mkString(" "))
-      case SecTags.Birth => Birth(tag.value, tag.args.mkString(" "))
-      case SecTags.Death => Death(tag.value, tag.args.mkString(" "))
-
       case SecTags.Mass | SecTags.Acceleration | SecTags.Velocity => {
         val parts = tag.value.split("\\s+")
         Try(parts(0).toDouble).toOption.map(value => {
@@ -156,6 +160,48 @@ object ParseTags {
           SpacecraftProperty(tag.kind, value, unit)
         }).getOrElse(ParseError(tag, s"can't parse double from '${tag.value}'"))
       }
+
+      case SecTags.FlightEpoch => {
+        val name = tag.value
+        val defaultStartDate = CalendarDateTime(2016, 1, 1, 12, 0, 0.0)
+        val defaultEndDate   = CalendarDateTime(2016, 2, 1, 12, 0, 0.0)
+        val startDate = args.get("startdate").map(DateTime.parse(_)).getOrElse(defaultStartDate)
+        val endDate   = args.get("enddate").map(DateTime.parse(_)).getOrElse(defaultEndDate)
+        FlightEpoch(name, startDate, endDate)
+      }
+
+      case SecTags.FlightAnimation => {
+
+        val camPosDefault =  Vec3(
+          Editor.CameraSettingsDefault.xPos,
+          Editor.CameraSettingsDefault.yPos,
+          Editor.CameraSettingsDefault.zPos)
+        val intDefault = 1.0 / 24.0
+        val widthDefault = 1280
+        val heightDefault = 720
+
+        stringToItem.get(tag.value).map(item => {
+          val epoch = args.getOrElse("epoch", "default")
+          val width = args.get("width").map(_.toIntSafe(widthDefault)).getOrElse(widthDefault)
+          val height = args.get("height").map(_.toIntSafe(heightDefault)).getOrElse(heightDefault)
+          val camPos = args.get("campos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
+          val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(Editor.CameraSettingsDefault.zViewPos)
+          val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
+          val interval = args.get("interval").map(_.toDoubleSafe(intDefault)).getOrElse(intDefault)  // one hour
+          val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(Editor.Damping)
+          val status = args.get("status").map(_.toIntSafe(1)).getOrElse(1)
+          val visible = args.get("visible").map(_.split(";\\s+").toList).getOrElse(List())
+
+          FlightAnimation(
+            item, epoch,
+            AnimationSettings(width, height, camPos, zViewPos, fps, interval, damping),
+            status,
+            visible)
+        }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
+
+      }
+
+      // ~~~~ ~~~~ ~~~~ ~~~~
 
       // TODO: convert date strings to date objects
       case SecTags.Thought | SecTags.Todo | SecTags.Started | SecTags.Done | SecTags.Blocked => {
@@ -265,7 +311,6 @@ object ParseTags {
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
-      // TODO: function that builds the standard parse error
       case SecTags.Gallery => {
         stringToItem.get(tag.value).map(item => {
           val recursive = args.get("recursive").map(_.toBooleanSafe).getOrElse(false)
@@ -278,6 +323,18 @@ object ParseTags {
       case _ => ParseError(tag, s"invalid tag kind '${tag.kind}'")
 
     }
+  }
+
+  // TODO: function that builds the standard parse error
+  // TODO: replace map + getOrElse with existss
+
+  def parseVec3(x: String, default: Vec3): Vec3 = {
+      val elems = x.split(",\\s+").map(_.toDoubleSafe(0.0))
+      if (elems.size != 3) {
+        default
+      } else {
+        Vec3(elems(0), elems(1), elems(2))
+      }
   }
 
 }
