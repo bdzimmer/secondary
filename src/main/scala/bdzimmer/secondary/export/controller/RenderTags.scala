@@ -260,11 +260,10 @@ s"""
           titles.zip(chunkRanges).map({case (title, (start, end)) => {
             (
               title,
-              tags
+              sidenotes
                 .filter(y => y._1 >= start && y._1 < end)
                 .flatMap(y => render(y._2))
                 .map(y => Html.listItem(y, ""))
-                .toList
             )
           }}).filter(_._2.length > 0).map(y =>
             Html.listItem(
