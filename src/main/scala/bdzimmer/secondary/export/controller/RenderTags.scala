@@ -254,16 +254,8 @@ s"""
         case _ => None
       }
 
-      if (false) {
-        Html.listGroup(
-          sidenotes
-            .flatMap({case (_, y) => render(y)})
-            .map(y => Html.listItem(y, ""))
-        )
-      } else {
-
+      if (x.sections) {
         val (titles, _, chunkRanges) = Epub.splitSections(x.item.notes)
-
         Html.listGroup(
           titles.zip(chunkRanges).map({case (title, (start, end)) => {
             (
@@ -279,7 +271,12 @@ s"""
               RenderPages.textLinkPage(
                 x.item, new AnchorLinkNode(y._1).getName, y._1) + "\n" + Html.listGroup(y._2), ""))
         )
-
+      } else {
+        Html.listGroup(
+          sidenotes
+            .flatMap({case (_, y) => render(y)})
+            .map(y => Html.listItem(y, ""))
+        )
       }
     }
 

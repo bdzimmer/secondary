@@ -279,7 +279,7 @@ object ParseTags {
 
       case SecTags.Footnotes => {
         stringToItem.get(tag.value).map(item => {
-          Footnotes(item)
+          Footnotes(item, args.get("sections").map(_.toBooleanSafe).getOrElse(true))
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
