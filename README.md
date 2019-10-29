@@ -2,11 +2,11 @@
 
 Secondary is a tool for creating fictional worlds. Describe a world consisting of complex hierarchies of characters, locations, events, and other concepts using Markdown in text files which are straightforward to read and edit. Use special tags to track relationships between concepts and mark tasks and thoughts. Compile your world into a static web site, browse and review tasks, then edit and compile again.
 
-Copyright &copy; 2018 Ben Zimmer. All rights reserved.
+Copyright &copy; 2019 Ben Zimmer. All rights reserved.
 
 ### Setup
 
-You'll need sbt and JDK 7 or greater.
+You'll need sbt and JDK 8 or greater.
 
 Clone the repositories for Secondary and its dependencies.
 
