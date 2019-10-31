@@ -184,6 +184,7 @@ object ParseTags {
           val epoch = args.getOrElse("epoch", "default")
           val width = args.get("width").map(_.toIntSafe(widthDefault)).getOrElse(widthDefault)
           val height = args.get("height").map(_.toIntSafe(heightDefault)).getOrElse(heightDefault)
+          val camType = args.getOrElse("camtype", "follow")
           val camPos = args.get("campos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
           val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(Editor.CameraSettingsDefault.zViewPos)
           val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
@@ -194,7 +195,7 @@ object ParseTags {
 
           FlightAnimation(
             item, epoch,
-            AnimationSettings(width, height, camPos, zViewPos, fps, interval, damping),
+            AnimationSettings(width, height, camType, camPos, zViewPos, fps, interval, damping),
             status,
             visible)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))

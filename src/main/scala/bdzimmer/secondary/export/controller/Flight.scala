@@ -125,9 +125,11 @@ object Flight {
 
   def epoch(
       item: WorldItems.WorldItem,
+      name: String,
       stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): Option[Tags.FlightEpoch] = {
 
-    stringToTags.get(item.id).flatMap(_.values.collectFirst({case x: Tags.FlightEpoch => x}))
+    val epochs = stringToTags.getOrElse(item.id, Map()).values.collect({case x: Tags.FlightEpoch => x})
+    epochs.find(_.name.equals(name))
 
   }
 
@@ -145,7 +147,7 @@ object Flight {
 
     animationTags.foreach(anim => {
 
-      val epoch = Flight.epoch(anim.item, stringToTags).getOrElse(
+      val epoch = Flight.epoch(anim.item, anim.epoch, stringToTags).getOrElse(
         Tags.FlightEpoch(
           "default",
           CalendarDateTime(2016, 1, 1, 12, 0, 0.0),
@@ -166,8 +168,9 @@ object Flight {
       println("\tstartDate: " + epoch.startDate.dateTimeString)
       println("\tendDate:   " + epoch.endDate.dateTimeString)
       println("settings:")
-      println("\twidth:  " + anim.settings.width)
-      println("\theight: " + anim.settings.height)
+      println("\twidth:    " + anim.settings.width)
+      println("\theight:   " + anim.settings.height)
+      println("\tcamType:  " + anim.settings.camType)
       println("\tcamPos:   [ " +
         anim.settings.camPos.x + " " +
         anim.settings.camPos.y + " " +
@@ -193,7 +196,8 @@ object Flight {
         epoch.endDate,
         factions,
         Editor.ShowSettingsDefault.copy(
-          flightStatus=anim.status
+          flightStatus=anim.status,
+          orbitInfo=true // just for testing
         ),
         anim.settings,
         outputDirname
