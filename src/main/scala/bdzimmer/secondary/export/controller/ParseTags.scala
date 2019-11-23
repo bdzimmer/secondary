@@ -55,7 +55,6 @@ object ExtractRawTags {
 object ParseTags {
 
   import scala.util.Try
-  import org.pegdown.ast.AnchorLinkNode
 
   import bdzimmer.secondary.export.model.Tags._
   import bdzimmer.secondary.export.model.SecTags
@@ -80,8 +79,9 @@ object ParseTags {
         stringToItem.get(tag.value).map(item =>
           if (tag.args.length == 1) {
             val anchorText = tag.args.mkString(" ")
-            val anchorName = new AnchorLinkNode(anchorText).getName
-            Link(item, Some(anchorText), Some(anchorName))
+            // val anchorName = new AnchorLinkNode(anchorText).getName
+            // Link(item, Some(anchorText), Some(anchorName))
+            Link(item, Some(anchorText), Some(anchorText))
           } else if (tag.args.length == 2) {
             Link(item, Some(tag.args(0)), Some(tag.args(1)))
           } else {
@@ -184,6 +184,7 @@ object ParseTags {
           val epoch = args.getOrElse("epoch", "default")
           val width = args.get("width").map(_.toIntSafe(widthDefault)).getOrElse(widthDefault)
           val height = args.get("height").map(_.toIntSafe(heightDefault)).getOrElse(heightDefault)
+          val camType = args.getOrElse("camtype", "follow")
           val camPos = args.get("campos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
           val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(Editor.CameraSettingsDefault.zViewPos)
           val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
@@ -194,7 +195,7 @@ object ParseTags {
 
           FlightAnimation(
             item, epoch,
-            AnimationSettings(width, height, camPos, zViewPos, fps, interval, damping),
+            AnimationSettings(width, height, camType, camPos, zViewPos, fps, interval, damping),
             status,
             visible)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
@@ -279,7 +280,7 @@ object ParseTags {
 
       case SecTags.Footnotes => {
         stringToItem.get(tag.value).map(item => {
-          Footnotes(item)
+          Footnotes(item, args.get("sections").map(_.toBooleanSafe).getOrElse(true))
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 

@@ -166,7 +166,8 @@ class RenderImages(
           fp.faction,
           fp.startLocation,
           fp.endLocation,
-          startLoc, endLoc,
+          startLoc.planet,
+          endLoc.planet,
           fp.startDate,
           fp.endDate)
 

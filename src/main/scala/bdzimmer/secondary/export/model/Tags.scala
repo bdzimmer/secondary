@@ -255,7 +255,8 @@ object Tags {
   ) extends ParsedTag
 
   case class Footnotes(
-    item: WorldItem
+    item: WorldItem,
+    sections: Boolean
   ) extends ParsedTag
 
   case class Snip(

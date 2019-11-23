@@ -6,6 +6,8 @@ import scala.util.matching.Regex
 
 import scala.util.Random
 
+import org.pegdown.ast.AnchorLinkNode
+
 import bdzimmer.secondary.export.model.{Tags, WorldItems}
 import bdzimmer.secondary.export.model.WorldItems.{WorldItem, CharacterItem}
 import bdzimmer.secondary.export.view.{Markdown, Html, Bootstrap}
@@ -73,7 +75,7 @@ class RenderTags(
     case link: Tags.Link => link.anchor match {
       case Some(anchor) => {
         val name = link.displayText.getOrElse(link.item.name)
-        RenderPages.textLinkPage(link.item, anchor, name)
+        RenderPages.textLinkPage(link.item, new AnchorLinkNode(anchor).getName, name)
       }
       case None => RenderPages.textLinkPage(link.item)
     }
@@ -236,23 +238,45 @@ s"""
       // Convert sidenotes to footnotes list
       val tags = stringToTags.getOrElse(x.item.id, List())
       val sidenotes = tags
-          // .filter(y => y._2.isInstanceOf[Tags.Sidenote])
-          // .collect({case y: (Int, Tags.Sidenote) => y})
-          .toList
-          // .sortBy(y => scala.util.Try({y._2.id.toDouble}).toOption.getOrElse(0.0))
-          .sortBy(_._1)
+        // .filter(y => y._2.isInstanceOf[Tags.Sidenote])
+        // .collect({case y: (Int, Tags.Sidenote) => y})
+        .toList
+        // .sortBy(y => scala.util.Try({y._2.id.toDouble}).toOption.getOrElse(0.0))
+        .sortBy(_._1)
 
-      Html.listGroup(
-        sidenotes.flatMap({case (_, y) => y match {
-          case tag: Tags.Sidenote => Some(
-            Html.link(tag.id, RenderPages.itemPageName(x.item) + "#" + tag.id) + ". " +
+      def render(y: Tags.ParsedTag): Option[String] = y match {
+        case tag: Tags.Sidenote => Some(
+          Html.link(tag.id, RenderPages.itemPageName(x.item) + "#" + tag.id) + ". " +
             Markdown.processLine(tag.desc))
-          case tag: Tags.Task => Some(
-            Html.link(tag.kind, RenderPages.itemPageName(x.item) + "#" + tag.hashCode) + ": " +
-              Markdown.processLine(tag.desc))
-          case _ => None
-        }}).map(y => Html.listItem(y, ""))
-      )
+        case tag: Tags.Task => Some(
+          Html.link(tag.kind, RenderPages.itemPageName(x.item) + "#" + tag.hashCode) + ": " +
+            Markdown.processLine(tag.desc))
+        case _ => None
+      }
+
+      if (x.sections) {
+        val (titles, _, chunkRanges) = Epub.splitSections(x.item.notes)
+        Html.listGroup(
+          titles.zip(chunkRanges).map({case (title, (start, end)) => {
+            (
+              title,
+              sidenotes
+                .filter(y => y._1 >= start && y._1 < end)
+                .flatMap(y => render(y._2))
+                .map(y => Html.listItem(y, ""))
+            )
+          }}).filter(_._2.length > 0).map(y =>
+            Html.listItem(
+              RenderPages.textLinkPage(
+                x.item, new AnchorLinkNode(y._1).getName, y._1) + "\n" + Html.listGroup(y._2), ""))
+        )
+      } else {
+        Html.listGroup(
+          sidenotes
+            .flatMap({case (_, y) => render(y)})
+            .map(y => Html.listItem(y, ""))
+        )
+      }
     }
 
     case x: Tags.Snip => if (!ebookMode) {
