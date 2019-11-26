@@ -29,7 +29,7 @@ object WordCount {
 
 
   def calculateSections(item: WorldItem): List[(String, Int)] = {
-    val (titles, chunks, _) = Epub.splitSections(item.notes)
+    val (titles, chunks, _) = Book.splitSections(item.notes)
     titles.zip(chunks.map(x => count(x._2)))
   }
 

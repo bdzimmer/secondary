@@ -255,7 +255,7 @@ s"""
       }
 
       if (x.sections) {
-        val (titles, _, chunkRanges) = Epub.splitSections(x.item.notes)
+        val (titles, _, chunkRanges) = Book.splitSections(x.item.notes)
         Html.listGroup(
           titles.zip(chunkRanges).map({case (title, (start, end)) => {
             (
