@@ -10,6 +10,7 @@ import bdzimmer.secondary.export.model.Tags.ParsedTag
 import bdzimmer.secondary.export.model.WorldItems.BookItem
 
 import scala.collection.immutable.Seq
+import scala.util.matching.Regex
 
 
 object Latex {
@@ -98,18 +99,17 @@ object Latex {
     val trimmed = section.content.split("\n").tail.mkString("\n")
     val converted = convert(trimmed)
 
-raw"""\chapter{${section.name}}
-${converted}
-"""
+    s"\\chapter{${section.name}}\n$converted"
 
   }).mkString("\n")
 
-  // TODO: make separate string with packages
+  val packages =
+    "\\" + "usepackage{titling}" +
+    "\\" + "usepackage[pagestyles]{titlesec}"
 
 raw"""\documentclass{book}
 
-\""" + raw"""usepackage{titling}
-\""" + raw"""usepackage[pagestyles]{titlesec}
+$packages
 
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
 \newpagestyle{mystyle}{
@@ -140,13 +140,29 @@ $chapters
 
   }
 
+
   // Convert markdown to LaTeX. Planned functionality:
   // + Strip secondary tags
-  // - Markdown headers
+  // - Fix pairs of quote marks in each paragraph
   // - Markdown bold / italics
+  // - Markdown headers
   def convert(markdown: String): String = {
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
-    stripped
+
+    val dqMatcher = "\\\"([^\\\"]+)\\\"".r
+   // val sqMatcher = "\\\'([^\\\']+)\\\'".r
+
+    val quotesFixed = stripped.split("\n").map(line => {
+      // val line1 = sqMatcher.replaceAllIn(line, m=> "`" + m.group(1) + "'")
+      val line1 = dqMatcher.replaceAllIn(line, m => "``" + m.group(1) + "''")
+      val line2 = "\\\"".r.replaceAllIn(line1, _ => "``")
+      line2
+
+      // TODO: deal properly with single quotes that are not apostrophes
+      // not really sure how to do this at the moment
+      // best solution honestly might be to convert LaTeX syntax back to markdown, lol
+    }).mkString("\n")
+    quotesFixed
   }
 
 }
