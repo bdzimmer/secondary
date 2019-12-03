@@ -1,0 +1,30 @@
+\documentclass{book}
+
+\usepackage{titling}
+\usepackage[pagestyles]{titlesec}
+
+\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
+\newpagestyle{mystyle}{
+  \sethead[\thepage][\textbf{\theauthor}][]
+          {}{\textbf{\thetitle}}{\thepage}}
+\pagestyle{empty}
+
+\title{%s}
+\author{%s %s}
+%% \date{today} %% this seems to be the default
+
+\begin{document}
+
+\frontmatter
+\thispagestyle{empty}
+\pagenumbering{empty} %% no page numbers or headers in front matter
+
+\maketitle
+%% \tableofcontents
+
+\mainmatter
+\pagestyle{mystyle}
+
+%s
+
+\end{document}

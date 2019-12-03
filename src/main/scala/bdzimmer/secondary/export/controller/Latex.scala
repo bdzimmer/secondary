@@ -2,15 +2,16 @@
 
 // Generate LaTeX files for books.
 
-
 package bdzimmer.secondary.export.controller
+
+import scala.collection.immutable.Seq
+// import scala.util.matching.Regex
+
+import org.apache.commons.io.FileUtils
 
 import bdzimmer.secondary.export.controller.Book.SectionInfo
 import bdzimmer.secondary.export.model.Tags.ParsedTag
 import bdzimmer.secondary.export.model.WorldItems.BookItem
-
-import scala.collection.immutable.Seq
-import scala.util.matching.Regex
 
 
 object Latex {
@@ -89,54 +90,26 @@ object Latex {
       lastname: String,
       sections: Seq[Book.SectionInfo]): String = {
 
-  // first section is title page
-  val titlePage :: remainingSections = sections
+    // first section is title page
+    val _ :: remainingSections = sections
 
-  // TODO: extract some additional information from title page
+    // TODO: extract additional information from title page?
+    // eg copyright date, etc.
 
-  val chapters = remainingSections.map(section => {
-    // the first line of the section is the chapter title header
-    val trimmed = section.content.split("\n").tail.mkString("\n")
-    val converted = convert(trimmed)
+    val chapters = remainingSections.map(section => {
+      // the first line of the section is the chapter title header
+      val trimmed = section.content.split("\n").tail.mkString("\n")
+      val converted = convert(trimmed)
+      s"\\chapter{${section.name}}\n$converted"
+    }).mkString("\n")
 
-    s"\\chapter{${section.name}}\n$converted"
+    val templateUrl = getClass.getResource("/template.tex")
+    val template = FileUtils.readFileToString(new java.io.File(templateUrl.getPath))
 
-  }).mkString("\n")
+    template.format(title, firstname, lastname, chapters)
 
-  val packages =
-    "\\" + "usepackage{titling}" +
-    "\\" + "usepackage[pagestyles]{titlesec}"
-
-raw"""\documentclass{book}
-
-$packages
-
-\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
-\newpagestyle{mystyle}{
-  \sethead[\thepage][\textbf{\theauthor}][]
-          {}{\textbf{\thetitle}}{\thepage}}
-\pagestyle{empty}
-
-\title{$title}
-\author{$firstname $lastname}
-% \date{today} % this seems to be the default
-
-\begin{document}
-
-\frontmatter
-\thispagestyle{empty}
-\pagenumbering{empty} % no page numbers or headers in front matter
-
-\maketitle
-% \tableofcontents
-
-\mainmatter
-\pagestyle{mystyle}
-
-$chapters
-
-\end{document}
-"""
+    // compile with:
+    //  pdflatex -interaction=nonstopmode uriels_revenge.tex
 
   }
 
