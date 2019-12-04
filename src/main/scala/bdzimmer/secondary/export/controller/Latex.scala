@@ -5,7 +5,7 @@
 package bdzimmer.secondary.export.controller
 
 import scala.collection.immutable.Seq
-// import scala.util.matching.Regex
+import scala.util.matching.Regex
 
 import org.apache.commons.io.FileUtils
 
@@ -15,6 +15,22 @@ import bdzimmer.secondary.export.model.WorldItems.BookItem
 
 
 object Latex {
+
+  // Regex stuff for converting markdown to latex.
+  // TODO: unit tests to understand what these do and do not work on.
+
+  // Note that the meaning of these is matched pairs with none of the
+  // thing in between. There are probably cases that I'm not thinking of
+  // where this will fail.
+
+  val MatcherDq: Regex = "\\\"([^\\\"]+)\\\"".r
+  // val MatcherSq: Regex = "\\\'([^\\\']+)\\\'".r
+
+  val MatcherBi: Regex = "\\*\\*\\*([^\\*]+)\\*\\*\\*".r
+  val MatcherB: Regex  = "\\*\\*([^\\*]+)\\*\\*".r
+  val MatcherI: Regex = "\\*([^\\*]+)\\*".r
+
+  val MatcherDqSingle: Regex = "\\\"".r
 
   // A lot of unused stuff here, for dealing with images.
 
@@ -116,20 +132,31 @@ object Latex {
 
   // Convert markdown to LaTeX. Planned functionality:
   // + Strip secondary tags
-  // - Fix pairs of quote marks in each paragraph
+  // + Fix pairs of quote marks in each paragraph
   // - Markdown bold / italics
   // - Markdown headers
   def convert(markdown: String): String = {
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
 
-    val dqMatcher = "\\\"([^\\\"]+)\\\"".r
-   // val sqMatcher = "\\\'([^\\\']+)\\\'".r
-
     val quotesFixed = stripped.split("\n").map(line => {
-      // val line1 = sqMatcher.replaceAllIn(line, m=> "`" + m.group(1) + "'")
-      val line1 = dqMatcher.replaceAllIn(line, m => "``" + m.group(1) + "''")
-      val line2 = "\\\"".r.replaceAllIn(line1, _ => "``")
-      line2
+      // val line1 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
+
+      // Look for matched pairs of double quotes and replace with
+      // left and right double quotes.
+      // Afterwards, replace any remaining double quotes with left double quotes.
+      val line1 = MatcherDq.replaceAllIn(line, m => "``" + m.group(1) + "''")
+      val line2 = MatcherDqSingle.replaceAllIn(line1, _ => "``")
+
+      // Look for matched pairs of *** and replace with bold and italic
+      val line3 = MatcherBi.replaceAllIn(line2, m => raw"\\textbf{\\textit{" + m.group(1) + "}}")
+
+      // Look for matched pairs of ** and replace with bold
+      val line4 = MatcherB.replaceAllIn(line3, m => raw"\\textbf{" + m.group(1) + "}")
+
+      // Look for matched pairs of * and replace with italic
+      val line5 = MatcherI.replaceAllIn(line4, m => raw"\\textit{" + m.group(1) + "}")
+
+      line5
 
       // TODO: deal properly with single quotes that are not apostrophes
       // not really sure how to do this at the moment
