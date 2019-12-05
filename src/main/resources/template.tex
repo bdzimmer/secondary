@@ -1,9 +1,19 @@
-\documentclass{book}
+\documentclass[12pt]{book}
 
 \usepackage{titling}
 \usepackage[pagestyles]{titlesec}
-\usepackage[urw-garamond]{mathdesign}
 \usepackage[T1]{fontenc}
+\usepackage{ebgaramond}
+
+\usepackage{geometry}
+\geometry{
+ papersize={5.25in,8in},
+ inner=0.75in,
+ outer=0.5in,
+ top=0.5in,
+ bottom=0.5in,
+ includeheadfoot
+}
 
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
 \newpagestyle{mystyle}{
