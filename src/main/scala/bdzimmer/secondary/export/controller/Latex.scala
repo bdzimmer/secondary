@@ -56,8 +56,7 @@ object Latex {
     // val cover = coverImageTag.map(
     //   x => Epub.SectionInfo("cover", "Cover", Epub.coverPage(RenderImages.itemImagePath(x.item))))
 
-    val allSections = (titlePage.toList ++ contentSections).map(x =>
-      x.copy(content = Latex.convert(x.content)))
+    val allSections = titlePage.toList ++ contentSections
     // val allSections = cover.toList ++ titlePage.toList ++ contentSections
 
     Latex.export(
@@ -66,7 +65,6 @@ object Latex {
       title,
       firstname,
       lastname,
-
       allSections
       // coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       // localExportPath
@@ -138,7 +136,8 @@ object Latex {
   def convert(markdown: String): String = {
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
 
-    val quotesFixed = stripped.split("\n").map(line => {
+    val linesFixed = stripped.split("\n").map(line => {
+
       // val line1 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
 
       // Look for matched pairs of double quotes and replace with
@@ -161,8 +160,34 @@ object Latex {
       // TODO: deal properly with single quotes that are not apostrophes
       // not really sure how to do this at the moment
       // best solution honestly might be to convert LaTeX syntax back to markdown, lol
-    }).mkString("\n")
-    quotesFixed
+    })
+
+    var result = ""
+    var inCodeBlock = false
+
+    linesFixed.foreach(line => {
+
+      if (line.startsWith("    ")) {
+        if (!inCodeBlock) {
+          result = result + "\\begin{lstlisting}\n"
+          inCodeBlock = true
+        }
+        result = result + line.substring(4) + "\n"
+      } else {
+        if (inCodeBlock && !line.isEmpty) {
+          result = result + "\\end{lstlisting}\n\n"
+          inCodeBlock = false
+        }
+        result = result + line + "\n"
+      }
+    })
+
+    if (inCodeBlock) {
+      result = result + "\\end{lstlisting}\n\n"
+    }
+
+    result
+
   }
 
 }
