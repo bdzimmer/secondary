@@ -165,7 +165,7 @@ object Latex {
     var result = ""
     var inCodeBlock = false
 
-    linesFixed.foreach(line => {
+    linesFixed.zipWithIndex.foreach({case (line, idx) => {
 
       if (line.startsWith("    ")) {
         if (!inCodeBlock) {
@@ -174,13 +174,17 @@ object Latex {
         }
         result = result + line.substring(4) + "\n"
       } else {
-        if (inCodeBlock && !line.isEmpty) {
-          result = result + "\\end{lstlisting}\n\n"
+        if (inCodeBlock &&
+            // non-empty current line OR
+            // next line doesn't start with 4 spaces terminates code block
+            (!line.isEmpty ||
+             idx < (linesFixed.length - 1) && !linesFixed(idx + 1).startsWith("    "))) {
+          result = result + "\\end{lstlisting}\n"
           inCodeBlock = false
         }
         result = result + line + "\n"
       }
-    })
+    }})
 
     if (inCodeBlock) {
       result = result + "\\end{lstlisting}\n\n"
