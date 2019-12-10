@@ -130,11 +130,16 @@ object Latex {
 
   // Convert markdown to LaTeX. Planned functionality:
   // + Strip secondary tags
-  // + Fix pairs of quote marks in each paragraph
-  // - Markdown bold / italics
-  // - Markdown headers
+  // + Fix pairs of double quote marks in each paragraph
+  // - Fix pairs of single quote marks in each paragraph
+  // + Markdown bold / italics
+  // + Markdown headers
+  // + code blocks
+  // - special symbols
   def convert(markdown: String): String = {
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
+
+    // convert per-line symbols
 
     val linesFixed = stripped.split("\n").map(line => {
 
@@ -162,48 +167,49 @@ object Latex {
       // best solution honestly might be to convert LaTeX syntax back to markdown, lol
     })
 
+    // convert code blocks
+
     var result = ""
     var inCodeBlock = false
     var codeBlockContents = ""
 
-    linesFixed.zipWithIndex.foreach({case (line, idx) => {
+    linesFixed.foreach(line => {
+
+      // are we going into a code block?
 
       if (line.startsWith("    ")) {
         if (!inCodeBlock) {
           codeBlockContents = codeBlockContents + "\\begin{lstlisting}\n"
           inCodeBlock = true
         }
-        codeBlockContents = codeBlockContents + line.substring(4) + "\n"
-
-      } else {
-        if (inCodeBlock) {
-
-          if (!line.isEmpty) {
-            // strip trailing whitespace, add back a single newline, and end the code block
-            codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
-            codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
-            // add the code block to the result
-            result = result + codeBlockContents
-
-            // reset code block
-            inCodeBlock = false
-            codeBlockContents = ""
-
-            // add line to result
-            result = result + line + "\n"
-
-          } else {
-            // add line to code block
-            codeBlockContents = codeBlockContents + "\n"
-          }
-
-        } else {
-          result = result + line + "\n"
-        }
-
       }
-    }})
 
+      // are we leaving a code block?
+      if (!line.startsWith("    ") && !line.isEmpty && inCodeBlock) {
+        // strip trailing whitespace, add back a single newline, and end the code block
+        codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
+        codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
+        // add the code block to the result
+        result = result + codeBlockContents
+
+        // reset code block
+        inCodeBlock = false
+        codeBlockContents = ""
+      }
+
+      if (inCodeBlock) {
+        if (line.isEmpty) {
+          codeBlockContents += "\n"
+        } else {
+          codeBlockContents = codeBlockContents + line.substring(4) + "\n"
+        }
+      } else {
+        result = result + line + "\n"
+      }
+
+    })
+
+    // finish off any code blocks that remain open
     if (inCodeBlock) {
       codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
       codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"

@@ -34,8 +34,8 @@ class LatexSuite extends FunSuite{
       ("test\n\n    a\n\n\n    b\n\ntest", "test\n\n\\begin{lstlisting}\na\n\n\nb\n\\end{lstlisting}\n\ntest\n"),
 
       // multiple code blocks
-      ("test\n\n    a\n---\n    b\n\ntest",
-       "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\n---\n\\begin{lstlisting}\nb\n\\end{lstlisting}\n\ntest\n")
+      ("test\n\n    a\n---\n\n    b\n\ntest",
+       "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\n---\n\n\\begin{lstlisting}\nb\n\\end{lstlisting}\n\ntest\n")
 
     )
 
