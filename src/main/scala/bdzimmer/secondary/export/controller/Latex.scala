@@ -164,30 +164,49 @@ object Latex {
 
     var result = ""
     var inCodeBlock = false
+    var codeBlockContents = ""
 
     linesFixed.zipWithIndex.foreach({case (line, idx) => {
 
       if (line.startsWith("    ")) {
         if (!inCodeBlock) {
-          result = result + "\\begin{lstlisting}\n"
+          codeBlockContents = codeBlockContents + "\\begin{lstlisting}\n"
           inCodeBlock = true
         }
-        result = result + line.substring(4) + "\n"
+        codeBlockContents = codeBlockContents + line.substring(4) + "\n"
+
       } else {
-        if (inCodeBlock &&
-            // non-empty current line OR
-            // next line doesn't start with 4 spaces terminates code block
-            (!line.isEmpty ||
-             idx < (linesFixed.length - 1) && !linesFixed(idx + 1).startsWith("    "))) {
-          result = result + "\\end{lstlisting}\n"
-          inCodeBlock = false
+        if (inCodeBlock) {
+
+          if (!line.isEmpty) {
+            // strip trailing whitespace, add back a single newline, and end the code block
+            codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
+            codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
+            // add the code block to the result
+            result = result + codeBlockContents
+
+            // reset code block
+            inCodeBlock = false
+            codeBlockContents = ""
+
+            // add line to result
+            result = result + line + "\n"
+
+          } else {
+            // add line to code block
+            codeBlockContents = codeBlockContents + "\n"
+          }
+
+        } else {
+          result = result + line + "\n"
         }
-        result = result + line + "\n"
+
       }
     }})
 
     if (inCodeBlock) {
-      result = result + "\\end{lstlisting}\n\n"
+      codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
+      codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
     }
 
     result
