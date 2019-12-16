@@ -30,6 +30,10 @@ object Latex {
   val MatcherB: Regex  = "\\*\\*([^\\*]+)\\*\\*".r
   val MatcherI: Regex = "\\*([^\\*]+)\\*".r
 
+  val MatcherH: Regex = "^#+\\s(.*)".r
+  val MatcherCopyright: Regex = "&copy;".r
+  val MatcherPercent: Regex = "%".r
+
   val MatcherDqSingle: Regex = "\\\"".r
 
   // A lot of unused stuff here, for dealing with images.
@@ -105,10 +109,13 @@ object Latex {
       sections: Seq[Book.SectionInfo]): String = {
 
     // first section is title page
-    val _ :: remainingSections = sections
+    val firstSection :: remainingSections = sections
 
-    // TODO: extract additional information from title page?
-    // eg copyright date, etc.
+    // TODO: do something more clever with title page formatting?
+    // add extra newlines to title page
+    val titlepage = convert(firstSection.content).split("\n").map(line => {
+        line + raw"\newline"
+    }).mkString("\n")
 
     val chapters = remainingSections.map(section => {
       // the first line of the section is the chapter title header
@@ -120,10 +127,10 @@ object Latex {
     val templateUrl = getClass.getResource("/template.tex")
     val template = FileUtils.readFileToString(new java.io.File(templateUrl.getPath))
 
-    template.format(title, firstname, lastname, chapters)
+    template.format(title, firstname, lastname, titlepage, chapters)
 
     // compile with:
-    //  pdflatex -interaction=nonstopmode uriels_revenge.tex
+    //  pdflatex -interaction=nonstopmode filename.tex
 
   }
 
@@ -135,7 +142,9 @@ object Latex {
   // + Markdown bold / italics
   // + Markdown headers
   // + code blocks
-  // - special symbols
+  // + special symbols
+  //    + &copy
+  //    + %
   def convert(markdown: String): String = {
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
 
@@ -143,24 +152,34 @@ object Latex {
 
     val linesFixed = stripped.split("\n").map(line => {
 
+      // TODO: these should only be converted for non code block lines
+
       // val line1 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
 
-      // Look for matched pairs of double quotes and replace with
-      // left and right double quotes.
+      // Matched pairs of double quotes -> left and right double quotes.
       // Afterwards, replace any remaining double quotes with left double quotes.
       val line1 = MatcherDq.replaceAllIn(line, m => "``" + m.group(1) + "''")
       val line2 = MatcherDqSingle.replaceAllIn(line1, _ => "``")
 
-      // Look for matched pairs of *** and replace with bold and italic
+      // Matched pairs of *** -> bold and italic
       val line3 = MatcherBi.replaceAllIn(line2, m => raw"\\textbf{\\textit{" + m.group(1) + "}}")
 
-      // Look for matched pairs of ** and replace with bold
+      // Matched pairs of ** -> bold
       val line4 = MatcherB.replaceAllIn(line3, m => raw"\\textbf{" + m.group(1) + "}")
 
-      // Look for matched pairs of * and replace with italic
+      // Matched pairs of *  -> italic
       val line5 = MatcherI.replaceAllIn(line4, m => raw"\\textit{" + m.group(1) + "}")
 
-      line5
+      // headers -> huge
+      val line6 = MatcherH.replaceAllIn(line5, m => raw"{\\huge\\noindent " + m.group(1) + "}")
+
+      // copyright symbol
+      val line7 = MatcherCopyright.replaceAllIn(line6, _ => raw"\\textcopyright\\")
+
+      // percent sign
+      val line8 = MatcherPercent.replaceAllIn(line7, _ => raw"\\%")
+
+      line8
 
       // TODO: deal properly with single quotes that are not apostrophes
       // not really sure how to do this at the moment
