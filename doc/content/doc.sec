@@ -89,7 +89,7 @@ path: Documentation
 
 The meat of a Secondary project is its *content files*. These are text files (usually with a `.sec` extension) that live in a project's `content` subdirectory.
 
-A content file describes one or more *items*. Each item corresponds to a single page in the world encyclopedia, but it may be possible to render one or more additional pieces of content such as images, or an EPUB or LaTeX document from an item.
+A content file describes one or more *items*. Each item corresponds to a single article page in the world encyclopedia, but it may be possible to render one or more additional pieces of content such as images, or an EPUB or LaTeX document from an item.
 
 Each item begins with a header. The first line of the header is exclamation mark (!) followed by the item type. A list of property key-value pairs (with a colon and space separating the key and value) follows on the next few lines. After a blank line, the item's notes begin, and notes end when a new item header begins. Here's an example:
 
@@ -128,7 +128,7 @@ Different types of items have special functionality and may have additional prop
     * Represents collection of items.
     * Has a list of child items (constructed from items that refer to it in their `path` property). Children are rendered as a list of links to subarticles at the end of the page.
     * In general, when linking or referring to an item, it does not matter which collection it belongs to or where in the hierarchy it falls. However, some {{Tags}}, such as `tasks` and `timeline`, recurse through collection hierarchies to gather information.
-    * Collections whose parent is the master collection (the first item in the master file) are rendered on the home page.
+    * Collections whose parent is the master collection (the first item in the master content file) are rendered on the home page.
 * **!place**, **!location**
     * Describes a place.
     * No special functionality.
@@ -167,13 +167,11 @@ The `include` item type is a special pseudo-item. Item only one property, `filen
 
 A collection's list of children is ordered. The order that items occur in files (including the use of the `include` pseudo-item) determines this order.
 
+
 !collection
 id: tags
 name: Tags
 path: Documentation
-
-### Overview
----
 
 A key feature of Secondary is a special set of tags that you can use in the notes of any item. Some of these function like tags in wiki markup, while others have purposes that are more specific to worldbuilding. Tags take the following form:
 
@@ -181,19 +179,16 @@ A key feature of Secondary is a special set of tags that you can use in the note
 
 For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Task Tags}}, `value` is usually a sentence or two of descriptive text, and for {{link: tags | Event Tags}}, `value` is a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
 
-<br />
 
+!item
+name: General Tags
+path: Tags
 
-### Item Tags
----
-
-Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
-
----
+General tags add links between items or allow information to be shared between them.
 
 #### anchor
 
-Add an anchor that can be referenced via a {{link: Tags | link}} tag.
+Add an anchor that can be referenced via a {{link: Item Tags | link}} tag.
 
 **Usage**
 
@@ -206,84 +201,9 @@ Add an anchor that can be referenced via a {{link: Tags | link}} tag.
 
 `{{demo: anchor | This is an anchor with id "anchor-tag". | id=anchor-tag}}` &rarr; {{anchor: This is an anchor with id "anchor-tag". | id=anchor-tag}}
 
----
+#### footnotes
 
-#### familytree
-
-Insert the family tree of a character and their descendants.
-
-**Usage**
-
-`{{demo: familytree | character}}`
-
-* **character**: name or id of character item
-
-Family relationships are established by using any of the following item tags in the notes of characters:
-
-* **father**, **mother**, **parent**
-* **son**, **daughter**, **child**
-* **ancestor**
-* **descendant**
-* **marriage**
-
-For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
-
-**birth** and **death** tags in a character's notes will add lifespan dates to their entry in the family tree. See {{link: tags | Event Tags}} below for more about these tags.
-
-**Examples**
-
-`{{demo: familytree | Lady Catherine de Bourgh}}`
-
-{{familytree: Lady Catherine de Bourgh}}
-
-See {{link: Genealogy Examples}} for further details.
-
----
-
-#### image
-
-{{image: image_red_riding_hood}}
-
-Insert an image.
-
-**Usage**
-
-`{{demo: image | item | link=true | responsive=false}}`
-
-* **item**: name or id of image item
-* **link**: add a link from the image back to its page
-* **responsive**: resize the image to fit the width of the page
-
-If the image is not responsive, it will be right aligned with a maximum width of 320px.
-
-**Example**
-
-`{{demo: image | image_red_riding_hood}}`
-
----
-
-#### jumbotron
-
-Set the background image, image position, and text color of the article jumbotron.
-
-**Usage**
-
-`{{demo: jumbotron | image | xpos=0% | ypos=50% | color=black}}`
-
-* **image**: name or id of image item
-* **xpos**: image x-position, in percentage (%) or pixels (px)
-* **ypos**: image y-position, in percentage or pixels
-* **color**: text color
-
-**Examples**
-
-`{{demo: jumbotron | image_alice | ypos=50%}}`
-
-{{jumbotron: image_alice | ypos=50%}}
-
-See jumbotron at top of page.
-
----
+#### index
 
 #### link
 
@@ -310,46 +230,78 @@ Because link is the most often used tag, `link:` is optional if it is being used
 
 `{{demo: link | Tags | Link to anchor with id "anchor-tag" | anchor-tag}}` &rarr; {{link: Tags | Link to anchor with id "anchor-tag" | anchor-tag}}
 
----
+#### link
 
-#### timeline
+#### sidenote
 
-Insert a timeline of all events in a hierarchy of items.
+#### snip
+
+#### quote
+
+
+!item
+name: Image Tags
+path: Tags
+
+Image tags allow Secondary to track and store information relating to images and use those images to decorate the world encyclopedia.
+
+#### gallery
+
+#### image
+
+{{image: image_red_riding_hood}}
+
+Insert an image.
 
 **Usage**
 
-`{{demo: timeline | item | format=monthDayParagraph}}`
+`{{demo: image | item | link=true | responsive=false}}`
 
-* **item**: name or id of an item; events will be gathered from the item and all items underneath it in the hierarchy.
-* **format**: one of several formatting options:
-    * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
-    * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
-    * **yearTable**: create a single table. The first cell in the row contains a year, and the second cell contains a paragraph of the events of that year. Best for events with the greatest spacing.
+* **item**: name or id of image item
+* **link**: add a link from the image back to its page
+* **responsive**: resize the image to fit the width of the page
 
-Events are described using {{link: tags | Event Tags}}.
+If the image is not responsive, it will be right aligned with a maximum width of 320px.
 
 **Example**
 
-This timeline tag gathers event tags from the examples in the next section.
+`{{demo: image | image_red_riding_hood}}`
 
-`{{demo: timeline | tags | format=monthDayParagraph}}`
+#### image-responsive
 
-{{timeline: tags | format=monthDayParagraph}}
+#### jumbotron
 
-<br />
+Set the background image, image position, and text color of the article jumbotron.
 
-### Event Tags
----
+**Usage**
 
-Event tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
+`{{demo: jumbotron | image | xpos=0% | ypos=50% | color=black}}`
+
+* **image**: name or id of image item
+* **xpos**: image x-position, in percentage (%) or pixels (px)
+* **ypos**: image y-position, in percentage or pixels
+* **color**: text color
+
+**Examples**
+
+`{{demo: jumbotron | image_alice | ypos=50%}}`
+
+{{jumbotron: image_alice | ypos=50%}}
+
+See jumbotron at top of page.
+
+
+!item
+name: Event and Genealogy Tags
+path: Tags
+
+These tags describe large-scale events or those relating to the lives of specific people. When used in these tags, dates can consist of the full month, day, and year; month and year, or year:
 
 * June 1, 1940
 * June 1940
 * 1940
 
 The parts of the date must be separated by at least one comma or a whitespace character, with additional whitespace allowed.
-
----
 
 #### birth / death
 
@@ -372,8 +324,6 @@ Birth and death tags may be added to any page, but it only make sense to add the
 
 {{death: November 23, 1926 | Angell dies after "a careless push" from a sailor.}}
 
----
-
 #### event
 
 Describe an event.
@@ -395,14 +345,73 @@ Describe an event.
 
 {{event: April 12, 1925 | *Vigilant* rescues *Alert*.}}
 
-<br />
+#### familytree
 
-### Task Tags
----
+Insert the family tree of a character and their descendants.
 
-Task tags describe thoughts and work items in various stages of completion. Tasks are gathered from the entire world hierarchy into tables and outlines on the Tasks page of the generated site.
+**Usage**
 
----
+`{{demo: familytree | character}}`
+
+* **character**: name or id of character item
+
+Family relationships are established by using any of the following item tags in the notes of a character. For these tags, `value` is the name or id of a character.
+
+* **father**, **mother**, **parent**
+* **son**, **daughter**, **child**
+* **ancestor**
+* **descendant**
+
+For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
+
+**birth** and **death** tags in a character's notes will add lifespan dates to their entry in the family tree. See above for more about these tags.
+
+The **marriage** tag establishes marriages between characters. Note that family trees distinguish between children from a marriage (both father and mother specified) and from an individual person in a marriage (only one of father and mother specified).
+
+**Examples**
+
+`{{demo: familytree | Lady Catherine de Bourgh}}`
+
+{{familytree: Lady Catherine de Bourgh}}
+
+See {{link: Genealogy Examples}} for further examples.
+
+#### marriage
+
+#### timeline
+
+Generate a timeline of all events in a hierarchy of items.
+
+**Usage**
+
+`{{demo: timeline | item | format=monthDayParagraph}}`
+
+* **item**: name or id of an item; events will be gathered from the item and all items underneath it in the hierarchy.
+* **format**: one of several formatting options:
+    * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
+    * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
+    * **yearTable**: create a single table. The first cell in the row contains a year, and the second cell contains a paragraph of the events of that year. Best for events with the greatest spacing.
+
+Events are described using **event**, **birth / death**, and **marriage** tags.
+
+**Example**
+
+This timeline tag gathers event tags from the examples in the next section.
+
+`{{demo: timeline | tags | format=monthDayParagraph}}`
+
+{{timeline: tags | format=monthDayParagraph}}
+
+
+!item
+name: Task Tags
+path: Tags
+
+Task tags describe thoughts and work items in various stages of completion. They also gather these from across the hierarchy into outlines and tables.
+
+#### burndown
+
+#### tasks
 
 #### thought / todo / started / done / blocked
 
@@ -429,6 +438,33 @@ Currently, dates are simple strings and are not parsed further. For meaningful s
 `{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}`
 
 {{done: Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}
+
+#### stats
+
+#### wordcount
+
+!item
+name: Flight Planning Tags
+path: Tags
+
+Describe interplanetary flights using Orbits software.
+
+#### acceleration / mass / velocity
+
+#### flight
+
+#### flightanimation
+
+#### flightepoch
+
+
+!item
+name: Miscellaneous Tags
+path: Tags
+
+#### demo
+
+#### markovtext
 
 
 !collection
@@ -510,8 +546,68 @@ path: Documentation
 
 {{todo: Publishing}}
 
+
 !item
 name: Glossary
 path: Documentation
 
-{{todo: Glossary}}
+* *master collection* - item at the top of the hierarchy. Used to render the world encyclopedia home page.
+* *master content file* - the first item defined in this file is the *master collection*
+* *name parts* - syntax and functionality to help Secondary understand parts of a person's name so it can be rendered and referred to appropriately in different contexts.
+
+
+!item
+name: Tasks
+path: Documentation
+
+**Item Tags**
+
++ Anchor
+- Footnotes
+- Index
++ Link
+- Sidenote
+- Snip
+- Quote
+
+**Image Tags**
+
+- Gallery
++ Image
+- ImageResponsive
+- Jumbotron
+
+**Event and Genealogy Tags**
+
++ birth / death
++ event
++ FamilyTree
+    + father, mother, parent
+    + son, daughter, child
+    + ancestor, descendant
+- marriage
++ timeline
+
+**Task Tags**
+
+- BurnDown
+- Tasks
++ Thought / todo / started / done / blocked
+- Stats
+- WordCount
+
+**Flight Planning Tags**
+
+- acceleration / mass / velocity
+- Flight
+- FlightEpoch
+- FlightAnimation
+
+**Miscellaneous Tags**
+
+- Demo
+- MarkovText
+
+
+{{tasks: master}}
+
