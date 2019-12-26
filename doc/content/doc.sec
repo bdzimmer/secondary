@@ -127,7 +127,7 @@ Different types of items have special functionality and may have additional prop
 * **!collection**
     * Represents collection of items.
     * Has a list of child items (constructed from items that refer to it in their `path` property). Children are rendered as a list of links to subarticles at the end of the page.
-    * In general, when linking or referring to an item, it does not matter which collection it belongs to or where in the hierarchy it falls. However, some {{Tags}}, such as `tasks` and `timeline`, recurse through collection hierarchies to gather information.
+    * In general, when linking or referring to an item, it does not matter which collection it belongs to or where in the hierarchy it falls. However, some tags, such as `tasks` and `timeline`, recurse through collection hierarchies to gather information.
     * Collections whose parent is the master collection (the first item in the master content file) are rendered on the home page.
 * **!place**, **!location**
     * Describes a place.
@@ -177,7 +177,7 @@ A key feature of Secondary is a special set of tags that you can use in the note
 
 `{{demo: tag_name | value | arg1=value1 | arg2=value2 | arg3=value3 ...}}`
 
-For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Task Tags}}, `value` is usually a sentence or two of descriptive text, and for {{link: tags | Event Tags}}, `value` is a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
+For many tags, `value` is usually the id or name of an item in your world. For others, `value` is usually a sentence or two of descriptive text, and for tags relating to events, `value` is often a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
 
 
 !item
@@ -203,7 +203,43 @@ Add an anchor that can be referenced via a {{link: General Tags | link}} tag.
 
 #### footnotes
 
+Add a list of footnotes gathered from an item.
+
+**Usage**
+
+`{{demo: footnotes | item | sections=true}}`
+
+* **sections**: if true, group into sections divided by headings
+
+The footnotes list includes links back to the paragraph of the article they occur in as well as links to sections if enabled. {{link: Task Tags | thought / todo / started / done / blocked}} tags are also gathered into the list.
+
+**Example**
+
+`{{demo: footnotes | *Little Red Riding Hood*}}`
+
+{{footnotes: *Little Red Riding Hood*}}
+
 #### index
+
+Generate an alphabetical index.
+
+**Usage**
+
+`{{demo: index | item}}`
+
+* **item** - collection item
+
+The index is generated from all items in the hierarchy below the specified item and grouped by first letter of the name. Characters are sorted and grouped by last name, if they have one. Each line of the index links to the item's article page.
+
+**Example**
+
+`{{demo: index | Genealogy Examples}}`
+
+---
+
+{{index: Genealogy Examples}}
+
+---
 
 #### link
 
@@ -220,7 +256,7 @@ Create a link to an item.
 * **description**: text to display
 * **id**: id of anchor generated with {{link: General Tags | anchor}} tag
 
-Because link is the most commonly used tag, `link:` is optional if it is being used without an heading argument or description and id arguments.
+Because link is the most commonly used tag, `link:` is optional if it is being used without additional arguments beyond the item.
 
 **Examples**
 
@@ -232,9 +268,58 @@ Because link is the most commonly used tag, `link:` is optional if it is being u
 
 #### sidenote
 
+Add a sidenote.
+
+**Usage**
+
+`{{demo: sidenote | content | id=None}}`
+
+* **content** - sidenote content
+* **id** - id to be displayed as a superscript in the body of the text and before the content in the side margin.
+
+Sidenotes are displayed in a side margin, aligned to the top of the paragraph that they appear in. The margin is only created in an article page only if sidenotes are present.
+
+Sidenotes (and side margins) will not render in `collection` and `image` items. Also, sidenotes are not rendered in EPUB or LaTeX exports.
+
+**Examples**
+
+See {{*Little Red Riding Hood*}}.
+
 #### snip
 
+Snip one or more paragraphs of text to be quoted in a separate article.
+
+**Usage**
+
+`{{demo: snip | id | paragraphs=1}}`
+
+* **id** - unique id of snip within item
+* **paragraphs** - number of paragraphs (lines of text separated by blank lines) to snip.
+
+Snipped text starts after the end of the tag, so to ignore the one or more sentences at the beginning of a paragraph, place the tag after them.
+
+**Example**
+
+See Chapter 2 of {{*Little Red Riding Hood*}} for an example snip.
+
 #### quote
+
+Quote snipped text.
+
+**Usage**
+
+`{{demo: quote | item | id}}`
+
+* **item** - name or id of item containing snip
+* **id** - id of snip to quote
+
+Quoting text from an article creates a dependency, so when the world encyclopedia is exported, the quoting article will be updated if the snipped article changes.
+
+**Example**
+
+`{{demo: quote | *Little Red Riding Hood* | id=what big teeth}}`
+
+{{quote: *Little Red Riding Hood* | id=what big teeth}}
 
 
 !item
@@ -308,7 +393,7 @@ See jumbotron at top of page.
 name: Event and Genealogy Tags
 path: Tags
 
-These tags describe large-scale events or those relating to the lives of specific people. When used in these tags, dates can consist of the full month, day, and year; month and year, or year:
+These tags describe large-scale events or those relating to the lives of specific people. Dates used in these tags can consist of the full month, day, and year; month and year, or year:
 
 * June 1, 1940
 * June 1940
@@ -410,9 +495,9 @@ Events are described using **event**, **birth / death**, and **marriage** tags.
 
 This timeline tag gathers event tags from the examples in the next section.
 
-`{{demo: timeline | tags | format=monthDayParagraph}}`
+`{{demo: timeline | Event and Genealogy Tags | format=monthDayParagraph}}`
 
-{{timeline: tags | format=monthDayParagraph}}
+{{timeline: Event and Genealogy Tags | format=monthDayParagraph}}
 
 
 !item
@@ -552,11 +637,51 @@ id: elizabeth
 name: Elizabeth | Bennet
 path: genealogy
 
-!item
+!collection
 name: Publishing
 path: Documentation
 
 {{todo: Publishing}}
+
+!book
+name: *Little Red Riding Hood*
+authorname: Author | Name
+uniqueid: id0000
+path: Publishing
+
+### ---
+
+{{image: image_red_riding_hood}}
+
+(The first section is special. If it contains an image, the image is used as the EPUB cover image. Otherwise, the first section is the title page. In this example, the second section is the title page.)
+
+# Little Red Riding Hood
+
+**By Author Name**
+
+Copyright &copy; 2020 Author Name. All rights reserved.
+
+#### 1
+
+This is the first chapter. Little Red Riding Hood is summoned to grandmother's house.
+
+
+#### 2
+
+The heroine encounters a strange version of her grandmother.{{sidenote: This creature is actually an evil wolf, not her grandmother. | id=2.1}}
+
+This chapter includes many famous lines, such as when the heroine says something like {{snip: what big teeth | paragraphs=2}}"But grandmother, what big teeth you have."
+
+And the wolf said, "All the better to eat you with!"
+
+Note how sidenotes are aligned with the top of the paragraph in which they appear.
+
+#### 3
+
+How will the heroine escape?
+
+{{todo: write the ending}}
+
 
 
 !item
@@ -573,15 +698,19 @@ path: Documentation
 name: Tasks
 path: Documentation
 
-**Item Tags**
+{{tasks: master}}
+
+#### Tag Documentation
+
+**General Tags**
 
 + Anchor
-- Footnotes
-- Index
++ Footnotes
++ Index
 + Link
-- Sidenote
-- Snip
-- Quote
++ Sidenote
++ Snip
++ Quote
 
 **Image Tags**
 
@@ -619,7 +748,4 @@ path: Documentation
 
 - Demo
 - MarkovText
-
-
-{{tasks: master}}
 
