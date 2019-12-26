@@ -14,69 +14,14 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 
 import bdzimmer.util.StringUtils._
 
-import bdzimmer.secondary.export.model.{Tags, WorldItems}
+import bdzimmer.secondary.export.model.{WorldItems}
 import bdzimmer.secondary.export.model.Tags.ParsedTag
 import bdzimmer.secondary.export.model.WorldItems.BookItem
 import bdzimmer.secondary.export.view.Styles
+import bdzimmer.secondary.export.controller.Book.SectionInfo
 
 
 object Epub {
-
-  case class SectionInfo(
-    id: String,
-    name: String,
-    content: String
-  )
-
-  def sections(
-      book: String,
-      tags: Map[Int, Tags.ParsedTag],
-      rt: RenderTags): (List[SectionInfo], Option[Tags.Image]) = {
-
-    val (titles, chunks, chunkRanges) = splitSections(book)
-
-    val contents = chunks.map({case (startIdx, chunk) => {
-      val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
-      rt.transform(chunk, tagsMod)
-    }})
-
-    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
-      SectionInfo("section" + secNumber.toString, secTitle, secContent)
-    }})
-
-    // find all image tags
-    val imageTags = tags.filter(x => x._2.isInstanceOf[Tags.Image]).collect({case x: (Int, Tags.Image) => x})
-
-    // first image tag in first section is cover image
-    val image = for {
-      coverPageRange <- chunkRanges.headOption
-      coverImageTag <- imageTags.find(x => x._1 >= coverPageRange._1 && x._1 < coverPageRange._2)
-    } yield {
-      coverImageTag._2
-    }
-
-    image match {
-      case Some(x) => (sections.tail, image)
-      case None    => (sections, None)
-    }
-  }
-
-
-  def splitSections(book: String): (List[String], List[(Int, String)], List[(Int, Int)]) = {
-
-    val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
-
-    val matches = matcher.findAllMatchIn(book).map(m => (m.start, m.end, m.group(1))).toList
-
-    // use _._2 if we want to exclude the chapter headings from the contents
-    val allPositions = matches.map(_._1) ++ List(book.length)
-    val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
-    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
-    val titles = matches.map(_._3)
-
-    (titles, chunks, chunkRanges)
-  }
-
 
   def coverPage(imageFilename: String): String = {
     //s"""<body><img id="coverimage" src="$imageFilename" alt="cover image" /></body>"""
@@ -242,6 +187,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
 
   }
 
+
   def export(
       filename: String,
       book: BookItem,
@@ -249,7 +195,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       renderTags: RenderTags,
       localExportPath: String): Unit = {
 
-    val (sections, coverImageTag) = Epub.sections(book.notes, tags, renderTags)
+    val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags))
     // title is name of first section
     val title = sections.headOption.map(_.name).getOrElse("empty")
     val titlePage = sections.headOption.map(_.copy(name="Title Page"))
@@ -262,8 +208,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     // WIP: experimenting with disabling cover page; I think it causes a duplicate cover on KDP
     // But it might be necessary to enable for Kobo.
 
-    val cover = coverImageTag.map(
-      x => Epub.SectionInfo("cover", "Cover", Epub.coverPage(RenderImages.itemImagePath(x.item))))
+    // val cover = coverImageTag.map(
+    //   x => Epub.SectionInfo("cover", "Cover", Epub.coverPage(RenderImages.itemImagePath(x.item))))
 
     Epub.export(
       filename,

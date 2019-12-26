@@ -26,7 +26,7 @@ class ConfigurationGUI(
   val fieldFont = new Font("monospaced", Font.PLAIN, 12)
 
 
-  val myBorder = new EmptyBorder(10, 10, 10, 10)
+  val emptyborder = new EmptyBorder(10, 10, 10, 10)
   val saveStatus = new JLabel("")
 
   val save = new JButton("Save")
@@ -111,7 +111,7 @@ class ConfigurationGUI(
 
   contents.add({
     val res = new JPanel(new GridLayout(columnPairs.length, 1))
-    res.setBorder(myBorder)
+    res.setBorder(emptyborder)
     columnPairs.foreach(x => {
       val label = new JLabel(x._2)
       label.setHorizontalAlignment(SwingConstants.LEFT)
@@ -122,7 +122,7 @@ class ConfigurationGUI(
 
   contents.add({
     val res = new JPanel(new GridLayout(columnPairs.length, 1))
-    res.setBorder(myBorder)
+    res.setBorder(emptyborder)
     columnPairs.foreach(x => {
       res.add(x._1)
     })

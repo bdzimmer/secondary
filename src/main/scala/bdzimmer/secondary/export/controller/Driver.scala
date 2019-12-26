@@ -96,7 +96,8 @@ class Driver {
     }
 
     case DriverCommands.Browse => browseLocal()
-    case DriverCommands.Basic => {
+
+    case DriverCommands.Basic | DriverCommands.Epub | DriverCommands.Latex => {
       val startTime = System.currentTimeMillis
       val res = for {
         stuff <- getRenderStuff()
@@ -107,10 +108,43 @@ class Driver {
           "invalid item name or id '" + itemId + "'")
       } yield {
         val tags = item.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-        val filename = item.id + ".htm"
-        Basic.export(filename, item.notes, item.name, tags, rt, projConf.localExportPath)
-        val totalTime = (System.currentTimeMillis - startTime) / 1000.0
-        println("exported " + filename + " in " + totalTime + " sec")
+
+        val outputFilename = command match {
+          case DriverCommands.Basic => {
+            val filename = item.id + ".htm"
+            Basic.export(filename, item.notes, item.name, tags, rt, projConf.localExportPath)
+            Pass(filename)
+          }
+          case DriverCommands.Epub => {
+            Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
+              val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
+              val filename = book.id + ".epub"
+              Epub.export(filename, book, tags, rt, projConf.localExportPath)
+              filename
+            }).mapLeft(_ => "'" + itemId + "' not a book")
+          }
+          case DriverCommands.Latex => {
+            Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
+              val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
+              val filename = book.id + ".tex"
+              Latex.export(filename, book, tags, projConf.localExportPath)
+              filename
+            }).mapLeft(_ => "'" + itemId + "' not a book")
+          }
+
+        }
+
+        outputFilename match {
+          case Pass(x) => {
+            val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+            println("exported " + x + " in " + totalTime + " sec")
+          }
+          case Fail(msg) => {
+            // TODO: collapse this into outer message
+            println("export failed:" + msg)
+          }
+        }
+
       }
       res.mapLeft(msg => println(msg))
     }
@@ -384,6 +418,7 @@ object DriverCommands {
   val Epub        = "epub"
   val Explore     = "explore"
   val Export      = "export"
+  val Latex       = "latex"
   val Orbits      = "orbits"
   val Screenshot  = "screenshot"
   val Server      = "server"
@@ -404,6 +439,7 @@ object DriverCommands {
     (Epub,        "export a book to EPUB"),
     (Explore,     "explore project content dir"),
     (Export,      "export"),
+    (Latex,       "export a book to LaTeX"),
     (Orbits,      "orbits editor (alpha)"),
     (Screenshot,  "screenshot utility"),
     (Server,      "server mode"),

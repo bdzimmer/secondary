@@ -196,8 +196,8 @@ object Flight {
         epoch.endDate,
         factions,
         Editor.ShowSettingsDefault.copy(
-          flightStatus=anim.status,
-          orbitInfo=true // just for testing
+          flightStatus=anim.status
+          // orbitInfo=true // just for testing
         ),
         anim.settings,
         outputDirname
