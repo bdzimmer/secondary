@@ -10,7 +10,75 @@ id: layout
 name: Project Layout
 path: Documentation
 
-{{TODO: project layout content}}
+#### Setup
+
+See the repo's `README.md` for setup instructions. After building, make sure the `dist` directory (which contains the `secondary` / `secondary.bat` launch script) or a copy of it is on your path.
+
+#### Run
+
+A Secondary project exists in a directory. Invoke the `secondary` command with a project directory as the working directory to interact with the project.
+
+#### Directory Structure
+
+Files and subdirectories within a project include:
+
+* `secondary.properties` - project configuration in [.properties](https://en.wikipedia.org/wiki/.properties) format. This file can be edited with a text editor or with a GUI via the command `secondary configure`. Every configurable property has a default value, which will be displayed when Secondary loads the project. It's a good idea, however, to understand and update the settings. See {{link: Project Layout | Configuration}}.
+* `content/` - content files, typically text documents with `.sec` extension or images, are placed here.
+* `web/` - location of exported world encyclopedia web site.
+* `wikicache/` - cache for full-size images downloaded from Wikimedia during the export process.
+* `status_*.txt` - files tracking hashes of {{Items}} to accelerate the export process. A full export (which should be done occasionally) can be performed by deleting these files before export or running export with with the `force` switch. See {{Commands}}.
+
+#### Configuration
+
+Many configuration options are available in `secondary.properties`, and most relate to HTML export behavior.
+
+* `masterName` - prefix (not inlcluding `.sec`) of initial text content file. The first item in this file is expected to be the master collection.
+* `license` - License to be included at the bottom of exported HTML pages. Use `&copy` for the copyright symbol: &copy.
+* `navbars` - boolean; whether to include navbars on pages. Only real reason to disable this is for rendering single page websites.
+* `subarticles` - boolean; if true, include subarticle lists in HTML pages for collection items.
+* `relativeLinks` - boolean; if true, include links for previous, parent, and next item in the navbar.
+* `hiddenItems` - semicolon-separated list of item ids or names. These items will not appear in lists of subarticles or main collection outlines on the rendered home page.
+* `unifiedJumbotron` - boolean; if true, all jumbotrons will display the name and description of the master collection. Useful for creating a generic website.
+* `search` - boolean; if true, include search field on home page navbar.
+
+
+!item
+id: commands
+name: Commands
+path: Documentation
+
+#### Interactive Mode
+
+Running `secondary` with no additional flags will start Secondary in interactive mode. Run commands one at a time, and exit with `exit`, `quit`, or `q`.
+
+#### Commands
+
+To execute an individual command, use `secondary <command> [additional options]`. If the command requires an item to be specified, it may be specified by id or name. If a name contains spaces, it may be quoted or separated across multiple parameters for convenience. Available commands:
+
+* `animate <item>` - render flight animation videos of all `flightanimation` tags in `<item>`. This can be time and CPU intensive, so it does not happen by default on export.
+* `basic <item>` - export an item to basic HTML. Useful for conversion to `.docx` format for manuscript submissions.
+* `browse` - browse exported project web site's home page. Uses Java's `Desktop.getDesktop.browse()`.
+* `configure` - edit project configuration in a GUI.
+* `duplicate <item>` - detect duplicate words in an item's notes.
+* `edit <item>` - edit the source file for an item using Notepad++; assumes `notepad++` command is on path and will open the file at the correct line. Currently only works in interactive mode.
+* `editor` - pixel editor (alpha).
+* `epub <item>` - export a book item to EPUB. See {{Publishing}}.
+* `explore` - explore project `content` directory. Uses Java's `Desktop.getDesktop.open()`.
+* `export` - export the world encyclopedia website. Add the optional `force` switch to regenerate all items, even if they haven't been updated.
+* `latex` - export a book to LaTeX. See {{Publishing}}.
+* `orbits` - orbits editor (alpha).
+* `screenshot` - screenshot utility (alpha).
+* `server` - server mode. Reruns export every 10 seconds.
+* `sprint <item>` - interactive writing sprint tool. Shows initial wordcount of item's notes. Press enter to show words added and words per hour rate. Press q to quit.
+* `styles` - add stylesheets, Google fonts, and related scripts to the project's `web` directory.
+* `help` - show usage and a summary of commands.
+
+#### Build Script
+
+For typical use, `secondary export` is used most frequently. This refreshes the world encyclopedia and tags related to content that you are editing, such as tasks, footnotes, and quotes. The `export` command usually completes within a few seconds.
+
+However, it does not refresh all content. It's recommended to create one or more build scripts for your project that include the various invocations of Secondary required to generate all project artifacts and run additional conversion commands on them.
+
 
 !item
 id: items
@@ -357,8 +425,7 @@ name: Elizabeth | Bennet
 path: genealogy
 
 !item
-id: faq
-name: Frequently Asked Questions
+name: Publishing
 path: Documentation
 
-{{TODO: faq content}}
+{{todo: Publishing}}
