@@ -281,7 +281,7 @@ Sidenotes are displayed in a side margin, aligned to the top of the paragraph th
 
 Sidenotes (and side margins) will not render in `collection` and `image` items. Also, sidenotes are not rendered in EPUB or LaTeX exports.
 
-**Examples**
+**Example**
 
 See {{*Little Red Riding Hood*}}.
 
@@ -300,7 +300,7 @@ Snipped text starts after the end of the tag, so to ignore the one or more sente
 
 **Example**
 
-See Chapter 2 of {{*Little Red Riding Hood*}} for an example snip.
+See {{*Little Red Riding Hood*}}.
 
 #### quote
 
@@ -380,7 +380,7 @@ Set the background image, image position, and text color of the article jumbotro
 * **ypos**: image y-position, in percentage or pixels
 * **color**: text color
 
-**Examples**
+**Example**
 
 `{{demo: jumbotron | image_red_riding_hood | ypos=90% | color=white}}`
 
@@ -467,7 +467,7 @@ For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes 
 
 The **marriage** tag establishes marriages between characters. Note that family trees distinguish between children from a marriage (both father and mother specified) and from an individual person in a marriage (only one of father and mother specified).
 
-**Examples**
+**Example**
 
 `{{demo: familytree | Lady Catherine de Bourgh}}`
 
@@ -749,3 +749,7 @@ path: Documentation
 - Demo
 - MarkovText
 
+
+#### Other Tasks
+
+*
