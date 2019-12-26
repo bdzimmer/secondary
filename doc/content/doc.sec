@@ -188,7 +188,7 @@ General tags add links between items or allow information to be shared between t
 
 #### anchor
 
-Add an anchor that can be referenced via a {{link: Item Tags | link}} tag.
+Add an anchor that can be referenced via a {{link: General Tags | link}} tag.
 
 **Usage**
 
@@ -218,19 +218,17 @@ Create a link to an item.
 * **item**: name or id of item
 * **heading** (optional): name of heading within item's notes
 * **description**: text to display
-* **id**: id of anchor generated with {{link: Tags | anchor}} tag
+* **id**: id of anchor generated with {{link: General Tags | anchor}} tag
 
-Because link is the most often used tag, `link:` is optional if it is being used without an heading argument or description and id arguments.
+Because link is the most commonly used tag, `link:` is optional if it is being used without an heading argument or description and id arguments.
 
 **Examples**
 
 `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
 
-`{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
+`{{demo: link | Event and Genealogy Tags | familytree}}` &rarr; {{link: Event and Genealogy Tags | familytree}}
 
-`{{demo: link | Tags | Link to anchor with id "anchor-tag" | anchor-tag}}` &rarr; {{link: Tags | Link to anchor with id "anchor-tag" | anchor-tag}}
-
-#### link
+`{{demo: link | General Tags | Link to anchor with id "anchor-tag" | anchor-tag}}` &rarr; {{link: General Tags | Link to anchor with id "anchor-tag" | anchor-tag}}
 
 #### sidenote
 
@@ -247,6 +245,23 @@ Image tags allow Secondary to track and store information relating to images and
 
 #### gallery
 
+Insert a responsive gallery of images.
+
+**Usage**
+
+`{{demo: gallery | item | recursive=false | size=4 | showCaptions=true}}`
+
+* **item**: name or id of collection
+* **recursive**: if true, descend through hierarchy to gather images for gallery
+* **size**: size of gallery columns (12 is full width)
+* **showCaptions**: if true, show the name of the image item below each name in the image
+
+**Example**
+
+`{{demo: gallery | Images}}`
+
+{{gallery: Images}}
+
 #### image
 
 {{image: image_red_riding_hood}}
@@ -259,15 +274,13 @@ Insert an image.
 
 * **item**: name or id of image item
 * **link**: add a link from the image back to its page
-* **responsive**: resize the image to fit the width of the page
+* **responsive**: if true, resize the image to fit the width of the page
 
 If the image is not responsive, it will be right aligned with a maximum width of 320px.
 
 **Example**
 
 `{{demo: image | image_red_riding_hood}}`
-
-#### image-responsive
 
 #### jumbotron
 
@@ -284,9 +297,9 @@ Set the background image, image position, and text color of the article jumbotro
 
 **Examples**
 
-`{{demo: jumbotron | image_alice | ypos=50%}}`
+`{{demo: jumbotron | image_red_riding_hood | ypos=90% | color=white}}`
 
-{{jumbotron: image_alice | ypos=50%}}
+{{jumbotron: image_red_riding_hood | ypos=90% | color=white}}
 
 See jumbotron at top of page.
 
@@ -316,7 +329,7 @@ Describe the birth or death of a character.
 * **date**: date of birth or death of the character whose notes this tag appears in
 * **description**: description of the event
 
-Birth and death tags may be added to any page, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
+Birth and death tags may be added to any item, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
 
 **Example**
 
@@ -361,6 +374,7 @@ Family relationships are established by using any of the following item tags in 
 * **son**, **daughter**, **child**
 * **ancestor**
 * **descendant**
+* **marriage**
 
 For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
 
@@ -375,8 +389,6 @@ The **marriage** tag establishes marriages between characters. Note that family 
 {{familytree: Lady Catherine de Bourgh}}
 
 See {{link: Genealogy Examples}} for further examples.
-
-#### marriage
 
 #### timeline
 
@@ -554,6 +566,7 @@ path: Documentation
 * *master collection* - item at the top of the hierarchy. Used to render the world encyclopedia home page.
 * *master content file* - the first item defined in this file is the *master collection*
 * *name parts* - syntax and functionality to help Secondary understand parts of a person's name so it can be rendered and referred to appropriately in different contexts.
+* *tag* - special directive used in an item's notes. Enclosed in double curly braces.
 
 
 !item
@@ -572,10 +585,9 @@ path: Documentation
 
 **Image Tags**
 
-- Gallery
++ Gallery
 + Image
-- ImageResponsive
-- Jumbotron
++ Jumbotron
 
 **Event and Genealogy Tags**
 
@@ -585,7 +597,7 @@ path: Documentation
     + father, mother, parent
     + son, daughter, child
     + ancestor, descendant
-- marriage
+    + marriage
 + timeline
 
 **Task Tags**
