@@ -32,7 +32,7 @@ Files and subdirectories within a project include:
 
 Many configuration options are available in `secondary.properties`, and most relate to HTML export behavior.
 
-* `masterName` - prefix (not inlcluding `.sec`) of initial text content file. The first item in this file is expected to be the master collection.
+* `masterName` - prefix (not including `.sec`) of the *master content file*. The first item in this file is the *master collection*: the top of the hierarchy. The master collection is rendered as the home page of the world encyclopedia web site.
 * `license` - License to be included at the bottom of exported HTML pages. Use `&copy` for the copyright symbol: &copy.
 * `navbars` - boolean; whether to include navbars on pages. Only real reason to disable this is for rendering single page websites.
 * `subarticles` - boolean; if true, include subarticle lists in HTML pages for collection items.
@@ -85,7 +85,87 @@ id: items
 name: Items
 path: Documentation
 
-{{TODO: items content}}
+#### Content Files
+
+The meat of a Secondary project is its *content files*. These are text files (usually with a `.sec` extension) that live in a project's `content` subdirectory.
+
+A content file describes one or more *items*. Each item corresponds to a single page in the world encyclopedia, but it may be possible to render one or more additional pieces of content such as images, or an EPUB or LaTeX document from an item.
+
+Each item begins with a header. The first line of the header is exclamation mark (!) followed by the item type. A list of property key-value pairs (with a colon and space separating the key and value) follows on the next few lines. After a blank line, the item's notes begin, and notes end when a new item header begins. Here's an example:
+
+    !item
+    id: test
+    name: Test Item
+    path: Test Parent
+
+    Here's the notes of the item.
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+    This is the last line of the notes that belong to item "test".
+
+    !item
+    id: test2
+    ...
+
+All items types have the following properties:
+
+* `id` - unique identifier of the item. Must also be a valid file prefix. If not specified, it will be derived from `name`.
+* `name` - display name or title of the item. Does not have to be unique.
+* `description` - optional description. Defaults to empty.
+* `path` - id or name of the item's parent item. Required for all items except the master collection. The parent item must be a collection; see below.
+* `notes` - body text of the item. Usually written out over multiple lines after the end of the key-value pairs and before the header of the next item. However, it can be included in the property lines instead. Useful for items with single-line notes.
+
+Different types of items have special functionality and may have additional properties specific to their purpose.
+
+#### Item Types
+
+* **!item**, **!thing**
+    * Generic item.
+* **!collection**
+    * Represents collection of items.
+    * Has a list of child items (constructed from items that refer to it in their `path` property). Children are rendered as a list of links to subarticles at the end of the page.
+    * In general, when linking or referring to an item, it does not matter which collection it belongs to or where in the hierarchy it falls. However, some {{Tags}}, such as `tasks` and `timeline`, recurse through collection hierarchies to gather information.
+    * Collections whose parent is the master collection (the first item in the master file) are rendered on the home page.
+* **!place**, **!location**
+    * Describes a place.
+    * No special functionality.
+    * Slated for deprecation.
+* **!character**, **!person**
+    * Describes a character.
+    * A character's `name` property is parsed into *name parts*, which allows Secondary to handle the character's name intelligently in different contexts.
+        * To use name parts syntax, place a vertical pipe between first and last names and observe how the character's name is displayed in jumbotrons, links, and indices.
+        * {{todo: describe "name parts" behavior in greater detail}}
+        * {{todo: describe behavior with links}}
+    * Certain types of event tags are functional only for characters, and relationship tags can describe familial relationships between them.
+* **!image**
+    * Describes an image.
+    * Has an additional `filename` property which is either a local file name relative to the `content` directory or the description of a Wikimedia image. This is constructed by removing the `File:` prefix and adding a `wikimedia:` prefix.
+    * Upon first export, Wikimedia images are downloaded at full resolution along with metadata into `wikicache`. This allows pages generated for Wikimedia image items to include information about the artist and license as well as a link to the source. See {{Red Riding Hood - Rackham}} for an example.
+* **!trip**
+    * Describes an interplanetary flight or series of flights.
+    * Tags relating to interplanetary flights function in trips.
+* **!book**
+    * Describes a story or novel.
+    * Additional properties:
+        * `uniqueIdentifier` - unique "notISBN" id to be included in EPUB
+        * `authorname` - name of the author described with "name parts" synatx.
+    * Markdown headings (lines that begin with `#`) in the notes of books divide them into sections. The first section will become the title page and remaining sections the chapters.
+    * The title of the book when publishing is *not* the name of the item (which may include markdown for styling) but the text of the heading of the first section.
+    * Books are given formatting that resembles print typesetting when rendered to HTML.
+    * See {{Publishing}}.
+* **!tileset**, **!spritesheet**, **!map**
+    * Special game design functionality. Not documented.
+
+#### !include
+
+The `include` item type is a special pseudo-item. Item only one property, `filename`, which specifies a file name (including extension) of another content file.
+
+#### Item Ordering
+
+A collection's list of children is ordered. The order that items occur in files (including the use of the `include` pseudo-item) determines this order.
 
 !collection
 id: tags
@@ -429,3 +509,9 @@ name: Publishing
 path: Documentation
 
 {{todo: Publishing}}
+
+!item
+name: Glossary
+path: Documentation
+
+{{todo: Glossary}}
