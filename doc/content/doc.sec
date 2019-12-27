@@ -209,9 +209,10 @@ Add a list of footnotes gathered from an item.
 
 `{{demo: footnotes | item | sections=true}}`
 
+* **item**: name or id of item
 * **sections**: if true, group into sections divided by headings
 
-The footnotes list includes links back to the paragraph of the article they occur in as well as links to sections if enabled. {{link: Task Tags | thought / todo / started / done / blocked}} tags are also gathered into the list.
+The footnotes list includes links back to the paragraph of the article they occur in as well as links to sections if enabled. {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags are also gathered into the list.
 
 **Example**
 
@@ -312,6 +313,8 @@ Quote snipped text.
 
 * **item** - name or id of item containing snip
 * **id** - id of snip to quote
+
+The name of the source article below the quote links back to the location of the snip.
 
 Quoting text from an article creates a dependency, so when the world encyclopedia is exported, the quoting article will be updated if the snipped article changes.
 
@@ -501,14 +504,55 @@ This timeline tag gathers event tags from the examples in the next section.
 
 
 !item
-name: Task Tags
+name: Work Tracking Tags
 path: Tags
 
-Task tags describe thoughts and work items in various stages of completion. They also gather these from across the hierarchy into outlines and tables.
+Work tracking tags describe thoughts and work items in various stages of completion. They also gather these from across the hierarchy into outlines and tables.
 
 #### burndown
 
+Draw a burndown chart.
+
+**Usage**
+
+`{{demo: burndown | startdate=None | enddate=None | recursive=false | weekends=false}}`
+
+* **stardate** - start date of chart
+* **enddate** - end date of chart
+* **recursive** - if true, recurse down hierarchy to find tasks
+* **weekends** - if true, include weekend days in chart
+
+This functionality uses the log / start / done dates and story points to construct a burndown chart of {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags within a certain time range.
+
+The enddate behavior is currently somewhat unintuitive and seems to require an extra day to get the full count of days. This issue will be addressed in future releases.
+
+**Example**
+
+This chart gathers task tags from this article; see task tag examples below.
+
+`{{demo: burndown | Work Tracking Tags | startdate=2016-03-07 | enddate=2016-03-15 | weekends=false}}`
+
+{{burndown: Work Tracking Tags | startdate=2016-03-07 | enddate=2016-03-15 | weekends=false}}
+
 #### tasks
+
+Generate a searchable, sortable table of tasks.
+
+**Usage**
+
+`{{demo: tasks | item}}`
+
+* **item**: name or id of item; tasks will be gathered from the item and all items beneath it in the hierachy.
+
+The table is constructed from {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags.
+
+**Example**
+
+This table gathers task tags from this article; see task tag examples below.
+
+`{{demo: tasks | Work Tracking Tags}}`
+
+{{tasks: Work Tracking Tags}}
 
 #### thought / todo / started / done / blocked
 
@@ -516,29 +560,73 @@ Describe a task.
 
 **Usage**
 
-`{{demo: task_type | description | log=None | start=None | done=None}}`
+`{{demo: task_type | description | log=None | start=None | done=None | points=1}}`
 
 * **task_type**: thought, todo, started, done, or blocked
 * **description**: description of the task
-* **log**: date that the task was first recorded
+* **log**: date the task was first recorded
 * **start**: planned or actual start date
 * **done**: planned or actual finish date
+* **points**: story points for task
 
-Currently, dates are simple strings and are not parsed further. For meaningful sorting, use numerical year-month-day dates with consistent numbers of digits.
+Currently, dates are simple strings and are only parsed further by certain functionality. For meaningful sorting, use numerical year-month-day dates with consistent numbers of digits.
+
+Story points are not displayed and are only used in {{link: Work Tracking Tags | burndown}} charts.
 
 **Examples**
 
-`{{demo: todo | Add additional example events | log=2016-03-09 | start=2016-03-10}}`
+`{{demo: todo | Add additional example events | log=2016-03-07 | start=2016-03-10 | points=2}}`
 
-{{todo: Add additional example events | log=2016-03-09 | start=2016-03-10}}
+{{todo: Add additional example events | log=2016-03-07 | start=2016-03-10 | points=2}}
 
-`{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}`
+`{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-07 | start=2016-03-09 | done=2016-03-09}}`
 
-{{done: Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}
+{{done: Add example events from the Lovecraft Mythos | log=2016-03-07 | start=2016-03-09 | done=2016-03-09}}
 
 #### stats
 
+Display statistics about an item.
+
+**Usage**
+
+`{{demo: stats | item}}`
+
+* **item**: name or id of item; stats will be calculated from the item and all items beneath it in the hierarchy.
+
+Calculates total number of items, tags, and word count. This is an easy way to see the total size of the project or a section of it.
+
+**Example**
+
+`{{demo: stats | master}}`
+
+---
+
+{{stats: master}}
+
+---
+
 #### wordcount
+
+Count words in item notes.
+
+**Usage**
+
+`{{demo: wordcount | item | recursive=false | sections=false}}`
+
+* **item**: name or id of item
+* **recursive**: if true, descend through hierarchy counting words
+* **sections**: if true, group wordcount into sections divided by headings
+
+The sections functionality of this tag is useful for comparing and balancing chapter lengths.
+
+**Example**
+
+This example calculates the wordcount of {{*Little Red Riding Hood*}}.
+
+`{{demo: wordcount | *Little Red Riding Hood* | sections=true}}`
+
+{{wordcount: *Little Red Riding Hood* | sections=true}}
+
 
 !item
 name: Flight Planning Tags
@@ -729,12 +817,12 @@ path: Documentation
     + marriage
 + timeline
 
-**Task Tags**
+**Work Tracking Tags**
 
-- BurnDown
-- Tasks
++ BurnDown
++ Tasks
 + Thought / todo / started / done / blocked
-- Stats
++ Stats
 - WordCount
 
 **Flight Planning Tags**
@@ -748,8 +836,3 @@ path: Documentation
 
 - Demo
 - MarkovText
-
-
-#### Other Tasks
-
-*
