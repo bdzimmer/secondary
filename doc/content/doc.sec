@@ -628,19 +628,208 @@ This example calculates the wordcount of {{*Little Red Riding Hood*}}.
 {{wordcount: *Little Red Riding Hood* | sections=true}}
 
 
-!item
+!trip
 name: Flight Planning Tags
 path: Tags
 
-Describe interplanetary flights using Orbits software.
+Describe interplanetary flights using [Orbits](https://github.com/bdzimmer/orbits) software.
+
+Currently flights may be planned between the following celestial objects:
+
+* Mercury
+* Venus
+* Earth
+* Mars
+* Jupiter
+* Saturn
+* Uranus
+* Neptune
 
 #### acceleration / mass / velocity
 
+Describe properties of a spacecraft.
+
+**Usage**
+
+`{{demo: acceleration | value | unit=None}}`
+
+`{{demo: mass | value | unit=None}}`
+
+`{{demo: velocity | value | unit=None}}`
+
+* **value** - value of property
+* **unit** - optional text to display unit
+
+These tags are added to the notes of an item that represents a spacecraft. This item may then be used in other tags that describe flights.
+
+Currently the unit property is only used for display. Regardless of what is specified, values are assumed to have the following units:
+
+* acceleration: AU/day<sup>2</sup>
+* mass: tonnes (metric tons)
+* velocity: AU/day
+
+Only one of acceleration or velocity is required. Velocity is only used for the very special case of flights with constant velocity and instantaneous acceleration.
+
+**Example**
+
+See example spacecraft {{USS *Big Bad Wolf*}}.
+
 #### flight
+
+Describe an interplanetary flight.
+
+**Usage**
+
+```
+{{demo: flight | ship
+  | startloc=Earth
+  | endloc=Mars
+  | startdate=January 1, 2016 00:00
+  | enddate=February 1, 2016 00:00
+  | passengers=None
+  | faction=none
+}}
+```
+
+* **ship**: name or id of item with spacecraft property tags
+* **startloc**: name of starting location
+* **endloc**: name of ending location
+* **startdate**: flight start date
+* **enddate**: flight end date
+* **passengers**: semicolon-separated list of characters to be recorded as passengers
+* **faction**: name of faction
+
+Note that flights are described with a specific starting and end date, independent of what the spacecraft is capable of. This allows flight definitions to stay constant across tweaks to spacecraft properties or small changes to planetary models.
+
+To properly generate images and animations, the flight tag must be used in a `trip` item. This restriction may be removed in the future.
+
+A definition of factions is required by Orbits. This is a file named `factions.txt` placed at the root of the project directory. Each line of the file takes the following form:
+
+    Faction Name, R, G, B
+
+where R, G, and B are integer values between 0 and 255 describing the color of the faction.
+
+{{todo: is a factions file actually required?}}
+
+**Example**
+
+```
+{{demo: flight | USS *Big Bad Wolf*
+  | startloc=Saturn
+  | endloc=Mars
+  | startdate=September 20, 2690 21:00
+  | enddate=September 30, 2690 12:00
+  | passengers=Elizabeth Bennet; Fitzwilliam Darcy
+  | faction=Protagonists
+}}
+```
+
+{{flight: USS *Big Bad Wolf*
+  | startloc=Saturn
+  | endloc=Mars
+  | startdate=September 20, 2690 21:00
+  | enddate=September 30, 2690 12:00
+  | passengers=Elizabeth Bennet; Fitzwilliam Darcy
+  | faction=Protagonists
+}}
 
 #### flightanimation
 
+Define and embed an animation of zero or more flights or other celestial objects.
+
+**Usage**
+
+```
+{{demo: flightanimation: item
+  | epoch=default
+  | width=1280
+  | height=720
+  | camtype=follow
+  | campos=0.0, 0.0, 0.0
+  | zViewPos=800.0
+  | fps=30
+  | interval=0.041666...
+  | damping=20.0
+  | status=1
+  | visible=none
+}}
+```
+
+{{todo: complete flightanimation usage}}
+
+
+**Examples**
+
+Embedded videos must be generated with the `animate` command: `secondary animage Flight Planning Tags`. This command expects that `ffmpeg` is on your path.
+
+```
+{{demo: flightanimation | Flight Planning Tags
+  | epoch=Flight of the *Big Bad Wolf*
+  | status=2
+  | width=1280
+  | height=720
+  | interval=0.1
+}}
+```
+
+{{flightanimation: Flight Planning Tags
+  | epoch=Flight of the *Big Bad Wolf*
+  | status=2
+  | width=1280
+  | height=720
+  | interval=0.1
+}}
+
+```
+{{demo: flightanimation | Flight Planning Tags
+  | epoch=Short
+  | status=0
+  | camtype=Mars
+  | campos=0.0, -5.0, 5.0
+  | width=1280
+  | height=720
+  | zviewpos=32000000
+  | interval=0.001
+}}
+```
+
+{{flightanimation: Flight Planning Tags
+  | epoch=Short
+  | status=0
+  | camtype=Mars
+  | campos=0.0, -5.0, 5.0
+  | width=1280
+  | height=720
+  | zviewpos=32000000
+  | interval=0.001
+}}
+
+
 #### flightepoch
+
+Define an epoch (timespan) for a flight animation.
+
+**Usage**
+
+```
+{{demo: flightepoch | name
+  | startdate=January 1, 2016 00:00
+  | enddate=February 1, 2016 00:00
+}}
+```
+
+* **startdate**: start date of timespan
+* **enddate**: end date of timespan
+
+**Examples**
+
+`{{demo: flightepoch | Flight of the *Big Bad Wolf* | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}`
+
+{{flightepoch: Flight of the Big Bad Wolf | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}
+
+`{{demo: flightepoch | Short | startdate=August 29, 2690 12:00 | enddate=August 30, 2690 00:00}}`
+
+{{flightepoch: Short | startdate=August 29, 2690 12:00 | enddate=August 30, 2690 00:00}}
 
 
 !item
@@ -649,7 +838,38 @@ path: Tags
 
 #### demo
 
+Render a tag for use in syntax examples.
+
+**Usage**
+
+`{{demo: demo | ... | ...}}`
+
+**Examples**
+
+`{{demo: demo | stats | master}}` &rarr; `{{demo: stats | master}}`
+
+`{{demo: demo | image | item | link=true | responsive=false}}` &rarr; `{{demo: image | item | link=true | responsive=false}}`
+
 #### markovtext
+
+Generate random text using a Markov chain.
+
+**Usage**
+
+`{{demo: markovtext | items | order=2 | count=5 | seed=0}}`
+
+* **items**: semicolon-separated list of item names or ids to recurse into
+* **order**: order of the markov chain; i.e. how many previous words inform the prediction of the next word.
+* **count**: number of sentences to generate
+* **seed**: seed for random number generator
+
+This feature is intended to be used for mixing and generating ideas. Results are most interesting when generated from several thousand words of notes.
+
+**Example**
+
+`{{demo: markovtext | Project Layout; Commands; Items}}`
+
+{{markovtext: Project Layout; Commands; Items}}
 
 
 !collection
@@ -725,6 +945,17 @@ id: elizabeth
 name: Elizabeth | Bennet
 path: genealogy
 
+
+!item
+name: USS *Big Bad Wolf*
+path: Tags
+
+This is an example spacecraft.
+
+* {{mass: 1200 tonnes}}
+* {{acceleration: 0.49 AU/day<sup>2</sup>}}
+
+
 !collection
 name: Publishing
 path: Documentation
@@ -769,7 +1000,6 @@ Note how sidenotes are aligned with the top of the paragraph in which they appea
 How will the heroine escape?
 
 {{todo: write the ending}}
-
 
 
 !item
@@ -834,5 +1064,5 @@ path: Documentation
 
 **Miscellaneous Tags**
 
-- Demo
-- MarkovText
++ Demo
++ MarkovText
