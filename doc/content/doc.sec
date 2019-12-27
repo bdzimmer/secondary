@@ -632,7 +632,7 @@ This example calculates the wordcount of {{*Little Red Riding Hood*}}.
 name: Flight Planning Tags
 path: Tags
 
-Describe interplanetary flights using [Orbits](https://github.com/bdzimmer/orbits) software.
+Describe interplanetary flights using [Orbits](https://github.com/bdzimmer/orbits).
 
 Currently flights may be planned between the following celestial objects:
 
@@ -697,7 +697,7 @@ Describe an interplanetary flight.
 * **startdate**: flight start date
 * **enddate**: flight end date
 * **passengers**: semicolon-separated list of characters to be recorded as passengers
-* **faction**: name of faction
+* **faction**: name of the faction the flight belongs to
 
 Note that flights are described with a specific starting and end date, independent of what the spacecraft is capable of. This allows flight definitions to stay constant across tweaks to spacecraft properties or small changes to planetary models.
 
@@ -735,7 +735,7 @@ where R, G, and B are integer values between 0 and 255 describing the color of t
 
 #### flightanimation
 
-Define and embed an animation of zero or more flights or other celestial objects.
+Define and embed an animation of multiple (or zero) flights or other celestial objects.
 
 **Usage**
 
@@ -746,7 +746,7 @@ Define and embed an animation of zero or more flights or other celestial objects
   | height=720
   | camtype=follow
   | campos=0.0, 0.0, 0.0
-  | zViewPos=800.0
+  | zviewpos=800.0
   | fps=30
   | interval=0.041666...
   | damping=20.0
@@ -755,12 +755,28 @@ Define and embed an animation of zero or more flights or other celestial objects
 }}
 ```
 
-{{todo: complete flightanimation usage}}
+* **epoch**: name of epoch (timespan) of animation
+* **width**: width in pixels of animation frames
+* **height**: height in pixels of animation frames
+* **camtype**: camera type; determines what the camera will point at. If "follow", point the camera at the average position of all active flights. Otherwise, the name of a celestial object to point the camera at. Currently only planets are supported, but in the future, moons and lagrange points will be valid objects.
+* **campos**: 3D coordinates of camera position
+* **zviewpos**: controls zoom. Should be in the range of several hundred for a view that includes multiple planets or tens of millions to observe the orbits of a planet's moons.
+* **fps**: animation frame rate in frames per second
+* **interval**: time interval in days (usually small fractions of a day) for each frame of animation
+* **damping**: number of frames of damping in the location the camera points at. Causes camera to lag behind a moving flights but smooths transition when new flights are added.
+* **status**: status mode:
+    * 0 - flight status with current datetime, distance, and velocity
+    * 1 - flight summary
+    * 2 - no status
+* **visible**: semicolon separated list of names of celestial objects to show. Currently not used. Only Earth, Saturn, Uranus, and Mars (the Orbits editor defaults) are visible. In the future, categories of objects including additional information may be controlled with this argument.
 
+The unit of the coordinate system is astronomical units (AU). The Sun is at the origin, and the eclipitic plane is the X-Y plane.
+
+Embedded videos must be generated with the `animate` command: `secondary animate <item>`. This command expects that `ffmpeg` is on your path.
+
+When the camera is zoomed past 100,000.0, additional detail is shown. Between zoom 100,000.0 to 5,000,000.0, the name of a planet will fade in at the bottom center of the frame if the planet is within view.
 
 **Examples**
-
-Embedded videos must be generated with the `animate` command: `secondary animage Flight Planning Tags`. This command expects that `ffmpeg` is on your path.
 
 ```
 {{demo: flightanimation | Flight Planning Tags
@@ -825,7 +841,7 @@ Define an epoch (timespan) for a flight animation.
 
 `{{demo: flightepoch | Flight of the *Big Bad Wolf* | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}`
 
-{{flightepoch: Flight of the Big Bad Wolf | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}
+{{flightepoch: Flight of the *Big Bad Wolf* | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}
 
 `{{demo: flightepoch | Short | startdate=August 29, 2690 12:00 | enddate=August 30, 2690 00:00}}`
 
@@ -1006,10 +1022,10 @@ How will the heroine escape?
 name: Glossary
 path: Documentation
 
-* *master collection* - item at the top of the hierarchy. Used to render the world encyclopedia home page.
-* *master content file* - the first item defined in this file is the *master collection*
-* *name parts* - syntax and functionality to help Secondary understand parts of a person's name so it can be rendered and referred to appropriately in different contexts.
-* *tag* - special directive used in an item's notes. Enclosed in double curly braces.
+* **master collection** - item at the top of the hierarchy. Used to render the world encyclopedia home page.
+* **master content file** - the first item defined in this file is the *master collection*
+* **name parts** - syntax and functionality to help Secondary understand parts of a person's name so it can be rendered and referred to appropriately in different contexts.
+* **tag** - special directive used in an item's notes. Enclosed in double curly braces.
 
 
 !item
@@ -1053,14 +1069,14 @@ path: Documentation
 + Tasks
 + Thought / todo / started / done / blocked
 + Stats
-- WordCount
++ WordCount
 
 **Flight Planning Tags**
 
-- acceleration / mass / velocity
-- Flight
-- FlightEpoch
-- FlightAnimation
++ acceleration / mass / velocity
++ Flight
++ FlightAnimation
++ FlightEpoch
 
 **Miscellaneous Tags**
 
