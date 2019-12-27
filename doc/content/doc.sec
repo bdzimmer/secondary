@@ -156,13 +156,19 @@ Different types of items have special functionality and may have additional prop
 * **!tileset**, **!spritesheet**, **!map**
     * Special game design functionality. Not documented.
 
-#### !include
+#### Including Additional Files
 
-The `include` item type is a special pseudo-item. Item only one property, `filename`, which specifies a file name (including extension) of another content file.
+The `include` item type is a special pseudo-item. It has only one property, `filename`, which specifies a file name (including extension) of another content file.
 
 #### Item Ordering
 
 A collection's list of children is ordered. The order that items occur in files (including the use of the `include` pseudo-item) determines this order.
+
+#### Notes
+
+Item notes are written in [Markdown](https://daringfireball.net/projects/markdown/syntax), along with special {{Tags}}.
+
+[Pegdown](https://github.com/sirthias/pegdown) 1.6.0 performs the Markdown-to-HTML conversion. During world encyclopedia export, the `SMARTYPANTS` (punctuation beautification) and `EXTANCHORLINKS` (automatically generates anchors on headings) extensions are enabled. During EPUB export, only `SMARTYPANTS` is enabled.
 
 
 !collection
@@ -700,7 +706,7 @@ Note that flights are described with a specific starting and end date, independe
 
 To properly generate images and animations, the flight tag must be used in a `trip` item. This restriction may be removed in the future.
 
-A definition of factions is required by Orbits. This is a file named `factions.txt` placed at the root of the project directory. Each line of the file takes the following form:
+A definition of factions is required by Orbits. This is a file named `factions.txt` placed at the base project directory. Each line of the file takes the following form:
 
     Faction Name, R, G, B
 
@@ -975,31 +981,56 @@ path: Documentation
 
 Secondary has a special item type and several commands useful for publishing fiction.
 
-#### book item type
+#### Book Items
 
-Items with the `book` type contain additional properties (`authorname` and `uniqueIdentifier`) that should be specified.
+Items with the `book` type contain additional properties (`authorname` and `uniqueIdentifier`) used when publishing.
 
-Most of this section deals with commands used on books, but they have some special behavior when rendered in the world encyclopedia, namely, they are given special styles that resemble print typesetting.
+Books also have special behavior when rendered in the world encyclopedia, namely, they are given special styles that resemble print typesetting.
 
 #### Structure
 
-Markdown headings (lines that begin with `#`) in the notes of books divide them into sections. The first section is special. If it contains an image, the image is used as taken as the cover image (used in EPUB generation). Otherwise, the first section is the title page. In the {{*Little Red Riding Hood*}} example, the second section is the title page.
+Markdown headings (lines that begin with one or more `#` symbols) in the notes of  a book divides it into a list of sections. The first section is special. If it contains an image, the image is used as taken as the cover image (used in EPUB generation) and the remainder of the section is discarded and the second section is used as the title page. Otherwise, the first section is the title page. In the {{*Little Red Riding Hood*}} example, the second section is the title page.
 
-The title of the book when publishing is *not* the name of the item (which may include markdown for styling) but the text of the heading of the title page.
+The title of the book when publishing is not the name of the item (which may include markdown for styling in the world encyclopedia) but the text of the heading of the title page.
 
-It's recommended to avoid using Secondary tags other than `sidenote` (these will be eliminated) or the `image` tag for specifiying the cover. Secondary does not currently include other images or referenced articles in published books.
+It's recommended to avoid using Secondary tags other than `sidenote` (which will be eliminated) or the `image` tag for specifying the cover. Secondary does not currently include other images or referenced articles in published books.
 
 #### EPUB
 
-Export a book to EPUB `secondary export <epub>`. Since EPUB is an HTML-based format, the same markdown to HTML converter used for the world encyclopedia is used.
+Export a book to EPUB 2 with the command `secondary epub <item>`, where `<item>` is the name or id of the book. The file will is generated in the base project directory, named `<item-id>.epub`, where `<item-id>` is the item's id (unique in project).
 
-{{todo: finish EPUB section}}
+Since EPUB is an HTML-based format, the same Markdown-to-HTML converter used for the world encyclopedia is used to format the content.
+
+The cover image is included as a property of the `OEBPS/content.opf` file. A separate cover page is not generated, since that would result in duplicate covers when converted to Kindle format.
+
+A table of contents section (for example as a section following the title page) is not generated. However, an `OEBPS/toc.ncx` and related content is created so navigation features will be available.
+
+After generating an EPUB file, it may be converted to Kindle MOBI format using Amazon's command line tool [KindleGen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211). Note restrictions on the use of KindleGen for commercial purposes beyond those authorized in its license.
+
+It's recommended to use a tool like [EPUBCheck](https://github.com/w3c/epubcheck) to validate generated EPUBs before distribution. Improper use of Secondary tags in books can cause issues that EPUBCheck may be able to discover.
+
+{{todo: example commands to run conversion}}
 
 #### LaTeX
 
-{{todo: LaTeX section}}
+Export a book to LaTeX with the command `secondary latex <item>`. The file is generated in the base project directory, named `<item-id>.tex`.
 
+A template file in Secondary's `resources` named `template.tex` is used. In the future, different templates or export options may become available. Until then, formatting changes may be made manually by editing declarations near the top of the TEX file.
 
+LaTeX export uses a custom Markdown-to-LaTeX converter that only supports a small subset of Markdown syntax, and there may be bugs or unexpected behavior in these:
+
+* Bold, italic, and bold-and-italic text (other nesting not supported) are converted to a proper combination of `textbf` and `textif`.
+* Headings are converted to `huge`, `noindent` text.
+* Code blocks (being with 4 spaces) are converted to `lstlisting` blocks.
+
+Other conversions are performed:
+
+* Pairs double quotes within a paragraph are converted to left and right double quote marks.
+* Copyright symbol and percent sign are converted from HTML to LaTeX syntax.
+
+Conversions not currently performed include single quote beautification, markdown links, images, lists, or inline preformatted text.
+
+{{todo: command to run conversion}}
 
 !book
 name: *Little Red Riding Hood*
