@@ -150,11 +150,8 @@ Different types of items have special functionality and may have additional prop
 * **!book**
     * Describes a story or novel.
     * Additional properties:
-        * `uniqueIdentifier` - unique "notISBN" id to be included in EPUB
         * `authorname` - name of the author described with "name parts" synatx.
-    * Markdown headings (lines that begin with `#`) in the notes of books divide them into sections. The first section will become the title page and remaining sections the chapters.
-    * The title of the book when publishing is *not* the name of the item (which may include markdown for styling) but the text of the heading of the first section.
-    * Books are given formatting that resembles print typesetting when rendered to HTML.
+        * `uniqueIdentifier` - unique "notISBN" id to be included in EPUB
     * See {{Publishing}}.
 * **!tileset**, **!spritesheet**, **!map**
     * Special game design functionality. Not documented.
@@ -976,7 +973,33 @@ This is an example spacecraft.
 name: Publishing
 path: Documentation
 
-{{todo: Publishing}}
+Secondary has a special item type and several commands useful for publishing fiction.
+
+#### book item type
+
+Items with the `book` type contain additional properties (`authorname` and `uniqueIdentifier`) that should be specified.
+
+Most of this section deals with commands used on books, but they have some special behavior when rendered in the world encyclopedia, namely, they are given special styles that resemble print typesetting.
+
+#### Structure
+
+Markdown headings (lines that begin with `#`) in the notes of books divide them into sections. The first section is special. If it contains an image, the image is used as taken as the cover image (used in EPUB generation). Otherwise, the first section is the title page. In the {{*Little Red Riding Hood*}} example, the second section is the title page.
+
+The title of the book when publishing is *not* the name of the item (which may include markdown for styling) but the text of the heading of the title page.
+
+It's recommended to avoid using Secondary tags other than `sidenote` (these will be eliminated) or the `image` tag for specifiying the cover. Secondary does not currently include other images or referenced articles in published books.
+
+#### EPUB
+
+Export a book to EPUB `secondary export <epub>`. Since EPUB is an HTML-based format, the same markdown to HTML converter used for the world encyclopedia is used.
+
+{{todo: finish EPUB section}}
+
+#### LaTeX
+
+{{todo: LaTeX section}}
+
+
 
 !book
 name: *Little Red Riding Hood*
@@ -987,8 +1010,6 @@ path: Publishing
 ### ---
 
 {{image: image_red_riding_hood}}
-
-(The first section is special. If it contains an image, the image is used as the EPUB cover image. Otherwise, the first section is the title page. In this example, the second section is the title page.)
 
 # Little Red Riding Hood
 
