@@ -7,7 +7,7 @@ package bdzimmer.secondary.export.controller
 import scala.collection.immutable.Seq
 import scala.util.matching.Regex
 
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{FileUtils, IOUtils}
 
 import bdzimmer.secondary.export.controller.Book.SectionInfo
 import bdzimmer.secondary.export.model.Tags.ParsedTag
@@ -124,8 +124,12 @@ object Latex {
       s"\\chapter{${section.name}}\n$converted"
     }).mkString("\n")
 
-    val templateUrl = getClass.getResource("/template.tex")
-    val template = FileUtils.readFileToString(new java.io.File(templateUrl.getPath))
+    // val templateUrl = getClass.getResource("/latex/template.tex")
+    // val template = FileUtils.readFileToString(new java.io.File(templateUrl.getPath))
+
+    val inputStream = getClass.getResourceAsStream("/latex/template.tex")
+    val template = IOUtils.toString(inputStream)
+    inputStream.close()
 
     template.format(title, firstname, lastname, titlepage, chapters)
 

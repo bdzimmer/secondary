@@ -1001,7 +1001,7 @@ Export a book to EPUB 2 with the command `secondary epub <item>`, where `<item>`
 
 Since EPUB is an HTML-based format, the same Markdown-to-HTML converter used for the world encyclopedia is used to format the content.
 
-The cover image is included as a property of the `OEBPS/content.opf` file. A separate cover page is not generated, since that would result in duplicate covers when converted to Kindle format.
+The cover image is included as a property of the `OEBPS/content.opf` file. A separate cover page is not generated, since that would result in duplicate covers when converted to Kindle format. Currently, the cover image is expected to be in PNG format, but other formats will probably work.
 
 A table of contents section (for example as a section following the title page) is not generated. However, an `OEBPS/toc.ncx` and related content is created so navigation features will be available.
 
@@ -1009,7 +1009,11 @@ After generating an EPUB file, it may be converted to Kindle MOBI format using A
 
 It's recommended to use a tool like [EPUBCheck](https://github.com/w3c/epubcheck) to validate generated EPUBs before distribution. Improper use of Secondary tags in books can cause issues that EPUBCheck may be able to discover.
 
-{{todo: example commands to run conversion}}
+Example commands for generating, checking, and converting the book example:
+
+    secondary epub little_red_riding_hood
+    epubcheck little_red_riding_hood.epub
+    kindlegen little_red_riding_hood.epub
 
 #### LaTeX
 
@@ -1030,7 +1034,11 @@ Other conversions are performed:
 
 Conversions not currently performed include single quote beautification, markdown links, images, lists, or inline preformatted text.
 
-{{todo: command to run conversion}}
+Once the LaTeX file is generated, another command must be run to convert to PDF. Example commands:
+
+    secondary latex little_red_riding_hood
+    pdflatex -interaction=nonstopmode little_red_riding_hood.tex
+
 
 !book
 name: *Little Red Riding Hood*
