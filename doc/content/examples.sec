@@ -1,0 +1,156 @@
+# Copyright (c) 2020 Ben Zimmer. All rights reserved.
+
+!collection
+name: Examples
+path: master
+
+
+!collection
+id: genealogy
+name: Genealogy
+path: Examples
+
+See child pages for explanations of the tags used to establish the relationships in the family tree.
+
+`{{demo: familytree | Anonymous Earl}}`
+
+{{familytree: Anonymous Earl}}
+
+
+!character
+id: earl
+name: Anonymous Earl
+path: genealogy
+
+
+!character
+id: lady_catherine
+name: Lady Catherine | de Bourgh
+path: genealogy
+
+`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+
+
+!character
+id: sir_lewis
+name: Sir Lewis | de Bourgh
+path: genealogy
+
+`{{demo: marriage | Lady Catherine de Bourgh}}` &rarr; {{marriage: Lady Catherine de Bourgh}}
+
+
+!character
+id: anne_debourgh
+name: Anne | de Bourgh
+path: genealogy
+
+`{{demo: father | Sir Lewis de Bourgh}}` &rarr; {{father: Sir Lewis de Bourgh}}
+`{{demo: mother | Lady Catherine de Bourgh}}` &rarr; {{mother: Lady Catherine de Bourgh}}
+
+
+!character
+id: anne_darcy
+name: Lady Anne | Darcy
+path: genealogy
+
+`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+`{{demo: marriage | Mr. Darcy}}` &rarr; {{marriage: Mr. Darcy}}
+
+
+!character
+id: mr_darcy
+name: Mr. | Darcy
+path: genealogy
+
+
+!character
+id: georgiana
+name: Georgiana | Darcy
+path: genealogy
+
+`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
+`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+
+
+!character
+id: fitzwilliam_darcy
+name: Fitzwilliam | Darcy
+path: genealogy
+
+`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
+`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+`{{demo: marriage | Elizabeth Bennet}}` &rarr; {{marriage: Elizabeth Bennet}}
+
+
+!character
+id: elizabeth
+name: Elizabeth | Bennet
+path: genealogy
+
+
+!item
+name: USS *Big Bad Wolf*
+path: Examples
+
+This is an example spacecraft.
+
+* {{mass: 1200 tonnes}}
+* {{acceleration: 0.49 AU/day<sup>2</sup>}}
+
+
+!collection
+name: Images
+path: Examples
+
+{{gallery: images}}
+
+!image
+id: image_red_riding_hood
+name: Red Riding Hood - Rackham
+filename: wikimedia:Arthur_Rackham_Little_Red_Riding_Hood%2B.jpg
+path: Images
+
+!image
+id: image_alice
+name: Alice in Wonderland - Rackham
+filename: wikimedia:Alice_in_Wonderland_by_Arthur_Rackham_-_04_-_Why_Mary_Ann,_what_are_you_doing_out_here%3F.jpg
+path: Images
+
+
+!book
+name: *Little Red Riding Hood*
+authorname: Author | Name
+uniqueid: id0000
+path: Examples
+
+### ---
+
+{{image: image_red_riding_hood}}
+
+# Little Red Riding Hood
+
+**By Author Name**
+
+Copyright &copy; 2020 Author Name. All rights reserved.
+
+#### 1
+
+This is the first chapter. Little Red Riding Hood is summoned to grandmother's house.
+
+
+#### 2
+
+The heroine encounters a strange version of her grandmother.{{sidenote: This creature is actually an evil wolf, not her grandmother. | id=2.1}}
+
+This chapter includes many famous lines, such as when the heroine says something like {{snip: what big teeth | paragraphs=2}}"But grandmother, what big teeth you have."
+
+And the wolf said, "All the better to eat you with!"
+
+Note how sidenotes are aligned with the top of the paragraph in which they appear.
+
+#### 3
+
+How will the heroine escape?
+
+{{todo: write the ending}}
+

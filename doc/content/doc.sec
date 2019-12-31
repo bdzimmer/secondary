@@ -5,11 +5,6 @@ id: documentation
 name: Documentation
 path: master
 
-!item
-id: layout
-name: Project Layout
-path: Documentation
-
 #### Setup
 
 See the repo's `README.md` for setup instructions. After building, make sure the `dist` directory (which contains the `secondary` / `secondary.bat` launch script) or a copy of it is on your path.
@@ -17,6 +12,12 @@ See the repo's `README.md` for setup instructions. After building, make sure the
 #### Run
 
 A Secondary project exists in a directory. Invoke the `secondary` command with a project directory as the working directory to interact with the project.
+
+
+!item
+id: layout
+name: Project Layout
+path: Documentation
 
 #### Directory Structure
 
@@ -237,11 +238,11 @@ The index is generated from all items in the hierarchy below the specified item 
 
 **Example**
 
-`{{demo: index | Genealogy Examples}}`
+`{{demo: index | Genealogy}}`
 
 ---
 
-{{index: Genealogy Examples}}
+{{index: Genealogy}}
 
 ---
 
@@ -479,7 +480,7 @@ The **marriage** tag establishes marriages between characters. Note that family 
 
 {{familytree: Lady Catherine de Bourgh}}
 
-See {{link: Genealogy Examples}} for further examples.
+See {{link: Genealogy}} for further examples.
 
 #### timeline
 
@@ -548,6 +549,8 @@ Generate a searchable, sortable table of tasks.
 * **item**: name or id of item; tasks will be gathered from the item and all items beneath it in the hierachy.
 
 The table is constructed from {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags.
+
+Below the table, lists of items with empty notes as well as items with invalid tags appear.
 
 **Example**
 
@@ -706,13 +709,11 @@ Note that flights are described with a specific starting and end date, independe
 
 To properly generate images and animations, the flight tag must be used in a `trip` item. This restriction may be removed in the future.
 
-A definition of factions is required by Orbits. This is a file named `factions.txt` placed at the base project directory. Each line of the file takes the following form:
+Orbits looks for a faction definition file. This is a file named `factions.txt` placed at the base project directory. Each line of the file takes the following form:
 
     Faction Name, R, G, B
 
 where R, G, and B are integer values between 0 and 255 describing the color of the faction.
-
-{{todo: is a factions file actually required?}}
 
 **Example**
 
@@ -892,90 +893,6 @@ This feature is intended to be used for mixing and generating ideas. Results are
 
 
 !collection
-id: genealogy
-name: Genealogy Examples
-path: Tags
-
-See the child pages for explanations of the tags used to establish the relationships in the family tree.
-
-`{{demo: familytree | Anonymous Earl}}`
-
-{{familytree: Anonymous Earl}}
-
-!character
-id: earl
-name: Anonymous Earl
-path: genealogy
-
-!character
-id: lady_catherine
-name: Lady Catherine | de Bourgh
-path: genealogy
-
-`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
-
-!character
-id: sir_lewis
-name: Sir Lewis | de Bourgh
-path: genealogy
-
-`{{demo: marriage | Lady Catherine de Bourgh}}` &rarr; {{marriage: Lady Catherine de Bourgh}}
-
-!character
-id: anne_debourgh
-name: Anne | de Bourgh
-path: genealogy
-
-`{{demo: father | Sir Lewis de Bourgh}}` &rarr; {{father: Sir Lewis de Bourgh}}
-`{{demo: mother | Lady Catherine de Bourgh}}` &rarr; {{mother: Lady Catherine de Bourgh}}
-
-!character
-id: anne_darcy
-name: Lady Anne | Darcy
-path: genealogy
-
-`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
-`{{demo: marriage | Mr. Darcy}}` &rarr; {{marriage: Mr. Darcy}}
-
-!character
-id: mr_darcy
-name: Mr. | Darcy
-path: genealogy
-
-!character
-id: georgiana
-name: Georgiana | Darcy
-path: genealogy
-
-`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
-`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
-
-!character
-id: fitzwilliam_darcy
-name: Fitzwilliam | Darcy
-path: genealogy
-
-`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
-`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
-`{{demo: marriage | Elizabeth Bennet}}` &rarr; {{marriage: Elizabeth Bennet}}
-
-!character
-id: elizabeth
-name: Elizabeth | Bennet
-path: genealogy
-
-
-!item
-name: USS *Big Bad Wolf*
-path: Tags
-
-This is an example spacecraft.
-
-* {{mass: 1200 tonnes}}
-* {{acceleration: 0.49 AU/day<sup>2</sup>}}
-
-
-!collection
 name: Publishing
 path: Documentation
 
@@ -993,7 +910,7 @@ Markdown headings (lines that begin with one or more `#` symbols) in the notes o
 
 The title of the book when publishing is not the name of the item (which may include markdown for styling in the world encyclopedia) but the text of the heading of the title page.
 
-It's recommended to avoid using Secondary tags other than `sidenote` (which will be eliminated) or the `image` tag for specifying the cover. Secondary does not currently include other images or referenced articles in published books.
+It's recommended to avoid using Secondary tags in books other than `sidenote` (which will be eliminated), `snip`, and the `image` tag for specifying the cover. Secondary does not currently include other images or linked articles in published books.
 
 #### EPUB
 
@@ -1038,44 +955,6 @@ Once the LaTeX file is generated, another command must be run to convert to PDF.
 
     secondary latex little_red_riding_hood
     pdflatex -interaction=nonstopmode little_red_riding_hood.tex
-
-
-!book
-name: *Little Red Riding Hood*
-authorname: Author | Name
-uniqueid: id0000
-path: Publishing
-
-### ---
-
-{{image: image_red_riding_hood}}
-
-# Little Red Riding Hood
-
-**By Author Name**
-
-Copyright &copy; 2020 Author Name. All rights reserved.
-
-#### 1
-
-This is the first chapter. Little Red Riding Hood is summoned to grandmother's house.
-
-
-#### 2
-
-The heroine encounters a strange version of her grandmother.{{sidenote: This creature is actually an evil wolf, not her grandmother. | id=2.1}}
-
-This chapter includes many famous lines, such as when the heroine says something like {{snip: what big teeth | paragraphs=2}}"But grandmother, what big teeth you have."
-
-And the wolf said, "All the better to eat you with!"
-
-Note how sidenotes are aligned with the top of the paragraph in which they appear.
-
-#### 3
-
-How will the heroine escape?
-
-{{todo: write the ending}}
 
 
 !item

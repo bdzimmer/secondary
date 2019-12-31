@@ -7,7 +7,7 @@ id: master
 name: Secondary
 description: create worlds from text
 
-Secondary is a markup language and static site generator created specifically for world building and writing. Features are constructed to enable a seamless process for planning, writing, and publishing fiction; however, Secondary also functions well as a general-purpose information or task tracking system.
+Secondary is a markup language and static site generator created specifically for world building and writing. Features are designed to enable a seamless process for planning, writing, and publishing fiction; however, Secondary also functions well as a general-purpose information or task tracking system.
 
 * **Edit**
     * Describe your world and write stories in text files with Markdown. Use your favorite text editor; there's no user interface to learn.
@@ -20,7 +20,6 @@ Secondary is a markup language and static site generator created specifically fo
     * Compile a world encyclopedia website, integrating your own image content or public domain images from Wikimedia. Browse to review tasks and get ideas, then edit the source files and recompile.
     * Export stories to EPUB or automatically typeset PDF documents for print publishing.
 
-<br />
 
 {{jumbotron: image_alice | ypos=50%}}
 
@@ -28,4 +27,4 @@ Secondary is a markup language and static site generator created specifically fo
 filename: doc.sec
 
 !include
-filename: images.sec
+filename: examples.sec
