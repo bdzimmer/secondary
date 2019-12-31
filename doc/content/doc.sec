@@ -61,16 +61,16 @@ To execute an individual command, use `secondary <command> [additional options]`
 * `browse` - browse exported project web site's home page. Uses Java's `Desktop.getDesktop.browse()`.
 * `configure` - edit project configuration in a GUI.
 * `duplicate <item>` - detect duplicate words in an item's notes.
-* `edit <item>` - edit the source file for an item using Notepad++; assumes `notepad++` command is on path and will open the file at the correct line. Currently only works in interactive mode.
+* `edit <item>` - edit the source file for an item using Notepad++; assumes `notepad++` command is on path. Will open the file at the correct line. Currently only works in interactive mode.
 * `editor` - pixel editor (alpha).
 * `epub <item>` - export a book item to EPUB. See {{Publishing}}.
 * `explore` - explore project `content` directory. Uses Java's `Desktop.getDesktop.open()`.
 * `export` - export the world encyclopedia website. Add the optional `force` switch to regenerate all items, even if they haven't been updated.
 * `latex` - export a book to LaTeX. See {{Publishing}}.
-* `orbits` - orbits editor (alpha).
+* `orbits` - interactive Orbits editor (alpha). For more about Orbits capabilities, see {{Flight Planning Tags}}.
 * `screenshot` - screenshot utility (alpha).
-* `server` - server mode. Reruns export every 10 seconds.
-* `sprint <item>` - interactive writing sprint tool. Shows initial wordcount of item's notes. Press enter to show words added and words per hour rate. Press q to quit.
+* `server` - server mode. Runs export every 10 seconds.
+* `sprint <item>` - interactive writing sprint tool. Shows initial word count of item's notes. Press `enter` to show count of words added and words per hour rate. Press `q` to quit.
 * `styles` - add stylesheets, Google fonts, and related scripts to the project's `web` directory.
 * `help` - show usage and a summary of commands.
 
@@ -111,7 +111,7 @@ Each item begins with a header. The first line of the header is exclamation mark
     id: test2
     ...
 
-All items types have the following properties:
+All item types have the following properties:
 
 * `id` - unique identifier of the item. Must also be a valid file prefix. If not specified, it will be derived from `name`.
 * `name` - display name or title of the item. Does not have to be unique.
@@ -147,7 +147,7 @@ Different types of items have special functionality and may have additional prop
     * Upon first export, Wikimedia images are downloaded at full resolution along with metadata into `wikicache`. This allows pages generated for Wikimedia image items to include information about the artist and license as well as a link to the source. See {{Red Riding Hood - Rackham}} for an example.
 * **!trip**
     * Describes an interplanetary flight or series of flights.
-    * Tags relating to interplanetary flights function in trips.
+    * Tags relating to interplanetary flights only function in trips.
 * **!book**
     * Describes a story or novel.
     * Additional properties:
@@ -167,7 +167,7 @@ A collection's list of children is ordered. The order that items occur in files 
 
 #### Notes
 
-Item notes are written in [Markdown](https://daringfireball.net/projects/markdown/syntax), along with special {{Tags}}.
+Item notes are written in [Markdown](https://daringfireball.net/projects/markdown/syntax), along with special tags.
 
 [Pegdown](https://github.com/sirthias/pegdown) 1.6.0 performs the Markdown-to-HTML conversion. During world encyclopedia export, the `SMARTYPANTS` (punctuation beautification) and `EXTANCHORLINKS` (automatically generates anchors on headings) extensions are enabled. During EPUB export, only `SMARTYPANTS` is enabled.
 
@@ -892,7 +892,7 @@ This feature is intended to be used for mixing and generating ideas. Results are
 {{markovtext: Project Layout; Commands; Items}}
 
 
-!collection
+!item
 name: Publishing
 path: Documentation
 
@@ -906,7 +906,7 @@ Books also have special behavior when rendered in the world encyclopedia, namely
 
 #### Structure
 
-Markdown headings (lines that begin with one or more `#` symbols) in the notes of  a book divides it into a list of sections. The first section is special. If it contains an image, the image is used as taken as the cover image (used in EPUB generation) and the remainder of the section is discarded and the second section is used as the title page. Otherwise, the first section is the title page. In the {{*Little Red Riding Hood*}} example, the second section is the title page.
+Markdown headings (lines that begin with one or more `#` symbols) in the notes of a book divide it into a list of sections. The first section is special. If it contains an image, the image is used as taken as the cover image (used in EPUB generation) and the remainder of the section is discarded and the second section is used as the title page. Otherwise, the first section is the title page. In the {{*Little Red Riding Hood*}} example, the second section is the title page.
 
 The title of the book when publishing is not the name of the item (which may include markdown for styling in the world encyclopedia) but the text of the heading of the title page.
 
@@ -946,7 +946,7 @@ LaTeX export uses a custom Markdown-to-LaTeX converter that only supports a smal
 
 Other conversions are performed:
 
-* Pairs double quotes within a paragraph are converted to left and right double quote marks.
+* Pairs of double quotes within a paragraph are converted to left and right double quote marks.
 * Copyright symbol and percent sign are converted from HTML to LaTeX syntax.
 
 Conversions not currently performed include single quote beautification, markdown links, images, lists, or inline preformatted text.
@@ -961,8 +961,10 @@ Once the LaTeX file is generated, another command must be run to convert to PDF.
 name: Glossary
 path: Documentation
 
+* **content file** - text files with `.sec` extension containing definitions of items.
+* **item** - object within a project corresponding to an article in the world encyclopedia or another piece of content
 * **master collection** - item at the top of the hierarchy. Used to render the world encyclopedia home page.
-* **master content file** - the first item defined in this file is the *master collection*
+* **master content file** - the first item defined in this file is the master collection.
 * **name parts** - syntax and functionality to help Secondary understand parts of a person's name so it can be rendered and referred to appropriately in different contexts.
 * **tag** - special directive used in an item's notes. Enclosed in double curly braces.
 
