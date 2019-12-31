@@ -5,47 +5,194 @@ id: documentation
 name: Documentation
 path: master
 
+#### Setup
+
+See the repo's `README.md` for setup instructions. After building, make sure the `dist` directory (which contains the `secondary` / `secondary.bat` launch script) or a copy of it is on your path.
+
+#### Run
+
+A Secondary project exists in a directory. Invoke the `secondary` command with a project directory as the working directory to interact with the project.
+
+
 !item
 id: layout
 name: Project Layout
 path: Documentation
 
-{{TODO: project layout content}}
+#### Directory Structure
+
+Files and subdirectories within a project include:
+
+* `secondary.properties` - project configuration in [.properties](https://en.wikipedia.org/wiki/.properties) format. This file can be edited with a text editor or with a GUI via the command `secondary configure`. Every configurable property has a default value, which will be displayed when Secondary loads the project. It's a good idea, however, to understand and update the settings. See {{link: Project Layout | Configuration}}.
+* `content/` - content files, typically text documents with `.sec` extension or images, are placed here.
+* `web/` - location of exported world encyclopedia web site.
+* `wikicache/` - cache for full-size images downloaded from Wikimedia during the export process.
+* `status_*.txt` - files tracking hashes of {{Items}} to accelerate the export process. A full export (which should be done occasionally) can be performed by deleting these files before export or running export with with the `force` switch. See {{Commands}}.
+
+#### Configuration
+
+Many configuration options are available in `secondary.properties`, and most relate to HTML export behavior.
+
+* `masterName` - prefix (not including `.sec`) of the *master content file*. The first item in this file is the *master collection*: the top of the hierarchy. The master collection is rendered as the home page of the world encyclopedia web site.
+* `license` - License to be included at the bottom of exported HTML pages. Use `&copy` for the copyright symbol: &copy.
+* `navbars` - boolean; whether to include navbars on pages. Only real reason to disable this is for rendering single page websites.
+* `subarticles` - boolean; if true, include subarticle lists in HTML pages for collection items.
+* `relativeLinks` - boolean; if true, include links for previous, parent, and next item in the navbar.
+* `hiddenItems` - semicolon-separated list of item ids or names. These items will not appear in lists of subarticles or main collection outlines on the rendered home page.
+* `unifiedJumbotron` - boolean; if true, all jumbotrons will display the name and description of the master collection. Useful for creating a generic website.
+* `search` - boolean; if true, include search field on home page navbar.
+
+
+!item
+id: commands
+name: Commands
+path: Documentation
+
+#### Interactive Mode
+
+Running `secondary` with no additional flags will start Secondary in interactive mode. Run commands one at a time, and exit with `exit`, `quit`, or `q`.
+
+#### Commands
+
+To execute an individual command, use `secondary <command> [additional options]`. If the command requires an item to be specified, it may be specified by id or name. If a name contains spaces, it may be quoted or separated across multiple parameters for convenience. Available commands:
+
+* `animate <item>` - render flight animation videos of all `flightanimation` tags in `<item>`. This can be time and CPU intensive, so it does not happen by default on export.
+* `basic <item>` - export an item to basic HTML. Useful for conversion to `.docx` format for manuscript submissions.
+* `browse` - browse exported project web site's home page. Uses Java's `Desktop.getDesktop.browse()`.
+* `configure` - edit project configuration in a GUI.
+* `duplicate <item>` - detect duplicate words in an item's notes.
+* `edit <item>` - edit the source file for an item using Notepad++; assumes `notepad++` command is on path. Will open the file at the correct line. Currently only works in interactive mode.
+* `editor` - pixel editor (alpha).
+* `epub <item>` - export a book item to EPUB. See {{Publishing}}.
+* `explore` - explore project `content` directory. Uses Java's `Desktop.getDesktop.open()`.
+* `export` - export the world encyclopedia website. Add the optional `force` switch to regenerate all items, even if they haven't been updated.
+* `latex` - export a book to LaTeX. See {{Publishing}}.
+* `orbits` - interactive Orbits editor (alpha). For more about Orbits capabilities, see {{Flight Planning Tags}}.
+* `screenshot` - screenshot utility (alpha).
+* `server` - server mode. Runs export every 10 seconds.
+* `sprint <item>` - interactive writing sprint tool. Shows initial word count of item's notes. Press `enter` to show count of words added and words per hour rate. Press `q` to quit.
+* `styles` - add stylesheets, Google fonts, and related scripts to the project's `web` directory.
+* `help` - show usage and a summary of commands.
+
+#### Build Script
+
+For typical use, `secondary export` is used most frequently. This refreshes the world encyclopedia and tags related to content that you are editing, such as tasks, footnotes, and quotes. The `export` command usually completes within a few seconds.
+
+However, it does not refresh all content. It's recommended to create one or more build scripts for your project that include the various invocations of Secondary required to generate all project artifacts and run additional conversion commands on them.
+
 
 !item
 id: items
 name: Items
 path: Documentation
 
-{{TODO: items content}}
+#### Content Files
+
+The meat of a Secondary project is its *content files*. These are text files (usually with a `.sec` extension) that live in a project's `content` subdirectory.
+
+A content file describes one or more *items*. Each item corresponds to a single article page in the world encyclopedia, but it may be possible to render one or more additional pieces of content such as images, or an EPUB or LaTeX document from an item.
+
+Each item begins with a header. The first line of the header is exclamation mark (!) followed by the item type. A list of property key-value pairs (with a colon and space separating the key and value) follows on the next few lines. After a blank line, the item's notes begin, and notes end when a new item header begins. Here's an example:
+
+    !item
+    id: test
+    name: Test Item
+    path: Test Parent
+
+    Here's the notes of the item.
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+    This is the last line of the notes that belong to item "test".
+
+    !item
+    id: test2
+    ...
+
+All item types have the following properties:
+
+* `id` - unique identifier of the item. Must also be a valid file prefix. If not specified, it will be derived from `name`.
+* `name` - display name or title of the item. Does not have to be unique.
+* `description` - optional description. Defaults to empty.
+* `path` - id or name of the item's parent item. Required for all items except the master collection. The parent item must be a collection; see below.
+* `notes` - body text of the item. Usually written out over multiple lines after the end of the key-value pairs and before the header of the next item. However, it can be included in the property lines instead. Useful for items with single-line notes.
+
+Different types of items have special functionality and may have additional properties specific to their purpose.
+
+#### Item Types
+
+* **!item**, **!thing**
+    * Generic item.
+* **!collection**
+    * Represents collection of items.
+    * Has a list of child items (constructed from items that refer to it in their `path` property). Children are rendered as a list of links to subarticles at the end of the page.
+    * In general, when linking or referring to an item, it does not matter which collection it belongs to or where in the hierarchy it falls. However, some tags, such as `tasks` and `timeline`, recurse through collection hierarchies to gather information.
+    * Collections whose parent is the master collection (the first item in the master content file) are rendered on the home page.
+* **!place**, **!location**
+    * Describes a place.
+    * No special functionality.
+    * Slated for deprecation.
+* **!character**, **!person**
+    * Describes a character.
+    * A character's `name` property is parsed into *name parts*, which allows Secondary to handle the character's name intelligently in different contexts.
+        * To use name parts syntax, place a vertical pipe between first and last names and observe how the character's name is displayed in jumbotrons, links, and indices.
+        * {{todo: describe "name parts" behavior in greater detail}}
+        * {{todo: describe behavior with links}}
+    * Certain types of event tags are functional only for characters, and relationship tags can describe familial relationships between them.
+* **!image**
+    * Describes an image.
+    * Has an additional `filename` property which is either a local file name relative to the `content` directory or the description of a Wikimedia image. This is constructed by removing the `File:` prefix and adding a `wikimedia:` prefix.
+    * Upon first export, Wikimedia images are downloaded at full resolution along with metadata into `wikicache`. This allows pages generated for Wikimedia image items to include information about the artist and license as well as a link to the source. See {{Red Riding Hood - Rackham}} for an example.
+* **!trip**
+    * Describes an interplanetary flight or series of flights.
+    * Tags relating to interplanetary flights only function in trips.
+* **!book**
+    * Describes a story or novel.
+    * Additional properties:
+        * `authorname` - name of the author described with "name parts" synatx.
+        * `uniqueIdentifier` - unique "notISBN" id to be included in EPUB
+    * See {{Publishing}}.
+* **!tileset**, **!spritesheet**, **!map**
+    * Special game design functionality. Not documented.
+
+#### Including Additional Files
+
+The `include` item type is a special pseudo-item. It has only one property, `filename`, which specifies a file name (including extension) of another content file.
+
+#### Item Ordering
+
+A collection's list of children is ordered. The order that items occur in files (including the use of the `include` pseudo-item) determines this order.
+
+#### Notes
+
+Item notes are written in [Markdown](https://daringfireball.net/projects/markdown/syntax), along with special tags.
+
+[Pegdown](https://github.com/sirthias/pegdown) 1.6.0 performs the Markdown-to-HTML conversion. During world encyclopedia export, the `SMARTYPANTS` (punctuation beautification) and `EXTANCHORLINKS` (automatically generates anchors on headings) extensions are enabled. During EPUB export, only `SMARTYPANTS` is enabled.
+
 
 !collection
 id: tags
 name: Tags
 path: Documentation
 
-### Overview
----
-
 A key feature of Secondary is a special set of tags that you can use in the notes of any item. Some of these function like tags in wiki markup, while others have purposes that are more specific to worldbuilding. Tags take the following form:
 
 `{{demo: tag_name | value | arg1=value1 | arg2=value2 | arg3=value3 ...}}`
 
-For {{link: tags | Item Tags}}, `value` is usually the id or name of an item in your world. For {{link: tags | Task Tags}}, `value` is usually a sentence or two of descriptive text, and for {{link: tags | Event Tags}}, `value` is a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
-
-<br />
+For many tags, `value` is usually the id or name of an item in your world. For others, `value` is usually a sentence or two of descriptive text, and for tags relating to events, `value` is often a date. Some tags take additional arguments, usually key-value pairs whose order does not matter. Default values for arguments are listed in the usage description for each tag.
 
 
-### Item Tags
----
+!item
+name: General Tags
+path: Tags
 
-Item tags add relationships between items, insert images and links in notes, or create charts and visualizations.
-
----
+General tags add links between items or allow information to be shared between them.
 
 #### anchor
 
-Add an anchor that can be referenced via a {{link: Tags | link}} tag.
+Add an anchor that can be referenced via a {{link: General Tags | link}} tag.
 
 **Usage**
 
@@ -58,82 +205,44 @@ Add an anchor that can be referenced via a {{link: Tags | link}} tag.
 
 `{{demo: anchor | This is an anchor with id "anchor-tag". | id=anchor-tag}}` &rarr; {{anchor: This is an anchor with id "anchor-tag". | id=anchor-tag}}
 
----
+#### footnotes
 
-#### familytree
-
-Insert the family tree of a character and their descendants.
+Add a list of footnotes gathered from an item.
 
 **Usage**
 
-`{{demo: familytree | character}}`
+`{{demo: footnotes | item | sections=true}}`
 
-* **character**: name or id of character item
+* **item**: name or id of item
+* **sections**: if true, group into sections divided by headings
 
-Family relationships are established by using any of the following item tags in the notes of characters:
-
-* **father**, **mother**, **parent**
-* **son**, **daughter**, **child**
-* **ancestor**
-* **descendant**
-* **marriage**
-
-For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
-
-**birth** and **death** tags in a character's notes will add lifespan dates to their entry in the family tree. See {{link: tags | Event Tags}} below for more about these tags.
-
-**Examples**
-
-`{{demo: familytree | Lady Catherine de Bourgh}}`
-
-{{familytree: Lady Catherine de Bourgh}}
-
-See {{link: Genealogy Examples}} for further details.
-
----
-
-#### image
-
-{{image: image_red_riding_hood}}
-
-Insert an image.
-
-**Usage**
-
-`{{demo: image | item | link=true | responsive=false}}`
-
-* **item**: name or id of image item
-* **link**: add a link from the image back to its page
-* **responsive**: resize the image to fit the width of the page
-
-If the image is not responsive, it will be right aligned with a maximum width of 320px.
+The footnotes list includes links back to the paragraph of the article they occur in as well as links to sections if enabled. {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags are also gathered into the list.
 
 **Example**
 
-`{{demo: image | image_red_riding_hood}}`
+`{{demo: footnotes | *Little Red Riding Hood*}}`
 
----
+{{footnotes: *Little Red Riding Hood*}}
 
-#### jumbotron
+#### index
 
-Set the background image, image position, and text color of the article jumbotron.
+Generate an alphabetical index.
 
 **Usage**
 
-`{{demo: jumbotron | image | xpos=0% | ypos=50% | color=black}}`
+`{{demo: index | item}}`
 
-* **image**: name or id of image item
-* **xpos**: image x-position, in percentage (%) or pixels (px)
-* **ypos**: image y-position, in percentage or pixels
-* **color**: text color
+* **item** - collection item
 
-**Examples**
+The index is generated from all items in the hierarchy below the specified item and grouped by first letter of the name. Characters are sorted and grouped by last name, if they have one. Each line of the index links to the item's article page.
 
-`{{demo: jumbotron | image_alice | ypos=50%}}`
+**Example**
 
-{{jumbotron: image_alice | ypos=50%}}
+`{{demo: index | Genealogy}}`
 
-See jumbotron at top of page.
+---
+
+{{index: Genealogy}}
 
 ---
 
@@ -150,58 +259,154 @@ Create a link to an item.
 * **item**: name or id of item
 * **heading** (optional): name of heading within item's notes
 * **description**: text to display
-* **id**: id of anchor generated with {{link: Tags | anchor}} tag
+* **id**: id of anchor generated with {{link: General Tags | anchor}} tag
 
-Because link is the most often used tag, `link:` is optional if it is being used without an heading argument or description and id arguments.
+Because link is the most commonly used tag, `link:` is optional if it is being used without additional arguments beyond the item.
 
 **Examples**
 
 `{{demo: link | Project Layout}}` &rarr; {{link: Project Layout}}
 
-`{{demo: link | Tags | Event Tags}}` &rarr; {{link: Tags | Event Tags}}
+`{{demo: link | Event and Genealogy Tags | familytree}}` &rarr; {{link: Event and Genealogy Tags | familytree}}
 
-`{{demo: link | Tags | Link to anchor with id "anchor-tag" | anchor-tag}}` &rarr; {{link: Tags | Link to anchor with id "anchor-tag" | anchor-tag}}
+`{{demo: link | General Tags | Link to anchor with id "anchor-tag" | anchor-tag}}` &rarr; {{link: General Tags | Link to anchor with id "anchor-tag" | anchor-tag}}
 
----
+#### sidenote
 
-#### timeline
-
-Insert a timeline of all events in a hierarchy of items.
+Add a sidenote.
 
 **Usage**
 
-`{{demo: timeline | item | format=monthDayParagraph}}`
+`{{demo: sidenote | content | id=None}}`
 
-* **item**: name or id of an item; events will be gathered from the item and all items underneath it in the hierarchy.
-* **format**: one of several formatting options:
-    * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
-    * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
-    * **yearTable**: create a single table. The first cell in the row contains a year, and the second cell contains a paragraph of the events of that year. Best for events with the greatest spacing.
+* **content** - sidenote content
+* **id** - id to be displayed as a superscript in the body of the text and before the content in the side margin.
 
-Events are described using {{link: tags | Event Tags}}.
+Sidenotes are displayed in a side margin, aligned to the top of the paragraph that they appear in. The margin is only created in an article page only if sidenotes are present.
+
+Sidenotes (and side margins) will not render in `collection` and `image` items. Also, sidenotes are not rendered in EPUB or LaTeX exports.
 
 **Example**
 
-This timeline tag gathers event tags from the examples in the next section.
+See {{*Little Red Riding Hood*}}.
 
-`{{demo: timeline | tags | format=monthDayParagraph}}`
+#### snip
 
-{{timeline: tags | format=monthDayParagraph}}
+Snip one or more paragraphs of text to be quoted in a separate article.
 
-<br />
+**Usage**
 
-### Event Tags
----
+`{{demo: snip | id | paragraphs=1}}`
 
-Event tags describe events, which can be gathered into a timeline with the {{link: Tags | timeline}} tag. The `value` of an event tag is a date, which can consist of the full month, day, and year; month and year, or year:
+* **id** - unique id of snip within item
+* **paragraphs** - number of paragraphs (lines of text separated by blank lines) to snip.
+
+Snipped text starts after the end of the tag, so to ignore the one or more sentences at the beginning of a paragraph, place the tag after them.
+
+**Example**
+
+See {{*Little Red Riding Hood*}}.
+
+#### quote
+
+Quote snipped text.
+
+**Usage**
+
+`{{demo: quote | item | id}}`
+
+* **item** - name or id of item containing snip
+* **id** - id of snip to quote
+
+The name of the source article below the quote links back to the location of the snip.
+
+Quoting text from an article creates a dependency, so when the world encyclopedia is exported, the quoting article will be updated if the snipped article changes.
+
+**Example**
+
+`{{demo: quote | *Little Red Riding Hood* | id=what big teeth}}`
+
+{{quote: *Little Red Riding Hood* | id=what big teeth}}
+
+
+!item
+name: Image Tags
+path: Tags
+
+Image tags allow Secondary to track and store information relating to images and use those images to decorate the world encyclopedia.
+
+#### gallery
+
+Insert a responsive gallery of images.
+
+**Usage**
+
+`{{demo: gallery | item | recursive=false | size=4 | showCaptions=true}}`
+
+* **item**: name or id of collection
+* **recursive**: if true, descend through hierarchy to gather images for gallery
+* **size**: size of gallery columns (12 is full width)
+* **showCaptions**: if true, show the name of the image item below each name in the image
+
+**Example**
+
+`{{demo: gallery | Images}}`
+
+{{gallery: Images}}
+
+#### image
+
+{{image: image_red_riding_hood}}
+
+Insert an image.
+
+**Usage**
+
+`{{demo: image | item | link=true | responsive=false}}`
+
+* **item**: name or id of image item
+* **link**: add a link from the image back to its page
+* **responsive**: if true, resize the image to fit the width of the page
+
+If the image is not responsive, it will be right aligned with a maximum width of 320px.
+
+**Example**
+
+`{{demo: image | image_red_riding_hood}}`
+
+#### jumbotron
+
+Set the background image, image position, and text color of the article jumbotron.
+
+**Usage**
+
+`{{demo: jumbotron | image | xpos=0% | ypos=50% | color=black}}`
+
+* **image**: name or id of image item
+* **xpos**: image x-position, in percentage (%) or pixels (px)
+* **ypos**: image y-position, in percentage or pixels
+* **color**: text color
+
+**Example**
+
+`{{demo: jumbotron | image_red_riding_hood | ypos=90% | color=white}}`
+
+{{jumbotron: image_red_riding_hood | ypos=90% | color=white}}
+
+See jumbotron at top of page.
+
+
+!item
+name: Event and Genealogy Tags
+path: Tags
+
+These tags describe large-scale events or those relating to the lives of specific people. Dates used in these tags can consist of the full month, day, and year; month and year, or year:
 
 * June 1, 1940
 * June 1940
 * 1940
 
 The parts of the date must be separated by at least one comma or a whitespace character, with additional whitespace allowed.
-
----
 
 #### birth / death
 
@@ -216,15 +421,13 @@ Describe the birth or death of a character.
 * **date**: date of birth or death of the character whose notes this tag appears in
 * **description**: description of the event
 
-Birth and death tags may be added to any page, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
+Birth and death tags may be added to any item, but it only make sense to add them to the notes of a character, since they describe the birth and death of that character.
 
 **Example**
 
 `{{demo: death | November 23, 1926 | Angell dies after "a careless push" from a sailor.}}`
 
 {{death: November 23, 1926 | Angell dies after "a careless push" from a sailor.}}
-
----
 
 #### event
 
@@ -247,14 +450,115 @@ Describe an event.
 
 {{event: April 12, 1925 | *Vigilant* rescues *Alert*.}}
 
-<br />
+#### familytree
 
-### Task Tags
----
+Insert the family tree of a character and their descendants.
 
-Task tags describe thoughts and work items in various stages of completion. Tasks are gathered from the entire world hierarchy into tables and outlines on the Tasks page of the generated site.
+**Usage**
 
----
+`{{demo: familytree | character}}`
+
+* **character**: name or id of character item
+
+Family relationships are established by using any of the following item tags in the notes of a character. For these tags, `value` is the name or id of a character.
+
+* **father**, **mother**, **parent**
+* **son**, **daughter**, **child**
+* **ancestor**
+* **descendant**
+* **marriage**
+
+For example, the tag `{{demo: mother | Lady Catherine de Bourgh}}` in the notes of {{Anne de Bourgh}} indicates that {{Lady Catherine de Bourgh}} is Anne's mother.
+
+**birth** and **death** tags in a character's notes will add lifespan dates to their entry in the family tree. See above for more about these tags.
+
+The **marriage** tag establishes marriages between characters. Note that family trees distinguish between children from a marriage (both father and mother specified) and from an individual person in a marriage (only one of father and mother specified).
+
+**Example**
+
+`{{demo: familytree | Lady Catherine de Bourgh}}`
+
+{{familytree: Lady Catherine de Bourgh}}
+
+See {{link: Genealogy}} for further examples.
+
+#### timeline
+
+Generate a timeline of all events in a hierarchy of items.
+
+**Usage**
+
+`{{demo: timeline | item | format=monthDayParagraph}}`
+
+* **item**: name or id of an item; events will be gathered from the item and all items underneath it in the hierarchy.
+* **format**: one of several formatting options:
+    * **dayTable**: create a heading for each year, and a table for each month. The first cell in the row contains a day of the month, and the second cell contains a paragraph of the events of that day. Best for closely-spaced events.
+    * **monthDayParagraph**: create a heading for each year, with a paragraph of the events of each month. Best for events with greater spacing.
+    * **yearTable**: create a single table. The first cell in the row contains a year, and the second cell contains a paragraph of the events of that year. Best for events with the greatest spacing.
+
+Events are described using **event**, **birth / death**, and **marriage** tags.
+
+**Example**
+
+This timeline tag gathers event tags from the examples in the next section.
+
+`{{demo: timeline | Event and Genealogy Tags | format=monthDayParagraph}}`
+
+{{timeline: Event and Genealogy Tags | format=monthDayParagraph}}
+
+
+!item
+name: Work Tracking Tags
+path: Tags
+
+Work tracking tags describe thoughts and work items in various stages of completion. They also gather these from across the hierarchy into outlines and tables.
+
+#### burndown
+
+Draw a burndown chart.
+
+**Usage**
+
+`{{demo: burndown | startdate=None | enddate=None | recursive=false | weekends=false}}`
+
+* **stardate** - start date of chart
+* **enddate** - end date of chart
+* **recursive** - if true, recurse down hierarchy to find tasks
+* **weekends** - if true, include weekend days in chart
+
+This functionality uses the log / start / done dates and story points to construct a burndown chart of {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags within a certain time range.
+
+The enddate behavior is currently somewhat unintuitive and seems to require an extra day to get the full count of days. This issue will be addressed in future releases.
+
+**Example**
+
+This chart gathers task tags from this article; see task tag examples below.
+
+`{{demo: burndown | Work Tracking Tags | startdate=2016-03-07 | enddate=2016-03-15 | weekends=false}}`
+
+{{burndown: Work Tracking Tags | startdate=2016-03-07 | enddate=2016-03-15 | weekends=false}}
+
+#### tasks
+
+Generate a searchable, sortable table of tasks.
+
+**Usage**
+
+`{{demo: tasks | item}}`
+
+* **item**: name or id of item; tasks will be gathered from the item and all items beneath it in the hierachy.
+
+The table is constructed from {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags.
+
+Below the table, lists of items with empty notes as well as items with invalid tags appear.
+
+**Example**
+
+This table gathers task tags from this article; see task tag examples below.
+
+`{{demo: tasks | Work Tracking Tags}}`
+
+{{tasks: Work Tracking Tags}}
 
 #### thought / todo / started / done / blocked
 
@@ -262,103 +566,460 @@ Describe a task.
 
 **Usage**
 
-`{{demo: task_type | description | log=None | start=None | done=None}}`
+`{{demo: task_type | description | log=None | start=None | done=None | points=1}}`
 
 * **task_type**: thought, todo, started, done, or blocked
 * **description**: description of the task
-* **log**: date that the task was first recorded
+* **log**: date the task was first recorded
 * **start**: planned or actual start date
 * **done**: planned or actual finish date
+* **points**: story points for task
 
-Currently, dates are simple strings and are not parsed further. For meaningful sorting, use numerical year-month-day dates with consistent numbers of digits.
+Currently, dates are simple strings and are only parsed further by certain functionality. For meaningful sorting, use numerical year-month-day dates with consistent numbers of digits.
+
+Story points are not displayed and are only used in {{link: Work Tracking Tags | burndown}} charts.
 
 **Examples**
 
-`{{demo: todo | Add additional example events | log=2016-03-09 | start=2016-03-10}}`
+`{{demo: todo | Add additional example events | log=2016-03-07 | start=2016-03-10 | points=2}}`
 
-{{todo: Add additional example events | log=2016-03-09 | start=2016-03-10}}
+{{todo: Add additional example events | log=2016-03-07 | start=2016-03-10 | points=2}}
 
-`{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}`
+`{{demo: done | Add example events from the Lovecraft Mythos | log=2016-03-07 | start=2016-03-09 | done=2016-03-09}}`
 
-{{done: Add example events from the Lovecraft Mythos | log=2016-03-08 | start=2016-03-09 | done=2016-03-09}}
+{{done: Add example events from the Lovecraft Mythos | log=2016-03-07 | start=2016-03-09 | done=2016-03-09}}
+
+#### stats
+
+Display statistics about an item.
+
+**Usage**
+
+`{{demo: stats | item}}`
+
+* **item**: name or id of item; stats will be calculated from the item and all items beneath it in the hierarchy.
+
+Calculates total number of items, tags, and word count. This is an easy way to see the total size of the project or a section of it.
+
+**Example**
+
+`{{demo: stats | master}}`
+
+---
+
+{{stats: master}}
+
+---
+
+#### wordcount
+
+Count words in item notes.
+
+**Usage**
+
+`{{demo: wordcount | item | recursive=false | sections=false}}`
+
+* **item**: name or id of item
+* **recursive**: if true, descend through hierarchy counting words
+* **sections**: if true, group wordcount into sections divided by headings
+
+The sections functionality of this tag is useful for comparing and balancing chapter lengths.
+
+**Example**
+
+This example calculates the wordcount of {{*Little Red Riding Hood*}}.
+
+`{{demo: wordcount | *Little Red Riding Hood* | sections=true}}`
+
+{{wordcount: *Little Red Riding Hood* | sections=true}}
 
 
-!collection
-id: genealogy
-name: Genealogy Examples
+!trip
+name: Flight Planning Tags
 path: Tags
 
-See the child pages for explanations of the tags used to establish the relationships in the family tree.
+Describe interplanetary flights using [Orbits](https://github.com/bdzimmer/orbits).
 
-`{{demo: familytree | Anonymous Earl}}`
+Currently flights may be planned between the following celestial objects:
 
-{{familytree: Anonymous Earl}}
+* Mercury
+* Venus
+* Earth
+* Mars
+* Jupiter
+* Saturn
+* Uranus
+* Neptune
 
-!character
-id: earl
-name: Anonymous Earl
-path: genealogy
+#### acceleration / mass / velocity
 
-!character
-id: lady_catherine
-name: Lady Catherine | de Bourgh
-path: genealogy
+Describe properties of a spacecraft.
 
-`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
+**Usage**
 
-!character
-id: sir_lewis
-name: Sir Lewis | de Bourgh
-path: genealogy
+`{{demo: acceleration | value | unit=None}}`
 
-`{{demo: marriage | Lady Catherine de Bourgh}}` &rarr; {{marriage: Lady Catherine de Bourgh}}
+`{{demo: mass | value | unit=None}}`
 
-!character
-id: anne_debourgh
-name: Anne | de Bourgh
-path: genealogy
+`{{demo: velocity | value | unit=None}}`
 
-`{{demo: father | Sir Lewis de Bourgh}}` &rarr; {{father: Sir Lewis de Bourgh}}
-`{{demo: mother | Lady Catherine de Bourgh}}` &rarr; {{mother: Lady Catherine de Bourgh}}
+* **value** - value of property
+* **unit** - optional text to display unit
 
-!character
-id: anne_darcy
-name: Lady Anne | Darcy
-path: genealogy
+These tags are added to the notes of an item that represents a spacecraft. This item may then be used in other tags that describe flights.
 
-`{{demo: father | Anonymous Earl}}` &rarr; {{father: Anonymous Earl}}
-`{{demo: marriage | Mr. Darcy}}` &rarr; {{marriage: Mr. Darcy}}
+Currently the unit property is only used for display. Regardless of what is specified, values are assumed to have the following units:
 
-!character
-id: mr_darcy
-name: Mr. | Darcy
-path: genealogy
+* acceleration: AU/day<sup>2</sup>
+* mass: tonnes (metric tons)
+* velocity: AU/day
 
-!character
-id: georgiana
-name: Georgiana | Darcy
-path: genealogy
+Only one of acceleration or velocity is required. Velocity is only used for the very special case of flights with constant velocity and instantaneous acceleration.
 
-`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
-`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
+**Example**
 
-!character
-id: fitzwilliam_darcy
-name: Fitzwilliam | Darcy
-path: genealogy
+See example spacecraft {{USS *Big Bad Wolf*}}.
 
-`{{demo: father | Mr. Darcy}}` &rarr; {{father: Mr. Darcy}}
-`{{demo: mother | Lady Anne Darcy}}` &rarr; {{mother: Lady Anne Darcy}}
-`{{demo: marriage | Elizabeth Bennet}}` &rarr; {{marriage: Elizabeth Bennet}}
+#### flight
 
-!character
-id: elizabeth
-name: Elizabeth | Bennet
-path: genealogy
+Describe an interplanetary flight.
+
+**Usage**
+
+```
+{{demo: flight | ship
+  | startloc=Earth
+  | endloc=Mars
+  | startdate=January 1, 2016 00:00
+  | enddate=February 1, 2016 00:00
+  | passengers=None
+  | faction=none
+}}
+```
+
+* **ship**: name or id of item with spacecraft property tags
+* **startloc**: name of starting location
+* **endloc**: name of ending location
+* **startdate**: flight start date
+* **enddate**: flight end date
+* **passengers**: semicolon-separated list of characters to be recorded as passengers
+* **faction**: name of the faction the flight belongs to
+
+Note that flights are described with a specific starting and end date, independent of what the spacecraft is capable of. This allows flight definitions to stay constant across tweaks to spacecraft properties or small changes to planetary models.
+
+To properly generate images and animations, the flight tag must be used in a `trip` item. This restriction may be removed in the future.
+
+Orbits looks for a faction definition file. This is a file named `factions.txt` placed at the base project directory. Each line of the file takes the following form:
+
+    Faction Name, R, G, B
+
+where R, G, and B are integer values between 0 and 255 describing the color of the faction.
+
+**Example**
+
+```
+{{demo: flight | USS *Big Bad Wolf*
+  | startloc=Saturn
+  | endloc=Mars
+  | startdate=September 20, 2690 21:00
+  | enddate=September 30, 2690 12:00
+  | passengers=Elizabeth Bennet; Fitzwilliam Darcy
+  | faction=Protagonists
+}}
+```
+
+{{flight: USS *Big Bad Wolf*
+  | startloc=Saturn
+  | endloc=Mars
+  | startdate=September 20, 2690 21:00
+  | enddate=September 30, 2690 12:00
+  | passengers=Elizabeth Bennet; Fitzwilliam Darcy
+  | faction=Protagonists
+}}
+
+#### flightanimation
+
+Define and embed an animation of multiple (or zero) flights or other celestial objects.
+
+**Usage**
+
+```
+{{demo: flightanimation: item
+  | epoch=default
+  | width=1280
+  | height=720
+  | camtype=follow
+  | campos=0.0, 0.0, 0.0
+  | zviewpos=800.0
+  | fps=30
+  | interval=0.041666...
+  | damping=20.0
+  | status=1
+  | visible=none
+}}
+```
+
+* **epoch**: name of epoch (timespan) of animation
+* **width**: width in pixels of animation frames
+* **height**: height in pixels of animation frames
+* **camtype**: camera type; determines what the camera will point at. If "follow", point the camera at the average position of all active flights. Otherwise, the name of a celestial object to point the camera at. Currently only planets are supported, but in the future, moons and lagrange points will be valid objects.
+* **campos**: 3D coordinates of camera position
+* **zviewpos**: controls zoom. Should be in the range of several hundred for a view that includes multiple planets or tens of millions to observe the orbits of a planet's moons.
+* **fps**: animation frame rate in frames per second
+* **interval**: time interval in days (usually small fractions of a day) for each frame of animation
+* **damping**: number of frames of damping in the location the camera points at. Causes camera to lag behind a moving flights but smooths transition when new flights are added.
+* **status**: status mode:
+    * 0 - flight status with current datetime, distance, and velocity
+    * 1 - flight summary
+    * 2 - no status
+* **visible**: semicolon separated list of names of celestial objects to show. Currently not used. Only Earth, Saturn, Uranus, and Mars (the Orbits editor defaults) are visible. In the future, categories of objects including additional information may be controlled with this argument.
+
+The unit of the coordinate system is astronomical units (AU). The Sun is at the origin, and the eclipitic plane is the X-Y plane.
+
+Embedded videos must be generated with the `animate` command: `secondary animate <item>`. This command expects that `ffmpeg` is on your path.
+
+When the camera is zoomed past 100,000.0, additional detail is shown. Between zoom 100,000.0 to 5,000,000.0, the name of a planet will fade in at the bottom center of the frame if the planet is within view.
+
+**Examples**
+
+```
+{{demo: flightanimation | Flight Planning Tags
+  | epoch=Flight of the *Big Bad Wolf*
+  | status=2
+  | width=1280
+  | height=720
+  | interval=0.1
+}}
+```
+
+{{flightanimation: Flight Planning Tags
+  | epoch=Flight of the *Big Bad Wolf*
+  | status=2
+  | width=1280
+  | height=720
+  | interval=0.1
+}}
+
+```
+{{demo: flightanimation | Flight Planning Tags
+  | epoch=Short
+  | status=0
+  | camtype=Mars
+  | campos=0.0, -5.0, 5.0
+  | width=1280
+  | height=720
+  | zviewpos=32000000
+  | interval=0.001
+}}
+```
+
+{{flightanimation: Flight Planning Tags
+  | epoch=Short
+  | status=0
+  | camtype=Mars
+  | campos=0.0, -5.0, 5.0
+  | width=1280
+  | height=720
+  | zviewpos=32000000
+  | interval=0.001
+}}
+
+
+#### flightepoch
+
+Define an epoch (timespan) for a flight animation.
+
+**Usage**
+
+```
+{{demo: flightepoch | name
+  | startdate=January 1, 2016 00:00
+  | enddate=February 1, 2016 00:00
+}}
+```
+
+* **startdate**: start date of timespan
+* **enddate**: end date of timespan
+
+**Examples**
+
+`{{demo: flightepoch | Flight of the *Big Bad Wolf* | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}`
+
+{{flightepoch: Flight of the *Big Bad Wolf* | startdate=September 20, 2690 21:00 | enddate=September 30, 2690 12:00}}
+
+`{{demo: flightepoch | Short | startdate=August 29, 2690 12:00 | enddate=August 30, 2690 00:00}}`
+
+{{flightepoch: Short | startdate=August 29, 2690 12:00 | enddate=August 30, 2690 00:00}}
+
 
 !item
-id: faq
-name: Frequently Asked Questions
+name: Miscellaneous Tags
+path: Tags
+
+#### demo
+
+Render a tag for use in syntax examples.
+
+**Usage**
+
+`{{demo: demo | ... | ...}}`
+
+**Examples**
+
+`{{demo: demo | stats | master}}` &rarr; `{{demo: stats | master}}`
+
+`{{demo: demo | image | item | link=true | responsive=false}}` &rarr; `{{demo: image | item | link=true | responsive=false}}`
+
+#### markovtext
+
+Generate random text using a Markov chain.
+
+**Usage**
+
+`{{demo: markovtext | items | order=2 | count=5 | seed=0}}`
+
+* **items**: semicolon-separated list of item names or ids to recurse into
+* **order**: order of the markov chain; i.e. how many previous words inform the prediction of the next word.
+* **count**: number of sentences to generate
+* **seed**: seed for random number generator
+
+This feature is intended to be used for mixing and generating ideas. Results are most interesting when generated from several thousand words of notes.
+
+**Example**
+
+`{{demo: markovtext | Project Layout; Commands; Items}}`
+
+{{markovtext: Project Layout; Commands; Items}}
+
+
+!item
+name: Publishing
 path: Documentation
 
-{{TODO: faq content}}
+Secondary has a special item type and several commands useful for publishing fiction.
+
+#### Book Items
+
+Items with the `book` type contain additional properties (`authorname` and `uniqueIdentifier`) used when publishing.
+
+Books also have special behavior when rendered in the world encyclopedia, namely, they are given special styles that resemble print typesetting.
+
+#### Structure
+
+Markdown headings (lines that begin with one or more `#` symbols) in the notes of a book divide it into a list of sections. The first section is special. If it contains an image, the image is used as taken as the cover image (used in EPUB generation) and the remainder of the section is discarded and the second section is used as the title page. Otherwise, the first section is the title page. In the {{*Little Red Riding Hood*}} example, the second section is the title page.
+
+The title of the book when publishing is not the name of the item (which may include markdown for styling in the world encyclopedia) but the text of the heading of the title page.
+
+It's recommended to avoid using Secondary tags in books other than `sidenote` (which will be eliminated), `snip`, and the `image` tag for specifying the cover. Secondary does not currently include other images or linked articles in published books.
+
+#### EPUB
+
+Export a book to EPUB 2 with the command `secondary epub <item>`, where `<item>` is the name or id of the book. The file will is generated in the base project directory, named `<item-id>.epub`, where `<item-id>` is the item's id (unique in project).
+
+Since EPUB is an HTML-based format, the same Markdown-to-HTML converter used for the world encyclopedia is used to format the content.
+
+The cover image is included as a property of the `OEBPS/content.opf` file. A separate cover page is not generated, since that would result in duplicate covers when converted to Kindle format. Currently, the cover image is expected to be in PNG format, but other formats will probably work.
+
+A table of contents section (for example as a section following the title page) is not generated. However, an `OEBPS/toc.ncx` and related content is created so navigation features will be available.
+
+After generating an EPUB file, it may be converted to Kindle MOBI format using Amazon's command line tool [KindleGen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211). Note restrictions on the use of KindleGen for commercial purposes beyond those authorized in its license.
+
+It's recommended to use a tool like [EPUBCheck](https://github.com/w3c/epubcheck) to validate generated EPUBs before distribution. Improper use of Secondary tags in books can cause issues that EPUBCheck may be able to discover.
+
+Example commands for generating, checking, and converting the book example:
+
+    secondary epub little_red_riding_hood
+    epubcheck little_red_riding_hood.epub
+    kindlegen little_red_riding_hood.epub
+
+#### LaTeX
+
+Export a book to LaTeX with the command `secondary latex <item>`. The file is generated in the base project directory, named `<item-id>.tex`.
+
+A template file in Secondary's `resources` named `template.tex` is used. In the future, different templates or export options may become available. Until then, formatting changes may be made manually by editing declarations near the top of the TEX file.
+
+LaTeX export uses a custom Markdown-to-LaTeX converter that only supports a small subset of Markdown syntax, and there may be bugs or unexpected behavior in these:
+
+* Bold, italic, and bold-and-italic text (other nesting not supported) are converted to a proper combination of `textbf` and `textif`.
+* Headings are converted to `huge`, `noindent` text.
+* Code blocks (being with 4 spaces) are converted to `lstlisting` blocks.
+
+Other conversions are performed:
+
+* Pairs of double quotes within a paragraph are converted to left and right double quote marks.
+* Copyright symbol and percent sign are converted from HTML to LaTeX syntax.
+
+Conversions not currently performed include single quote beautification, markdown links, images, lists, or inline preformatted text.
+
+Once the LaTeX file is generated, another command must be run to convert to PDF. Example commands:
+
+    secondary latex little_red_riding_hood
+    pdflatex -interaction=nonstopmode little_red_riding_hood.tex
+
+
+!item
+name: Glossary
+path: Documentation
+
+* **content file** - text files with `.sec` extension containing definitions of items.
+* **item** - object within a project corresponding to an article in the world encyclopedia or another piece of content
+* **master collection** - item at the top of the hierarchy. Used to render the world encyclopedia home page.
+* **master content file** - the first item defined in this file is the master collection.
+* **name parts** - syntax and functionality to help Secondary understand parts of a person's name so it can be rendered and referred to appropriately in different contexts.
+* **tag** - special directive used in an item's notes. Enclosed in double curly braces.
+
+
+!item
+name: Tasks
+path: Documentation
+
+{{tasks: master}}
+
+#### Tag Documentation
+
+**General Tags**
+
++ Anchor
++ Footnotes
++ Index
++ Link
++ Sidenote
++ Snip
++ Quote
+
+**Image Tags**
+
++ Gallery
++ Image
++ Jumbotron
+
+**Event and Genealogy Tags**
+
++ birth / death
++ event
++ FamilyTree
+    + father, mother, parent
+    + son, daughter, child
+    + ancestor, descendant
+    + marriage
++ timeline
+
+**Work Tracking Tags**
+
++ BurnDown
++ Tasks
++ Thought / todo / started / done / blocked
++ Stats
++ WordCount
+
+**Flight Planning Tags**
+
++ acceleration / mass / velocity
++ Flight
++ FlightAnimation
++ FlightEpoch
+
+**Miscellaneous Tags**
+
++ Demo
++ MarkovText

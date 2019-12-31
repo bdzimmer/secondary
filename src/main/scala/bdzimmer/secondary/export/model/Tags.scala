@@ -9,7 +9,6 @@ object SecTags {
 
   val Link = "link"
   val Image = "image"
-  val ImageResponsive = "image-responsive"
   val FamilyTree = "familytree"
   val Jumbotron = "jumbotron"
   val Marriage = "marriage"

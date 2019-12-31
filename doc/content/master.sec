@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Ben Zimmer. All rights reserved.
+# Copyright (c) 2020 Ben Zimmer. All rights reserved.
 
 # Documentation for Secondary
 
@@ -7,14 +7,19 @@ id: master
 name: Secondary
 description: create worlds from text
 
-Secondary is a markup language and static site generator created specifically for world building. Use Secondary for planning novels, creating game design documents, and more.
+Secondary is a markup language and static site generator created specifically for world building and writing. Features are designed to enable a seamless process for planning, writing, and publishing fiction; however, Secondary also functions well as a general-purpose information or task tracking system.
 
-* **Edit**: Describe your world in text files with Markdown. Use your favorite text editor; there's no user interface to learn.
-* **Organize**: Use simple tags to group characters, places, and ideas into collections and hierarchies however you see fit. Add links and relationships between things in your world.
-* **Plan**: Track writing that needs to completed and ideas that need to be developed.
-* **Export**: Compile your world to a website, integrating your own image content or public domain images from Wikimedia. Browse to review tasks and get ideas, then edit the source files and recompile.
+* **Edit**
+    * Describe your world and write stories in text files with Markdown. Use your favorite text editor; there's no user interface to learn.
+    * Track changes in your project using your favorite version control system.
+* **Organize**
+    * Use tags to group characters, places, and ideas into collections and hierarchies however you see fit. Add links and relationships between things in your world.
+* **Plan**
+    * Track writing that needs to completed and ideas that need to be developed.
+* **Publish**
+    * Compile a world encyclopedia website, integrating your own image content or public domain images from Wikimedia. Browse to review tasks and get ideas, then edit the source files and recompile.
+    * Export stories to EPUB or automatically typeset PDF documents for print publishing.
 
-<br />
 
 {{jumbotron: image_alice | ypos=50%}}
 
@@ -22,4 +27,4 @@ Secondary is a markup language and static site generator created specifically fo
 filename: doc.sec
 
 !include
-filename: images.sec
+filename: examples.sec
