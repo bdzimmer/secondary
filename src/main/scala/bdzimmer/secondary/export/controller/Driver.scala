@@ -275,7 +275,14 @@ class Driver {
               description="")
           }
 
-          new Editor(orbitsFlights, orbitsShips.values.toList)
+          val styles = bdzimmer.orbits.IO.loadStyles(Editor.StylesFilename)
+          val factions = bdzimmer.orbits.IO.loadFactions(Editor.FactionsFilename)
+
+          new Editor(
+            orbitsFlights,
+            orbitsShips.values.toList,
+            styles,
+            factions)
         }
         case Fail(msg) => println(msg)
       }

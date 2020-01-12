@@ -156,6 +156,7 @@ object Tags {
     epoch: String,
     settings: AnimationSettings,
     status: Int,
+    style: String,
     visible: List[String]
     // TODO: other visualization options
     // examples include faction filters

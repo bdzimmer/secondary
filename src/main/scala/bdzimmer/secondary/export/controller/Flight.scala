@@ -143,6 +143,7 @@ object Flight {
     val flightTags = tags.collect({case x: Tags.Flight => x})
     val animationTags = tags.collect({case x: Tags.FlightAnimation => x})
 
+    val styles = IO.loadStyles(Editor.StylesFilename)
     val factions = IO.loadFactions(Editor.FactionsFilename)
 
     animationTags.foreach(anim => {
@@ -181,10 +182,13 @@ object Flight {
       println("\tdamping:  " + anim.settings.damping)
       println("status: " + anim.status)
       println("visible:")
+      println("style:  " + anim.style)
       anim.visible.foreach(x => println("\t" + x))
       println()
       println("output directory: " + outputDirname)
       println("-----------------------")
+
+      val viewerSettings = ???
 
       // load flights from the item
       val flights = flightTags.flatMap(
@@ -199,6 +203,7 @@ object Flight {
           flightStatus=anim.status
           // orbitInfo=true // just for testing
         ),
+        viewerSettings,
         anim.settings,
         outputDirname
       )
