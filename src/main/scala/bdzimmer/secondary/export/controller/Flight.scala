@@ -66,15 +66,17 @@ object Flight {
     }
 
     for {
-      orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.startLocation)
-      dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.endLocation)
+      // orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.startLocation)
+      // dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(fp.endLocation)
+      orig <- bdzimmer.orbits.Locations.StatesMap.get(fp.startLocation)
+      dest <- bdzimmer.orbits.Locations.StatesMap.get(fp.endLocation)
     } yield {
       bdzimmer.orbits.FlightParams(
         ship=ship,
         origName=fp.startLocation,
         destName=fp.endLocation,
-        orig=orig.planet,
-        dest=dest.planet,
+        orig=orig,
+        dest=dest,
         startDate=fp.startDate,
         endDate=fp.endDate,
         passengers=fp.passengers.map(_.name),

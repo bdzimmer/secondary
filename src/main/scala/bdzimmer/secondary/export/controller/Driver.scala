@@ -259,15 +259,17 @@ class Driver {
           val orbitsFlights = for {
             x <- flights
             flightShip <- orbitsShips.get(x.ship.id)
-            orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.startLocation)
-            dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.endLocation)
+            // orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.startLocation)
+            // dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.endLocation)
+            orig <- bdzimmer.orbits.Locations.StatesMap.get(x.startLocation)
+            dest <- bdzimmer.orbits.Locations.StatesMap.get(x.endLocation)
           } yield {
             bdzimmer.orbits.FlightParams(
               ship=flightShip,
               origName=x.startLocation,
               destName=x.endLocation,
-              orig=orig.planet,
-              dest=dest.planet,
+              orig=orig,
+              dest=dest,
               startDate=x.startDate,
               endDate=x.endDate,
               passengers=x.passengers.map(_.name),
