@@ -230,13 +230,39 @@ class Driver {
 
           // TODO: move this logic somewhere else
 
-          val flights = world.collect({
-            case tripItem: WorldItems.TripItem => {
-              stringToTags.getOrElse(tripItem.id, Map()).values.collect({
-                case x: Tags.Flight => Flight.flightParams(x, stringToTags)
-              }).toList
-            }
-          }).flatten.sortBy(_.startDate.julian) // probably a way to avoid this flatten
+          // all trips
+          val trips: List[WorldItems.TripItem] = world.collect({
+            case x: WorldItems.TripItem => x})
+
+          // all flights
+          val flights = trips.flatMap(tripItem => {
+            stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+              case x: Tags.Flight => Flight.flightParams(x, stringToTags)
+            }).toList
+          }).sortBy(_.startDate.julian) // probably a way to avoid this flatten
+
+          // collect two kinds of epochs
+
+          val tripEpochs: List[(String, Double, Double)] = trips.map(tripItem => {
+            val flightTags: List[Tags.Flight] = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+              case x: Tags.Flight => x
+            }).toList
+            (
+              tripItem.name,
+              flightTags.map(_.startDate.julian).min,
+              flightTags.map(_.endDate.julian).max
+            )
+          })
+
+          val tagEpochs: List[(String, Double, Double)] = trips.flatMap(tripItem => {
+            val epochTags: List[Tags.FlightEpoch] = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+              case x: Tags.FlightEpoch => x
+            }).toList
+            epochTags.map(x => (x.name, x.startDate.julian, x.endDate.julian))
+          })
+
+          val allEpochs = tripEpochs ++ tagEpochs
+          // TODO: add a total epoch?
 
           val ships = world.filter(x => {
             // probably a better way to write this
@@ -259,15 +285,17 @@ class Driver {
           val orbitsFlights = for {
             x <- flights
             flightShip <- orbitsShips.get(x.ship.id)
-            orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.startLocation)
-            dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.endLocation)
+            // orig <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.startLocation)
+            // dest <- bdzimmer.orbits.MeeusPlanets.Planets.get(x.endLocation)
+            orig <- bdzimmer.orbits.Locations.StatesMap.get(x.startLocation)
+            dest <- bdzimmer.orbits.Locations.StatesMap.get(x.endLocation)
           } yield {
             bdzimmer.orbits.FlightParams(
               ship=flightShip,
               origName=x.startLocation,
               destName=x.endLocation,
-              orig=orig.planet,
-              dest=dest.planet,
+              orig=orig,
+              dest=dest,
               startDate=x.startDate,
               endDate=x.endDate,
               passengers=x.passengers.map(_.name),
@@ -275,7 +303,15 @@ class Driver {
               description="")
           }
 
-          new Editor(orbitsFlights, orbitsShips.values.toList)
+          val styles = bdzimmer.orbits.IO.loadStyles(Editor.StylesFilename)
+          val factions = bdzimmer.orbits.IO.loadFactions(Editor.FactionsFilename)
+
+          new Editor(
+            orbitsFlights,
+            orbitsShips.values.toList,
+            allEpochs,
+            styles,
+            factions)
         }
         case Fail(msg) => println(msg)
       }

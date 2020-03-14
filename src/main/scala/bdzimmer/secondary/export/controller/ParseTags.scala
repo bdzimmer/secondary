@@ -191,13 +191,16 @@ object ParseTags {
           val interval = args.get("interval").map(_.toDoubleSafe(intDefault)).getOrElse(intDefault)  // one hour
           val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(Editor.Damping)
           val status = args.get("status").map(_.toIntSafe(1)).getOrElse(1)
+          val style = args.getOrElse("style", "default")
           val visible = args.get("visible").map(_.split(";\\s+").toList).getOrElse(List())
 
           FlightAnimation(
             item, epoch,
             AnimationSettings(width, height, camType, camPos, zViewPos, fps, interval, damping),
             status,
+            style,
             visible)
+
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
 
       }
