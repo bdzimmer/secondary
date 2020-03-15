@@ -68,7 +68,7 @@ class LatexSuite extends FunSuite {
     )
 
     examples.foreach({case (input, expected) => {
-      val result = Latex.convert(input)
+      val result = Latex.convertLine(input)
       println(input)
       println("~~~~")
       println(result)

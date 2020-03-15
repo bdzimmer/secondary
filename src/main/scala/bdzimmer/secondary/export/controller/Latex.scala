@@ -24,7 +24,7 @@ object Latex {
   // where this will fail.
 
   val MatcherDq: Regex = "\\\"([^\\\"]+)\\\"".r
-  // val MatcherSq: Regex = "\\\'([^\\\']+)\\\'".r
+  val MatcherSq: Regex = "\\\'([^\\\']+)\\\'".r
 
   val MatcherBi: Regex = "\\*\\*\\*([^\\*]+)\\*\\*\\*".r
   val MatcherB: Regex  = "\\*\\*([^\\*]+)\\*\\*".r
@@ -139,60 +139,24 @@ object Latex {
   }
 
 
-  // Convert markdown to LaTeX. Planned functionality:
-  // + Strip secondary tags
-  // + Fix pairs of double quote marks in each paragraph
-  // - Fix pairs of single quote marks in each paragraph
-  // + Markdown bold / italics
-  // + Markdown headers
-  // + code blocks
-  // + special symbols
-  //    + &copy
-  //    + %
+  // Convert Markdown to LaTeX. Handles:
+  // * strip secondary tags
+  // * code blocks
+  // * and parsing of individual lines (paragraphs)
+
   def convert(markdown: String): String = {
+
+    // strip Secondary tags
+    // TODO: eventually there may be a couple of tags for typesetting
+    // that we will want to render
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
 
-    // convert per-line symbols
+    // ~~~~ convert per-line symbols
 
-    val linesFixed = stripped.split("\n").map(line => {
+    // TODO: these should not be converted for non code block lines (see below)
+    val linesFixed = stripped.split("\n").map(convertLine)
 
-      // TODO: these should only be converted for non code block lines
-      // TODO: a lot of these should be put in their own functions / methods
-
-      // val line0 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
-      val line0 = line
-
-      // Matched pairs of double quotes -> left and right double quotes.
-      // Afterwards, replace any remaining double quotes with left double quotes.
-      val line1 = MatcherDq.replaceAllIn(line0, m => "``" + m.group(1) + "''")
-      val line2 = MatcherDqSingle.replaceAllIn(line1, _ => "``")
-
-      // Matched pairs of *** -> bold and italic
-      val line3 = MatcherBi.replaceAllIn(line2, m => raw"\\textbf{\\textit{" + m.group(1) + "}}")
-
-      // Matched pairs of ** -> bold
-      val line4 = MatcherB.replaceAllIn(line3, m => raw"\\textbf{" + m.group(1) + "}")
-
-      // Matched pairs of *  -> italic
-      val line5 = MatcherI.replaceAllIn(line4, m => raw"\\textit{" + m.group(1) + "}")
-
-      // headers -> huge
-      val line6 = MatcherH.replaceAllIn(line5, m => raw"{\\huge\\noindent " + m.group(1) + "}")
-
-      // copyright symbol
-      val line7 = MatcherCopyright.replaceAllIn(line6, _ => raw"\\textcopyright\\")
-
-      // percent sign
-      val line8 = MatcherPercent.replaceAllIn(line7, _ => raw"\\%")
-
-      line8
-
-      // TODO: deal properly with single quotes that are not apostrophes
-      // not really sure how to do this at the moment
-      // best solution honestly might be to convert LaTeX syntax back to markdown, lol
-    })
-
-    // convert code blocks
+    // ~~~~ convert code blocks
 
     var result = ""
     var inCodeBlock = false
@@ -210,6 +174,7 @@ object Latex {
       }
 
       // are we leaving a code block?
+
       if (!line.startsWith("    ") && !line.isEmpty && inCodeBlock) {
         // strip trailing whitespace, add back a single newline, and end the code block
         codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
@@ -229,6 +194,7 @@ object Latex {
           codeBlockContents = codeBlockContents + line.substring(4) + "\n"
         }
       } else {
+        // TODO: convertLine here, I think. Yep.
         result = result + line + "\n"
       }
 
@@ -241,6 +207,53 @@ object Latex {
     }
 
     result
+
+  }
+
+
+  // * Strip secondary tags
+  // * Fix pairs of double quote marks in each paragraph
+  // * Fix pairs of single quote marks in each paragraph
+  // * Markdown bold / italics
+  // * Markdown headers
+  // * special symbols
+  //    * &copy
+  //    * %
+
+  def convertLine(line: String): String = {
+
+    // TODO: deal properly with single quotes that are not apostrophes
+    // not really sure how to do this at the moment
+
+    // TODO: why didn't this work?
+    val line0 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
+    // val line0 = line
+
+    // Matched pairs of double quotes -> left and right double quotes.
+    // Afterwards, replace any remaining double quotes with left double quotes.
+
+    val line1 = MatcherDq.replaceAllIn(line0, m => "``" + m.group(1) + "''")
+    val line2 = MatcherDqSingle.replaceAllIn(line1, _ => "``")
+
+    // Matched pairs of *** -> bold and italic
+    val line3 = MatcherBi.replaceAllIn(line2, m => raw"\\textbf{\\textit{" + m.group(1) + "}}")
+
+    // Matched pairs of ** -> bold
+    val line4 = MatcherB.replaceAllIn(line3, m => raw"\\textbf{" + m.group(1) + "}")
+
+    // Matched pairs of *  -> italic
+    val line5 = MatcherI.replaceAllIn(line4, m => raw"\\textit{" + m.group(1) + "}")
+
+    // headers -> huge
+    val line6 = MatcherH.replaceAllIn(line5, m => raw"{\\huge\\noindent " + m.group(1) + "}")
+
+    // copyright symbol
+    val line7 = MatcherCopyright.replaceAllIn(line6, _ => raw"\\textcopyright\\")
+
+    // percent sign
+    val line8 = MatcherPercent.replaceAllIn(line7, _ => raw"\\%")
+
+    line8
 
   }
 
