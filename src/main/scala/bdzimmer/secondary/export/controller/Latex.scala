@@ -157,12 +157,14 @@ object Latex {
     val linesFixed = stripped.split("\n").map(line => {
 
       // TODO: these should only be converted for non code block lines
+      // TODO: a lot of these should be put in their own functions / methods
 
-      // val line1 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
+      // val line0 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
+      val line0 = line
 
       // Matched pairs of double quotes -> left and right double quotes.
       // Afterwards, replace any remaining double quotes with left double quotes.
-      val line1 = MatcherDq.replaceAllIn(line, m => "``" + m.group(1) + "''")
+      val line1 = MatcherDq.replaceAllIn(line0, m => "``" + m.group(1) + "''")
       val line2 = MatcherDqSingle.replaceAllIn(line1, _ => "``")
 
       // Matched pairs of *** -> bold and italic

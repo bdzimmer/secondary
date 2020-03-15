@@ -1,6 +1,6 @@
-// Copyright (c) 2019 Ben Zimmer. All rights reserved.
+// Copyright (c) 2020 Ben Zimmer. All rights reserved.
 
-// Tests for duplicate word detection.
+// Tests for Markdown -> Latex conversion.
 
 package bdzimmer.secondary.export.controller
 
@@ -8,7 +8,7 @@ import bdzimmer.secondary.export.view.Markdown
 import org.scalatest.FunSuite
 
 
-class LatexSuite extends FunSuite{
+class LatexSuite extends FunSuite {
 
   test("code blocks") {
 
@@ -51,13 +51,33 @@ class LatexSuite extends FunSuite{
       println()
 
       assert(result == expected)
+    }})
+  }
 
+
+  test("quote marks") {
+
+    val examples = List(
+      ("\"hello\", \"world\"", "``hello'', ``world''"), // pair of double-quoted words
+      ("'hello', 'world'", "`hello', `world'"),         // pair of single-quoted words
+      ("\"hello\", 'world'", "``hello'', `world'"),     // double then single
+      ("'hello', \"world\"", "`hello', ``world''"),     // single then double
+      ("\"hello, 'world'\"", "``hello, `world'''"),     // nested on left
+      ("\"'hello,' world\"", "```hello,' world''")      // nested on right
+      // TODO: more tests with addl comma placements
+    )
+
+    examples.foreach({case (input, expected) => {
+      val result = Latex.convert(input)
+      println(input)
+      println("~~~~")
+      println(result)
+      println("~~~~ ~~~~ ~~~~ ~~~~")
+      println()
+
+      assert(result == expected)
     }})
 
-
-    val testLines = "the quick quick brown\nfox jumps over\nthe the lazy dog dog\nThat's something.."
-    val lineNumbers = Dup.find(testLines)
-    assert(lineNumbers == List((0, (4, 15)), (2, (0, 7)), (2, (13, 20))))
   }
 
 }
