@@ -23,18 +23,23 @@ object Latex {
   // thing in between. There are probably cases that I'm not thinking of
   // where this will fail.
 
-  val MatcherDq: Regex = "\\\"([^\\\"]+)\\\"".r
-  val MatcherSq: Regex = "\\\'([^\\\']+)\\\'".r
+  val MatcherDq: Regex = "\"([^\"]+)\"".r
 
-  val MatcherBi: Regex = "\\*\\*\\*([^\\*]+)\\*\\*\\*".r
-  val MatcherB: Regex  = "\\*\\*([^\\*]+)\\*\\*".r
-  val MatcherI: Regex = "\\*([^\\*]+)\\*".r
+  // val MatcherSq: Regex = "\\\'([^\\\']+)\\\'".r
+  val MatcherSq: Regex = "(^|\\W)\'([^\']+)\'($|\\W)".r
+
+  val MatcherDqSq: Regex = "`{3}".r
+  val MatcherSqDq: Regex = "'{3}".r
+
+  val MatcherBi: Regex = "\\*\\*\\*([^*]+)\\*\\*\\*".r
+  val MatcherB: Regex  = "\\*\\*([^*]+)\\*\\*".r
+  val MatcherI: Regex = "\\*([^*]+)\\*".r
 
   val MatcherH: Regex = "^#+\\s(.*)".r
   val MatcherCopyright: Regex = "&copy;".r
   val MatcherPercent: Regex = "%".r
 
-  val MatcherDqSingle: Regex = "\\\"".r
+  val MatcherDqSingle: Regex = "\"".r
 
   // A lot of unused stuff here, for dealing with images.
 
@@ -222,38 +227,39 @@ object Latex {
 
   def convertLine(line: String): String = {
 
-    // TODO: deal properly with single quotes that are not apostrophes
-    // not really sure how to do this at the moment
+    var res = line
 
-    // TODO: why didn't this work?
-    val line0 = MatcherSq.replaceAllIn(line, m=> "`" + m.group(1) + "'")
-    // val line0 = line
+    // single quotes first
+    res = MatcherSq.replaceAllIn(res, m => m.group(1) + "`" + m.group(2) + "'" + m.group(3))
 
     // Matched pairs of double quotes -> left and right double quotes.
-    // Afterwards, replace any remaining double quotes with left double quotes.
+    // Afterwards, replace any remaining double quotes with left double quotes
+    // and insert thin spaces between single / quote groups of three
 
-    val line1 = MatcherDq.replaceAllIn(line0, m => "``" + m.group(1) + "''")
-    val line2 = MatcherDqSingle.replaceAllIn(line1, _ => "``")
+    res = MatcherDq.replaceAllIn(res, m => "``" + m.group(1) + "''")
+    res = MatcherDqSingle.replaceAllIn(res, _ => "``")
+    res = MatcherDqSq.replaceAllIn(res, _ => raw"``\\thinspace`")
+    res = MatcherSqDq.replaceAllIn(res, _ => raw"'\\thinspace''")
 
     // Matched pairs of *** -> bold and italic
-    val line3 = MatcherBi.replaceAllIn(line2, m => raw"\\textbf{\\textit{" + m.group(1) + "}}")
+    res = MatcherBi.replaceAllIn(res, m => raw"\\textbf{\\textit{" + m.group(1) + "}}")
 
     // Matched pairs of ** -> bold
-    val line4 = MatcherB.replaceAllIn(line3, m => raw"\\textbf{" + m.group(1) + "}")
+    res = MatcherB.replaceAllIn(res, m => raw"\\textbf{" + m.group(1) + "}")
 
     // Matched pairs of *  -> italic
-    val line5 = MatcherI.replaceAllIn(line4, m => raw"\\textit{" + m.group(1) + "}")
+    res = MatcherI.replaceAllIn(res, m => raw"\\textit{" + m.group(1) + "}")
 
     // headers -> huge
-    val line6 = MatcherH.replaceAllIn(line5, m => raw"{\\huge\\noindent " + m.group(1) + "}")
+    res = MatcherH.replaceAllIn(res, m => raw"{\\huge\\noindent " + m.group(1) + "}")
 
     // copyright symbol
-    val line7 = MatcherCopyright.replaceAllIn(line6, _ => raw"\\textcopyright\\")
+    res = MatcherCopyright.replaceAllIn(res, _ => raw"\\textcopyright\\")
 
     // percent sign
-    val line8 = MatcherPercent.replaceAllIn(line7, _ => raw"\\%")
+    res = MatcherPercent.replaceAllIn(res, _ => raw"\\%")
 
-    line8
+    res
 
   }
 

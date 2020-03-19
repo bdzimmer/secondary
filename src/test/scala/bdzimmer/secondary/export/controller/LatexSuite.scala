@@ -62,9 +62,18 @@ class LatexSuite extends FunSuite {
       ("'hello', 'world'", "`hello', `world'"),         // pair of single-quoted words
       ("\"hello\", 'world'", "``hello'', `world'"),     // double then single
       ("'hello', \"world\"", "`hello', ``world''"),     // single then double
-      ("\"hello, 'world'\"", "``hello, `world'''"),     // nested on left
-      ("\"'hello,' world\"", "```hello,' world''")      // nested on right
-      // TODO: more tests with addl comma placements
+      ("\"hello, 'world'\"", "``hello, `world'\\thinspace''"),     // nested on left
+      ("\"'hello,' world\"", "``\\thinspace`hello,' world''"),     // nested on right
+
+      ("test's test's", "test's test's"),
+      ("\"test's test's\"", "``test's test's''"),
+      ("'til the end, don't leave.", "'til the end, don't leave."),
+
+      // Some examples where the current result is not correct.
+
+      // Apostrophes inside single quotes don't work,
+      // so the initial single quote doesn't get transformed into `.
+      ("\"She said, 'Don't give up! Don't quit!'\"", "``She said, 'Don't give up! Don't quit!'\\thinspace''")
     )
 
     examples.foreach({case (input, expected) => {
