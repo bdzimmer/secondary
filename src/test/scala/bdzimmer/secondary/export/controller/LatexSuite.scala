@@ -59,21 +59,32 @@ class LatexSuite extends FunSuite {
 
     val examples = List(
       ("\"hello\", \"world\"", "``hello'', ``world''"), // pair of double-quoted words
-      ("'hello', 'world'", "`hello', `world'"),         // pair of single-quoted words
-      ("\"hello\", 'world'", "``hello'', `world'"),     // double then single
-      ("'hello', \"world\"", "`hello', ``world''"),     // single then double
-      ("\"hello, 'world'\"", "``hello, `world'\\thinspace''"),     // nested on left
-      ("\"'hello,' world\"", "``\\thinspace`hello,' world''"),     // nested on right
+      ("'hello', 'world'", "`hello', `world'"), // pair of single-quoted words
+      ("'hello' and 'world'", "`hello' and `world'"), // pair of single-quoted words without comma
+      ("\"hello\", 'world'", "``hello'', `world'"), // double then single
+      ("'hello', \"world\"", "`hello', ``world''"), // single then double
+      ("\"hello, 'world'\"", "``hello, `world'\\thinspace''"), // nested on left
+      ("\"'hello,' world\"", "``\\thinspace`hello,' world''"), // nested on right
 
       ("test's test's", "test's test's"),
       ("\"test's test's\"", "``test's test's''"),
       ("'til the end, don't leave.", "'til the end, don't leave."),
+      ("\"She said, 'Don't give up! Don't quit!'\"", "``She said, `Don't give up! Don't quit!'\\thinspace''"),
 
-      // Some examples where the current result is not correct.
+      // Some examples where the current result is not "correct."
 
-      // Apostrophes inside single quotes don't work,
-      // so the initial single quote doesn't get transformed into `.
-      ("\"She said, 'Don't give up! Don't quit!'\"", "``She said, 'Don't give up! Don't quit!'\\thinspace''")
+      // The apostrophe at the end of "Heckin'" is taken as the closing single quote.
+      // This is not an easy problem to solve, since we identify closing single quotes
+      // by being followed with a non-word character. If we change that to "non-word
+      // character and also not a space" that prevents single quoted words like above.
+      // Solution is probably a special tag that translates to the correct thing
+      // in both modes.
+
+      ("'Heckin' birb!'", "`Heckin' birb!'"),
+
+      // (This one actually works, due to asymmetry.)
+      ("'Well, 'til we meet again!'", "`Well, 'til we meet again!'")
+
     )
 
     examples.foreach({case (input, expected) => {

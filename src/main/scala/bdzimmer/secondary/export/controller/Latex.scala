@@ -17,16 +17,17 @@ import bdzimmer.secondary.export.model.WorldItems.BookItem
 object Latex {
 
   // Regex stuff for converting markdown to latex.
-  // TODO: unit tests to understand what these do and do not work on.
-
-  // Note that the meaning of these is matched pairs with none of the
-  // thing in between. There are probably cases that I'm not thinking of
-  // where this will fail.
 
   val MatcherDq: Regex = "\"([^\"]+)\"".r
 
-  // val MatcherSq: Regex = "\\\'([^\\\']+)\\\'".r
-  val MatcherSq: Regex = "(^|\\W)\'([^\']+)\'($|\\W)".r
+  // Matching single pairs of single quotes is tricky due to apostrophes.
+
+  // This will not match pairs of single quotes with apostrophes inside.
+  // val MatcherSq: Regex = "(^|\\W)\'([^\']+)\'($|\\W)".r
+
+  // This one handles apostrophes inside but will interpret apostrophes
+  // at the beginning or ending of words as single quotes.
+  val MatcherSq: Regex = "(^|\\W)\'(.*?)\'($|\\W)".r
 
   val MatcherDqSq: Regex = "`{3}".r
   val MatcherSqDq: Regex = "'{3}".r
