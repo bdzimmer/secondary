@@ -50,7 +50,12 @@ class RenderTags(
       // $ and \ have special meaning in replacement strings, this quotes them
       // it may be desirable for performance to only apply below to results of certain tags
       // that are more likely to include slashes
-      Regex.quoteReplacement(render(tag))
+      Regex.quoteReplacement({
+        // Timer.timeit("\t" + tag.getClass.getSimpleName + ": ", {
+        //   render(tag)
+        // })
+        render(tag)
+      })
     })
 
     val pp = Markdown.getPegDown(ebookMode)

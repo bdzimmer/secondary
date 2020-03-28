@@ -54,26 +54,27 @@ class ExportProcess(projConf: ProjectConfig)  {
     }
 
     val (newMetaStatus, metaStatusChanges) = loadMeta()
-    val loadedWorld = WorldLoader.loadWorld(projConf, newMetaStatus)
+    val loadedWorld = Timer.showTimeBrief("loading world", {WorldLoader.loadWorld(projConf, newMetaStatus)})
 
     loadedWorld match {
       case Pass(master) => {
 
         val world = WorldItems.collectionToList(master)
+
         val (newRefStatus,  refStatusChanges)  = loadRefs(world)
         val (newItemStatus, itemStatusChanges) = loadItemStatus(world)
 
         // only export the things that have changed
-        if (itemStatusChanges.size > 0 || refStatusChanges.size > 0) {
+        if (itemStatusChanges.nonEmpty || refStatusChanges.nonEmpty) {
 
           // parse all of the tags
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
           val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
           val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
-            stringToItem.get(x).map(WorldItems.collectionToList(_))
+            stringToItem.get(x).map(WorldItems.collectionToList)
           }).flatten.distinct
 
-          val exportPages = new RenderPages(
+          val exportPages = Timer.showTimeBrief("build render pages", new RenderPages(
               master,
               world,
               stringToTags,
@@ -84,38 +85,49 @@ class ExportProcess(projConf: ProjectConfig)  {
               projConf.relativeLinks,
               hiddenItems,
               projConf.unifiedJumbotron,
-              projConf.search)
+              projConf.search))
 
-          val exportImages = new RenderImages(
+          val exportImages = Timer.showTimeBrief("build render images", new RenderImages(
               world,
               stringToTags,
               wikiCache,
               projConf.localExportPath,
-              projConf.license)
+              projConf.license))
 
-          val modifiedIds = itemStatusChanges.keySet
+          val (itemsToExport, modifiedRefs) = Timer.showTime("dependency analysis", {
 
-          // items that have been modified
-          val modifiedItems = world.filter(x => modifiedIds.contains(x.id))
+            val modifiedIds = itemStatusChanges.keySet
 
-          // items that modified items reference
-          // this will keep "referenced by" lists up to date
-          // I don't think this is usually important; so this may be something to make optional
-          val modifiedItemsReferences = modifiedItems.flatMap(x => exportPages.references.get(x.id)).flatten
+            // items that have been modified
+            val modifiedItems = world.filter(x => modifiedIds.contains(x.id))
 
-          // items that modified items are referenced by
-          // updates link names, flight predictions, etc.
-          // This is more important than above in terms of keeping things up to date.
-          val modifiedItemsReferencedBy = modifiedItems.flatMap(x => exportPages.referencedBy.get(x.id)).flatten
+            modifiedItems.foreach(x => println("modified item:      " + x.id))
 
-          modifiedItems.foreach(x             => println("modified item:      " + x.id))
-          modifiedItemsReferences.foreach(x   => println("modified item refs: " + x.id))
-          modifiedItemsReferencedBy.foreach(x => println("modified item refd: " + x.id))
+            // items that modified items reference
+            // this will keep "referenced by" lists up to date
+            // I don't think this is usually important; so this may be something to make optional
+            val modifiedItemsReferences = modifiedItems.flatMap(x => {
+                val refs = exportPages.references.getOrElse(x.id, List())
+                refs.foreach(y => println("modified item refs: " + y.id + " <- " + x.id))
+                refs
+            })
 
-          // val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedsBy ++ timelineItemsRefresh).distinct
-          val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedBy).distinct
+            // items that modified items are referenced by
+            // updates link names, flight predictions, etc.
+            // This is more important than above in terms of keeping things up to date.
+            val modifiedItemsReferencedBy = modifiedItems.flatMap(x => {
+               val refd = exportPages.referencedBy.getOrElse(x.id, List())
+               refd.foreach(y => println("modified item refd: " + y.id + " -> " + x.id))
+               refd
+            })
 
-          val modifiedRefs = world.collect({case x: RefItem => x}).filter(x => refStatusChanges.keySet.contains(x.filename))
+            // val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedsBy ++ timelineItemsRefresh).distinct
+            val itemsToExport = (modifiedItems ++ modifiedItemsReferences ++ modifiedItemsReferencedBy).distinct
+
+            val modifiedRefs = world.collect({case x: RefItem => x }).filter(x => refStatusChanges.keySet.contains(x.filename))
+
+            (itemsToExport, modifiedRefs)
+          })
 
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
                itemsToExport, modifiedRefs, exportPages, exportImages,
@@ -262,11 +274,11 @@ object ExportPipeline {
     val pageOutputs = performExportPages(exportPages, pagesToExport, localExportPath)
     val imageOutputs = performExportImages(exportImages, imagesToExport, localContentPath)
 
-    println("--export finished")
-
     imageOutputs.foreach{case (k, v) => {
       logList("image created", v.map(k + " -> " + _))
     }}
+
+    println("~~~~ export complete ~~~~")
 
     (pageOutputs, imageOutputs)
   }
@@ -277,46 +289,38 @@ object ExportPipeline {
       pagesToExport: List[WorldItem],
       localExportPath: String): List[String] = {
 
+    val startTime = System.currentTimeMillis
+
     val pageOutputs = scala.collection.mutable.Buffer[String]()
 
     // create master and summary pages that are always exported
 
-    writePage(
+    // create pages that are always rendered
+    val (writeTime, _) = Timer.timeit(writePage(
       localExportPath / RenderPages.MasterPageFile,
-      exportPages.masterPage())
+      exportPages.masterPage()))
     pageOutputs += RenderPages.MasterPageFile
 
-    // writePage(
-    //   localExportPath / RenderPages.TasksPageFile,
-    //   exportPages.tasksPage())
-    // pageOutputs += RenderPages.TasksPageFile
-
-    // writePage(
-    //   localExportPath / RenderPages.IndexPageFile,
-    //   exportPages.indexPage())
-    // pageOutputs += RenderPages.IndexPageFile
-
-    // writePage(
-    //   localExportPath / RenderPages.StatsPageFile,
-    //   exportPages.statsPage())
-    // pageOutputs += RenderPages.StatsPageFile
-
-    logList("project page created", pageOutputs)
+    println("master page created: " + RenderPages.MasterPageFile + "\t" + writeTime + " sec")
 
     // create other pages
     pagesToExport.foreach(item => {
       val pageFilename = RenderPages.itemPageName(item)
 
-      writePage(
+      val (writeTime, _ ) = Timer.timeit(writePage(
         localExportPath / pageFilename,
-        exportPages.itemPageDispatch(item))
+        exportPages.itemPageDispatch(item)
+      ))
 
-      println("page created: " + pageFilename)
+      println("page created: " + pageFilename + "\t" + writeTime + " sec")
 
       if (pageFilename.length > 0) {
         pageOutputs += pageFilename
       }
     })
+
+    val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+    println("total time for export pages: " + totalTime + " sec")
 
     pageOutputs.toList
   }
@@ -327,12 +331,17 @@ object ExportPipeline {
       imagesToExport: List[WorldItem],
       localContentPath: String): FileOutputsMap = {
 
+    val startTime = System.currentTimeMillis
+
     // TODO: move file IO here from ExportIamges
     val imageOutputs = if (imagesToExport.nonEmpty) {
       exportImages.exportAllImages(imagesToExport, localContentPath)
     } else {
       RenderImages.emptyFileOutputsMap
     }
+
+    val totalTime = (System.currentTimeMillis - startTime) / 1000.0
+    println("total time for export images: " + totalTime + " sec")
 
     imageOutputs
 
