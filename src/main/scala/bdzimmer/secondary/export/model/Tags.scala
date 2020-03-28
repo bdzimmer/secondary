@@ -235,7 +235,10 @@ object Tags {
   ) extends ParsedTag
 
   case class Tasks(
-    item: WorldItem
+    item: WorldItem,
+    shorthand: Boolean,
+    recursive: Boolean,
+    mode: String
   ) extends ParsedTag
 
   case class Stats(

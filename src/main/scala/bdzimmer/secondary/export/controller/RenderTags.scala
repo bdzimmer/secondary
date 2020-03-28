@@ -309,7 +309,7 @@ s"""
         WorldItems.collectionToList(x.item).drop(1))
 
     case x: Tags.Tasks => {
-      Tasks.render(x.item, stringToTags)
+      Tasks.render(x.item, stringToTags, x.shorthand, x.recursive, x.mode)
     }
 
     case x: Tags.Stats => {

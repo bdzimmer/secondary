@@ -26,6 +26,8 @@ case class TaskTableItem(
 
 object Tasks {
 
+  val MatcherShorthand = "^\\s*([-|+])\\s+(.+)$".r
+
   val TasksStyles =
      s"""<script src="${WebResource.Jquery.localRelFilename}"></script>""" + "\n" +
      s"""<script src="${WebResource.DataTablesJs.localRelFilename}" charset="utf-8"></script>""" + "\n" +
@@ -33,21 +35,44 @@ object Tasks {
 
   def render(
       master: WorldItem,
-      stringToTags: Map[String, Map[Int, Tags.ParsedTag]]): String = {
+      stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+      shorthand: Boolean,
+      recursive: Boolean,
+      mode: String
+    ): String = {
 
-    val items = WorldItems.collectionToList(master)
-
-    val groups = master match {
-      case x: CollectionItem => x.children.flatMap(
-          group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
-      case _                 => Map[String, WorldItem]()
+    val (items, groups) = if (recursive) {
+      val items = WorldItems.collectionToList(master)
+      val groups = master match {
+        case x: CollectionItem => x.children.flatMap(
+            group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
+        case _                 => Map[String, WorldItem]()
+      }
+      (items, groups)
+    } else {
+      (List(master), Map[String, WorldItem]())
     }
 
-    val allTasks = for {
+    val tasksFromTags = for {
       item    <- items
       taskTag <- stringToTags(item.id).values.collect({case x: Tags.Task => x})
     } yield {
       (taskTag, item, groups.getOrElse(item.id, master))
+    }
+
+    val allTasks = if (shorthand) {
+      val tasksFromShorthand = for {
+        item <- items
+        line <- item.notes.split("\n")
+        m <- MatcherShorthand.findAllMatchIn(line)
+      } yield {
+        val kind = if (m.group(1).equals("-")) "todo" else "started"
+        val desc = m.group(2)
+        (Tags.Task(kind, desc, None, None, None, 0), item, groups.getOrElse(item.id, master))
+      }
+      tasksFromTags ++ tasksFromShorthand
+    } else {
+      tasksFromTags
     }
 
     // get invalid tags
@@ -66,26 +91,32 @@ object Tasks {
                   Html.listGroup(x._2.map(text => Html.listItem(Markdown.processLine(text)))))}))
     }
 
-    Bootstrap.row(
-
-      // Task table
-      Bootstrap.column(Bootstrap.Column12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2, x._3)))) +
-
-      // Empty notes
-      Bootstrap.column(
+    if (mode.equals("countonly")) {
+      allTasks.count(_._1.kind.equals("todo")) + " todo, " +
+      allTasks.count(_._1.kind.equals("started")) + " started"
+    } else {
+      val extras = if (mode.equals("all")) {
+        val emptyNotes = Bootstrap.column(
           Bootstrap.Column6,
           Html.h4("Empty Notes") +
-          Html.listGroup(items
-            .filter(_.notes.equals(""))
-            .map(x => Html.listItem(RenderPages.textLinkPage(x))))
-      ) +
-
-      // Invalid tags
-      Bootstrap.column(
+            Html.listGroup(items
+              .filter(_.notes.equals(""))
+              .map(x => Html.listItem(RenderPages.textLinkPage(x)))))
+        val invalidTags = Bootstrap.column(
           Bootstrap.Column6,
           Html.h4("Invalid Tags") +
-          taskList(getInvalidTags))
-    )
+            taskList(getInvalidTags))
+
+        emptyNotes + invalidTags
+      } else {
+        ""
+      }
+
+      Bootstrap.row(
+        Bootstrap.column(Bootstrap.Column12, Tasks.table(allTasks.map(x => Tasks.createTask(x._1, x._2, x._3)))) +
+        extras
+      )
+    }
 
   }
 
