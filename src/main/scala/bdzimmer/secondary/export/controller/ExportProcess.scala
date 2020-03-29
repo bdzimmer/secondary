@@ -74,7 +74,7 @@ class ExportProcess(projConf: ProjectConfig)  {
             stringToItem.get(x).map(WorldItems.collectionToList)
           }).flatten.distinct
 
-          val exportPages = Timer.showTimeBrief("build render pages", new RenderPages(
+          val renderPages = Timer.showTimeBrief("build render pages", new RenderPages(
               master,
               world,
               stringToTags,
@@ -87,7 +87,7 @@ class ExportProcess(projConf: ProjectConfig)  {
               projConf.unifiedJumbotron,
               projConf.search))
 
-          val exportImages = Timer.showTimeBrief("build render images", new RenderImages(
+          val renderImages = Timer.showTimeBrief("build render images", new RenderImages(
               world,
               stringToTags,
               wikiCache,
@@ -107,7 +107,7 @@ class ExportProcess(projConf: ProjectConfig)  {
             // this will keep "referenced by" lists up to date
             // I don't think this is usually important; so this may be something to make optional
             val modifiedItemsReferences = modifiedItems.flatMap(x => {
-                val refs = exportPages.references.getOrElse(x.id, List())
+                val refs = renderPages.references.getOrElse(x.id, List())
                 refs.foreach(y => println("modified item refs: " + y.id + " <- " + x.id))
                 refs
             })
@@ -116,7 +116,7 @@ class ExportProcess(projConf: ProjectConfig)  {
             // updates link names, flight predictions, etc.
             // This is more important than above in terms of keeping things up to date.
             val modifiedItemsReferencedBy = modifiedItems.flatMap(x => {
-               val refd = exportPages.referencedBy.getOrElse(x.id, List())
+               val refd = renderPages.referencedBy.getOrElse(x.id, List())
                refd.foreach(y => println("modified item refd: " + y.id + " -> " + x.id))
                refd
             })
@@ -130,7 +130,7 @@ class ExportProcess(projConf: ProjectConfig)  {
           })
 
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
-               itemsToExport, modifiedRefs, exportPages, exportImages,
+               itemsToExport, modifiedRefs, renderPages, renderImages,
                projConf.localExportPath, projConf.localContentPath)
 
           saveStatus(newMetaStatus, newRefStatus, newItemStatus)
@@ -216,7 +216,7 @@ object ExportPipeline {
           stringToItem.get(x).map(WorldItems.collectionToList(_))
         }).flatten.distinct
 
-        val exportPages = new RenderPages(
+        val renderPages = new RenderPages(
           master,
           world,
           stringToTags,
@@ -229,15 +229,15 @@ object ExportPipeline {
           projConf.unifiedJumbotron,
           projConf.search)
 
-        val exportImages = new RenderImages(
+        val renderImages = new RenderImages(
           world,
           stringToTags,
           wikiCache,
           projConf.localExportPath,
           projConf.license)
 
-        performExportPages(exportPages, world, projConf.localExportPath)
-        performExportImages(exportImages, world, projConf.localContentPath)
+        performRenderPages(renderPages, world, projConf.localExportPath)
+        performRenderImages(renderImages, world, projConf.localContentPath)
 
       }
       case Fail(msg) => println(msg)
@@ -251,8 +251,8 @@ object ExportPipeline {
   def export(
       pagesToExport: List[WorldItem],
       refsToExport:  List[RefItem],
-      exportPages: RenderPages,
-      exportImages: RenderImages,
+      renderPages: RenderPages,
+      renderImages: RenderImages,
       localExportPath: String,
       localContentPath: String): (List[String], FileOutputsMap) = {
 
@@ -271,8 +271,8 @@ object ExportPipeline {
     // and the description is also updated, so the "distinct" here should prevent duplicate work.
     val imagesToExport = (refsToExport ++ imagePagesToExport).distinct
 
-    val pageOutputs = performExportPages(exportPages, pagesToExport, localExportPath)
-    val imageOutputs = performExportImages(exportImages, imagesToExport, localContentPath)
+    val pageOutputs = performRenderPages(renderPages, pagesToExport, localExportPath)
+    val imageOutputs = performRenderImages(renderImages, imagesToExport, localContentPath)
 
     imageOutputs.foreach{case (k, v) => {
       logList("image created", v.map(k + " -> " + _))
@@ -284,8 +284,8 @@ object ExportPipeline {
   }
 
 
-  def performExportPages(
-      exportPages: RenderPages,
+  def performRenderPages(
+      renderPages: RenderPages,
       pagesToExport: List[WorldItem],
       localExportPath: String): List[String] = {
 
@@ -298,7 +298,7 @@ object ExportPipeline {
     // create pages that are always rendered
     val (writeTime, _) = Timer.timeit(writePage(
       localExportPath / RenderPages.MasterPageFile,
-      exportPages.masterPage()))
+      renderPages.masterPage()))
     pageOutputs += RenderPages.MasterPageFile
 
     println("master page created: " + RenderPages.MasterPageFile + "\t" + writeTime + " sec")
@@ -309,7 +309,7 @@ object ExportPipeline {
 
       val (writeTime, _ ) = Timer.timeit(writePage(
         localExportPath / pageFilename,
-        exportPages.itemPageDispatch(item)
+        renderPages.itemPageDispatch(item)
       ))
 
       println("page created: " + pageFilename + "\t" + writeTime + " sec")
@@ -326,8 +326,8 @@ object ExportPipeline {
   }
 
 
-  def performExportImages(
-      exportImages: RenderImages,
+  def performRenderImages(
+      renderImages: RenderImages,
       imagesToExport: List[WorldItem],
       localContentPath: String): FileOutputsMap = {
 
@@ -335,7 +335,7 @@ object ExportPipeline {
 
     // TODO: move file IO here from ExportIamges
     val imageOutputs = if (imagesToExport.nonEmpty) {
-      exportImages.exportAllImages(imagesToExport, localContentPath)
+      renderImages.exportAllImages(imagesToExport, localContentPath)
     } else {
       RenderImages.emptyFileOutputsMap
     }

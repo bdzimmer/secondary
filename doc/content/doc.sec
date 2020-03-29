@@ -521,10 +521,10 @@ Draw a burndown chart.
 
 `{{demo: burndown | startdate=None | enddate=None | recursive=false | weekends=false}}`
 
-* **stardate** - start date of chart
-* **enddate** - end date of chart
-* **recursive** - if true, recurse down hierarchy to find tasks
-* **weekends** - if true, include weekend days in chart
+* **stardate**: start date of chart
+* **enddate**: end date of chart
+* **recursive**: if true, recurse down hierarchy to find tasks
+* **weekends**: if true, include weekend days in chart
 
 This functionality uses the log / start / done dates and story points to construct a burndown chart of {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags within a certain time range.
 
@@ -540,17 +540,22 @@ This chart gathers task tags from this article; see task tag examples below.
 
 #### tasks
 
-Generate a searchable, sortable table of tasks.
+Gather or summarize task information.
 
 **Usage**
 
-`{{demo: tasks | item}}`
+`{{demo: tasks | item | shorthand=false | recursive=true | mode=all}}`
 
 * **item**: name or id of item; tasks will be gathered from the item and all items beneath it in the hierachy.
+* **shorthand**: if true, lines beginning with `-` will be interpreted as "todo" tasks and lines beginning with `+` will be treated as "started" tasks
+* **recursive**: if true, recurse down hierarchy to find tasks
+* **mode**: one of several formatting options
+    * **all**: searchable, sortable table as well as lists of items containing empty notes and invalid tags
+    * **table**: table only
+    * **count**: only counts of "todo" and "started" tasks
+
 
 The table is constructed from {{link: Work Tracking Tags | thought / todo / started / done / blocked}} tags.
-
-Below the table, lists of items with empty notes as well as items with invalid tags appear.
 
 **Example**
 
@@ -559,6 +564,10 @@ This table gathers task tags from this article; see task tag examples below.
 `{{demo: tasks | Work Tracking Tags}}`
 
 {{tasks: Work Tracking Tags}}
+
+`Task counts only: {{demo: tasks | Work Tracking Tags | mode=count}}`
+
+Task counts only: {{tasks: Work Tracking Tags | mode=count}}
 
 #### thought / todo / started / done / blocked
 

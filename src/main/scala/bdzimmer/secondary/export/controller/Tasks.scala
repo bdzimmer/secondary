@@ -91,7 +91,7 @@ object Tasks {
                   Html.listGroup(x._2.map(text => Html.listItem(Markdown.processLine(text)))))}))
     }
 
-    if (mode.equals("countonly")) {
+    if (mode.equals("count")) {
       allTasks.count(_._1.kind.equals("todo")) + " todo, " +
       allTasks.count(_._1.kind.equals("started")) + " started"
     } else {
