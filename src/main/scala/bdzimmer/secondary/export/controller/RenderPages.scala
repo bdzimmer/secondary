@@ -16,7 +16,7 @@ import bdzimmer.secondary.export.view.{ Markdown, PageTemplates, Styles }
 class RenderPages(
     master: CollectionItem,
     world: List[WorldItem],
-    tags: Map[String, Map[Int, Tags.ParsedTag]],
+    tags: Map[Int, Map[Int, Tags.ParsedTag]],
     wikiCache: FilesystemCache,
     license: String,
     navbars: Boolean,
@@ -29,96 +29,68 @@ class RenderPages(
   // derive some data structures that are used repeatedly throughout the rendering process
 
   // outward references
-//  val references: Map[String, List[WorldItem]] = Timer.showTimeBrief("outward refs",
-//    world.map(item =>
-//      (item.id,
-//      itemToTags(item).values.flatMap(
-//        x => Tags.items(x)).toList)).toMap)
-
-  // inward references
-//  val referencedBy: Map[String, List[WorldItem]] = Timer.showTimeBrief("inward refs",
-//    world.map(item => {
-//      (item.id,
-//       world.filter(otherItem =>
-//         !otherItem.id.equals(item.id) &&
-//         itemToTags(otherItem).values.flatMap(x => Tags.items(x))
-//           .exists(x => item.id.equals(x.id))))
-//    }).toMap)
-
-  // outward references
-  val references: Map[String, List[WorldItem]] = Timer.showTimeBrief("outward refs",
+  val references: Map[Int, List[WorldItem]] = Timer.showTimeBrief("outward refs",
     (for {
       item <- world
       tag <- itemToTags(item).values
       tagItem <- Tags.items(tag)
     } yield {
-      (item.id, tagItem)
+      (item.uid, tagItem)
     })
-    .filter(x => !(x._1.equals(x._2.id)))
+    .filter(x => !(x._1.equals(x._2.uid)))
     .groupBy(_._1)
     .mapValues(x => x.map(_._2))
   )
 
-
-  val referencedBy: Map[String, List[WorldItem]] = Timer.showTimeBrief("inward refs",
+  val referencedBy: Map[Int, List[WorldItem]] = Timer.showTimeBrief("inward refs",
     (for {
       item <- world
       tag <- itemToTags(item).values
       tagItem <- Tags.items(tag)
     } yield {
-      (tagItem.id, item)
+      (tagItem.uid, item)
     })
-    .filter(x => !(x._1.equals(x._2.id)))
+    .filter(x => !(x._1.equals(x._2.uid)))
     .groupBy(_._1)
     .mapValues(x => x.map(_._2))
   )
-
 
   // previous, next, and parent items
-  val collections: Seq[CollectionItem] = Timer.showTimeBrief("collections",
-    world.collect({ case x: CollectionItem => x }))
+  val collections: Seq[CollectionItem] = world.collect({ case x: CollectionItem => x })
 
-  val previous: Map[String, WorldItem] = Timer.showTimeBrief("previous",
-    collections.flatMap(collection => {
-      collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
-    }).toMap)
+  val previous: Map[Int, WorldItem] = collections.flatMap(collection => {
+    collection.children.drop(1).map(_.uid).zip(collection.children.dropRight(1))
+  }).toMap
 
-  val next: Map[String, WorldItem] = Timer.showTimeBrief("next",
-    collections.flatMap(collection => {
-      collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
-    }).toMap)
+  val next: Map[Int, WorldItem] =  collections.flatMap(collection => {
+    collection.children.dropRight(1).map(_.uid).zip(collection.children.drop(1))
+  }).toMap
 
-  val parent: Map[String, WorldItem] = Timer.showTimeBrief("parent",
-    collections.flatMap(collection => {
-      collection.children.map(x => (x.id, collection))
-    }).toMap)
+  val parent: Map[Int, WorldItem] = collections.flatMap(collection => {
+    collection.children.map(x => (x.uid, collection))
+  }).toMap
 
   // the main collection for each each item
-  val groups: Map[String, WorldItem] = Timer.showTimeBrief("groups",
-    master.children
-      .flatMap(group => WorldItems.collectionToList(group)
-      .map(item => (item.id, group))).toMap)
+  val groups: Map[Int, WorldItem] = master.children
+    .flatMap(group => WorldItems.collectionToList(group)
+    .map(item => (item.uid, group))).toMap
 
-  val stringToTags: Map[String, Map[Int, Tags.ParsedTag]] = Timer.showTimeBrief("stringToTags", (
-    world.map(x => (x.id, tags.get(x.id)))
-    ++ world.map(x => (x.name, tags.get(x.id)))).collect({ case (x, Some(y)) => (x, y) }).toMap)
+  val stringToTags: Map[Int, Map[Int, Tags.ParsedTag]] = tags
 
-  val np: RenderTags = Timer.showTimeBrief("RenderTags",
-    new RenderTags(
-      stringToTags,
-      world.collect({ case x: CharacterItem => x }),
-      false,
-      false))
+  val np: RenderTags = new RenderTags(
+    stringToTags,
+    world.collect({ case x: CharacterItem => x }),
+    false,
+    false)
 
-  val hiddenItemIds: Set[String] = Timer.showTimeBrief("hiddenItemIds",
-    hiddenItems.map(_.id).toSet)
+  val hiddenItemIds: Set[Int] = hiddenItems.map(_.uid).toSet
 
 
   // ~~~~ ~~~~ ~~~~ ~~~~
 
 
   private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
-    tags.getOrElse(item.id, Map())
+    tags.getOrElse(item.uid, Map())
   }
   
 
@@ -137,7 +109,7 @@ class RenderPages(
 
     val collections = Timer.showTimeBrief("master page collections",
       if (master.children.nonEmpty) {
-        master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
+        master.children.filter(x => !hiddenItemIds.contains(x.uid)).collect({
           case curCollection: CollectionItem => {
             column(
               Column6,
@@ -145,7 +117,7 @@ class RenderPages(
               RenderPages.glyphLinkPage(curCollection) + "\n" +
               listGroup(
                 curCollection.children
-                .filter(x => !hiddenItemIds.contains(x.id))
+                .filter(x => !hiddenItemIds.contains(x.uid))
                 .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
           }
         }).grouped(2).map(_.mkString("\n") +
@@ -190,7 +162,7 @@ class RenderPages(
             h4("Subarticles") +
               listGroup(
                   collection.children
-                  .filter(x => !hiddenItemIds.contains(x.id))
+                  .filter(x => !hiddenItemIds.contains(x.uid))
                   .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds)))
           } else {
             ""
@@ -346,9 +318,9 @@ class RenderPages(
       val relLinks = if (relativeLinks && !master.equals(item) && !master.children.contains(item)) {
         // previous / parent / next
         List(
-          previous.get(item.id).map(y => PageTemplates.LeftArrow + RenderPages.textLinkPage(y)),
-          parent.get(item.id).map(RenderPages.textLinkPage),
-          next.get(item.id).map(y => RenderPages.textLinkPage(y) + PageTemplates.RightArrow)).flatten
+          previous.get(item.uid).map(y => PageTemplates.LeftArrow + RenderPages.textLinkPage(y)),
+          parent.get(item.uid).map(RenderPages.textLinkPage),
+          next.get(item.uid).map(y => RenderPages.textLinkPage(y) + PageTemplates.RightArrow)).flatten
       } else {
         List()
       }
@@ -360,7 +332,7 @@ class RenderPages(
       }
 
       val home = List(link("Home", RenderPages.MasterPageFile))
-      val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.id)).map(RenderPages.textLinkPage)
+      val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.uid)).map(RenderPages.textLinkPage)
       val bar = (home ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + searchBar + hr
 
       Some(bar)
@@ -370,7 +342,7 @@ class RenderPages(
 
 
   private def refItems(item: WorldItem): String = {
-    val refs = referencedBy.get(item.id) match {
+    val refs = referencedBy.get(item.uid) match {
       case Some(x) => x
       case None    => List()
     }
@@ -393,7 +365,7 @@ object RenderPages {
 
 
   // recursively generated collapsible lists
-  def getCollectionLinksCollapsible(item: WorldItem, hiddenItemIds: Set[String]): String = item match {
+  def getCollectionLinksCollapsible(item: WorldItem, hiddenItemIds: Set[Int]): String = item match {
     case x: CollectionItem => {
     
       // TODO: think about this
@@ -406,7 +378,7 @@ object RenderPages {
         collapsibleLink +
         listGroup(
             x.children
-            .filter(x => !hiddenItemIds.contains(x.id))
+            .filter(x => !hiddenItemIds.contains(x.uid))
             .map(x => getCollectionLinksCollapsible(x, hiddenItemIds))),
             className = "swivel")
 

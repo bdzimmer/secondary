@@ -24,7 +24,7 @@ import bdzimmer.util.StringUtils._
 
 class RenderImages(
     world: List[WorldItem],
-    stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+    stringToTags: Map[Int, Map[Int, Tags.ParsedTag]],
     wikiCache: FilesystemCache,
     val location: String,
     license: String) {
@@ -140,7 +140,7 @@ class RenderImages(
     val src = tripItem.srcfilename
 
     // sort the flight tags by the order they appear in the item
-    val tags = stringToTags.getOrElse(tripItem.id, Map()).toList.sortBy(x => x._1).map(_._2)
+    val tags = stringToTags.getOrElse(tripItem.uid, Map()).toList.sortBy(x => x._1).map(_._2)
 
     val flightTags = tags.collect({case x: Tags.Flight => x})
 

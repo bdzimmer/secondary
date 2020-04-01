@@ -69,7 +69,7 @@ class ExportProcess(projConf: ProjectConfig)  {
 
           // parse all of the tags
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-          val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+          val stringToTags = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
           val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
             stringToItem.get(x).map(WorldItems.collectionToList)
           }).flatten.distinct
@@ -107,7 +107,7 @@ class ExportProcess(projConf: ProjectConfig)  {
             // this will keep "referenced by" lists up to date
             // I don't think this is usually important; so this may be something to make optional
             val modifiedItemsReferences = modifiedItems.flatMap(x => {
-                val refs = renderPages.references.getOrElse(x.id, List())
+                val refs = renderPages.references.getOrElse(x.uid, List())
                 refs.foreach(y => println("modified item refs: " + y.id + " <- " + x.id))
                 refs
             })
@@ -116,7 +116,7 @@ class ExportProcess(projConf: ProjectConfig)  {
             // updates link names, flight predictions, etc.
             // This is more important than above in terms of keeping things up to date.
             val modifiedItemsReferencedBy = modifiedItems.flatMap(x => {
-               val refd = renderPages.referencedBy.getOrElse(x.id, List())
+               val refd = renderPages.referencedBy.getOrElse(x.uid, List())
                refd.foreach(y => println("modified item refd: " + y.id + " -> " + x.id))
                refd
             })
@@ -211,7 +211,7 @@ object ExportPipeline {
 
         // parse all of the tags
         val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-        val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+        val stringToTags = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
         val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
           stringToItem.get(x).map(WorldItems.collectionToList(_))
         }).flatten.distinct

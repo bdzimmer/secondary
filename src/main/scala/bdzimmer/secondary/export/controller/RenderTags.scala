@@ -31,7 +31,7 @@ case class FlightParams(
 
 
 class RenderTags(
-    val stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+    val stringToTags: Map[Int, Map[Int, Tags.ParsedTag]],
     val characters: List[CharacterItem],
     disableTrees: Boolean,
     ebookMode: Boolean) {
@@ -51,9 +51,6 @@ class RenderTags(
       // it may be desirable for performance to only apply below to results of certain tags
       // that are more likely to include slashes
       Regex.quoteReplacement({
-        // Timer.timeit("\t" + tag.getClass.getSimpleName + ": ", {
-        //   render(tag)
-        // })
         render(tag)
       })
     })
@@ -182,7 +179,7 @@ s"""
       val proseMatcher = "^[A-Z]".r
 
       val itemText = items.map(item => {
-        val tagPositions = stringToTags.getOrElse(item.id, Map())
+        val tagPositions = stringToTags.getOrElse(item.uid, Map())
         val renderedText = transformProse(item.notes, tagPositions)
 
         // remove non-prose lines and markdown leftovers
@@ -219,7 +216,7 @@ s"""
         case false => List(x.item)
       }
       val tasks = items
-        .flatMap(item => stringToTags.get(item.id))
+        .flatMap(item => stringToTags.get(item.uid))
         .flatMap(_.values.collect({case tag: Tags.Task => tag}))
       BurnDownImage.render(
           tasks,
@@ -241,7 +238,7 @@ s"""
     case x: Tags.Footnotes => {
 
       // Convert sidenotes to footnotes list
-      val tags = stringToTags.getOrElse(x.item.id, List())
+      val tags = stringToTags.getOrElse(x.item.uid, List())
       val sidenotes = tags
         // .filter(y => y._2.isInstanceOf[Tags.Sidenote])
         // .collect({case y: (Int, Tags.Sidenote) => y})
@@ -293,7 +290,7 @@ s"""
     case x: Tags.Quote => {
       // TODO: snip or quote multiple paragraphs
       (for {
-        tags <- stringToTags.get(x.item.id)
+        tags <- stringToTags.get(x.item.uid)
         snips = tags.filter(x => x._2.isInstanceOf[Tags.Snip]).collect({case y: (Int, Tags.Snip) => y})
         snip <- snips.find(y => y._2.id.equals(x.id))
       } yield {

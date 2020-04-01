@@ -35,7 +35,7 @@ object Tasks {
 
   def render(
       master: WorldItem,
-      stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+      stringToTags: Map[Int, Map[Int, Tags.ParsedTag]],
       shorthand: Boolean,
       recursive: Boolean,
       mode: String
@@ -45,19 +45,19 @@ object Tasks {
       val items = WorldItems.collectionToList(master)
       val groups = master match {
         case x: CollectionItem => x.children.flatMap(
-            group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
-        case _                 => Map[String, WorldItem]()
+            group => WorldItems.collectionToList(group).map(item => (item.uid, group))).toMap
+        case _                 => Map[Int, WorldItem]()
       }
       (items, groups)
     } else {
-      (List(master), Map[String, WorldItem]())
+      (List(master), Map[Int, WorldItem]())
     }
 
     val tasksFromTags = for {
       item    <- items
-      taskTag <- stringToTags(item.id).values.collect({case x: Tags.Task => x})
+      taskTag <- stringToTags(item.uid).values.collect({case x: Tags.Task => x})
     } yield {
-      (taskTag, item, groups.getOrElse(item.id, master))
+      (taskTag, item, groups.getOrElse(item.uid, master))
     }
 
     val allTasks = if (shorthand) {
@@ -68,7 +68,7 @@ object Tasks {
       } yield {
         val kind = if (m.group(1).equals("-")) "todo" else "started"
         val desc = m.group(2)
-        (Tags.Task(kind, desc, None, None, None, 0), item, groups.getOrElse(item.id, master))
+        (Tags.Task(kind, desc, None, None, None, 0), item, groups.getOrElse(item.uid, master))
       }
       tasksFromTags ++ tasksFromShorthand
     } else {
@@ -77,7 +77,7 @@ object Tasks {
 
     // get invalid tags
     def getInvalidTags(item: WorldItem): List[String] = {
-      stringToTags(item.id).values.collect({
+      stringToTags(item.uid).values.collect({
         case x: Tags.ParseError => s"${x.msg} in tag '${x.tag.kind}'"}).toList
     }
 

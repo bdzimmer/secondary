@@ -11,8 +11,12 @@ object Markdown {
 
   // process a line of text (like a description or title) with PegDown
   // eliminating beginning and ending paragraph tags
+
+  val PPLine = getPegDown(ebookMode = false)
+
   def processLine(line: String): String = {
-    val pp = getPegDown(ebookMode = false)
+    // val pp = getPegDown(ebookMode = false)
+    val pp = PPLine
     val html = pp.markdownToHtml(line)
     html.stripPrefix("<p>").stripSuffix("</p>")
   }
