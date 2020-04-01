@@ -45,7 +45,6 @@ class RenderPages(
 //           .exists(x => item.id.equals(x.id))))
 //    }).toMap)
 
-
   // outward references
   val references: Map[String, List[WorldItem]] = Timer.showTimeBrief("outward refs",
     (for {
@@ -79,39 +78,39 @@ class RenderPages(
   val collections: Seq[CollectionItem] = Timer.showTimeBrief("collections",
     world.collect({ case x: CollectionItem => x }))
 
-  val previous = Timer.showTimeBrief("previous",
+  val previous: Map[String, WorldItem] = Timer.showTimeBrief("previous",
     collections.flatMap(collection => {
       collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
     }).toMap)
 
-  val next = Timer.showTimeBrief("next",
+  val next: Map[String, WorldItem] = Timer.showTimeBrief("next",
     collections.flatMap(collection => {
       collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
     }).toMap)
 
-  val parent = Timer.showTimeBrief("parent",
+  val parent: Map[String, WorldItem] = Timer.showTimeBrief("parent",
     collections.flatMap(collection => {
       collection.children.map(x => (x.id, collection))
     }).toMap)
 
   // the main collection for each each item
-  val groups = Timer.showTimeBrief("groups",
+  val groups: Map[String, WorldItem] = Timer.showTimeBrief("groups",
     master.children
       .flatMap(group => WorldItems.collectionToList(group)
       .map(item => (item.id, group))).toMap)
 
-  val stringToTags = Timer.showTimeBrief("stringToTags", (
+  val stringToTags: Map[String, Map[Int, Tags.ParsedTag]] = Timer.showTimeBrief("stringToTags", (
     world.map(x => (x.id, tags.get(x.id)))
     ++ world.map(x => (x.name, tags.get(x.id)))).collect({ case (x, Some(y)) => (x, y) }).toMap)
 
-  val np = Timer.showTimeBrief("RenderTags",
+  val np: RenderTags = Timer.showTimeBrief("RenderTags",
     new RenderTags(
       stringToTags,
       world.collect({ case x: CharacterItem => x }),
       false,
       false))
 
-  val hiddenItemIds = Timer.showTimeBrief("hiddenItemIds",
+  val hiddenItemIds: Set[String] = Timer.showTimeBrief("hiddenItemIds",
     hiddenItems.map(_.id).toSet)
 
 
@@ -391,27 +390,6 @@ class RenderPages(
 object RenderPages {
 
   val MasterPageFile = "index.html"
-
-  /*
-  // recursively generate nested lists of links from a CollectionItem
-  def getCollectionLinks(item: WorldItem): String = item match {
-    case x: CollectionItem => listItem(textLinkPage(x) + listGroup(x.children.map(x => getCollectionLinks(x))))
-    case _                 => listItem(textLinkPage(item))
-  }
-
-
-  // recursively generated nested lists of links with descriptions from a CollectionItem
-  def getCollectionLinksWithDescription(item: WorldItem): String = item match {
-    case x: CollectionItem => listItem(
-      textLinkPage(x) +
-        (if (x.description.length > 0) " - " + Markdown.processLine(x.description) else "") +
-        listGroup(x.children.map(x => getCollectionLinksWithDescription(x))))
-    case _ => listItem(
-      textLinkPage(item) +
-        (if (item.description.length > 0) " - " + Markdown.processLine(item.description) else ""))
-  }
-  * 
-  */
 
 
   // recursively generated collapsible lists
