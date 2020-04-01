@@ -29,42 +29,95 @@ class RenderPages(
   // derive some data structures that are used repeatedly throughout the rendering process
 
   // outward references
-  val references = world.map(item =>
-    (item.id, itemToTags(item).values.flatMap(x => Tags.items(x)).toList)).toMap
+//  val references: Map[String, List[WorldItem]] = Timer.showTimeBrief("outward refs",
+//    world.map(item =>
+//      (item.id,
+//      itemToTags(item).values.flatMap(
+//        x => Tags.items(x)).toList)).toMap)
 
   // inward references
-  val referencedBy = world.map(item => {
-    (item.id, world.filter(otherItem =>
-      !otherItem.id.equals(item.id) &&
-        itemToTags(otherItem).values.flatMap(x => Tags.items(x)).exists(x => item.id.equals(x.id))))
-  }).toMap
+//  val referencedBy: Map[String, List[WorldItem]] = Timer.showTimeBrief("inward refs",
+//    world.map(item => {
+//      (item.id,
+//       world.filter(otherItem =>
+//         !otherItem.id.equals(item.id) &&
+//         itemToTags(otherItem).values.flatMap(x => Tags.items(x))
+//           .exists(x => item.id.equals(x.id))))
+//    }).toMap)
+
+
+  // outward references
+  val references: Map[String, List[WorldItem]] = Timer.showTimeBrief("outward refs",
+    (for {
+      item <- world
+      tag <- itemToTags(item).values
+      tagItem <- Tags.items(tag)
+    } yield {
+      (item.id, tagItem)
+    })
+    .filter(x => !(x._1.equals(x._2.id)))
+    .groupBy(_._1)
+    .mapValues(x => x.map(_._2))
+  )
+
+
+  val referencedBy: Map[String, List[WorldItem]] = Timer.showTimeBrief("inward refs",
+    (for {
+      item <- world
+      tag <- itemToTags(item).values
+      tagItem <- Tags.items(tag)
+    } yield {
+      (tagItem.id, item)
+    })
+    .filter(x => !(x._1.equals(x._2.id)))
+    .groupBy(_._1)
+    .mapValues(x => x.map(_._2))
+  )
+
 
   // previous, next, and parent items
-  val collections = world.collect({ case x: CollectionItem => x })
+  val collections: Seq[CollectionItem] = Timer.showTimeBrief("collections",
+    world.collect({ case x: CollectionItem => x }))
 
-  val previous = collections.flatMap(collection => {
-    collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
-  }).toMap
+  val previous = Timer.showTimeBrief("previous",
+    collections.flatMap(collection => {
+      collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
+    }).toMap)
 
-  val next = collections.flatMap(collection => {
-    collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
-  }).toMap
+  val next = Timer.showTimeBrief("next",
+    collections.flatMap(collection => {
+      collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
+    }).toMap)
 
-  val parent = collections.flatMap(collection => {
-    collection.children.map(x => (x.id, collection))
-  }).toMap
+  val parent = Timer.showTimeBrief("parent",
+    collections.flatMap(collection => {
+      collection.children.map(x => (x.id, collection))
+    }).toMap)
 
   // the main collection for each each item
-  val groups = master.children.flatMap(group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
+  val groups = Timer.showTimeBrief("groups",
+    master.children
+      .flatMap(group => WorldItems.collectionToList(group)
+      .map(item => (item.id, group))).toMap)
 
-  val stringToTags = (
+  val stringToTags = Timer.showTimeBrief("stringToTags", (
     world.map(x => (x.id, tags.get(x.id)))
-    ++ world.map(x => (x.name, tags.get(x.id)))).collect({ case (x, Some(y)) => (x, y) }).toMap
+    ++ world.map(x => (x.name, tags.get(x.id)))).collect({ case (x, Some(y)) => (x, y) }).toMap)
 
-  val np = new RenderTags(stringToTags, world.collect({ case x: CharacterItem => x }), false, false)
+  val np = Timer.showTimeBrief("RenderTags",
+    new RenderTags(
+      stringToTags,
+      world.collect({ case x: CharacterItem => x }),
+      false,
+      false))
 
-  val hiddenItemIds = hiddenItems.map(_.id).toSet
-  
+  val hiddenItemIds = Timer.showTimeBrief("hiddenItemIds",
+    hiddenItems.map(_.id).toSet)
+
+
+  // ~~~~ ~~~~ ~~~~ ~~~~
+
+
   private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
     tags.getOrElse(item.id, Map())
   }
@@ -82,6 +135,26 @@ class RenderPages(
   /// /// ///
 
   def masterPage(): String = {
+
+    val collections = Timer.showTimeBrief("master page collections",
+      if (master.children.nonEmpty) {
+        master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
+          case curCollection: CollectionItem => {
+            column(
+              Column6,
+              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
+              RenderPages.glyphLinkPage(curCollection) + "\n" +
+              listGroup(
+                curCollection.children
+                .filter(x => !hiddenItemIds.contains(x.id))
+                .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
+          }
+        }).grouped(2).map(_.mkString("\n") +
+        """<div class="clearfix"></div>""" + "\n").mkString("\n")
+      } else {
+        ""
+      }
+    )
     
     PageTemplates.articlePage(
       master.name,
@@ -90,23 +163,7 @@ class RenderPages(
 
       column(Column12,
         np.transform(master.notes, itemToTags(master))
-      ) +
-      (if (master.children.nonEmpty) {
-        master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
-          case curCollection: CollectionItem => {
-            column(Column6,
-              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
-                RenderPages.glyphLinkPage(curCollection) + "\n" +
-                listGroup(
-                  curCollection.children
-                  .filter(x => !hiddenItemIds.contains(x.id))
-                  .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
-          }
-        }).grouped(2).map(_.mkString("\n") +
-        """<div class="clearfix"></div>""" + "\n").mkString("\n")
-      } else {
-        ""
-      }),
+      ) + collections,
           
       pageNavbar(master, false),
       license)
@@ -182,7 +239,8 @@ class RenderPages(
     val navbar = pageNavbar(imageItem, false)
 
     PageTemplates.articlePage(
-      name, description,
+      name,
+      description,
       navbar,
 
       column(Column8, image(RenderImages.imagePath(imageItem), responsive = true)) +
