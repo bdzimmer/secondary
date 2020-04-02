@@ -35,7 +35,7 @@ object Tasks {
 
   def render(
       master: WorldItem,
-      stringToTags: Map[Int, Map[Int, Tags.ParsedTag]],
+      tagsMap: Map[Int, Map[Int, Tags.ParsedTag]],
       shorthand: Boolean,
       recursive: Boolean,
       mode: String
@@ -55,7 +55,7 @@ object Tasks {
 
     val tasksFromTags = for {
       item    <- items
-      taskTag <- stringToTags(item.uid).values.collect({case x: Tags.Task => x})
+      taskTag <- tagsMap(item.uid).values.collect({case x: Tags.Task => x})
     } yield {
       (taskTag, item, groups.getOrElse(item.uid, master))
     }
@@ -77,7 +77,7 @@ object Tasks {
 
     // get invalid tags
     def getInvalidTags(item: WorldItem): List[String] = {
-      stringToTags(item.uid).values.collect({
+      tagsMap(item.uid).values.collect({
         case x: Tags.ParseError => s"${x.msg} in tag '${x.tag.kind}'"}).toList
     }
 

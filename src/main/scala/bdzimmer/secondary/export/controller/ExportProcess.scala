@@ -69,7 +69,7 @@ class ExportProcess(projConf: ProjectConfig)  {
 
           // parse all of the tags
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-          val stringToTags = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+          val tagsMap = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
           val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
             stringToItem.get(x).map(WorldItems.collectionToList)
           }).flatten.distinct
@@ -77,7 +77,7 @@ class ExportProcess(projConf: ProjectConfig)  {
           val renderPages = Timer.showTimeBrief("build render pages", new RenderPages(
               master,
               world,
-              stringToTags,
+              tagsMap,
               wikiCache,
               projConf.license,
               projConf.navbars,
@@ -89,7 +89,7 @@ class ExportProcess(projConf: ProjectConfig)  {
 
           val renderImages = Timer.showTimeBrief("build render images", new RenderImages(
               world,
-              stringToTags,
+              tagsMap,
               wikiCache,
               projConf.localExportPath,
               projConf.license))
@@ -211,7 +211,7 @@ object ExportPipeline {
 
         // parse all of the tags
         val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-        val stringToTags = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+        val tagsMap = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
         val hiddenItems = projConf.hiddenItems.split(";\\s+").toList.flatMap(x => {
           stringToItem.get(x).map(WorldItems.collectionToList(_))
         }).flatten.distinct
@@ -219,7 +219,7 @@ object ExportPipeline {
         val renderPages = new RenderPages(
           master,
           world,
-          stringToTags,
+          tagsMap,
           wikiCache,
           projConf.license,
           projConf.navbars,
@@ -231,7 +231,7 @@ object ExportPipeline {
 
         val renderImages = new RenderImages(
           world,
-          stringToTags,
+          tagsMap,
           wikiCache,
           projConf.localExportPath,
           projConf.license)

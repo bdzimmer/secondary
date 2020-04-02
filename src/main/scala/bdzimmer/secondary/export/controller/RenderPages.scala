@@ -16,7 +16,7 @@ import bdzimmer.secondary.export.view.{ Markdown, PageTemplates, Styles }
 class RenderPages(
     master: CollectionItem,
     world: List[WorldItem],
-    tags: Map[Int, Map[Int, Tags.ParsedTag]],
+    tagsMap: Map[Int, Map[Int, Tags.ParsedTag]],
     wikiCache: FilesystemCache,
     license: String,
     navbars: Boolean,
@@ -75,10 +75,8 @@ class RenderPages(
     .flatMap(group => WorldItems.collectionToList(group)
     .map(item => (item.uid, group))).toMap
 
-  val stringToTags: Map[Int, Map[Int, Tags.ParsedTag]] = tags
-
   val np: RenderTags = new RenderTags(
-    stringToTags,
+    tagsMap,
     world.collect({ case x: CharacterItem => x }),
     false,
     false)
@@ -90,7 +88,7 @@ class RenderPages(
 
 
   private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
-    tags.getOrElse(item.uid, Map())
+    tagsMap.getOrElse(item.uid, Map())
   }
   
 

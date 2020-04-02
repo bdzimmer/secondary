@@ -39,9 +39,9 @@ object Flight {
 
   def flightParams(
       flight: Tags.Flight,
-      stringToTags: Map[Int, Map[Int, Tags.ParsedTag]]): FlightParams = {
+      tagsMap: Map[Int, Map[Int, Tags.ParsedTag]]): FlightParams = {
 
-    val (mass, accel, vel) = spacecraft(flight.ship, stringToTags)
+    val (mass, accel, vel) = spacecraft(flight.ship, tagsMap)
 
     FlightParams(
       flight.ship,
@@ -89,12 +89,12 @@ object Flight {
 
   def spacecraft(
       ship: WorldItems.WorldItem,
-      stringToTags: Map[Int, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
+      tagsMap: Map[Int, Map[Int, Tags.ParsedTag]]): (Double, Double, Double) = {
 
     // TODO: handle specification of different units
 
     val mass = (for {
-      shipTags <- stringToTags.get(ship.uid)
+      shipTags <- tagsMap.get(ship.uid)
       massTag <- shipTags.values.collect({
         case x: Tags.SpacecraftProperty => x
       }).find(x => x.kind.equals(SecTags.Mass))
@@ -103,7 +103,7 @@ object Flight {
     }).getOrElse(1000.0) // tonnes
 
     val accel = (for {
-      shipTags <- stringToTags.get(ship.uid)
+      shipTags <- tagsMap.get(ship.uid)
       accelTag <- shipTags.values.collect({
         case x: Tags.SpacecraftProperty => x
       }).find(x => x.kind.equals(SecTags.Acceleration))
@@ -112,7 +112,7 @@ object Flight {
     }).getOrElse(0.25) // AU / day^2
 
     val vel = (for {
-      shipTags <- stringToTags.get(ship.uid)
+      shipTags <- tagsMap.get(ship.uid)
       velTag <- shipTags.values.collect({
         case x: Tags.SpacecraftProperty => x
       }).find(x => x.kind.equals(SecTags.Velocity))
@@ -128,9 +128,9 @@ object Flight {
   def epoch(
       item: WorldItems.WorldItem,
       name: String,
-      stringToTags: Map[Int, Map[Int, Tags.ParsedTag]]): Option[Tags.FlightEpoch] = {
+      tagsMap: Map[Int, Map[Int, Tags.ParsedTag]]): Option[Tags.FlightEpoch] = {
 
-    val epochs = stringToTags.getOrElse(item.uid, Map()).values.collect({case x: Tags.FlightEpoch => x})
+    val epochs = tagsMap.getOrElse(item.uid, Map()).values.collect({case x: Tags.FlightEpoch => x})
     epochs.find(_.name.equals(name))
 
   }
@@ -138,10 +138,10 @@ object Flight {
 
   def animationToDisk(
       item: WorldItems.WorldItem,
-      stringToTags: Map[Int, Map[Int, Tags.ParsedTag]],
+      tagsMap: Map[Int, Map[Int, Tags.ParsedTag]],
       location: String): Unit = {
 
-    val tags = stringToTags.getOrElse(item.uid, Map()).toList.sortBy(x => x._1).map(_._2)
+    val tags = tagsMap.getOrElse(item.uid, Map()).toList.sortBy(x => x._1).map(_._2)
     val flightTags = tags.collect({case x: Tags.Flight => x})
     val animationTags = tags.collect({case x: Tags.FlightAnimation => x})
 
@@ -150,7 +150,7 @@ object Flight {
 
     animationTags.foreach(anim => {
 
-      val epoch = Flight.epoch(anim.item, anim.epoch, stringToTags).getOrElse(
+      val epoch = Flight.epoch(anim.item, anim.epoch, tagsMap).getOrElse(
         Tags.FlightEpoch(
           "default",
           CalendarDateTime(2016, 1, 1, 12, 0, 0.0),
@@ -194,7 +194,7 @@ object Flight {
 
       // load flights from the item
       val flights = flightTags.flatMap(
-        tag => Flight.flightParamsOrbits(Flight.flightParams(tag, stringToTags)))
+        tag => Flight.flightParamsOrbits(Flight.flightParams(tag, tagsMap)))
 
       Animation.animateFlights(
         flights,
