@@ -22,14 +22,12 @@ import bdzimmer.orbits.DateTime.DateTuple
 
 class Timeline(
     dtp: DateTupleParser,
-    val stringToTags: Map[String, Map[Int, Tags.ParsedTag]]) {
-
-  // technically this doesn't need the full stringToTags, it only needs a map from id to tags.
+    val tagsMap: Map[Int, Map[Int, Tags.ParsedTag]]) {
 
   def getHtml(item: WorldItem, format: String): String = {
 
     val events = WorldItems.collectionToList(item).flatMap(it => {
-      stringToTags.get(it.id).map(_.values.collect({
+      tagsMap.get(it.uid).map(_.values.collect({
         case tag: Tags.EventTag => (dtp.parse(tag.date), tag.desc, it)
       })).getOrElse(List())
     }).sortBy(_._1)

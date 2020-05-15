@@ -127,7 +127,7 @@ object FamilyTree {
       }})
     }}).flatten
 
-    val tags = np.stringToTags.get(char.id).getOrElse(Map())
+    val tags = np.tagsMap.getOrElse(char.uid, Map())
 
     val description = np.transform(
         char.notes, tags).split("\n").filter(_.length > 0).headOption.getOrElse("").replaceAll("\"", "\\\\\"")

@@ -16,7 +16,7 @@ import bdzimmer.secondary.export.view.{ Markdown, PageTemplates, Styles }
 class RenderPages(
     master: CollectionItem,
     world: List[WorldItem],
-    tags: Map[String, Map[Int, Tags.ParsedTag]],
+    tagsMap: Map[Int, Map[Int, Tags.ParsedTag]],
     wikiCache: FilesystemCache,
     license: String,
     navbars: Boolean,
@@ -29,44 +29,66 @@ class RenderPages(
   // derive some data structures that are used repeatedly throughout the rendering process
 
   // outward references
-  val references = world.map(item =>
-    (item.id, itemToTags(item).values.flatMap(x => Tags.items(x)).toList)).toMap
+  val references: Map[Int, List[WorldItem]] = Timer.showTimeBrief("outward refs",
+    (for {
+      item <- world
+      tag <- itemToTags(item).values
+      tagItem <- Tags.items(tag)
+    } yield {
+      (item.uid, tagItem)
+    })
+    .filter(x => !(x._1.equals(x._2.uid)))
+    .groupBy(_._1)
+    .mapValues(x => x.map(_._2))
+  )
 
-  // inward references
-  val referencedBy = world.map(item => {
-    (item.id, world.filter(otherItem =>
-      !otherItem.id.equals(item.id) &&
-        itemToTags(otherItem).values.flatMap(x => Tags.items(x)).exists(x => item.id.equals(x.id))))
-  }).toMap
+  val referencedBy: Map[Int, List[WorldItem]] = Timer.showTimeBrief("inward refs",
+    (for {
+      item <- world
+      tag <- itemToTags(item).values
+      tagItem <- Tags.items(tag)
+    } yield {
+      (tagItem.uid, item)
+    })
+    .filter(x => !(x._1.equals(x._2.uid)))
+    .groupBy(_._1)
+    .mapValues(x => x.map(_._2))
+  )
 
   // previous, next, and parent items
-  val collections = world.collect({ case x: CollectionItem => x })
+  val collections: Seq[CollectionItem] = world.collect({ case x: CollectionItem => x })
 
-  val previous = collections.flatMap(collection => {
-    collection.children.drop(1).map(_.id).zip(collection.children.dropRight(1))
+  val previous: Map[Int, WorldItem] = collections.flatMap(collection => {
+    collection.children.drop(1).map(_.uid).zip(collection.children.dropRight(1))
   }).toMap
 
-  val next = collections.flatMap(collection => {
-    collection.children.dropRight(1).map(_.id).zip(collection.children.drop(1))
+  val next: Map[Int, WorldItem] =  collections.flatMap(collection => {
+    collection.children.dropRight(1).map(_.uid).zip(collection.children.drop(1))
   }).toMap
 
-  val parent = collections.flatMap(collection => {
-    collection.children.map(x => (x.id, collection))
+  val parent: Map[Int, WorldItem] = collections.flatMap(collection => {
+    collection.children.map(x => (x.uid, collection))
   }).toMap
 
   // the main collection for each each item
-  val groups = master.children.flatMap(group => WorldItems.collectionToList(group).map(item => (item.id, group))).toMap
+  val groups: Map[Int, WorldItem] = master.children
+    .flatMap(group => WorldItems.collectionToList(group)
+    .map(item => (item.uid, group))).toMap
 
-  val stringToTags = (
-    world.map(x => (x.id, tags.get(x.id)))
-    ++ world.map(x => (x.name, tags.get(x.id)))).collect({ case (x, Some(y)) => (x, y) }).toMap
+  val np: RenderTags = new RenderTags(
+    tagsMap,
+    world.collect({ case x: CharacterItem => x }),
+    false,
+    false)
 
-  val np = new RenderTags(stringToTags, world.collect({ case x: CharacterItem => x }), false, false)
+  val hiddenItemIds: Set[Int] = hiddenItems.map(_.uid).toSet
 
-  val hiddenItemIds = hiddenItems.map(_.id).toSet
-  
+
+  // ~~~~ ~~~~ ~~~~ ~~~~
+
+
   private def itemToTags(item: WorldItem): Map[Int, Tags.ParsedTag] = {
-    tags.getOrElse(item.id, Map())
+    tagsMap.getOrElse(item.uid, Map())
   }
   
 
@@ -82,6 +104,26 @@ class RenderPages(
   /// /// ///
 
   def masterPage(): String = {
+
+    val collections = Timer.showTimeBrief("master page collections",
+      if (master.children.nonEmpty) {
+        master.children.filter(x => !hiddenItemIds.contains(x.uid)).collect({
+          case curCollection: CollectionItem => {
+            column(
+              Column6,
+              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
+              RenderPages.glyphLinkPage(curCollection) + "\n" +
+              listGroup(
+                curCollection.children
+                .filter(x => !hiddenItemIds.contains(x.uid))
+                .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
+          }
+        }).grouped(2).map(_.mkString("\n") +
+        """<div class="clearfix"></div>""" + "\n").mkString("\n")
+      } else {
+        ""
+      }
+    )
     
     PageTemplates.articlePage(
       master.name,
@@ -90,23 +132,7 @@ class RenderPages(
 
       column(Column12,
         np.transform(master.notes, itemToTags(master))
-      ) +
-      (if (master.children.nonEmpty) {
-        master.children.filter(x => !hiddenItemIds.contains(x.id)).collect({
-          case curCollection: CollectionItem => {
-            column(Column6,
-              """<h3 style="display: inline-block">""" + curCollection.name + "</h3>" + nbsp +
-                RenderPages.glyphLinkPage(curCollection) + "\n" +
-                listGroup(
-                  curCollection.children
-                  .filter(x => !hiddenItemIds.contains(x.id))
-                  .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds))))
-          }
-        }).grouped(2).map(_.mkString("\n") +
-        """<div class="clearfix"></div>""" + "\n").mkString("\n")
-      } else {
-        ""
-      }),
+      ) + collections,
           
       pageNavbar(master, false),
       license)
@@ -134,7 +160,7 @@ class RenderPages(
             h4("Subarticles") +
               listGroup(
                   collection.children
-                  .filter(x => !hiddenItemIds.contains(x.id))
+                  .filter(x => !hiddenItemIds.contains(x.uid))
                   .map(x => RenderPages.getCollectionLinksCollapsible(x, hiddenItemIds)))
           } else {
             ""
@@ -182,7 +208,8 @@ class RenderPages(
     val navbar = pageNavbar(imageItem, false)
 
     PageTemplates.articlePage(
-      name, description,
+      name,
+      description,
       navbar,
 
       column(Column8, image(RenderImages.imagePath(imageItem), responsive = true)) +
@@ -289,9 +316,9 @@ class RenderPages(
       val relLinks = if (relativeLinks && !master.equals(item) && !master.children.contains(item)) {
         // previous / parent / next
         List(
-          previous.get(item.id).map(y => PageTemplates.LeftArrow + RenderPages.textLinkPage(y)),
-          parent.get(item.id).map(RenderPages.textLinkPage),
-          next.get(item.id).map(y => RenderPages.textLinkPage(y) + PageTemplates.RightArrow)).flatten
+          previous.get(item.uid).map(y => PageTemplates.LeftArrow + RenderPages.textLinkPage(y)),
+          parent.get(item.uid).map(RenderPages.textLinkPage),
+          next.get(item.uid).map(y => RenderPages.textLinkPage(y) + PageTemplates.RightArrow)).flatten
       } else {
         List()
       }
@@ -303,7 +330,7 @@ class RenderPages(
       }
 
       val home = List(link("Home", RenderPages.MasterPageFile))
-      val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.id)).map(RenderPages.textLinkPage)
+      val mainCollectionLinks = master.children.filter(x => !hiddenItemIds.contains(x.uid)).map(RenderPages.textLinkPage)
       val bar = (home ++ relLinks ++ mainCollectionLinks).mkString(PageTemplates.NavbarSeparator) + searchBar + hr
 
       Some(bar)
@@ -313,7 +340,7 @@ class RenderPages(
 
 
   private def refItems(item: WorldItem): String = {
-    val refs = referencedBy.get(item.id) match {
+    val refs = referencedBy.get(item.uid) match {
       case Some(x) => x
       case None    => List()
     }
@@ -334,30 +361,9 @@ object RenderPages {
 
   val MasterPageFile = "index.html"
 
-  /*
-  // recursively generate nested lists of links from a CollectionItem
-  def getCollectionLinks(item: WorldItem): String = item match {
-    case x: CollectionItem => listItem(textLinkPage(x) + listGroup(x.children.map(x => getCollectionLinks(x))))
-    case _                 => listItem(textLinkPage(item))
-  }
-
-
-  // recursively generated nested lists of links with descriptions from a CollectionItem
-  def getCollectionLinksWithDescription(item: WorldItem): String = item match {
-    case x: CollectionItem => listItem(
-      textLinkPage(x) +
-        (if (x.description.length > 0) " - " + Markdown.processLine(x.description) else "") +
-        listGroup(x.children.map(x => getCollectionLinksWithDescription(x))))
-    case _ => listItem(
-      textLinkPage(item) +
-        (if (item.description.length > 0) " - " + Markdown.processLine(item.description) else ""))
-  }
-  * 
-  */
-
 
   // recursively generated collapsible lists
-  def getCollectionLinksCollapsible(item: WorldItem, hiddenItemIds: Set[String]): String = item match {
+  def getCollectionLinksCollapsible(item: WorldItem, hiddenItemIds: Set[Int]): String = item match {
     case x: CollectionItem => {
     
       // TODO: think about this
@@ -370,7 +376,7 @@ object RenderPages {
         collapsibleLink +
         listGroup(
             x.children
-            .filter(x => !hiddenItemIds.contains(x.id))
+            .filter(x => !hiddenItemIds.contains(x.uid))
             .map(x => getCollectionLinksCollapsible(x, hiddenItemIds))),
             className = "swivel")
 

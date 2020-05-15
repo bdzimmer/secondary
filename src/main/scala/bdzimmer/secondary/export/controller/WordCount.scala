@@ -20,7 +20,7 @@ object WordCount {
       // calculating word count on notes transformed to prose is a
       // little bit more accurate that raw notes but probably isn't
       // necessary
-      // val tagPositions = stringToTags.get(item.id).getOrElse(Map())
+      // val tagPositions = tagsMap.get(item.id).getOrElse(Map())
       // transformProse(item.notes, tagPositions)
       item.notes
     }).mkString("\n")

@@ -305,7 +305,10 @@ object ParseTags {
 
       case SecTags.Tasks => {
         stringToItem.get(tag.value).map(item => {
-          Tasks(item)
+          val shorthand = args.get("shorthand").exists(_.toBooleanSafe)  // default false
+          val recursive = args.get("recursive").forall(_.toBooleanSafe)  // default true
+          val mode = args.getOrElse("mode", "all")
+          Tasks(item, shorthand, recursive, mode)
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 

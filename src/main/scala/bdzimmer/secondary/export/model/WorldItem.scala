@@ -91,7 +91,7 @@ object WorldItemBeans {
 
      def getVal(): CollectionItem = CollectionItem (
          id, name, description, notes,
-         srcfilename, remoteid,
+         srcfilename,
          pst.getAllTags(notes),
          children.asScala.map(_.getVal).toList)
   }
@@ -99,19 +99,19 @@ object WorldItemBeans {
   class ThingItemBean extends WorldItemBean {
     def getVal(): ThingItem = ThingItem(
         id, name, description, notes,
-        srcfilename, remoteid, pst.getAllTags(notes))
+        srcfilename, pst.getAllTags(notes))
   }
 
   class PlaceItemBean extends WorldItemBean {
     def getVal(): PlaceItem = PlaceItem(
         id, name, description, notes,
-        srcfilename, remoteid, pst.getAllTags(notes))
+        srcfilename, pst.getAllTags(notes))
   }
 
   class ImageFileItemBean extends ImageItemBean with RefItemBean {
     def getVal(): ImageFileItem = ImageFileItem(
         id, name, description, notes,
-        srcfilename, remoteid,
+        srcfilename,
         pst.getAllTags(notes),
         filename)
   }
@@ -119,7 +119,7 @@ object WorldItemBeans {
   class TripItemBean extends ImageItemBean {
     def getVal(): TripItem = TripItem(
         id, name, description, notes,
-        srcfilename, remoteid,
+        srcfilename,
         pst.getAllTags(notes))
   }
 
@@ -132,7 +132,7 @@ object WorldItemBeans {
       CharacterItem(
         id, cleanedName, nameParts,
         description, notes,
-        srcfilename, remoteid,
+        srcfilename,
         pst.getAllTags(notes))
     }
 
@@ -143,7 +143,7 @@ object WorldItemBeans {
   class TilesetItemBean extends TileRefItemBean {
     def getVal(): TilesetItem = TilesetItem(
         id, name, description, notes,
-        srcfilename, remoteid,
+        srcfilename,
         pst.getAllTags(notes),
         filename, tiletype)
   }
@@ -151,7 +151,7 @@ object WorldItemBeans {
   class SpritesheetItemBean extends TileRefItemBean {
     def getVal(): SpritesheetItem = SpritesheetItem(
         id, name, description, notes,
-        srcfilename, remoteid,
+        srcfilename,
         pst.getAllTags(notes),
         filename, tiletype)
   }
@@ -159,7 +159,7 @@ object WorldItemBeans {
   class MapItemBean extends ImageItemBean with RefItemBean {
     def getVal(): MapItem = MapItem(
         id, name, description, notes,
-        srcfilename, remoteid,
+        srcfilename,
         pst.getAllTags(notes),
         filename)
   }
@@ -170,7 +170,7 @@ object WorldItemBeans {
   class SrcIncludeBean extends RefItemBean {
     def getVal(): ThingItem = ThingItem(
         id, name, description, notes,
-        srcfilename, remoteid, pst.getAllTags(notes))
+        srcfilename, pst.getAllTags(notes))
   }
 
 
@@ -180,7 +180,7 @@ object WorldItemBeans {
 
     def getVal(): BookItem = BookItem(
       id, name, description, notes,
-      srcfilename, remoteid, pst.getAllTags(notes),
+      srcfilename, pst.getAllTags(notes),
       uniqueIdentifier, authorname)
   }
 
@@ -202,8 +202,8 @@ object WorldItems {
       val description: String
       val notes: String
       val srcfilename: String
-      val remoteid: String
       val tags: Map[Int, RawTag]
+      val uid: Int
   }
 
 
@@ -219,55 +219,55 @@ object WorldItems {
 
   case class CollectionItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-      val children: List[WorldItem]) extends WorldItem
+      srcfilename: String, tags: Map[Int, RawTag],
+      val children: List[WorldItem]) extends WorldItem {val uid: Int = id.hashCode}
 
   case class ThingItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends WorldItem
+      srcfilename: String, tags: Map[Int, RawTag]) extends WorldItem {val uid: Int = id.hashCode}
 
   // for now, PlaceItem and TripItem have no fields that distinguish them from ThingItem
   case class PlaceItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends WorldItem
+      srcfilename: String, tags: Map[Int, RawTag]) extends WorldItem {val uid: Int = id.hashCode}
 
   case class ImageFileItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-      filename: String) extends ImageItem with RefItem
+      srcfilename: String, tags: Map[Int, RawTag],
+      filename: String) extends ImageItem with RefItem {val uid: Int = id.hashCode}
 
   case class TripItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends ImageItem
+      srcfilename: String, tags: Map[Int, RawTag]) extends ImageItem {val uid: Int = id.hashCode}
 
   case class CharacterItem(
       id: String, name: String, nameParts: Option[List[String]],
       description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag]) extends WorldItem
+      srcfilename: String, tags: Map[Int, RawTag]) extends WorldItem {val uid: Int = id.hashCode}
 
   /// items for pixel art content ///
 
   case class TilesetItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-      filename: String, tiletype: String) extends ImageItem with TileRefItem
+      srcfilename: String, tags: Map[Int, RawTag],
+      filename: String, tiletype: String) extends ImageItem with TileRefItem {val uid: Int = id.hashCode}
 
   case class SpritesheetItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-      filename: String, tiletype: String) extends ImageItem with TileRefItem
+      srcfilename: String, tags: Map[Int, RawTag],
+      filename: String, tiletype: String) extends ImageItem with TileRefItem {val uid: Int = id.hashCode}
 
   case class MapItem(
       id: String, name: String, description: String, notes: String,
-      srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-      filename: String) extends ImageItem with RefItem
+      srcfilename: String, tags: Map[Int, RawTag],
+      filename: String) extends ImageItem with RefItem {val uid: Int = id.hashCode}
 
   /// book items
 
   case class BookItem(
      id: String, name: String, description: String, notes: String,
-     srcfilename: String, remoteid: String, tags: Map[Int, RawTag],
-     uniqueIdentifier: String, authorname: String) extends WorldItem
+     srcfilename: String, tags: Map[Int, RawTag],
+     uniqueIdentifier: String, authorname: String) extends WorldItem {val uid: Int = id.hashCode}
 
 
   // create a list of all world items in a hierarchy

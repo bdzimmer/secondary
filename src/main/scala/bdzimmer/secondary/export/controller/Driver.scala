@@ -82,13 +82,13 @@ class Driver {
       val startTime = System.currentTimeMillis
       val res = for {
         stuff <- getRenderStuff()
-        (stringToItem, rt, stringToTags) = stuff
+        (stringToItem, rt, tagsMap) = stuff
         itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
           "invalid item name or id '" + itemId + "'")
       } yield {
-        Flight.animationToDisk(item, stringToTags, projConf.localExportPath)
+        Flight.animationToDisk(item, tagsMap, projConf.localExportPath)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0
         println("exported animation(s) in " + totalTime + " sec")
       }
@@ -226,7 +226,7 @@ class Driver {
 
           val world = WorldItems.collectionToList(master)
           val stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-          val stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+          val tagsMap = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
 
           // TODO: move this logic somewhere else
 
@@ -236,15 +236,15 @@ class Driver {
 
           // all flights
           val flights = trips.flatMap(tripItem => {
-            stringToTags.getOrElse(tripItem.id, Map()).values.collect({
-              case x: Tags.Flight => Flight.flightParams(x, stringToTags)
+            tagsMap.getOrElse(tripItem.uid, Map()).values.collect({
+              case x: Tags.Flight => Flight.flightParams(x, tagsMap)
             }).toList
           }).sortBy(_.startDate.julian) // probably a way to avoid this flatten
 
           // collect two kinds of epochs
 
           val tripEpochs: List[(String, Double, Double)] = trips.map(tripItem => {
-            val flightTags: List[Tags.Flight] = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+            val flightTags: List[Tags.Flight] = tagsMap.getOrElse(tripItem.uid, Map()).values.collect({
               case x: Tags.Flight => x
             }).toList
             (
@@ -255,7 +255,7 @@ class Driver {
           })
 
           val tagEpochs: List[(String, Double, Double)] = trips.flatMap(tripItem => {
-            val epochTags: List[Tags.FlightEpoch] = stringToTags.getOrElse(tripItem.id, Map()).values.collect({
+            val epochTags: List[Tags.FlightEpoch] = tagsMap.getOrElse(tripItem.uid, Map()).values.collect({
               case x: Tags.FlightEpoch => x
             }).toList
             epochTags.map(x => (x.name, x.startDate.julian, x.endDate.julian))
@@ -267,10 +267,10 @@ class Driver {
           val ships = world.filter(x => {
             // probably a better way to write this
             // ships are all items that have at least one spacecraft property tag
-            stringToTags.getOrElse(x.id, Map()).values.collect({case x: Tags.SpacecraftProperty => x}).headOption.isDefined})
+            tagsMap.getOrElse(x.uid, Map()).values.collect({case x: Tags.SpacecraftProperty => x}).headOption.isDefined})
           val orbitsShips = (for {
             shipItem <- ships
-            (mass, accel, vel) = Flight.spacecraft(shipItem, stringToTags)
+            (mass, accel, vel) = Flight.spacecraft(shipItem, tagsMap)
           } yield {
             if (vel > ConstVelFlightFn.VelMin) {
               (shipItem.id, bdzimmer.orbits.ConstVelCraft(shipItem.name, vel))
@@ -338,19 +338,19 @@ class Driver {
   }
 
 
-  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[String, Map[Int, Tags.ParsedTag]])] = {
+  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[Int, Map[Int, Tags.ParsedTag]])] = {
     for {
       master <- WorldLoader.loadWorld(projConf)
       world = WorldItems.collectionToList(master)
       stringToItem = (world.map(x => (x.id, x)) ++ world.map(x => (x.name, x))).toMap
-      stringToTags = world.map(x => (x.id, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
+      tagsMap = world.map(x => (x.uid, x.tags.mapValues(tag => ParseTags.parse(tag, stringToItem)))).toMap
       rt = new RenderTags(
-        stringToTags, world.collect({ case x: WorldItems.CharacterItem => x }),
+        tagsMap, world.collect({ case x: WorldItems.CharacterItem => x }),
         disableTrees = true,
         ebookMode = true
       )
     } yield {
-      (stringToItem, rt, stringToTags)
+      (stringToItem, rt, tagsMap)
     }
 
   }
@@ -403,7 +403,7 @@ class Driver {
 
 object Driver {
 
-  val Title = "Secondary - create worlds from text - v2019.08.14"
+  val Title = "Secondary - create worlds from text - v2020.03.31"
   val DefaultCommand = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
 

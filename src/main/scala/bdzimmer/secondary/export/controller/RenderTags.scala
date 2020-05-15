@@ -31,7 +31,7 @@ case class FlightParams(
 
 
 class RenderTags(
-    val stringToTags: Map[String, Map[Int, Tags.ParsedTag]],
+    val tagsMap: Map[Int, Map[Int, Tags.ParsedTag]],
     val characters: List[CharacterItem],
     disableTrees: Boolean,
     ebookMode: Boolean) {
@@ -50,7 +50,9 @@ class RenderTags(
       // $ and \ have special meaning in replacement strings, this quotes them
       // it may be desirable for performance to only apply below to results of certain tags
       // that are more likely to include slashes
-      Regex.quoteReplacement(render(tag))
+      Regex.quoteReplacement({
+        render(tag)
+      })
     })
 
     val pp = Markdown.getPegDown(ebookMode)
@@ -99,7 +101,7 @@ class RenderTags(
       } else {
         tree.root match {
           case character: CharacterItem => {
-            val safeRender = new RenderTags(stringToTags, characters, true, ebookMode)
+            val safeRender = new RenderTags(tagsMap, characters, true, ebookMode)
             val result = FamilyTree.TreeStyles + FamilyTree.getJs(
                 character, characters, safeRender)
             result
@@ -127,14 +129,14 @@ class RenderTags(
     }
 
     case timeline: Tags.Timeline => {
-      val tr = new Timeline(DateTime.DefaultParser, stringToTags)
+      val tr = new Timeline(DateTime.DefaultParser, tagsMap)
       tr.getHtml(timeline.root, timeline.format)
     }
 
     case event: Tags.EventTag => genShow(event.date, event.desc)
 
     case flight: Tags.Flight => {
-      val fp = Flight.flightParams(flight, stringToTags)
+      val fp = Flight.flightParams(flight, tagsMap)
       Flight.render(fp, RenderImages.tagImagePath(flight))
     }
 
@@ -177,7 +179,7 @@ s"""
       val proseMatcher = "^[A-Z]".r
 
       val itemText = items.map(item => {
-        val tagPositions = stringToTags.getOrElse(item.id, Map())
+        val tagPositions = tagsMap.getOrElse(item.uid, Map())
         val renderedText = transformProse(item.notes, tagPositions)
 
         // remove non-prose lines and markdown leftovers
@@ -214,7 +216,7 @@ s"""
         case false => List(x.item)
       }
       val tasks = items
-        .flatMap(item => stringToTags.get(item.id))
+        .flatMap(item => tagsMap.get(item.uid))
         .flatMap(_.values.collect({case tag: Tags.Task => tag}))
       BurnDownImage.render(
           tasks,
@@ -236,7 +238,7 @@ s"""
     case x: Tags.Footnotes => {
 
       // Convert sidenotes to footnotes list
-      val tags = stringToTags.getOrElse(x.item.id, List())
+      val tags = tagsMap.getOrElse(x.item.uid, List())
       val sidenotes = tags
         // .filter(y => y._2.isInstanceOf[Tags.Sidenote])
         // .collect({case y: (Int, Tags.Sidenote) => y})
@@ -288,7 +290,7 @@ s"""
     case x: Tags.Quote => {
       // TODO: snip or quote multiple paragraphs
       (for {
-        tags <- stringToTags.get(x.item.id)
+        tags <- tagsMap.get(x.item.uid)
         snips = tags.filter(x => x._2.isInstanceOf[Tags.Snip]).collect({case y: (Int, Tags.Snip) => y})
         snip <- snips.find(y => y._2.id.equals(x.id))
       } yield {
@@ -309,7 +311,7 @@ s"""
         WorldItems.collectionToList(x.item).drop(1))
 
     case x: Tags.Tasks => {
-      Tasks.render(x.item, stringToTags)
+      Tasks.render(x.item, tagsMap, x.shorthand, x.recursive, x.mode)
     }
 
     case x: Tags.Stats => {
