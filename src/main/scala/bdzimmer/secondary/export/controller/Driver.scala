@@ -21,8 +21,8 @@ import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldIt
 import bdzimmer.secondary.export.view.{ConfigurationGUI, ScreenshotUtility}
 import bdzimmer.secondary.export.model.Tags
 
-import bdzimmer.pixeleditor.view.Main
-import bdzimmer.pixeleditor.model.AssetMetadataUtils
+import bdzimmer.pixeleditor.view
+import bdzimmer.pixeleditor.model.{AssetMetadataUtils, Experiment}
 import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 
@@ -181,7 +181,10 @@ class Driver {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItems.assetMetadata(master))
-          new Main(projConf.localContentPath, "Secondary Editor", outputFilename)
+
+          // new Main(projConf.localContentPath, "Secondary Editor", outputFilename)
+          Experiment.main(Array())
+
         }
         case Fail(msg) => println(msg)
       }
