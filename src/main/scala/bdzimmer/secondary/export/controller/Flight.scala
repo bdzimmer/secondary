@@ -4,10 +4,9 @@ package bdzimmer.secondary.export.controller
 
 import java.io.File
 
-import bdzimmer.orbits.{Animation, CalendarDateTime, ConstVelFlightFn, Editor, IO}
+import bdzimmer.orbits.{Animation, CalendarDateTime, ConstVelFlightFn, Editor, IO, Style}
 import bdzimmer.secondary.export.model.{SecTags, Tags, WorldItems}
 import bdzimmer.secondary.export.view.Html
-
 import bdzimmer.util.StringUtils._
 
 
@@ -184,13 +183,13 @@ object Flight {
       println("\tdamping:  " + anim.settings.damping)
       println("status: " + anim.status)
       println("visible:")
-      println("style:  " + anim.style)
       anim.visible.foreach(x => println("\t" + x))
+      println("style:  " + anim.style)
       println()
       println("output directory: " + outputDirname)
       println("-----------------------")
 
-      val viewerSettings = ???
+      val viewerSettings = styles.getOrElse(anim.style, Style.ViewerSettingsDefault)
 
       // load flights from the item
       val flights = flightTags.flatMap(
