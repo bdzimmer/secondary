@@ -21,9 +21,52 @@ import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldIt
 import bdzimmer.secondary.export.view.{ConfigurationGUI, ScreenshotUtility}
 import bdzimmer.secondary.export.model.Tags
 
-import bdzimmer.pixeleditor.view
 import bdzimmer.pixeleditor.model.{AssetMetadataUtils, Experiment}
 import bdzimmer.orbits.{Editor, ConstVelFlightFn}
+
+
+
+object Driver {
+
+  val Version = "2020.05.21"
+  val Title: String = "Secondary - create worlds from text - v" + Version
+  val DefaultCommand: String = DriverCommands.Interactive
+  val ServerRefreshSeconds = 10
+
+
+  def main(argv: Array[String]): Unit = {
+    val driver = new Driver()
+    driver.run(argv)
+  }
+
+
+  // show help at the command line
+  private def showUsage(): Unit = {
+    println(Title)
+    println()
+    println("Usage:")
+    println("  secondary <command>")
+    println()
+    println("Commands:")
+    showCommands()
+    println("If no command is provided, Secondary will start in interactive mode.")
+  }
+
+
+  // print the list of commands / descriptions
+  private def showCommands(): Unit = {
+    println()
+    val maxLength = DriverCommands.CommandsDescriptions.map(_._1.length).max
+    DriverCommands.CommandsDescriptions.foreach(x => {
+      val command = x._1
+      val description = x._2
+      println("  " + command + " " * (maxLength - command.length + 2) + description)
+    })
+    println()
+  }
+
+}
+
 
 
 class Driver {
@@ -382,47 +425,6 @@ class Driver {
       runCommand(DriverCommands.Export, List())
       Thread.sleep(seconds * 1000)
     }
-  }
-
-}
-
-
-
-object Driver {
-
-  val Title = "Secondary - create worlds from text - v2020.03.31"
-  val DefaultCommand = DriverCommands.Interactive
-  val ServerRefreshSeconds = 10
-
-  def main(argv: Array[String]): Unit = {
-    val driver = new Driver()
-    driver.run(argv)
-  }
-
-
-  // show help at the command line
-  private def showUsage(): Unit = {
-    println(Title)
-    println()
-    println("Usage:")
-    println("  secondary <command>")
-    println()
-    println("Commands:")
-    showCommands()
-    println("If no command is provided, Secondary will start in interactive mode.")
-  }
-
-
-  // print the list of commands / descriptions
-  private def showCommands(): Unit = {
-    println()
-    val maxLength = DriverCommands.CommandsDescriptions.map(_._1.length).max
-    DriverCommands.CommandsDescriptions.foreach(x => {
-      val command = x._1
-      val description = x._2
-      println("  " + command + " " * (maxLength - command.length + 2) + description)
-    })
-    println()
   }
 
 }
