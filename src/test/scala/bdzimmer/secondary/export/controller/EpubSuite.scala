@@ -29,7 +29,8 @@ class EpubSuite extends FunSuite with TempDirectory {
          Book.SectionInfo("1", "Chapter 1", "<body>This is the content of chapter 1.</body>")
        ),
        None,
-       ""
+       "",
+       Set()
      )
 
     assert(outputFile.exists())

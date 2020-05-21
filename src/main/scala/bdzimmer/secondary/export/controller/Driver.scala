@@ -119,7 +119,9 @@ class Driver {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
               val filename = book.id + ".epub"
-              Epub.export(filename, book, tags, rt, projConf.localExportPath)
+              // page(section.name, section.content, idx > 0 && section.name != "Divisions of the Rami"),
+              val unstyledSections = Set("Divisions of the Rami")
+              Epub.export(filename, book, tags, rt, unstyledSections, projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }
@@ -188,26 +190,6 @@ class Driver {
         }
         case Fail(msg) => println(msg)
       }
-    }
-    case DriverCommands.Epub => {
-      val startTime = System.currentTimeMillis
-      val res = for {
-        stuff <- getRenderStuff()
-        (stringToItem, rt, _) = stuff
-        itemId = args.mkString(" ")
-        item <- Result.fromOption(
-          stringToItem.get(itemId),
-          "invalid item name or id '" + itemId + "'")
-        book <- Result.fromTry(
-          Try(item.asInstanceOf[WorldItems.BookItem])).mapLeft(_ => "'" + itemId + "' not a book")
-      } yield {
-        val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-        val filename = book.id + ".epub"
-        Epub.export(filename, book, tags, rt, projConf.localExportPath)
-        val totalTime = (System.currentTimeMillis - startTime) / 1000.0
-        println("exported " + filename + " in " + totalTime + " sec")
-      }
-      res.mapLeft(msg => println(msg))
     }
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {

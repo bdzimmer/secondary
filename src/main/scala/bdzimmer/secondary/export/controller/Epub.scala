@@ -193,6 +193,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       book: BookItem,
       tags: Map[Int, ParsedTag],
       renderTags: RenderTags,
+      unstyledSections: Set[String],
       localExportPath: String): Unit = {
 
     val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags))
@@ -220,7 +221,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       // cover.toList ++ titlePage.toList ++ contentSections,
       titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
-      localExportPath)
+      localExportPath,
+      unstyledSections)
   }
 
 
@@ -232,7 +234,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       lastname: String,
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String],
-      imageDirname: String): Unit = {
+      imageDirname: String,
+      unstyledSections: Set[String]): Unit = {
 
     // expects the first page to be the title page
     // and remaining pages prose
@@ -281,9 +284,14 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
 
     sections.zipWithIndex.foreach({case (section, idx) => {
       zout.putNextEntry(new ZipEntry("OEBPS/" + section.id + ".xhtml"))
+      val useBookStyle = idx > 0 && !unstyledSections.contains(section.name)
+      if (!useBookStyle) {
+        println("\tnot using book style for section '" + section.name + "'")
+      }
       IOUtils.write(
-        page(section.name, section.content, idx > 0),
-        zout, "UTF-8")
+        page(section.name, section.content, useBookStyle),
+        zout,
+        "UTF-8")
       zout.closeEntry()
     }})
 
