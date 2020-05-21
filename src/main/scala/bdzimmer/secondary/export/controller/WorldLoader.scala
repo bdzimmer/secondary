@@ -1,15 +1,12 @@
 // Copyright (c) 2016 Ben Zimmer. All rights reserved.
 
-// Class for loading WorldItem hierarchies from the file system.
+// Load WorldItem hierarchies from the file system.
 
 package bdzimmer.secondary.export.controller
 
 import java.io.{BufferedReader, File, FileReader}
 
 import scala.collection.JavaConverters._
-import scala.ref
-import scala.reflect.ClassTag
-import scala.util.{Try, Success, Failure}
 
 import org.apache.commons.io.FileUtils
 
@@ -193,12 +190,16 @@ object WorldLoaderFlat {
       val propVal = splitted.drop(1).mkString(": ")
 
       val result = field match {
+
+        // fields present in all item types
         case "id"          => item.setId(propVal)
         case "name"        => item.setName(propVal)
         case "description" => item.setDescription(propVal)
         case "notes"       => item.setNotes(propVal)
         case "path"        => item.setPath(propVal)
         case "parent"      => item.setPath(propVal)
+
+        // fields which may or may not be present for certain item types
         case "filename"    => item match {
           case x: RefItemBean => x.setFilename(propVal)
           case _              => field
@@ -213,7 +214,11 @@ object WorldLoaderFlat {
         }
         case "authorname" => item match {
           case x: BookItemBean => x.setAuthorname(propVal)
-          case _ => field
+          case _               => field
+        }
+        case "config" => item match {
+          case x: BookItemBean => x.setConfig(propVal)
+          case _               => field
         }
         case _ => field
       }

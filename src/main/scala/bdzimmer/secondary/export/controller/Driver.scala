@@ -119,8 +119,10 @@ class Driver {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
               val filename = book.id + ".epub"
-              // page(section.name, section.content, idx > 0 && section.name != "Divisions of the Rami"),
-              val unstyledSections = Set("Divisions of the Rami")
+              // extract relevant config info
+              // TODO: move this somewhere else, such as a parse function that returns a book config object
+              val args = ExtractRawTags.parseArgs(book.config.split("\\s*\\|\\s*").toList)
+              val unstyledSections = args.get("unstyledsections").map(_.split(";\\s+").toSet).getOrElse(Set())
               Epub.export(filename, book, tags, rt, unstyledSections, projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
