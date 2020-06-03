@@ -138,7 +138,7 @@ class Driver {
       res.mapLeft(msg => println(msg))
     }
 
-    case DriverCommands.Browse => browseLocal()
+    case DriverCommands.Browse => browseLocal(findItem(args.mkString(" ")))
 
     case DriverCommands.Basic | DriverCommands.Epub | DriverCommands.Latex => {
       val startTime = System.currentTimeMillis
@@ -387,8 +387,9 @@ class Driver {
 
 
   // browse to the local copy of the project website
-  private def browseLocal(): Unit = {
-    val filename = projConf.projectDir / ProjectStructure.WebDir / "index.html"
+  private def browseLocal(item: Option[WorldItems.WorldItem]): Unit = {
+    val pagefilename = item.map(_.id + ".html").getOrElse("index.html")
+    val filename = projConf.projectDir / ProjectStructure.WebDir / pagefilename
     val uri = new File(filename).toURI
     Try(Desktop.getDesktop.browse(uri))
   }
