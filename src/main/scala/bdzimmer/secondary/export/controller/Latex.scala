@@ -252,7 +252,10 @@ object Latex {
     res = MatcherI.replaceAllIn(res, m => raw"\\textit{" + m.group(1) + "}")
 
     // headers -> huge
-    res = MatcherH.replaceAllIn(res, m => raw"{\\huge\\noindent " + m.group(1) + "}")
+    // res = MatcherH.replaceAllIn(res, m => raw"{\\huge\\noindent " + m.group(1) + "}")
+
+    // headers -> huge bold (matches with auto chapter headers)
+    res = MatcherH.replaceAllIn(res, m => raw"{\\huge\\noindent \\textbf{" + m.group(1) + "}}")
 
     // copyright symbol
     res = MatcherCopyright.replaceAllIn(res, _ => raw"\\textcopyright\\")
