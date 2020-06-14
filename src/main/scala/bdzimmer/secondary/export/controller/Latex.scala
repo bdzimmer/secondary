@@ -42,6 +42,8 @@ object Latex {
 
   val MatcherDqSingle: Regex = "\"".r
 
+  val MatcherUL: Regex = "^(( {4})*)\\* (.*)".r
+
   // A lot of unused stuff here, for dealing with images.
 
   // Note that function is currently pretty similar to the version in Epub.
@@ -159,7 +161,9 @@ object Latex {
 
     // ~~~~ convert per-line symbols
 
-    // TODO: these should not be converted for non code block lines (see below)
+    // TODO: these should not be converted here
+    // since some of these lines may end up being part of code blocks.
+    // (see below)
     val linesFixed = stripped.split("\n").map(convertLine)
 
     // ~~~~ convert code blocks
@@ -175,20 +179,37 @@ object Latex {
 
     var codeBlockContents = ""
     var listContents = ""
+    var listIndentLevel = 0
 
     linesFixed.foreach(line => {
 
-      // are we going into a code block?
+      // going into a list
+      if (state == STATE_OUTSIDE && MatcherUL.findFirstIn(line).isDefined) {
+        listContents = listContents + "\\begin{itemize}\n"
+        state = STATE_LIST
+        listIndentLevel = 0
+      }
 
-      if (line.startsWith("    ")) {
-        if (state == STATE_OUTSIDE) {
-          codeBlockContents = codeBlockContents + "\\begin{lstlisting}\n"
-          state = STATE_CODEBLOCK
-        }
+      // leaving a list
+      if (state == STATE_LIST && MatcherUL.findFirstIn(line).isEmpty) {
+        (listIndentLevel to 0 by -1).foreach(level => {
+          listContents = listContents + "  " * level + "\\end{itemize}\n"
+        })
+        result = result + listContents
+
+        state = STATE_OUTSIDE
+        listContents = ""
+        listIndentLevel = -1
+      }
+
+      // into a code block?
+      if (state == STATE_OUTSIDE && line.startsWith("    ")) {
+        // TODO: disentangle the formatting from identification of contents
+        codeBlockContents = codeBlockContents + "\\begin{lstlisting}\n"
+        state = STATE_CODEBLOCK
       }
 
       // are we leaving a code block?
-
       if (state == STATE_CODEBLOCK && !line.startsWith("    ") && !line.isEmpty) {
         // strip trailing whitespace, add back a single newline, and end the code block
         codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
@@ -201,23 +222,57 @@ object Latex {
         codeBlockContents = ""
       }
 
+      // do things depending on what state we are in
       if (state == STATE_CODEBLOCK) {
         if (line.isEmpty) {
           codeBlockContents += "\n"
         } else {
           codeBlockContents = codeBlockContents + line.substring(4) + "\n"
         }
+      } else if (state == STATE_LIST) {
+        val matches = MatcherUL.findFirstMatchIn(line)
+        matches.foreach(m => {
+          val newListIndentLevel = m.group(1).length / 4
+          val padding = "  " * newListIndentLevel
+          if (newListIndentLevel > listIndentLevel) {
+            listContents = listContents + padding + "\\begin{itemize}\n"
+          } else if (newListIndentLevel < listIndentLevel) {
+            listContents = listContents + "  " * listIndentLevel + "\\end{itemize}\n"
+          }
+          listIndentLevel = newListIndentLevel
+
+          // TODO: convertLine here
+          val listItem = m.group(3)
+
+          listContents = listContents + padding + "  \\item  " + listItem + "\n"
+        })
+
+        if (matches.isEmpty) {
+          println("invalid list element formatting - no matches")
+        }
+
       } else {
-        // TODO: convertLine here, I think. Yep.
+
+        // TODO: convertLine here
         result = result + line + "\n"
       }
 
     })
 
-    // finish off any code blocks that remain open
+    // finish off any code blocks or lists that remain open
     if (state == STATE_CODEBLOCK) {
+
       codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
       codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
+      result = result + codeBlockContents  // this was originally missing
+
+    } else if (state == STATE_LIST) {
+
+      (listIndentLevel to 0 by -1).foreach(level => {
+        listContents = listContents + "  " * level + "\\end{itemize}\n"
+      })
+      result = result + listContents
+
     }
 
     result

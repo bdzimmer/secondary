@@ -10,16 +10,22 @@ import org.scalatest.FunSuite
 
 class LatexSuite extends FunSuite {
 
-  test("code blocks") {
+  test("code blocks and lists") {
 
     val pp = Markdown.getPegDown(false)
 
     val examples = List(
+
+      // code blocks examples
+
       // no code blocks, result will end with newline
       ("test\n\ntest\n\ntest", "test\n\ntest\n\ntest\n"),
 
       // single line code block, surrounded by blank lines
       ("test\n\n    a\n\ntest", "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\ntest\n"),
+
+      // single line code block with no terminating blank lines
+      ("test\n\n    a\n", "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\n"),
 
       // multiple line code block, surrounded by blank lines
       ("test\n\n    a\n    b\n\ntest", "test\n\n\\begin{lstlisting}\na\nb\n\\end{lstlisting}\n\ntest\n"),
@@ -35,7 +41,25 @@ class LatexSuite extends FunSuite {
 
       // multiple code blocks
       ("test\n\n    a\n---\n\n    b\n\ntest",
-       "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\n---\n\n\\begin{lstlisting}\nb\n\\end{lstlisting}\n\ntest\n")
+       "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\n---\n\n\\begin{lstlisting}\nb\n\\end{lstlisting}\n\ntest\n"),
+
+      // unordered lists!
+
+      // simple three-item list
+      ("test\n\n* a\n* b\n* c\n\ntest",
+       "test\n\n\\begin{itemize}\n  \\item  a\n  \\item  b\n  \\item  c\n\\end{itemize}\n\ntest\n"),
+
+      // three-item list with another indent level
+      ("test\n\n* a\n* b\n    * c\n\ntest",
+        "test\n\n\\begin{itemize}\n  \\item  a\n  \\item  b\n  \\begin{itemize}\n    \\item  c\n  \\end{itemize}\n\\end{itemize}\n\ntest\n"),
+
+      // three-item list with another indent level and no termination
+      ("test\n\n* a\n* b\n    * c\n",
+        "test\n\n\\begin{itemize}\n  \\item  a\n  \\item  b\n  \\begin{itemize}\n    \\item  c\n  \\end{itemize}\n\\end{itemize}\n"),
+
+      // three-item list with different indent level and no termination
+      ("test\n\n* a\n    * b\n* c\n",
+        "test\n\n\\begin{itemize}\n  \\item  a\n  \\begin{itemize}\n    \\item  b\n  \\end{itemize}\n  \\item  c\n\\end{itemize}\n")
 
     )
 
