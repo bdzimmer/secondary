@@ -165,23 +165,31 @@ object Latex {
     // ~~~~ convert code blocks
 
     var result = ""
-    var inCodeBlock = false
+    // var inCodeBlock = false
+
+    val STATE_OUTSIDE = 0
+    val STATE_CODEBLOCK = 1
+    val STATE_LIST = 2
+
+    var state = STATE_OUTSIDE
+
     var codeBlockContents = ""
+    var listContents = ""
 
     linesFixed.foreach(line => {
 
       // are we going into a code block?
 
       if (line.startsWith("    ")) {
-        if (!inCodeBlock) {
+        if (state == STATE_OUTSIDE) {
           codeBlockContents = codeBlockContents + "\\begin{lstlisting}\n"
-          inCodeBlock = true
+          state = STATE_CODEBLOCK
         }
       }
 
       // are we leaving a code block?
 
-      if (!line.startsWith("    ") && !line.isEmpty && inCodeBlock) {
+      if (state == STATE_CODEBLOCK && !line.startsWith("    ") && !line.isEmpty) {
         // strip trailing whitespace, add back a single newline, and end the code block
         codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
         codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
@@ -189,11 +197,11 @@ object Latex {
         result = result + codeBlockContents
 
         // reset code block
-        inCodeBlock = false
+        state = STATE_OUTSIDE
         codeBlockContents = ""
       }
 
-      if (inCodeBlock) {
+      if (state == STATE_CODEBLOCK) {
         if (line.isEmpty) {
           codeBlockContents += "\n"
         } else {
@@ -207,7 +215,7 @@ object Latex {
     })
 
     // finish off any code blocks that remain open
-    if (inCodeBlock) {
+    if (state == STATE_CODEBLOCK) {
       codeBlockContents = codeBlockContents.replaceAll("\\s+$", "")
       codeBlockContents = codeBlockContents + "\n\\end{lstlisting}\n\n"
     }
@@ -254,7 +262,7 @@ object Latex {
     // headers -> huge
     // res = MatcherH.replaceAllIn(res, m => raw"{\\huge\\noindent " + m.group(1) + "}")
 
-    // headers -> huge bold (matches with auto chapter headers)
+    // headers -> huge bold (matches with chapter headers style)
     res = MatcherH.replaceAllIn(res, m => raw"{\\huge\\noindent \\textbf{" + m.group(1) + "}}")
 
     // copyright symbol
