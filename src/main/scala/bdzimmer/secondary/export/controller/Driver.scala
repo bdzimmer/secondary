@@ -28,7 +28,7 @@ import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 object Driver {
 
-  val Version = "2020.05.21"
+  val Version = "2020.06.14"
   val Title: String = "Secondary - create worlds from text - v" + Version
   val DefaultCommand: String = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
@@ -164,8 +164,7 @@ class Driver {
               val filename = book.id + ".epub"
               // extract relevant config info
               // TODO: move this somewhere else, such as a parse function that returns a book config object
-              val args = ExtractRawTags.parseArgs(book.config.split("\\s*\\|\\s*").toList)
-              val unstyledSections = args.get("unstyledsections").map(_.split(";\\s+").toSet).getOrElse(Set())
+              val unstyledSections = parseUnstyledSections(book)
               Epub.export(filename, book, tags, rt, unstyledSections, projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
@@ -174,7 +173,8 @@ class Driver {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
               val filename = book.id + ".tex"
-              Latex.export(filename, book, tags, projConf.localExportPath)
+              val unstyledSections = parseUnstyledSections(book)
+              Latex.export(filename, book, tags, unstyledSections, projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }
@@ -426,6 +426,11 @@ class Driver {
       runCommand(DriverCommands.Export, List())
       Thread.sleep(seconds * 1000)
     }
+  }
+
+  private def parseUnstyledSections(book: WorldItems.BookItem): Set[String] = {
+    val args = ExtractRawTags.parseArgs(book.config.split("\\s*\\|\\s*").toList)
+    args.get("unstyledsections").map(_.split(";\\s+").toSet).getOrElse(Set())
   }
 
 }

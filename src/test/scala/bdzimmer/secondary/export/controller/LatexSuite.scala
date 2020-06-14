@@ -47,19 +47,19 @@ class LatexSuite extends FunSuite {
 
       // simple three-item list
       ("test\n\n* a\n* b\n* c\n\ntest",
-       "test\n\n\\begin{itemize}\n  \\item  a\n  \\item  b\n  \\item  c\n\\end{itemize}\n\ntest\n"),
+       "test\n\n\\begin{itemize}[nolistsep]\n  \\item  a\n  \\item  b\n  \\item  c\n\\end{itemize}\n\ntest\n"),
 
       // three-item list with another indent level
       ("test\n\n* a\n* b\n    * c\n\ntest",
-        "test\n\n\\begin{itemize}\n  \\item  a\n  \\item  b\n  \\begin{itemize}\n    \\item  c\n  \\end{itemize}\n\\end{itemize}\n\ntest\n"),
+        "test\n\n\\begin{itemize}[nolistsep]\n  \\item  a\n  \\item  b\n  \\begin{itemize}[nolistsep]\n    \\item  c\n  \\end{itemize}\n\\end{itemize}\n\ntest\n"),
 
       // three-item list with another indent level and no termination
       ("test\n\n* a\n* b\n    * c\n",
-        "test\n\n\\begin{itemize}\n  \\item  a\n  \\item  b\n  \\begin{itemize}\n    \\item  c\n  \\end{itemize}\n\\end{itemize}\n"),
+        "test\n\n\\begin{itemize}[nolistsep]\n  \\item  a\n  \\item  b\n  \\begin{itemize}[nolistsep]\n    \\item  c\n  \\end{itemize}\n\\end{itemize}\n"),
 
       // three-item list with different indent level and no termination
       ("test\n\n* a\n    * b\n* c\n",
-        "test\n\n\\begin{itemize}\n  \\item  a\n  \\begin{itemize}\n    \\item  b\n  \\end{itemize}\n  \\item  c\n\\end{itemize}\n")
+        "test\n\n\\begin{itemize}[nolistsep]\n  \\item  a\n  \\begin{itemize}[nolistsep]\n    \\item  b\n  \\end{itemize}\n  \\item  c\n\\end{itemize}\n")
 
     )
 

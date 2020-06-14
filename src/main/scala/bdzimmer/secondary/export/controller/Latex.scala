@@ -52,6 +52,7 @@ object Latex {
       filename: String,
       book: BookItem,
       tags: Map[Int, ParsedTag],
+      unstyledSections: Set[String],
       // renderTags: RenderTags,  // many tags do HTML specific stuff, so we won't render them
       localExportPath: String): Unit = {
 
@@ -77,7 +78,8 @@ object Latex {
       title,
       firstname,
       lastname,
-      allSections
+      allSections,
+      unstyledSections
       // coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       // localExportPath
     )
@@ -90,7 +92,8 @@ object Latex {
       title: String,
       firstname: String,
       lastname: String,
-      sections: Seq[SectionInfo]
+      sections: Seq[SectionInfo],
+      unstyledSections: Set[String]
       // coverImageFilename: Option[String],
       // imageDirname: String
     ): Unit = {
@@ -100,7 +103,8 @@ object Latex {
       title,
       firstname,
       lastname,
-      sections
+      sections,
+      unstyledSections
     )
 
     val fileWriter = new java.io.FileWriter(outputFilename, false)
@@ -114,7 +118,8 @@ object Latex {
       title: String,
       firstname: String,
       lastname: String,
-      sections: Seq[Book.SectionInfo]): String = {
+      sections: Seq[Book.SectionInfo],
+      unstyledSections: Set[String]): String = {
 
     // first section is title page
     val firstSection :: remainingSections = sections
@@ -129,7 +134,13 @@ object Latex {
       // the first line of the section is the chapter title header
       val trimmed = section.content.split("\n").tail.mkString("\n")
       val converted = convert(trimmed)
-      s"\\chapter{${section.name}}\n$converted"
+      val convertedStyled = if (unstyledSections.contains(section.name)) {
+        println("\tnot using indented style for section '" + section.name + "'")
+        "{\\parindent0pt\n" + converted + "}\n"
+      } else {
+        converted
+      }
+      s"\\chapter{${section.name}}\n$convertedStyled"
     }).mkString("\n")
 
     // val templateUrl = getClass.getResource("/latex/template.tex")
@@ -185,7 +196,7 @@ object Latex {
 
       // going into a list
       if (state == STATE_OUTSIDE && MatcherUL.findFirstIn(line).isDefined) {
-        listContents = listContents + "\\begin{itemize}\n"
+        listContents = listContents + "\\begin{itemize}[nolistsep]\n"
         state = STATE_LIST
         listIndentLevel = 0
       }
@@ -235,7 +246,7 @@ object Latex {
           val newListIndentLevel = m.group(1).length / 4
           val padding = "  " * newListIndentLevel
           if (newListIndentLevel > listIndentLevel) {
-            listContents = listContents + padding + "\\begin{itemize}\n"
+            listContents = listContents + padding + "\\begin{itemize}[nolistsep]\n"
           } else if (newListIndentLevel < listIndentLevel) {
             listContents = listContents + "  " * listIndentLevel + "\\end{itemize}\n"
           }
