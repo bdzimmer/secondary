@@ -273,6 +273,8 @@ object Latex {
       })
       result = result + listContents
 
+      listContents = ""
+      listIndentLevel = -1
     }
 
     result
