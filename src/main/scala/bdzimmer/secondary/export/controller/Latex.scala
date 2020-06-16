@@ -39,6 +39,7 @@ object Latex {
   val MatcherH: Regex = "^#+\\s(.*)".r
   val MatcherCopyright: Regex = "&copy;".r
   val MatcherPercent: Regex = "%".r
+  val MatcherEllipsis: Regex = "\\.\\.\\.".r
 
   val MatcherDqSingle: Regex = "\"".r
 
@@ -338,6 +339,9 @@ object Latex {
 
     // percent sign
     res = MatcherPercent.replaceAllIn(res, _ => raw"\\%")
+
+    // ellipsis
+    res = MatcherEllipsis.replaceAllIn(res, _ => raw" \\ldots\\ ")
 
     res
 
