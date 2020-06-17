@@ -307,6 +307,9 @@ s"""
       }).getOrElse(s"{{Quote error: snip '${x.id}' not found in item '${x.item.id}'}}")
     }
 
+    // TODO: for now, Configs are not ever rendered.
+    case _: Tags.Config => ""
+
     case x: Tags.Index => Index.render(
         WorldItems.collectionToList(x.item).drop(1))
 

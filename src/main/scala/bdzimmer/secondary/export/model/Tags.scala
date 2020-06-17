@@ -55,6 +55,7 @@ object SecTags {
   val Footnotes = "footnotes"
   val Snip = "snip"
   val Quote = "quote"
+  val Config = "config"
 
   val Gallery = "gallery"
 
@@ -270,6 +271,11 @@ object Tags {
   case class Quote(
     item: WorldItem,
     id: String
+  ) extends ParsedTag
+
+  case class Config(
+      desc: String,
+      args: Map[String, String]
   ) extends ParsedTag
 
   // error tags

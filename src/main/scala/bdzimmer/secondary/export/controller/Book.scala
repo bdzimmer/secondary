@@ -9,12 +9,45 @@ import bdzimmer.secondary.export.model.Tags
 
 object Book {
 
-
   case class SectionInfo(
     id: String,
     name: String,
     content: String
   )
+
+  case class BookConfig(
+    unstyledSections: Set[String],
+    paperWidth: String,
+    paperHeight: String,
+    marginInner: String,
+    marginOuter: String,
+    marginTop: String,
+    marginBottom: String
+  ) {
+    override def toString: String = {
+      "unstyledSections: " + unstyledSections + "\n" +
+      "paperWidth:       " + paperWidth + "\n" +
+      "paperHeight:      " + paperHeight + "\n" +
+      "marginInner:      " + marginInner + "\n" +
+      "marginOuter:      " + marginOuter + "\n" +
+      "marginTop:        " + marginTop + "\n" +
+      "marginBottom:     " + marginBottom + "\n"
+    }
+  }
+
+  // ~~~~ ~~~~ ~~~~ ~~~~
+
+  val BookConfigDefault: BookConfig = BookConfig(
+    unstyledSections = Set(),
+    paperWidth = "5.25in",
+    paperHeight = "8in",
+    marginInner = "0.75in",
+    marginOuter = "0.5in",
+    marginTop = "0.5in",
+    marginBottom = "0.5in"
+  )
+
+  // ~~~~ ~~~~ ~~~~ ~~~~
 
   // Split the notes of a book into sections, rendering the notes.
   // Returns:
@@ -76,8 +109,29 @@ object Book {
     (titles, chunks, chunkRanges)
   }
 
+  // Get configuration from a book (the first config tag present in the book)
+  def getConfig(
+         tags: Map[Int, Tags.ParsedTag]): BookConfig = {
 
+    val args: Map[String, String] = tags
+        .values
+        .collect({case x: Tags.Config => x}).toList
+        .find(_.desc.startsWith("Book"))
+        .map(_.args)
+        .getOrElse(Map())
 
+    val unstyledSections = args.get("unstyledsections").map(_.split(";\\s+").toSet)
+
+    BookConfig(
+      unstyledSections = unstyledSections.getOrElse(BookConfigDefault.unstyledSections),
+      paperWidth   = args.getOrElse("paperwidth",   BookConfigDefault.paperWidth),
+      paperHeight  = args.getOrElse("paperheight",  BookConfigDefault.paperHeight),
+      marginInner  = args.getOrElse("margininner",  BookConfigDefault.marginInner),
+      marginOuter  = args.getOrElse("marginouter",  BookConfigDefault.marginOuter),
+      marginTop    = args.getOrElse("margintop",    BookConfigDefault.marginTop),
+      marginBottom = args.getOrElse("marginbottom", BookConfigDefault.marginBottom)
+    )
+  }
 
 
 }

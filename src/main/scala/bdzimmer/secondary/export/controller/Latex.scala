@@ -53,7 +53,7 @@ object Latex {
       filename: String,
       book: BookItem,
       tags: Map[Int, ParsedTag],
-      unstyledSections: Set[String],
+      config: Book.BookConfig,
       // renderTags: RenderTags,  // many tags do HTML specific stuff, so we won't render them
       localExportPath: String): Unit = {
 
@@ -80,7 +80,7 @@ object Latex {
       firstname,
       lastname,
       allSections,
-      unstyledSections
+      config
       // coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       // localExportPath
     )
@@ -94,7 +94,7 @@ object Latex {
       firstname: String,
       lastname: String,
       sections: Seq[SectionInfo],
-      unstyledSections: Set[String]
+      config: Book.BookConfig
       // coverImageFilename: Option[String],
       // imageDirname: String
     ): Unit = {
@@ -105,7 +105,7 @@ object Latex {
       firstname,
       lastname,
       sections,
-      unstyledSections
+      config
     )
 
     val fileWriter = new java.io.FileWriter(outputFilename, false)
@@ -120,7 +120,7 @@ object Latex {
       firstname: String,
       lastname: String,
       sections: Seq[Book.SectionInfo],
-      unstyledSections: Set[String]): String = {
+      config: Book.BookConfig): String = {
 
     // first section is title page
     val firstSection :: remainingSections = sections
@@ -135,7 +135,7 @@ object Latex {
       // the first line of the section is the chapter title header
       val trimmed = section.content.split("\n").tail.mkString("\n")
       val converted = convert(trimmed)
-      val convertedStyled = if (unstyledSections.contains(section.name)) {
+      val convertedStyled = if (config.unstyledSections.contains(section.name)) {
         println("\tnot using indented style for section '" + section.name + "'")
         "{\\parindent0pt\n" + converted + "}\n"
       } else {
@@ -151,7 +151,10 @@ object Latex {
     val template = IOUtils.toString(inputStream)
     inputStream.close()
 
-    template.format(title, firstname, lastname, titlepage, chapters)
+    template.format(
+      config.paperWidth, config.paperHeight,
+      config.marginInner, config.marginOuter, config.marginTop, config.marginBottom,
+      title, firstname, lastname, titlepage, chapters)
 
     // compile with:
     //  pdflatex -interaction=nonstopmode filename.tex
