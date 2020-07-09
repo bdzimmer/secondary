@@ -56,6 +56,7 @@ object SecTags {
   val Snip = "snip"
   val Quote = "quote"
   val Config = "config"
+  val Conditional = "conditional"
 
   val Gallery = "gallery"
 
@@ -276,6 +277,11 @@ object Tags {
   case class Config(
       desc: String,
       args: Map[String, String]
+  ) extends ParsedTag
+
+  case class Conditional(
+      text: String,
+      modes: Set[String]
   ) extends ParsedTag
 
   // error tags

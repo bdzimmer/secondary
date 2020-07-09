@@ -81,7 +81,8 @@ class RenderPages(
     tagsMap,
     world.collect({ case x: CharacterItem => x }),
     false,
-    false)
+    false,
+    "default")
 
   val hiddenItemIds: Set[Int] = hiddenItems.map(_.uid).toSet
 

@@ -301,6 +301,12 @@ object ParseTags {
         Config(tag.value, args)
       }
 
+      case SecTags.Conditional => {
+        Conditional(
+          tag.value,
+          args.get("unstyledsections").map(_.split(";\\s+").toSet).getOrElse(Set()))
+      }
+
       case SecTags.Index => {
         stringToItem.get(tag.value).map(item => {
           Index(item)

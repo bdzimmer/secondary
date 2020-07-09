@@ -124,7 +124,7 @@ class Driver {
     case DriverCommands.Animate => {
       val startTime = System.currentTimeMillis
       val res = for {
-        stuff <- getRenderStuff()
+        stuff <- getRenderStuff(false, "default")
         (stringToItem, rt, tagsMap) = stuff
         itemId = args.mkString(" ")
         item <- Result.fromOption(
@@ -142,10 +142,20 @@ class Driver {
 
     case DriverCommands.Basic | DriverCommands.Epub | DriverCommands.Latex => {
       val startTime = System.currentTimeMillis
+
+      val itemId = args.headOption.getOrElse("")
+      val mode = args.lift(1).getOrElse("default")
+      val imCompQuality = args.lift(2).flatMap(x => Try(x.toFloat).toOption)
+
+      println("mode: " + mode)
+      println("im comp quality: " + imCompQuality)
+      println()
+
+      val suffix = if (mode.equals("default")) "" else "_" + mode
+
       val res = for {
-        stuff <- getRenderStuff()
+        stuff <- getRenderStuff(true, mode)
         (stringToItem, rt, _) = stuff
-        itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
           "invalid item name or id '" + itemId + "'")
@@ -154,29 +164,29 @@ class Driver {
 
         val outputFilename = command match {
           case DriverCommands.Basic => {
-            val filename = item.id + ".htm"
+            val filename = item.id + suffix + ".htm"
             Basic.export(filename, item.notes, item.name, tags, rt, projConf.localExportPath)
             Pass(filename)
           }
           case DriverCommands.Epub => {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
+              val filename = book.id + suffix + ".epub"
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-              val filename = book.id + ".epub"
-              // extract relevant config info
-              // TODO: move this somewhere else, such as a parse function that returns a book config object
-              // val unstyledSections = parseUnstyledSections(book)
               val config = Book.getConfig(tags)
               println("Book configuration:")
               println("-------------------")
               println(config)
-              Epub.export(filename, book, tags, rt, config.unstyledSections, projConf.localExportPath)
+              Epub.export(
+                filename, book, tags, rt,
+                config.unstyledSections, imCompQuality,
+                projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }
           case DriverCommands.Latex => {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
+              val filename = book.id + suffix + ".tex"
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-              val filename = book.id + ".tex"
               val config = Book.getConfig(tags)
               println("Book configuration:")
               println("-------------------")
@@ -375,7 +385,7 @@ class Driver {
   }
 
 
-  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[Int, Map[Int, Tags.ParsedTag]])] = {
+  private def getRenderStuff(ebookMode: Boolean, mode: String): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[Int, Map[Int, Tags.ParsedTag]])] = {
     for {
       master <- WorldLoader.loadWorld(projConf)
       world = WorldItems.collectionToList(master)
@@ -384,7 +394,8 @@ class Driver {
       rt = new RenderTags(
         tagsMap, world.collect({ case x: WorldItems.CharacterItem => x }),
         disableTrees = true,
-        ebookMode = true
+        ebookMode = ebookMode,
+        mode = mode
       )
     } yield {
       (stringToItem, rt, tagsMap)

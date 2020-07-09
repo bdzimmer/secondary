@@ -30,7 +30,8 @@ class EpubSuite extends FunSuite with TempDirectory {
        ),
        None,
        "",
-       Set()
+       Set(),
+       None
      )
 
     assert(outputFile.exists())
