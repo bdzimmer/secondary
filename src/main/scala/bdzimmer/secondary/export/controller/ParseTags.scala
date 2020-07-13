@@ -304,7 +304,7 @@ object ParseTags {
       case SecTags.Conditional => {
         Conditional(
           tag.value,
-          args.get("unstyledsections").map(_.split(";\\s+").toSet).getOrElse(Set()))
+          args.get("mode").map(_.split(";\\s+").toSet).getOrElse(Set()))
       }
 
       case SecTags.Index => {
