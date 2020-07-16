@@ -246,6 +246,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
         // if we were also creating a downsized version or something, that would be done
         // around here.
 
+        // TODO: add a compression tag / quality suffix
         val jpgFilename = FilenameUtils.removeExtension(origFilename) + ".jpg"
         val jpgFilenameFull = imageDirname / jpgFilename
         val jpgFile = new File(jpgFilenameFull)

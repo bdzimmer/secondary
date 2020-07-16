@@ -109,7 +109,7 @@ object Book {
     (titles, chunks, chunkRanges)
   }
 
-  // Get configuration from a book (the first config tag present in the book)
+  // Get configuration from a book (the first config tag whose description begins with "Book")
   def getConfig(
          tags: Map[Int, Tags.ParsedTag]): BookConfig = {
 

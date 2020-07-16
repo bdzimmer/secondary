@@ -54,19 +54,19 @@ Running `secondary` with no additional flags will start Secondary in interactive
 
 #### Commands
 
-To execute an individual command, use `secondary <command> [additional options]`. If the command requires an item to be specified, it may be specified by id or name. If a name contains spaces, it may be quoted or separated across multiple parameters for convenience. Available commands:
+To execute an individual command, use `secondary <command> [additional options]`. If the command requires an item to be specified, it may be specified by id or name. If a name contains spaces, it should be quoted. Available commands:
 
 * `animate <item>` - render flight animation videos of all `flightanimation` tags in `<item>`. This can be time and CPU intensive, so it does not happen by default on export.
-* `basic <item>` - export an item to basic HTML. Useful for conversion to `.docx` format for manuscript submissions.
-* `browse` - browse exported project web site's home page. Uses Java's `Desktop.getDesktop.browse()`.
+* `basic <item> [mode]` - export an item to basic HTML. Useful for conversion to `.docx` format for manuscript submissions.
+* `browse [item]` - browse exported project web site. Uses Java's `Desktop.getDesktop.browse()`. If item is not specified, the site's home page will be the destination.
 * `configure` - edit project configuration in a GUI.
 * `duplicate <item>` - detect duplicate words in an item's notes.
 * `edit <item>` - edit the source file for an item using Notepad++; assumes `notepad++` command is on path. Will open the file at the correct line. Currently only works in interactive mode.
 * `editor` - pixel editor (alpha).
-* `epub <item>` - export a book item to EPUB. See {{Publishing}}.
+* `epub <item> [mode] [imcompquality]` - export a book item to EPUB. See {{Publishing}}.
 * `explore` - explore project `content` directory. Uses Java's `Desktop.getDesktop.open()`.
-* `export` - export the world encyclopedia website. Add the optional `force` switch to regenerate all items, even if they haven't been updated.
-* `latex` - export a book to LaTeX. See {{Publishing}}.
+* `export [force]` - export the world encyclopedia website. Add the optional `force` switch to regenerate all items, even if they haven't been updated.
+* `latex <item> [mode] [imcompquality]` - export a book to LaTeX. See {{Publishing}}.
 * `orbits` - interactive Orbits editor (alpha). For more about Orbits capabilities, see {{Flight Planning Tags}}.
 * `screenshot` - screenshot utility (alpha).
 * `server` - server mode. Runs export every 10 seconds.
@@ -152,7 +152,7 @@ Different types of items have special functionality and may have additional prop
     * Describes a story or novel.
     * Additional properties:
         * `authorname` - name of the author described with "name parts" synatx.
-        * `uniqueIdentifier` - unique "notISBN" id to be included in EPUB
+        * `uniqueIdentifier` - unique "notISBN" id to be included in EPUB.
     * See {{Publishing}}.
 * **!tileset**, **!spritesheet**, **!map**
     * Special game design functionality. Not documented.
@@ -879,6 +879,34 @@ Render a tag for use in syntax examples.
 
 `{{demo: demo | image | item | link=true | responsive=false}}` &rarr; `{{demo: image | item | link=true | responsive=false}}`
 
+#### conditional
+
+Conditionally render text based on specified mode.
+
+**Usage**
+
+`{{demo: conditional | text | mode=}}`
+
+* **text**: text to conditionally render
+* **mode**: mode in which to render the text
+
+**Examples**
+
+`{{demo: conditional | This text will be rendered, since web export uses the default mode. | mode=default}}` &rarr; {{conditional: This text will be rendered, since web export uses the default mode. | mode=default}}
+
+`{{demo: conditional | This text will not be rendered. | mode=other}}` &rarr; {{conditional: This text will not be rendered. | mode=other}}
+
+#### config
+
+General-purpose config, currently used for EPUB and LaTeX export. See {{Publishing}}. Does not render.
+
+**Usage**
+
+`{{demo: config | name | key1=val1 | key2=val2 | ...}}`
+
+* **name**: name of configuration
+* **key1, key2, ...**: arbitrary arguments
+
 #### markovtext
 
 Generate random text using a Markov chain.
@@ -888,7 +916,7 @@ Generate random text using a Markov chain.
 `{{demo: markovtext | items | order=2 | count=5 | seed=0}}`
 
 * **items**: semicolon-separated list of item names or ids to recurse into
-* **order**: order of the markov chain; i.e. how many previous words inform the prediction of the next word.
+* **order**: order of the markov chain; i.e. how many previous words inform the prediction of the next word
 * **count**: number of sentences to generate
 * **seed**: seed for random number generator
 
@@ -919,15 +947,23 @@ Markdown headings (lines that begin with one or more `#` symbols) in the notes o
 
 The title of the book when publishing is not the name of the item (which may include markdown for styling in the world encyclopedia) but the text of the heading of the title page.
 
-It's recommended to avoid using Secondary tags in books other than `sidenote` (which will be eliminated), `snip`, and the `image` tag for specifying the cover. Secondary does not currently include other images or linked articles in published books.
+It's recommended to avoid using Secondary tags in books other than `conditional`, `config`, `sidenote` (which will be eliminated), `snip`, and the `image` tag for specifying the cover. Secondary does not currently include other images or linked articles in published books.
 
 #### EPUB
 
 Export a book to EPUB 2 with the command `secondary epub <item>`, where `<item>` is the name or id of the book. The file will is generated in the base project directory, named `<item-id>.epub`, where `<item-id>` is the item's id (unique in project).
 
+Up to two additional optional flags may be included. The first is a string specifying a mode that will be used when rendering `conditional` tags. (The default is `default`, which is also the default when using the `export` command.) If a conditional tag in the book also includes the mode, its text will be rendered. The primary use case for this functionality is easily creating multiple EPUBs for different online stores that contain store-specific content, such as links.
+
+The second optional flag specifies JPEG compression quality for the EPUB's cover image (see below). If it is not included or is a non-numeric, the original image will not be altered. Otherwise, values between 0.0-1.0 will be used to derive a JPEG version of the cover image at that compression quality. 0.8 seems to be a good compromise between size and quality.
+
+Other options may be specified via a `config` tag (the first `config` tag whose description begins with `Book` will be used):
+
+* `unstyledsections` - semicolon-separated list of section names. Normally, sections include CSS to indent the first line of paragraphs and remove spacing between paragraphs. The first section (title page) and whatever sections specified here will not include this style.
+
 Since EPUB is an HTML-based format, the same Markdown-to-HTML converter used for the world encyclopedia is used to format the content.
 
-The cover image is included as a property of the `OEBPS/content.opf` file. A separate cover page is not generated, since that would result in duplicate covers when converted to Kindle format. Currently, the cover image is expected to be in PNG format, but other formats will probably work.
+The cover image is included as a property of the `OEBPS/content.opf` file. A separate cover page is not generated, since that results in duplicate covers when converted to Kindle format.
 
 A table of contents section (for example as a section following the title page) is not generated. However, an `OEBPS/toc.ncx` and related content is created so navigation features will be available.
 
@@ -943,22 +979,29 @@ Example commands for generating, checking, and converting the book example:
 
 #### LaTeX
 
-Export a book to LaTeX with the command `secondary latex <item>`. The file is generated in the base project directory, named `<item-id>.tex`.
+Export a book to LaTeX with the command `secondary latex <item> [mode]`. The file is generated in the base project directory, named `<item-id>.tex`. A mode may also be specified via an optional fourth argument (see above).
 
-A template file in Secondary's `resources` named `template.tex` is used. In the future, different templates or export options may become available. Until then, formatting changes may be made manually by editing declarations near the top of the TEX file.
+A template file in Secondary's `resources` named `template.tex` is used. Other options may be specified via a `config` tag (the first `config` tag whose description begins with `Book` will be used):
+
+* `unstyledsections` - semicolon-separated list of section names (currently not implemented LaTeX)
+* `paperwidth`, `paperheight` - paper dimensions (include units)
+* `margininner`, `marginouter`, `margintop`, `marginbottom` - margin sizes (include units)
+
+In the future, different templates and export options may become available.
 
 LaTeX export uses a custom Markdown-to-LaTeX converter that only supports a small subset of Markdown syntax, and there may be bugs or unexpected behavior in these:
 
 * Bold, italic, and bold-and-italic text (other nesting not supported) are converted to a proper combination of `textbf` and `textif`.
-* Headings are converted to `huge`, `noindent` text.
+* Headings are converted to `huge`, `noindent`, `textbf` text to match the style of chapter headers.
 * Code blocks (being with 4 spaces) are converted to `lstlisting` blocks.
+* Unordered lists are converted into `itemize` blocks.
 
 Other conversions are performed:
 
-* Pairs of double quotes within a paragraph are converted to left and right double quote marks.
-* Copyright symbol and percent sign are converted from HTML to LaTeX syntax.
+* Pairs of double quotes within a paragraph are converted to left and right double quote marks. Pairs of single quotes are also converted, with heuristics to avoid identifying apostrophes as single quotes. Nested quote types are separated with `thinspace`.
+* Copyright symbol, percent sign, and ellipses are converted from HTML to LaTeX syntax.
 
-Conversions not currently performed include single quote beautification, markdown links, images, lists, or inline preformatted text.
+Conversions not currently performed include inline pre-formatted text, markdown links, and images.
 
 Once the LaTeX file is generated, another command must be run to convert to PDF. Example commands:
 
@@ -988,47 +1031,49 @@ path: Documentation
 
 **General Tags**
 
-+ Anchor
-+ Footnotes
-+ Index
-+ Link
-+ Sidenote
-+ Snip
-+ Quote
+* anchor
+* footnotes
+* index
+* link
+* sidenote
+* snip
+* quote
 
 **Image Tags**
 
-+ Gallery
-+ Image
-+ Jumbotron
+* gallery
+* image
+* jumbotron
 
 **Event and Genealogy Tags**
 
-+ birth / death
-+ event
-+ FamilyTree
-    + father, mother, parent
-    + son, daughter, child
-    + ancestor, descendant
-    + marriage
-+ timeline
+* birth / death
+* event
+* familytree
+    * father, mother, parent
+    * son, daughter, child
+    * ancestor, descendant
+    * marriage
+* timeline
 
 **Work Tracking Tags**
 
-+ BurnDown
-+ Tasks
-+ Thought / todo / started / done / blocked
-+ Stats
-+ WordCount
+* burndown
+* tasks
+* thought / todo / started / done / blocked
+* stats
+* wordCount
 
 **Flight Planning Tags**
 
-+ acceleration / mass / velocity
-+ Flight
-+ FlightAnimation
-+ FlightEpoch
+* acceleration / mass / velocity
+* flight
+* flightanimation
+* flightepoch
 
 **Miscellaneous Tags**
 
-+ Demo
-+ MarkovText
+* demo
+* conditional
+* config
+* markovText
