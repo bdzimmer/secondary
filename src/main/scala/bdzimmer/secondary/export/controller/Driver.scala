@@ -21,9 +21,52 @@ import bdzimmer.secondary.export.model.{ProjectConfig, ProjectStructure, WorldIt
 import bdzimmer.secondary.export.view.{ConfigurationGUI, ScreenshotUtility}
 import bdzimmer.secondary.export.model.Tags
 
-import bdzimmer.pixeleditor.view.Main
-import bdzimmer.pixeleditor.model.AssetMetadataUtils
+import bdzimmer.pixeleditor.model.{AssetMetadataUtils, Experiment}
 import bdzimmer.orbits.{Editor, ConstVelFlightFn}
+
+
+
+object Driver {
+
+  val Version = "2020.06.16"
+  val Title: String = "Secondary - create worlds from text - v" + Version
+  val DefaultCommand: String = DriverCommands.Interactive
+  val ServerRefreshSeconds = 10
+
+
+  def main(argv: Array[String]): Unit = {
+    val driver = new Driver()
+    driver.run(argv)
+  }
+
+
+  // show help at the command line
+  private def showUsage(): Unit = {
+    println(Title)
+    println()
+    println("Usage:")
+    println("  secondary <command>")
+    println()
+    println("Commands:")
+    showCommands()
+    println("If no command is provided, Secondary will start in interactive mode.")
+  }
+
+
+  // print the list of commands / descriptions
+  private def showCommands(): Unit = {
+    println()
+    val maxLength = DriverCommands.CommandsDescriptions.map(_._1.length).max
+    DriverCommands.CommandsDescriptions.foreach(x => {
+      val command = x._1
+      val description = x._2
+      println("  " + command + " " * (maxLength - command.length + 2) + description)
+    })
+    println()
+  }
+
+}
+
 
 
 class Driver {
@@ -81,7 +124,7 @@ class Driver {
     case DriverCommands.Animate => {
       val startTime = System.currentTimeMillis
       val res = for {
-        stuff <- getRenderStuff()
+        stuff <- getRenderStuff(false, "default")
         (stringToItem, rt, tagsMap) = stuff
         itemId = args.mkString(" ")
         item <- Result.fromOption(
@@ -95,14 +138,24 @@ class Driver {
       res.mapLeft(msg => println(msg))
     }
 
-    case DriverCommands.Browse => browseLocal()
+    case DriverCommands.Browse => browseLocal(findItem(args.mkString(" ")))
 
     case DriverCommands.Basic | DriverCommands.Epub | DriverCommands.Latex => {
       val startTime = System.currentTimeMillis
+
+      val itemId = args.headOption.getOrElse("")
+      val mode = args.lift(1).getOrElse("default")
+      val imCompQuality = args.lift(2).flatMap(x => Try(x.toFloat).toOption)
+
+      println("mode: " + mode)
+      println("im comp quality: " + imCompQuality)
+      println()
+
+      val suffix = if (mode.equals("default")) "" else "_" + mode
+
       val res = for {
-        stuff <- getRenderStuff()
+        stuff <- getRenderStuff(true, mode)
         (stringToItem, rt, _) = stuff
-        itemId = args.mkString(" ")
         item <- Result.fromOption(
           stringToItem.get(itemId),
           "invalid item name or id '" + itemId + "'")
@@ -111,23 +164,34 @@ class Driver {
 
         val outputFilename = command match {
           case DriverCommands.Basic => {
-            val filename = item.id + ".htm"
+            val filename = item.id + suffix + ".htm"
             Basic.export(filename, item.notes, item.name, tags, rt, projConf.localExportPath)
             Pass(filename)
           }
           case DriverCommands.Epub => {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
+              val filename = book.id + suffix + ".epub"
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-              val filename = book.id + ".epub"
-              Epub.export(filename, book, tags, rt, projConf.localExportPath)
+              val config = Book.getConfig(tags)
+              println("Book configuration:")
+              println("-------------------")
+              println(config)
+              Epub.export(
+                filename, book, tags, rt,
+                config.unstyledSections, imCompQuality,
+                projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }
           case DriverCommands.Latex => {
             Result(item.asInstanceOf[WorldItems.BookItem]).map(book => {
+              val filename = book.id + suffix + ".tex"
               val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-              val filename = book.id + ".tex"
-              Latex.export(filename, book, tags, projConf.localExportPath)
+              val config = Book.getConfig(tags)
+              println("Book configuration:")
+              println("-------------------")
+              println(config)
+              Latex.export(filename, book, tags, config, projConf.localExportPath)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }
@@ -181,30 +245,13 @@ class Driver {
         case Pass(master) => {
           val outputFilename = "assetmetadata.txt"
           AssetMetadataUtils.saveAssetMetadata(outputFilename, WorldItems.assetMetadata(master))
-          new Main(projConf.localContentPath, "Secondary Editor", outputFilename)
+
+          // new Main(projConf.localContentPath, "Secondary Editor", outputFilename)
+          Experiment.main(Array())
+
         }
         case Fail(msg) => println(msg)
       }
-    }
-    case DriverCommands.Epub => {
-      val startTime = System.currentTimeMillis
-      val res = for {
-        stuff <- getRenderStuff()
-        (stringToItem, rt, _) = stuff
-        itemId = args.mkString(" ")
-        item <- Result.fromOption(
-          stringToItem.get(itemId),
-          "invalid item name or id '" + itemId + "'")
-        book <- Result.fromTry(
-          Try(item.asInstanceOf[WorldItems.BookItem])).mapLeft(_ => "'" + itemId + "' not a book")
-      } yield {
-        val tags = book.tags.mapValues(tag => ParseTags.parse(tag, stringToItem))
-        val filename = book.id + ".epub"
-        Epub.export(filename, book, tags, rt, projConf.localExportPath)
-        val totalTime = (System.currentTimeMillis - startTime) / 1000.0
-        println("exported " + filename + " in " + totalTime + " sec")
-      }
-      res.mapLeft(msg => println(msg))
     }
     case DriverCommands.Explore => explore()
     case DriverCommands.Export => {
@@ -338,7 +385,7 @@ class Driver {
   }
 
 
-  private def getRenderStuff(): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[Int, Map[Int, Tags.ParsedTag]])] = {
+  private def getRenderStuff(ebookMode: Boolean, mode: String): Result[String, (Map[String, WorldItems.WorldItem], RenderTags, Map[Int, Map[Int, Tags.ParsedTag]])] = {
     for {
       master <- WorldLoader.loadWorld(projConf)
       world = WorldItems.collectionToList(master)
@@ -347,7 +394,8 @@ class Driver {
       rt = new RenderTags(
         tagsMap, world.collect({ case x: WorldItems.CharacterItem => x }),
         disableTrees = true,
-        ebookMode = true
+        ebookMode = ebookMode,
+        mode = mode
       )
     } yield {
       (stringToItem, rt, tagsMap)
@@ -357,8 +405,9 @@ class Driver {
 
 
   // browse to the local copy of the project website
-  private def browseLocal(): Unit = {
-    val filename = projConf.projectDir / ProjectStructure.WebDir / "index.html"
+  private def browseLocal(item: Option[WorldItems.WorldItem]): Unit = {
+    val pagefilename = item.map(_.id + ".html").getOrElse("index.html")
+    val filename = projConf.projectDir / ProjectStructure.WebDir / pagefilename
     val uri = new File(filename).toURI
     Try(Desktop.getDesktop.browse(uri))
   }
@@ -395,47 +444,6 @@ class Driver {
       runCommand(DriverCommands.Export, List())
       Thread.sleep(seconds * 1000)
     }
-  }
-
-}
-
-
-
-object Driver {
-
-  val Title = "Secondary - create worlds from text - v2020.03.31"
-  val DefaultCommand = DriverCommands.Interactive
-  val ServerRefreshSeconds = 10
-
-  def main(argv: Array[String]): Unit = {
-    val driver = new Driver()
-    driver.run(argv)
-  }
-
-
-  // show help at the command line
-  private def showUsage(): Unit = {
-    println(Title)
-    println()
-    println("Usage:")
-    println("  secondary <command>")
-    println()
-    println("Commands:")
-    showCommands()
-    println("If no command is provided, Secondary will start in interactive mode.")
-  }
-
-
-  // print the list of commands / descriptions
-  private def showCommands(): Unit = {
-    println()
-    val maxLength = DriverCommands.CommandsDescriptions.map(_._1.length).max
-    DriverCommands.CommandsDescriptions.foreach(x => {
-      val command = x._1
-      val description = x._2
-      println("  " + command + " " * (maxLength - command.length + 2) + description)
-    })
-    println()
   }
 
 }

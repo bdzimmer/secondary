@@ -39,7 +39,8 @@ class RenderPages(
     })
     .filter(x => !(x._1.equals(x._2.uid)))
     .groupBy(_._1)
-    .mapValues(x => x.map(_._2))
+    .mapValues(x =>
+      x.map(_._2).distinct.sortBy(_.name))
   )
 
   val referencedBy: Map[Int, List[WorldItem]] = Timer.showTimeBrief("inward refs",
@@ -50,9 +51,10 @@ class RenderPages(
     } yield {
       (tagItem.uid, item)
     })
-    .filter(x => !(x._1.equals(x._2.uid)))
-    .groupBy(_._1)
-    .mapValues(x => x.map(_._2))
+    .filter(x => !(x._1.equals(x._2.uid)))  // match uids
+    .groupBy(_._1)                          // group by uid, resulting in a Map
+    .mapValues(x =>                         //   of uid -> List[(uid, WorldItem)]
+      x.map(_._2).distinct.sortBy(_.name))  // keep only items, distinct, and sort by name
   )
 
   // previous, next, and parent items
@@ -79,7 +81,8 @@ class RenderPages(
     tagsMap,
     world.collect({ case x: CharacterItem => x }),
     false,
-    false)
+    false,
+    "default")
 
   val hiddenItemIds: Set[Int] = hiddenItems.map(_.uid).toSet
 

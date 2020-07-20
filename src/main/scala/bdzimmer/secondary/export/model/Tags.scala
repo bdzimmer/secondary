@@ -7,56 +7,68 @@ import bdzimmer.orbits.{CalendarDateTime, AnimationSettings}
 
 object SecTags {
 
+  // Tags are organized below as they are in the documentation.
+
+  // General Tags
+
+  val Anchor = "anchor"
+  val Footnotes = "footnotes"
+  val Index = "index"
   val Link = "link"
+  val Sidenote = "sidenote"
+  val Snip = "snip"
+  val Quote = "quote"
+
+  // Image Tags
+
+  val Gallery = "gallery"
   val Image = "image"
-  val FamilyTree = "familytree"
   val Jumbotron = "jumbotron"
-  val Marriage = "marriage"
-  val Timeline = "timeline"
+
+  // Event and Genealogy Tags
 
   val Birth = "birth"
   val Death = "death"
   val Event = "event"
+  val FamilyTree = "familytree"
+  val Father = "father"
+  val Mother = "mother"
+  val Parent = "parent"
+  val Son = "son"
+  val Daughter = "daughter"
+  val Child = "child"
+  val Ancestor = "ancestor"
+  val Descendant = "descendant"
+  val Marriage = "marriage"
+  val Timeline = "timeline"
 
-  val Flight = "flight"
-  val Mass = "mass"
-  val Acceleration = "acceleration"
-  val Velocity = "velocity"
-  val FlightEpoch = "flightepoch"
-  val FlightAnimation = "flightanimation"
+  // Work Tracking Tags
 
+  val BurnDown = "burndown"
+  val Tasks = "tasks"
   val Thought = "thought"
   val Todo = "todo"
   val Started = "started"
   val Done = "done"
   val Blocked = "blocked"
+  val Stats = "stats"
+  val WordCount = "wordcount"
 
-  val Father = "father"
-  val Mother = "mother"
-  val Parent = "parent"
-  val Ancestor = "ancestor"
+  // Flight Planning Tags
 
-  val Son = "son"
-  val Daughter = "daughter"
-  val Child = "child"
-  val Descendant = "descendant"
+  val Acceleration = "acceleration"
+  val Mass = "mass"
+  val Velocity = "velocity"
+  val Flight = "flight"
+  val FlightAnimation = "flightanimation"
+  val FlightEpoch = "flightepoch"
+
+  // Miscellaneous Tags
 
   val Demo = "demo"
+  val Conditional = "conditional"
+  val Config = "config"
   val MarkovText = "markovtext"
-  val WordCount = "wordcount"
-  val BurnDown = "burndown"
-  val Anchor = "anchor"
-
-  val Index = "index"
-  val Tasks = "tasks"
-  val Stats = "stats"
-
-  val Sidenote = "sidenote"
-  val Footnotes = "footnotes"
-  val Snip = "snip"
-  val Quote = "quote"
-
-  val Gallery = "gallery"
 
 }
 
@@ -270,6 +282,16 @@ object Tags {
   case class Quote(
     item: WorldItem,
     id: String
+  ) extends ParsedTag
+
+  case class Config(
+      desc: String,
+      args: Map[String, String]
+  ) extends ParsedTag
+
+  case class Conditional(
+      text: String,
+      modes: Set[String]
   ) extends ParsedTag
 
   // error tags

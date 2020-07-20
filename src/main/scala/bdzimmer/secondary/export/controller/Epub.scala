@@ -7,14 +7,15 @@
 package bdzimmer.secondary.export.controller
 
 import scala.collection.immutable.Seq
+import java.io.{BufferedOutputStream, File, FileOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipOutputStream}
 
-import java.io.{File, FileOutputStream, BufferedOutputStream}
-import java.util.zip.{ZipOutputStream, ZipEntry, CRC32}
-import org.apache.commons.io.{FileUtils, IOUtils}
+import javax.imageio.{ImageIO, IIOImage, ImageWriteParam}
+import javax.imageio.stream.FileImageOutputStream
 
+import org.apache.commons.io.{FileUtils, FilenameUtils, IOUtils}
 import bdzimmer.util.StringUtils._
-
-import bdzimmer.secondary.export.model.{WorldItems}
+import bdzimmer.secondary.export.model.WorldItems
 import bdzimmer.secondary.export.model.Tags.ParsedTag
 import bdzimmer.secondary.export.model.WorldItems.BookItem
 import bdzimmer.secondary.export.view.Styles
@@ -22,12 +23,6 @@ import bdzimmer.secondary.export.controller.Book.SectionInfo
 
 
 object Epub {
-
-  def coverPage(imageFilename: String): String = {
-    //s"""<body><img id="coverimage" src="$imageFilename" alt="cover image" /></body>"""
-    val imageTag = s"""<img id="coverimage" src="$imageFilename" alt="cover image" />"""
-    page("Cover", imageTag, false)
-  }
 
   def page(title: String, content: String, chapter: Boolean): String = {
 
@@ -87,32 +82,33 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
     // format contents of content.opf file
 
     val cover = if (coverImageFilename.isDefined) {
-      "<meta name=\"cover\" content=\"cover-image\"/>"
+      "<meta name=\"cover\" content=\"cover-image\" />"
     } else {
       ""
     }
 
     val manifestItems = sections.map(section => {
-      s"""<item id="${section.id}" href="${section.id}.xhtml" media-type="application/xhtml+xml"/>"""
+      s"""    <item id="${section.id}" href="${section.id}.xhtml" media-type="application/xhtml+xml" />"""
     }) ++ coverImageFilename.map(x => {
-      // assumes cover image is png
-      s"""<item id="cover-image" href="$x" media-type="image/png"/>"""
+      val imageType = getImageType(x)
+      println("cover image type: " + imageType)
+      "    <item id=\"cover-image\" href=\"" + x + "\" media-type=\"image/" + imageType + "\" />"
     }).toList
 
     val manifest =
       "<manifest>\n" +
-        manifestItems.mkString("\n") +
-      """<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>""" +
-      "\n</manifest>"
+        manifestItems.mkString("\n") + "\n" +
+      """    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml" />""" + "\n" +
+      "  </manifest>"
 
     val spineItems = sections.map(section => {
-      s"""<itemref idref="${section.id}" />"""
+      s"""    <itemref idref="${section.id}" />"""
     })
 
     val spine =
-      """<spine toc="ncx">""" +
-      spineItems.mkString("") +
-      """</spine>"""
+      """<spine toc="ncx">""" + "\n" +
+      spineItems.mkString("\n") + "\n" +
+      "  </spine>"
 
 s"""<?xml version="1.0"?>
 <package version="2.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="$uniqueIdentifier">
@@ -141,19 +137,19 @@ s"""<?xml version="1.0"?>
     lastname: String,
     sections: Seq[SectionInfo]): String = {
 
-    // format contents of toc.ncx file"""
+    // format contents of toc.ncx file
 
     val navmapItems = sections.zipWithIndex.map(x => {
-      s"""<navPoint class="chapter" id="${x._1.id}" playOrder="${x._2}">""" +
-      s"""<navLabel><text>${x._1.name}</text></navLabel>""" +
-      s"""<content src="${x._1.id}.xhtml"/>""" +
-      s"""</navPoint>"""
+      s"""    <navPoint class="chapter" id="${x._1.id}" playOrder="${x._2}">""" + "\n" +
+      s"""      <navLabel><text>${x._1.name}</text></navLabel>""" + "\n" +
+      s"""      <content src="${x._1.id}.xhtml"/>""" + "\n" +
+      s"""    </navPoint>"""
     })
 
     val navmap =
-      "<navMap>" +
-        navmapItems.mkString("") +
-        "</navMap>"
+      "<navMap>\n" +
+      navmapItems.mkString("\n") + "\n" +
+      "  </navMap>"
 
 
 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -193,6 +189,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       book: BookItem,
       tags: Map[Int, ParsedTag],
       renderTags: RenderTags,
+      unstyledSections: Set[String],
+      imCompQuality: Option[Float],
       localExportPath: String): Unit = {
 
     val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags))
@@ -220,7 +218,9 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       // cover.toList ++ titlePage.toList ++ contentSections,
       titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
-      localExportPath)
+      localExportPath,
+      unstyledSections,
+      imCompQuality)
   }
 
 
@@ -232,7 +232,51 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       lastname: String,
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String],
-      imageDirname: String): Unit = {
+      imageDirname: String,
+      unstyledSections: Set[String],
+      imCompQuality: Option[Float]): Unit = {
+
+    // prep image filename and convert file
+
+    val coverImageFilenameConverted: Option[String] = coverImageFilename.map(origFilename => {
+      val imageType = getImageType(origFilename)
+      if (!imageType.equals("jpeg") && imCompQuality.isDefined) {
+
+        // if it isn't already jpeg and we are compressing images, we need to compress it.
+        // if we were also creating a downsized version or something, that would be done
+        // around here.
+
+        // TODO: add a compression tag / quality suffix
+        val jpgFilename = FilenameUtils.removeExtension(origFilename) + ".jpg"
+        val jpgFilenameFull = imageDirname / jpgFilename
+        val jpgFile = new File(jpgFilenameFull)
+
+        // if (jpgFile.exists()) {
+        //   println(f"'${jpgFilenameFull}' already exists.")
+        // } else {
+          // convert the file
+          println(f"creating '${jpgFilenameFull}")
+
+          val image = ImageIO.read(new File(imageDirname / origFilename))
+          val quality = imCompQuality.getOrElse(1.0f)
+          println("image compression quality: " + quality)
+
+          val jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next()
+          val jpgWriteParam = jpgWriter.getDefaultWriteParam
+          jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
+          jpgWriteParam.setCompressionQuality(quality)
+
+          jpgWriter.setOutput(new FileImageOutputStream(jpgFile))
+          val outputImage = new IIOImage(image, null, null)
+          jpgWriter.write(null, outputImage, jpgWriteParam)
+        // }
+
+        jpgFilename
+      } else {
+        origFilename
+      }
+
+    })
 
     // expects the first page to be the title page
     // and remaining pages prose
@@ -243,7 +287,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       firstname,
       lastname,
       sections,
-      coverImageFilename)
+      coverImageFilenameConverted)
 
     val tocNcx = formatTocNcx(
       uniqueIdentifier,
@@ -281,14 +325,20 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
 
     sections.zipWithIndex.foreach({case (section, idx) => {
       zout.putNextEntry(new ZipEntry("OEBPS/" + section.id + ".xhtml"))
+      val useBookStyle = idx > 0 && !unstyledSections.contains(section.name)
+      if (!useBookStyle) {
+        println("not using book style for section '" + section.name + "'")
+      }
       IOUtils.write(
-        page(section.name, section.content, idx > 0),
-        zout, "UTF-8")
+        page(section.name, section.content, useBookStyle),
+        zout,
+        "UTF-8")
       zout.closeEntry()
     }})
 
     // cover image
-    coverImageFilename.foreach(x => {
+    coverImageFilenameConverted.foreach(x => {
+      println("adding cover image '" + imageDirname / x + "'")
       zout.putNextEntry(new ZipEntry("OEBPS/" + x))
       FileUtils.copyFile(new File(imageDirname / x), zout)
       zout.closeEntry()
@@ -296,6 +346,16 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
 
     zout.close()
 
+  }
+
+
+  def getImageType(filename: String): String = {
+    // jpeg media type files commonly have .jpg extension
+    // all the other filetypes (png, bmp, etc.) have identical extension to media type
+    FilenameUtils.getExtension(filename) match {
+      case "jpg" => "jpeg"
+      case x: String => x
+    }
   }
 
 }

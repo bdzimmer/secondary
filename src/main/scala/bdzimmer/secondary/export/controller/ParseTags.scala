@@ -297,6 +297,16 @@ object ParseTags {
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
+      case SecTags.Config => {
+        Config(tag.value, args)
+      }
+
+      case SecTags.Conditional => {
+        Conditional(
+          tag.value,
+          args.get("mode").map(_.split(";\\s+").toSet).getOrElse(Set()))
+      }
+
       case SecTags.Index => {
         stringToItem.get(tag.value).map(item => {
           Index(item)

@@ -34,7 +34,8 @@ class RenderTags(
     val tagsMap: Map[Int, Map[Int, Tags.ParsedTag]],
     val characters: List[CharacterItem],
     disableTrees: Boolean,
-    ebookMode: Boolean) {
+    ebookMode: Boolean,
+    mode: String) {
 
   // transform markdown text with special tags to HTML
   def transform(text: String, tags: Map[Int, Tags.ParsedTag]): String = {
@@ -101,7 +102,7 @@ class RenderTags(
       } else {
         tree.root match {
           case character: CharacterItem => {
-            val safeRender = new RenderTags(tagsMap, characters, true, ebookMode)
+            val safeRender = new RenderTags(tagsMap, characters, true, ebookMode, mode)
             val result = FamilyTree.TreeStyles + FamilyTree.getJs(
                 character, characters, safeRender)
             result
@@ -305,6 +306,15 @@ s"""
         }).mkString("\n") +
         "> --" + RenderPages.textLinkPage(x.item, snip._2.id, x.item.name) + "\n"
       }).getOrElse(s"{{Quote error: snip '${x.id}' not found in item '${x.item.id}'}}")
+    }
+
+    // TODO: for now, Configs are never rendered.
+    case _: Tags.Config => ""
+
+    case x: Tags.Conditional => if (x.modes.contains(mode)) {
+      x.text
+    } else {
+      ""
     }
 
     case x: Tags.Index => Index.render(
