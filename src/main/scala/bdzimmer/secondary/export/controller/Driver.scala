@@ -28,7 +28,7 @@ import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 object Driver {
 
-  val Version = "2020.06.16"
+  val Version = "2020.11.18"
   val Title: String = "Secondary - create worlds from text - v" + Version
   val DefaultCommand: String = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
@@ -72,8 +72,8 @@ object Driver {
 class Driver {
 
   // project directory is current working directory
-  val projectDir = System.getProperty("user.dir")
-  val projConf = ProjectConfig(projectDir)
+  val projectDir: String = System.getProperty("user.dir")
+  val projConf: ProjectConfig = ProjectConfig(projectDir)
 
   var loadedWorld: Result[String, WorldItems.CollectionItem] = Fail("World not loaded!")
 
@@ -368,6 +368,14 @@ class Driver {
     case DriverCommands.Server => serverMode(Driver.ServerRefreshSeconds)
     case DriverCommands.Sprint => WordCount.interactive(() => findItem(args.mkString(" ")))
     case DriverCommands.Styles => ExportPipeline.addStyles(projConf)
+    case DriverCommands.WordCount => {
+      val item = findItem(args.mkString(" "))
+      val msg = item match {
+        case Some(x) => WordCount.calculate(x, recursive = true, sections = false)
+        case None => s"Item '$item' not found."
+      }
+      println(msg)
+    }
     case DriverCommands.Help   => Driver.showCommands()
     case _                     => println("Invalid command. Use 'help' for a list of commands.")
   }
@@ -468,6 +476,7 @@ object DriverCommands {
   val Server      = "server"
   val Sprint      = "sprint"
   val Styles      = "styles"
+  val WordCount   = "wc"
 
   val Interactive = "interactive"
   val Help        = "help"
@@ -482,12 +491,13 @@ object DriverCommands {
     (Editor,      "pixel editor (alpha)"),
     (Epub,        "export a book to EPUB"),
     (Explore,     "explore project content dir"),
-    (Export,      "export"),
+    (Export,      "export website"),
     (Latex,       "export a book to LaTeX"),
     (Orbits,      "orbits editor (alpha)"),
     (Screenshot,  "screenshot utility"),
     (Server,      "server mode"),
     (Sprint,      "interactive writing sprint tool"),
     (Styles,      "add stylesheets"),
+    (WordCount,   "count words recursively in an item"),
     (Help,        "show usage / commands"))
 }

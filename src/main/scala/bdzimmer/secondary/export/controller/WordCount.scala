@@ -48,22 +48,49 @@ object WordCount {
 
     @tailrec
     def loop(): Unit = {
-      val key = System.in.read()
-      if (key != 13) {
+      // val key = System.in.read()
+      // if (key != 13) {
         // ignore carriage returns
         val curCount = getItem().map(WordCount.calculate(_, true, false)).getOrElse(0)
         val totalTime = (System.currentTimeMillis - startTime) / 1000.0 / 3600.0
         val wordChange = curCount - startCount
-        val wordsPerHour = wordChange / totalTime
-        println(wordChange + " words - " + totalTime + " hr - " + wordsPerHour + " wph")
-      }
-      if (key != 113) {
-        loop()
-      }
+        val wph = wordChange / totalTime
+        val wphColor = if (wph >= 0.0 && wph < 200.0) {
+          Console.BLACK
+        } else if (wph >= 200.0 && wph < 400.0) {
+          Console.RED
+        } else if (wph >= 400.0 && wph < 600.0) {
+          Console.MAGENTA
+        } else if (wph >= 600.0 && wph < 800.0) {
+          Console.BLUE
+        } else if (wph >= 800.0 && wph < 1000.0) {
+          Console.CYAN
+        } else if (wph >= 1000.0) {
+          Console.GREEN
+        }
+        println(
+          wordChange + " words " +
+          "(" + curCount + " total) - " +
+          round(totalTime, 2) + " hr - " +
+          wphColor + round(wph, 2) + " wph" +
+          Console.RESET)
+
+      // if (key != 113) {
+      //   loop()
+      // }
+
+      Thread.sleep(20000) // 20 seconds
+      loop()
     }
 
     loop()
 
+  }
+
+
+  def round(x: Double, places: Int): Double = {
+    val s = math.pow(10, places)
+    math.round(x * s) / s
   }
 
 }
