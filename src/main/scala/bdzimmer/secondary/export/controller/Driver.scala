@@ -337,7 +337,7 @@ class Driver {
             orig <- bdzimmer.orbits.Locations.StatesMap.get(x.startLocation)
             dest <- bdzimmer.orbits.Locations.StatesMap.get(x.endLocation)
           } yield {
-            bdzimmer.orbits.FlightParams(
+            bdzimmer.orbits.SimpleFlightParams(
               ship=flightShip,
               origName=x.startLocation,
               destName=x.endLocation,

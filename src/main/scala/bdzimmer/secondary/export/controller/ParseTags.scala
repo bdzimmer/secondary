@@ -2,8 +2,7 @@
 
 package bdzimmer.secondary.export.controller
 
-import bdzimmer.orbits.{DateTime, Vec3, Editor, AnimationSettings}
-
+import bdzimmer.orbits.{AnimationSettings, DateTime, Editor, InteractiveView, Vec3}
 import bdzimmer.util.StringUtils.StringConvertSafe
 
 
@@ -173,9 +172,9 @@ object ParseTags {
       case SecTags.FlightAnimation => {
 
         val camPosDefault =  Vec3(
-          Editor.CameraSettingsDefault.xPos,
-          Editor.CameraSettingsDefault.yPos,
-          Editor.CameraSettingsDefault.zPos)
+          InteractiveView.CameraSettingsDefault.xPos,
+          InteractiveView.CameraSettingsDefault.yPos,
+          InteractiveView.CameraSettingsDefault.zPos)
         val intDefault = 1.0 / 24.0
         val widthDefault = 1280
         val heightDefault = 720
@@ -186,10 +185,10 @@ object ParseTags {
           val height = args.get("height").map(_.toIntSafe(heightDefault)).getOrElse(heightDefault)
           val camType = args.getOrElse("camtype", "follow")
           val camPos = args.get("campos").map(parseVec3(_, Vec3(0.0, 0.0, 0.0))).getOrElse(camPosDefault)
-          val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(Editor.CameraSettingsDefault.zViewPos)
+          val zViewPos = args.get("zviewpos").map(_.toDoubleSafe()).getOrElse(InteractiveView.CameraSettingsDefault.zViewPos)
           val fps = args.get("fps").map(_.toIntSafe()).getOrElse(30)
           val interval = args.get("interval").map(_.toDoubleSafe(intDefault)).getOrElse(intDefault)  // one hour
-          val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(Editor.Damping)
+          val damping = args.get("damping").map(_.toDoubleSafe()).getOrElse(InteractiveView.Damping)
           val status = args.get("status").map(_.toIntSafe(1)).getOrElse(1)
           val style = args.getOrElse("style", "default")
           val visible = args.get("visible").map(_.split(";\\s+").toList).getOrElse(List())
