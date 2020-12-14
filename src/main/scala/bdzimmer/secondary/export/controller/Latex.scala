@@ -18,6 +18,8 @@ object Latex {
 
   // Regex stuff for converting markdown to latex.
 
+  // TODO: move parsing stuff into a different object
+
   val MatcherDq: Regex = "\"([^\"]+)\"".r
 
   // Matching single pairs of single quotes is tricky due to apostrophes.
@@ -169,17 +171,18 @@ object Latex {
 
   def convert(markdown: String): String = {
 
+    // TODO: would be nice for this to have an HTML mode as well
+    // I only use a subset of markdown; this could work for web mode as well
+
     // strip Secondary tags
     // TODO: eventually there may be a couple of tags for typesetting
-    // that we will want to render
+    // we will need to render those here first
+
     val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
 
     // ~~~~ convert per-line symbols
 
-    // TODO: these should not be converted here
-    // since some of these lines may end up being part of code blocks.
-    // (see below)
-    val linesFixed = stripped.split("\n").map(convertLine)
+    val linesFixed = stripped.split("\n")
 
     // ~~~~ convert code blocks
 
@@ -244,6 +247,7 @@ object Latex {
         } else {
           codeBlockContents = codeBlockContents + line.substring(4) + "\n"
         }
+
       } else if (state == STATE_LIST) {
         val matches = MatcherUL.findFirstMatchIn(line)
         matches.foreach(m => {
@@ -256,8 +260,7 @@ object Latex {
           }
           listIndentLevel = newListIndentLevel
 
-          // TODO: convertLine here
-          val listItem = m.group(3)
+          val listItem = convertLine(m.group(3))
 
           listContents = listContents + padding + "  \\item  " + listItem + "\n"
         })
@@ -267,9 +270,8 @@ object Latex {
         }
 
       } else {
+        result = result + convertLine(line) + "\n"
 
-        // TODO: convertLine here
-        result = result + line + "\n"
       }
 
     })
@@ -307,6 +309,8 @@ object Latex {
   //    * %
 
   def convertLine(line: String): String = {
+
+    // TODO: all of these Latex constants should be defined in an object.
 
     var res = line
 
