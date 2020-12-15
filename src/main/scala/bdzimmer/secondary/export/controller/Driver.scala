@@ -191,7 +191,7 @@ class Driver {
               println("Book configuration:")
               println("-------------------")
               println(config)
-              Latex.export(filename, book, tags, config, projConf.localExportPath)
+              Latex.export(filename, book, tags, config)
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }
