@@ -16,6 +16,10 @@ object Book {
   )
 
   case class BookConfig(
+    fontSize: String,
+    fontFace: String,
+    fixedFontScale: String,
+    fixedFontFace: String,
     unstyledSections: Set[String],
     paperWidth: String,
     paperHeight: String,
@@ -25,6 +29,10 @@ object Book {
     marginBottom: String
   ) {
     override def toString: String = {
+      "fontSize:         " + fontSize + "\n" +
+      "fontFace:         " + fontFace + "\n" +
+      "fixedFontScale:   " + fixedFontScale + "\n" +
+      "fixedFontFace:    " + fixedFontFace + "\n" +
       "unstyledSections: " + unstyledSections + "\n" +
       "paperWidth:       " + paperWidth + "\n" +
       "paperHeight:      " + paperHeight + "\n" +
@@ -38,6 +46,10 @@ object Book {
   // ~~~~ ~~~~ ~~~~ ~~~~
 
   val BookConfigDefault: BookConfig = BookConfig(
+    fontSize = "12pt",
+    fontFace = "ebgaramond",
+    fixedFontScale = "0.75",
+    fixedFontFace = "DejaVuSansMono",
     unstyledSections = Set(),
     paperWidth = "5.25in",
     paperHeight = "8in",
@@ -123,6 +135,10 @@ object Book {
     val unstyledSections = args.get("unstyledsections").map(_.split(";\\s+").toSet)
 
     BookConfig(
+      fontSize     = args.getOrElse("fontsize",     BookConfigDefault.fontSize),
+      fontFace     = args.getOrElse("fontface",     BookConfigDefault.fontFace),
+      fixedFontScale = args.getOrElse("fixedfontscale", BookConfigDefault.fixedFontScale),
+      fixedFontFace  = args.getOrElse("fixedfontface",  BookConfigDefault.fixedFontFace),
       unstyledSections = unstyledSections.getOrElse(BookConfigDefault.unstyledSections),
       paperWidth   = args.getOrElse("paperwidth",   BookConfigDefault.paperWidth),
       paperHeight  = args.getOrElse("paperheight",  BookConfigDefault.paperHeight),

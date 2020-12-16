@@ -26,7 +26,7 @@ object Latex {
     // Note that function is currently pretty similar to the version in Epub.
     // Most tags do HTML specific stuff, so we won't render them
 
-    val (sections, coverImageTag) = Book.sections(book.notes, tags, None)
+    val (sections, _) = Book.sections(book.notes, tags, None)
     // title is name of first section
     val title = sections.headOption.map(_.name).getOrElse("empty")
     val titlePage = sections.headOption.map(_.copy(name="Title Page"))
@@ -44,7 +44,6 @@ object Latex {
 
     Latex.export(
       filename,
-      book.uniqueIdentifier,
       title,
       firstname,
       lastname,
@@ -55,7 +54,6 @@ object Latex {
 
   def export(
       outputFilename: String,
-      uniqueIdentifier: String,
       title: String,
       firstname: String,
       lastname: String,
@@ -113,6 +111,8 @@ object Latex {
     inputStream.close()
 
     template.format(
+      config.fontSize, config.fontFace,
+      config.fixedFontScale, config.fixedFontFace,
       config.paperWidth, config.paperHeight,
       config.marginInner, config.marginOuter, config.marginTop, config.marginBottom,
       title, firstname, lastname, titlepage, chapters)
