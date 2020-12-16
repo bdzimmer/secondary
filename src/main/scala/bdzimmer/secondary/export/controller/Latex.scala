@@ -299,6 +299,7 @@ object Latex {
     res = MarkdownParse.MatcherPercent.replaceAllIn(res, _ => PercentSign)
     res = MarkdownParse.MatcherEllipsis.replaceAllIn(res, _ => Ellipsis)
     res = MarkdownParse.MatcherNbsp.replaceAllIn(res, _ => BlankLine)
+    res = MarkdownParse.MatcherHr.replaceAllIn(res, _ => Rule)
 
     res
 
@@ -326,6 +327,7 @@ object Latex {
   val PercentSign = raw"\\%"
   val Ellipsis = raw" \\ldots\\ "
   val BlankLine = raw"\\vskip\\baselineskip"
+  val Rule = raw"\\hfil\\rule{0.25\\textwidth}{0.4pt}\\hfil"
 
 }
 
@@ -355,11 +357,11 @@ object MarkdownParse {
   val MatcherCopyright: Regex = "&copy;".r
   val MatcherPercent: Regex = "%".r
   val MatcherEllipsis: Regex = "\\.\\.\\.".r
+  val MatcherNbsp: Regex = "^&nbsp;$".r
+  val MatcherHr: Regex = "^---$".r
 
   val MatcherDqSingle: Regex = "\"".r
 
   val MatcherUL: Regex = "^(( {4})*)\\* (.*)".r
-
-  val MatcherNbsp: Regex = "^&nbsp;$".r
 
 }
