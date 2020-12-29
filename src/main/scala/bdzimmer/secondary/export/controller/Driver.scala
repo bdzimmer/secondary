@@ -28,7 +28,7 @@ import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 object Driver {
 
-  val Version = "2020.11.18"
+  val Version = "2020.12.29"
   val Title: String = "Secondary - create worlds from text - v" + Version
   val DefaultCommand: String = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
