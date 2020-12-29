@@ -296,6 +296,16 @@ object ParseTags {
         }).getOrElse(ParseError(tag, s"item '${tag.value}' does not exist"))
       }
 
+      case SecTags.Table => {
+        Table(
+          tag.value,
+          args.get("rownames").forall(_.toBooleanSafe),  // default true
+          args.get("colnames").forall(_.toBooleanSafe),  // default true
+          args.get("style"),
+          args.get("tdstyle"),
+          args.get("theadstyle"))
+      }
+
       case SecTags.Config => {
         Config(tag.value, args)
       }

@@ -19,7 +19,7 @@ object Html {
     """<ul>""" + "\n" + items.mkString("\n") +  """</ul>"""
   }
 
-  
+
   def listItem(item: String, className: String = ""): String = {
     val classAttr = if (className.equals("")) {
       className
@@ -80,7 +80,9 @@ object Html {
       body: Seq[Seq[String]],
       tdStyle: Option[Seq[String]],
       id: Option[String],
-      cssClass: Option[String] = None): String = {
+      cssClass: Option[String],
+      tableStyle: Option[String],
+      theadStyle: Option[String]): String = {
 
     def styleAttribute(style: String): String = {
       s""" style="${style}""""
@@ -89,6 +91,8 @@ object Html {
     val tableRowTags = s"<tr>\n%s</tr>\n"
     val idString = id.map(x => s""" id="${x}"""").getOrElse("")
     val cssClassString = cssClass.map(x => s""" class="${x}"""").getOrElse("")
+    val tableStyleString = tableStyle.map(styleAttribute).getOrElse("")
+    val theadStyleString = theadStyle.map(styleAttribute).getOrElse("")
 
     val headStyled = tdStyle match {
       case Some(x) => head.map(row => row.zip(x.map(styleAttribute)))
@@ -112,8 +116,8 @@ object Html {
       }}).mkString)
     })
 
-    s"<table%s%s>\n".format(idString, cssClassString) +
-    tableHead.map(x => "<thead>\n" + x + "</thead>\n").getOrElse("") +
+    s"<table${idString}${cssClassString}${tableStyleString}>\n" +
+    tableHead.map(x => s"<thead${theadStyleString}>\n" + x + "</thead>\n").getOrElse("") +
     "<tbody>\n" + tableBody + "</tbody>\n" +
     "</table>\n"
   }

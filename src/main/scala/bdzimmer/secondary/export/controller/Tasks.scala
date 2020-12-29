@@ -157,7 +157,7 @@ object Tasks {
         "vertical-align: top; white-space: nowrap",
         "vertical-align: top; white-space: nowrap")
 
-    Html.table(Some(head), body, Some(styles), Some("tasks"), Some("dataTable display")) +
+    Html.table(Some(head), body, Some(styles), Some("tasks"), Some("dataTable display"), None, None) +
     TasksStyles +
     """<script>$(document).ready(function() {$('#tasks').dataTable({"pageLength": 30, "stateSave": true});});</script>"""
   }

@@ -143,7 +143,7 @@ object Latex {
 
     val linesFixed = stripped.split("\n")
 
-    // ~~~~ convert code blocks
+    // ~~~~ convert code blocks and lists
 
     var result = ""
 
