@@ -286,7 +286,8 @@ object Tags {
     colnames: Boolean,
     style: Option[String],
     tdStyle: Option[String],
-    theadStyle: Option[String]
+    theadStyle: Option[String],
+    colwidths: Option[List[String]]
   ) extends ParsedTag
 
   case class Quote(

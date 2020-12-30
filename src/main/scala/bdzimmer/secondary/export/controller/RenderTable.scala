@@ -18,7 +18,8 @@ object RenderTable {
       colnames: Boolean,
       style: Option[String],
       tdStyle: Option[String],
-      theadStyle: Option[String]): String = {
+      theadStyle: Option[String],
+      colwidths: Option[List[String]]): String = {
 
     val (head, tail, exampleRow) = if (colnames) {
       table match {
@@ -44,7 +45,14 @@ object RenderTable {
     val tdStyleRow: Option[List[String]] = exampleRow.flatMap(x => {
       tdStyle.map(y => List.fill(x.length)(y))})
 
-    Html.table(head, body, tdStyleRow, None, None, style, theadStyle)
+    val tdStyleRowWidths: Option[List[String]] = tdStyleRow.map(x => {
+      colwidths match {
+        case Some(y) => x.zip(y).map(z => z._1 + " width: " + z._2 + ";")
+        case None => x
+      }
+    })
+
+    Html.table(head, body, tdStyleRowWidths, None, None, style, theadStyle)
   }
 
 

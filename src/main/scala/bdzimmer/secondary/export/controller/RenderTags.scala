@@ -314,7 +314,7 @@ s"""
       // println(x.text)
       // println(items)
       // println(table)
-      RenderTable.render(table, x.rownames, x.colnames, x.style, x.tdStyle, x.theadStyle)
+      RenderTable.render(table, x.rownames, x.colnames, x.style, x.tdStyle, x.theadStyle, x.colwidths)
     }
 
     // TODO: for now, Configs are never rendered.

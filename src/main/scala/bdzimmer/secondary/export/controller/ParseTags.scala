@@ -303,7 +303,8 @@ object ParseTags {
           args.get("colnames").forall(_.toBooleanSafe),  // default true
           args.get("style"),
           args.get("tdstyle"),
-          args.get("theadstyle"))
+          args.get("theadstyle"),
+          args.get("colwidths").map(_.split(",").toList))
       }
 
       case SecTags.Config => {

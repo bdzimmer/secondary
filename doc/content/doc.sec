@@ -313,7 +313,7 @@ Display a Markdown unordered list as a table.
 
 **Usage**
 
-`{{demo: table | content | rownames=true | colnames=true | style=None | tdstyle=None}}`
+`{{demo: table | content | rownames=true | colnames=true | style=None | tdstyle=None | colwidths=None}}`
 
 * **content** - unordered list in Markdown
 * **rownames** - if true, display the outer level of list elements in bold
@@ -321,6 +321,7 @@ Display a Markdown unordered list as a table.
 * **style** - table-wide style
 * **tdstyle** - style for table cells
 * **theadstyle** - style for table head (first row)
+* **colwidths** - comma-separated list of column widths
 
 Treats a Markdown unordered list as a 2D data structure (where the outer level delineates rows) and renders it as an HTML table. Intended to be used with multiline tag syntax. Currently only `*` is recognized as the start of a list item.
 
