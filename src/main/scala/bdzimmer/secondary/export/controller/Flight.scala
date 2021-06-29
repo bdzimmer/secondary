@@ -70,7 +70,7 @@ object Flight {
       orig <- bdzimmer.orbits.Locations.StatesMap.get(fp.startLocation)
       dest <- bdzimmer.orbits.Locations.StatesMap.get(fp.endLocation)
     } yield {
-      bdzimmer.orbits.FlightParams(
+      bdzimmer.orbits.SimpleFlightParams(
         ship=ship,
         origName=fp.startLocation,
         destName=fp.endLocation,

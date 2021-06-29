@@ -308,6 +308,15 @@ s"""
       }).getOrElse(s"{{Quote error: snip '${x.id}' not found in item '${x.item.id}'}}")
     }
 
+    case x: Tags.Table => {
+      val items = RenderTable.parseItems(x.text)
+      val table = RenderTable.itemsToTable(items)
+      // println(x.text)
+      // println(items)
+      // println(table)
+      RenderTable.render(table, x.rownames, x.colnames, x.style, x.tdStyle, x.theadStyle, x.colwidths)
+    }
+
     // TODO: for now, Configs are never rendered.
     case _: Tags.Config => ""
 

@@ -17,6 +17,7 @@ object SecTags {
   val Link = "link"
   val Sidenote = "sidenote"
   val Snip = "snip"
+  val Table = "table"
   val Quote = "quote"
 
   // Image Tags
@@ -279,20 +280,31 @@ object Tags {
     paragraphs: Int
   ) extends ParsedTag
 
+  case class Table(
+    text: String,
+    rownames: Boolean,
+    colnames: Boolean,
+    style: Option[String],
+    tdStyle: Option[String],
+    theadStyle: Option[String],
+    colwidths: Option[List[String]]
+  ) extends ParsedTag
+
   case class Quote(
     item: WorldItem,
     id: String
   ) extends ParsedTag
 
   case class Config(
-      desc: String,
-      args: Map[String, String]
+    desc: String,
+    args: Map[String, String]
   ) extends ParsedTag
 
   case class Conditional(
-      text: String,
-      modes: Set[String]
+    text: String,
+    modes: Set[String]
   ) extends ParsedTag
+
 
   // error tags
 

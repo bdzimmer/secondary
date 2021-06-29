@@ -40,8 +40,13 @@ class LatexSuite extends FunSuite {
       ("test\n\n    a\n\n\n    b\n\ntest", "test\n\n\\begin{lstlisting}\na\n\n\nb\n\\end{lstlisting}\n\ntest\n"),
 
       // multiple code blocks
-      ("test\n\n    a\n---\n\n    b\n\ntest",
-       "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\n---\n\n\\begin{lstlisting}\nb\n\\end{lstlisting}\n\ntest\n"),
+      ("test\n\n    a\ntest\n\n    b\n\ntest",
+       "test\n\n\\begin{lstlisting}\na\n\\end{lstlisting}\n\ntest\n\n\\begin{lstlisting}\nb\n\\end{lstlisting}\n\ntest\n"),
+
+      // code block containing asterisks
+      ("test\n\n    *test*\n\ntest",
+       "test\n\n\\begin{lstlisting}\n*test*\n\\end{lstlisting}\n\ntest\n"),
+
 
       // unordered lists!
 

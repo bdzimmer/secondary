@@ -307,6 +307,26 @@ Snipped text starts after the end of the tag, so to ignore the one or more sente
 
 See {{*Little Red Riding Hood*}}.
 
+#### table
+
+Display a Markdown unordered list as a table.
+
+**Usage**
+
+`{{demo: table | content | rownames=true | colnames=true | style=None | tdstyle=None | colwidths=None}}`
+
+* **content** - unordered list in Markdown
+* **rownames** - if true, display the outer level of list elements in bold
+* **colnames** - if true, display the first section of inner list in bold
+* **style** - table-wide style
+* **tdstyle** - style for table cells
+* **theadstyle** - style for table head (first row)
+* **colwidths** - comma-separated list of column widths
+
+Treats a Markdown unordered list as a 2D data structure (where the outer level delineates rows) and renders it as an HTML table. Intended to be used with multiline tag syntax. Currently only `*` is recognized as the start of a list item.
+
+{{todo: table tag examples}}
+
 #### quote
 
 Quote snipped text.
@@ -983,6 +1003,10 @@ Export a book to LaTeX with the command `secondary latex <item> [mode]`. The fil
 
 A template file in Secondary's `resources` named `template.tex` is used. Other options may be specified via a `config` tag (the first `config` tag whose description begins with `Book` will be used):
 
+* `fontsize` - font size (include units)
+* `fontface` - font face
+* `fixedfontscale` - scale factor for fixed-width font
+* `fixedfontface` - font face for fixed-width font
 * `unstyledsections` - semicolon-separated list of section names (currently not implemented LaTeX)
 * `paperwidth`, `paperheight` - paper dimensions (include units)
 * `margininner`, `marginouter`, `margintop`, `marginbottom` - margin sizes (include units)
@@ -993,7 +1017,7 @@ LaTeX export uses a custom Markdown-to-LaTeX converter that only supports a smal
 
 * Bold, italic, and bold-and-italic text (other nesting not supported) are converted to a proper combination of `textbf` and `textif`.
 * Headings are converted to `huge`, `noindent`, `textbf` text to match the style of chapter headers.
-* Code blocks (being with 4 spaces) are converted to `lstlisting` blocks.
+* Code blocks (lines beginning with 4 spaces) are converted to `lstlisting` blocks, which use a fixed-width font.
 * Unordered lists are converted into `itemize` blocks.
 
 Other conversions are performed:
