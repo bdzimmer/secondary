@@ -219,7 +219,7 @@ object ImageDownloader {
 
 
   // read an image, downsize, save
-  def downsizeImage(inputImage: String, outputImage: String, ext: String, maxWidth: Int = MaxWidth): Unit = {
+  def copyAndDownsizeImage(inputImage: String, outputImage: String, ext: String, maxWidth: Int = MaxWidth): Unit = {
     Try {
       val inputImageFile = new File(inputImage)
       val img = ImageIO.read(inputImageFile)
