@@ -1,4 +1,4 @@
-# Secondary [![Build Status](https://travis-ci.org/bdzimmer/secondary.svg)](https://travis-ci.org/bdzimmer/secondary) [![Codacy Badge](https://api.codacy.com/project/badge/grade/d862db25644045359ba166636cbb2392)](https://www.codacy.com/app/bdzimmer/secondary)
+# Secondary [![Build Status](https://travis-ci.org/bdzimmer/secondary.svg)](https://travis-ci.org/bdzimmer/secondary)
 
 Secondary is a tool for creating fictional worlds. Describe a world consisting of complex hierarchies of characters, locations, events, and other concepts using Markdown in text files which are straightforward to read and edit. Use special tags to track relationships between concepts and mark tasks and thoughts. Compile your world into a static web site, browse and review tasks, then edit and compile again.
 
