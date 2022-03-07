@@ -52,7 +52,7 @@ class ImageDownloaderSuite extends FunSuite with TempDirectory {
     val downsizedFilename = tempDirname / "downsized.jpg"
     val downsizedFile = new File(downsizedFilename)
 
-    resultFilename.foreach(x => ImageDownloader.downsizeImage(
+    resultFilename.foreach(x => ImageDownloader.copyAndDownsizeImage(
         outputFilename, downsizedFilename, "jpg", 800))
     assert(downsizedFile.exists())
 

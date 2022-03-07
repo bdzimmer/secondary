@@ -106,7 +106,7 @@ object WorldLoaderFlat {
         if (state != inHeader && line.startsWith("!")) {
 
           if (item != null) {
-            if (notes.size > 0) {
+            if (item.notes.isEmpty && notes.nonEmpty) {
               item.notes = notes.mkString("\n")
             }
             if (item.id.equals("") && !item.name.equals("")) {
@@ -137,7 +137,7 @@ object WorldLoaderFlat {
       }
 
       if (item != null) {
-        if (notes.size > 0) {
+        if (item.notes.isEmpty && notes.nonEmpty) {
           item.notes = notes.mkString("\n")
         }
         if (item.id.equals("") && !item.name.equals("")) {
@@ -181,7 +181,7 @@ object WorldLoaderFlat {
   }
 
 
-  def setProperty(item: WorldItemBean,  property: String): Option[String] = {
+  def setProperty(item: WorldItemBean, property: String): Option[String] = {
 
     val splitted = property.split(":\\s+")
     if (splitted.length >= 2) {

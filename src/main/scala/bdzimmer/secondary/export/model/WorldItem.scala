@@ -57,7 +57,9 @@ object WorldItemBeans {
 
     var notes: String = ""
     def getNotes(): String = notes
-    def setNotes(notes: String): Unit = {this.notes = NonNullString(notes)}
+    def setNotes(notes: String): Unit = {
+      this.notes = NonNullString(notes)
+    }
 
     // used by new parser
     var path: String = ""

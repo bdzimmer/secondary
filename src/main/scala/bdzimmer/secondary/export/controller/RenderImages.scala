@@ -46,11 +46,15 @@ class RenderImages(
     val tileImageOutputs = (items.collect({case x: TileRefItem => x})
         map(x => (x.filename, RenderImages.exportImage(x, contentDir, location))))
 
-    // In the case of ImageItems, the filename is already an image. It either exists
-    // in the contentDir (no prefix) or is to be downloaded (currently "wikimedia:"
-    // prefix.
-    val imageFileOutputs = (items.collect({case x: ImageFileItem => x})
+    // In the case of ImageItems, the filename is already an image. It either
+    // - exists in the contentDir (no prefix)
+    // - exists somewhere else on the computer ("file:" prefix)
+    // - to be downloaded ("wikimedia: prefix)
+
+    val imageFileOutputsRaw = (items.collect({case x: ImageFileItem => x})
         map(x => prepareImageFileItemOutputs(x, contentDir)))
+
+    val imageFileOutputs = imageFileOutputsRaw.map(x => (x._1, x._3))
 
     // TripItems generate images of interplanetary flights from tags in their notes.
     val tripOutputs = (items.collect({case x: TripItem => x})
@@ -65,13 +69,23 @@ class RenderImages(
         .map(x => List(x).toMap)
         .foldLeft(RenderImages.emptyFileOutputsMap)(RenderImages.mergeFileOutputsMaps(_, _))
 
+    // show missing files - this would probably move to a higher level once refactored
+    val missingFiles = imageFileOutputsRaw.filter({case (_, ex, _) => !ex}).map(x => x._1)
+    if (missingFiles.nonEmpty) {
+      println("missing files:")
+      missingFiles.foreach(x => println("\tfile not found: " + x))
+    }
+
     allImageOutputs
 
   }
 
 
   // download or copy image files to the output location
-  def prepareImageFileItemOutputs(imageFileItem: ImageFileItem, contentDir: String): (String, List[String]) = {
+  def prepareImageFileItemOutputs(imageFileItem: ImageFileItem, contentDir: String): (String, Boolean, List[String]) = {
+
+    val prefixFile = "file:"
+    val prefixWikimedia = "wikimedia:"
 
     // where does the image ultimately have to end up?
     val ext = FilenameUtils.getExtension(imageFileItem.filename)
@@ -86,17 +100,22 @@ class RenderImages(
     // resultToCopyAbs is absolute and will be None if the file already exists in the output
     // location or something goes wrong in the downloading
 
-    val (resultSrc, resultToCopyAbs) = if (!imageFileItem.filename.startsWith("wikimedia:")) {
+    val (resultSrc, resultEx, resultToCopyAbs) = if (!imageFileItem.filename.startsWith(prefixWikimedia)) {
 
       // local file - copy to output web image directory
 
-      val srcAbsFilename = contentDir / imageFileItem.filename
+      val srcAbsFilename = if (imageFileItem.filename.startsWith(prefixFile)) {
+        imageFileItem.filename.stripPrefix(prefixFile)
+      } else {
+        contentDir / imageFileItem.filename
+      }
+
       val srcFile = new File(srcAbsFilename)
 
       if (!dstFile.exists && srcFile.exists) {
-        (srcFilename, Some(srcAbsFilename))
+        (srcFilename, srcFile.exists, Some(srcAbsFilename))
       } else {
-        (srcFilename, None)
+        (srcFilename, srcFile.exists, None)
       }
 
     } else {
@@ -118,20 +137,20 @@ class RenderImages(
       }
 
       if (!dstFile.exists && cachedFile.exists) {
-        (srcFilename, Some(cachedFilename))
+        (srcFilename, cachedFile.exists, Some(cachedFilename))
       } else {
-        (srcFilename, None)
+        (srcFilename, cachedFile.exists, None)
       }
 
     }
 
     val resultDst = resultToCopyAbs.map(x => {
       // copy and downsize image if necessary
-      ImageDownloader.downsizeImage(x, dstAbsoluteName, ext)
+      ImageDownloader.copyAndDownsizeImage(x, dstAbsoluteName, ext)
       dstRelativeName
     })
 
-    (resultSrc, resultDst.toList)
+    (resultSrc, resultEx, resultDst.toList)
   }
 
 
