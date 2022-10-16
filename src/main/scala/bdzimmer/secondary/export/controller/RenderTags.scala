@@ -259,9 +259,9 @@ s"""
       }
 
       if (x.sections) {
-        val (titles, _, chunkRanges) = Book.splitSections(x.item.notes)
+        val (titles, chunks) = Book.splitSections(x.item.notes)
         Html.listGroup(
-          titles.zip(chunkRanges).map({case (title, (start, end)) => {
+          titles.zip(chunks).map({case (title, (start, end, _)) => {
             (
               title,
               sidenotes

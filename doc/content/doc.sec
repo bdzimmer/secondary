@@ -922,7 +922,7 @@ General-purpose config, currently used for EPUB and LaTeX export. See {{Publishi
 
 **Usage**
 
-`{{demo: config | name | key1=val1 | key2=val2 | ...}}`
+`{{demo: config | desc | key1=val1 | key2=val2 | ...}}`
 
 * **name**: name of configuration
 * **key1, key2, ...**: arbitrary arguments

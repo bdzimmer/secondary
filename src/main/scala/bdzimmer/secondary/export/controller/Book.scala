@@ -12,6 +12,7 @@ object Book {
   case class SectionInfo(
     id: String,
     name: String,
+    author: Option[String],
     content: String
   )
 
@@ -70,17 +71,30 @@ object Book {
       tags: Map[Int, Tags.ParsedTag],
       rtOption: Option[RenderTags]): (List[SectionInfo], Option[Tags.Image]) = {
 
-    val (titles, chunks, chunkRanges) = splitSections(book)
+    val (titles, chunks) = splitSections(book)
 
-    val contents = chunks.map({case (startIdx, chunk) => {
-      rtOption.map(rt => {
+    val contents = chunks.map({case (startIdx, endIdx, chunk) => {
+
+      val chunk_t = rtOption.map(rt => {
         val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
         rt.transform(chunk, tagsMod)
       }).getOrElse(chunk)
+
+      // get author from a the first "Chapter" config in this section
+      val author: Option[String] = tags
+          .filter(x => x._1 >= startIdx && x._1 < endIdx)
+          .values
+          .collect({case x: Tags.Config => x}).toList
+          .find(_.desc.startsWith("Chapter"))
+          .flatMap(_.args.get("author"))
+
+      (chunk_t, author)
     }})
 
-    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
-      SectionInfo("section" + secNumber.toString, secTitle, secContent)
+    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), (secContent, secAuthor)) => {
+      val secAuthorStr = secAuthor.getOrElse("(None)")
+      println(s"${secTitle} - ${secAuthorStr}")
+      SectionInfo("section" + secNumber.toString, secTitle, secAuthor, secContent)
     }})
 
     // find all image tags
@@ -88,7 +102,7 @@ object Book {
 
     // first image tag in first section is cover image
     val image = for {
-      coverPageRange <- chunkRanges.headOption
+      coverPageRange <- chunks.headOption.map(x => (x._1, x._2))
       coverImageTag <- imageTags.find(x => x._1 >= coverPageRange._1 && x._1 < coverPageRange._2)
     } yield {
       coverImageTag._2
@@ -104,9 +118,8 @@ object Book {
   // Split the notes of a book into sections.
   // Returns:
   // - list of section titles
-  // - list of tuples of start position and section contents
-  // - list of tuples of section start and end position
-  def splitSections(book: String): (List[String], List[(Int, String)], List[(Int, Int)]) = {
+  // - list of tuples of start position, end position, and section contents
+  def splitSections(book: String): (List[String], List[(Int, Int, String)]) = {
 
     val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
 
@@ -115,10 +128,10 @@ object Book {
     // use _._2 if we want to exclude the chapter headings from the contents
     val allPositions = matches.map(_._1) ++ List(book.length)
     val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
-    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
+    val chunks = chunkRanges.map(x => (x._1, x._2, book.substring(x._1, x._2)))
     val titles = matches.map(_._3)
 
-    (titles, chunks, chunkRanges)
+    (titles, chunks)
   }
 
   // Get configuration from a book (the first config tag whose description begins with "Book")

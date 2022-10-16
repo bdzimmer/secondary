@@ -100,7 +100,13 @@ object Latex {
       } else {
         converted
       }
-      s"\\chapter{${section.name}}\n$convertedStyled"
+
+      val titleHeader = section.author.map(
+        x => s"\\title{${section.name}}\n\\author{$x}\n").getOrElse(
+        s"\\title{$title}\n\\author{$firstname $lastname}\n"
+      )
+
+      s"\\chapter{${section.name}}\n$titleHeader$convertedStyled"
     }).mkString("\n")
 
     // val templateUrl = getClass.getResource("/latex/template.tex")
