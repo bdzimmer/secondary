@@ -12,8 +12,6 @@ class LatexSuite extends FunSuite {
 
   test("code blocks and lists") {
 
-    val pp = Markdown.getPegDown(false)
-
     val examples = List(
 
       // code blocks examples
@@ -70,7 +68,7 @@ class LatexSuite extends FunSuite {
 
     examples.foreach({case (input, expected) => {
       val result = Latex.convert(input)
-      val resultHTML = pp.markdownToHtml(input)
+      val resultHTML = Markdown.process(input, ebookMode = false)
       println(input)
       println("~~~~")
       println(result)

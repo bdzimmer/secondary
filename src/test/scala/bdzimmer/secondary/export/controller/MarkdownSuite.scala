@@ -14,9 +14,9 @@ class MarkdownSuite extends FunSuite {
 
   test("quotes") {
 
-    val pp = Markdown.getPegDown(false)
-
     val examples = List(
+
+      // ~~~~ ~~~~ all of this works
 
       // gut check basic markdown functionality
       ("test", "<p>test</p>"),
@@ -35,26 +35,28 @@ class MarkdownSuite extends FunSuite {
       // the &quot in the first paragraph should be an &ldquo
       (
         "\"test\n\n\"test\"",
-        // "<p>&ldquo;test</p>\n<p>&ldquo;test&rdquo;</p>"
-        "<p>&quot;test</p>\n<p>&ldquo;test&rdquo;</p>"
+        // "<p>&quot;test</p>\n<p>&ldquo;test&rdquo;</p>"  // original incorrect
+        "<p>&ldquo;test</p>\n<p>&ldquo;test&rdquo;</p>"
       ),
 
       // open and closed quote, then open quote
       (
         "\"baloney,\" he said. \"test\n\n\"test\"",
-        "<p>&ldquo;baloney,&rdquo; he said. &quot;test</p>\n<p>&ldquo;test&rdquo;</p>"
+        // "<p>&ldquo;baloney,&rdquo; he said. &quot;test</p>\n<p>&ldquo;test&rdquo;</p>"  // original incorrect
+        "<p>&ldquo;baloney,&rdquo; he said. &ldquo;test</p>\n<p>&ldquo;test&rdquo;</p>"
       ),
 
       // multiple open quotes
       (
         "\"test\n\n\"test\n\n\"test\"",
-        "<p>&quot;test</p>\n<p>&quot;test</p>\n<p>&ldquo;test&rdquo;</p>"
+        // "<p>&quot;test</p>\n<p>&quot;test</p>\n<p>&ldquo;test&rdquo;</p>"  // original incorrect
+        "<p>&ldquo;test</p>\n<p>&ldquo;test</p>\n<p>&ldquo;test&rdquo;</p>"
       )
 
     )
 
     examples.foreach({ case (input, expected) => {
-      val resultHTML = pp.markdownToHtml(input)
+      val resultHTML = Markdown.process(input, ebookMode = false)
 
       println(input)
       println("~~~~")

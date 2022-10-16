@@ -56,8 +56,9 @@ class RenderTags(
       })
     })
 
-    val pp = Markdown.getPegDown(ebookMode)
-    pp.markdownToHtml(updatedText)
+    // val pp = Markdown.getPegDown(ebookMode)
+    // pp.markdownToHtml(updatedText)
+    Markdown.process(updatedText, ebookMode = ebookMode)
   }
 
   // transform prose for the Markov text generator
