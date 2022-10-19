@@ -106,7 +106,17 @@ object Latex {
         s"\\title{$title}\n\\author{$firstname $lastname}\n"
       )
 
-      s"\\chapter{${section.name}}\n$titleHeader$convertedStyled"
+      val tocData = section.author.map(
+        x => s"\\tocdata{toc}{$x}\n"
+      ).getOrElse("")
+
+      (
+        tocData +
+        s"\\chapter*{${section.name}}\n" +
+        s"\\addcontentsline{toc}{chapter}{${section.name}}\n" +
+        titleHeader +
+        convertedStyled
+      )
     }).mkString("\n")
 
     // val templateUrl = getClass.getResource("/latex/template.tex")
