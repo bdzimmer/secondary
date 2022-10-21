@@ -6,6 +6,8 @@ package bdzimmer.secondary.export.controller
 
 import bdzimmer.secondary.export.model.Tags
 
+import bdzimmer.util.StringUtils._
+
 
 object Book {
 
@@ -27,7 +29,8 @@ object Book {
     marginInner: String,
     marginOuter: String,
     marginTop: String,
-    marginBottom: String
+    marginBottom: String,
+    toc: Boolean
   ) {
     override def toString: String = {
       "fontSize:         " + fontSize + "\n" +
@@ -40,7 +43,8 @@ object Book {
       "marginInner:      " + marginInner + "\n" +
       "marginOuter:      " + marginOuter + "\n" +
       "marginTop:        " + marginTop + "\n" +
-      "marginBottom:     " + marginBottom + "\n"
+      "marginBottom:     " + marginBottom + "\n" +
+      "toc:              " + toc + "\n"
     }
   }
 
@@ -57,7 +61,8 @@ object Book {
     marginInner = "0.75in",
     marginOuter = "0.5in",
     marginTop = "0.5in",
-    marginBottom = "0.5in"
+    marginBottom = "0.5in",
+    toc = false
   )
 
   // ~~~~ ~~~~ ~~~~ ~~~~
@@ -158,7 +163,8 @@ object Book {
       marginInner  = args.getOrElse("margininner",  BookConfigDefault.marginInner),
       marginOuter  = args.getOrElse("marginouter",  BookConfigDefault.marginOuter),
       marginTop    = args.getOrElse("margintop",    BookConfigDefault.marginTop),
-      marginBottom = args.getOrElse("marginbottom", BookConfigDefault.marginBottom)
+      marginBottom = args.getOrElse("marginbottom", BookConfigDefault.marginBottom),
+      toc          = args.get("toc").map(_.toBooleanSafe).getOrElse(BookConfigDefault.toc)
     )
   }
 

@@ -32,7 +32,7 @@
 
 \title{%s}
 \author{%s %s}
-%% \date{today} %% this seems to be the default
+%% \date{today}
 
 \begin{document}
 
@@ -40,15 +40,20 @@
 \thispagestyle{empty}
 \pagenumbering{empty} %% no page numbers or headers in front matter
 
+%% We don't need to maketitle since we do it manually below
 %% \maketitle
 
+%% title page goes here
 %s
 
-\tableofcontents
+%% table of contents (\tableofcontents) goes here
+%s
 
 \mainmatter
 \pagestyle{mystyle}
 
+%% chapters goes here
 %s
+
 
 \end{document}

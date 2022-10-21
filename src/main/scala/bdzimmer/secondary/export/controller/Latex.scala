@@ -84,6 +84,8 @@ object Latex {
     // first section is title page
     val firstSection :: remainingSections = sections
 
+    val toc = if (config.toc) {"\\tableofcontents"} else {""}
+
     // TODO: do something more clever with title page formatting?
     // add extra newlines to title page
     val titlepage = convert(firstSection.content).split("\n").map(line => {
@@ -131,7 +133,10 @@ object Latex {
       config.fixedFontScale, config.fixedFontFace,
       config.paperWidth, config.paperHeight,
       config.marginInner, config.marginOuter, config.marginTop, config.marginBottom,
-      title, firstname, lastname, titlepage, chapters)
+      title, firstname, lastname,
+      titlepage,
+      toc,
+      chapters)
 
     // compile with:
     //  pdflatex -interaction=nonstopmode filename.tex
