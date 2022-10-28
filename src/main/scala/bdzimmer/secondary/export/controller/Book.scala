@@ -4,8 +4,8 @@
 
 package bdzimmer.secondary.export.controller
 
+import bdzimmer.secondary.`export`.view.Markdown
 import bdzimmer.secondary.export.model.Tags
-
 import bdzimmer.util.StringUtils._
 
 
@@ -74,7 +74,8 @@ object Book {
   def sections(
       book: String,
       tags: Map[Int, Tags.ParsedTag],
-      rtOption: Option[RenderTags]): (List[SectionInfo], Option[Tags.Image]) = {
+      rtOption: Option[RenderTags],
+      markdown: Boolean): (List[SectionInfo], Option[Tags.Image]) = {
 
     val (titles, chunks) = splitSections(book)
 
@@ -82,7 +83,12 @@ object Book {
 
       val chunk_t = rtOption.map(rt => {
         val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
-        rt.transform(chunk, tagsMod)
+        val chunk_t_t = rt.transformTagsOnly(chunk, tagsMod)
+        if (markdown) {
+          Markdown.process(chunk_t_t, ebookMode = true)
+        } else {
+          chunk_t_t
+        }
       }).getOrElse(chunk)
 
       // get author from a the first "Chapter" config in this section

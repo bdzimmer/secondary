@@ -37,12 +37,8 @@ class RenderTags(
     ebookMode: Boolean,
     mode: String) {
 
-  // transform markdown text with special tags to HTML
-  def transform(text: String, tags: Map[Int, Tags.ParsedTag]): String = {
-
-    // process special tags
-    val updatedText = ExtractRawTags.matcher.replaceAllIn(text, m => {
-
+  def transformTagsOnly(text: String, tags: Map[Int, Tags.ParsedTag]): String = {
+    ExtractRawTags.matcher.replaceAllIn(text, m => {
       // don't need to reparse anymore
       // val tag = ParseSecTags.getTag(m.group(1))
       val tag = tags.getOrElse(
@@ -55,6 +51,13 @@ class RenderTags(
         render(tag)
       })
     })
+  }
+
+  // transform markdown text with special tags to HTML
+  def transform(text: String, tags: Map[Int, Tags.ParsedTag]): String = {
+
+    // process special tags
+    val updatedText = transformTagsOnly(text, tags)
 
     // val pp = Markdown.getPegDown(ebookMode)
     // pp.markdownToHtml(updatedText)

@@ -21,12 +21,13 @@ object Latex {
       filename: String,
       book: BookItem,
       tags: Map[Int, ParsedTag],
-      config: Book.BookConfig): Unit = {
+      config: Book.BookConfig,
+      rtOption: Option[RenderTags]): Unit = {
 
     // Note that function is currently pretty similar to the version in Epub.
-    // Most tags do HTML specific stuff, so we won't render them
+    // Optionally render tags, but don't convert markdown to HTML.
 
-    val (sections, _) = Book.sections(book.notes, tags, None)
+    val (sections, _) = Book.sections(book.notes, tags, rtOption, false)
     // title is name of first section
     val title = sections.headOption.map(_.name).getOrElse("empty")
     val titlePage = sections.headOption.map(_.copy(name="Title Page"))
@@ -104,7 +105,7 @@ object Latex {
       }
 
       val titleHeader = section.author.map(
-        x => s"\\title{${section.name}}\n\\author{$x}\n").getOrElse(
+        x => s"\\author{$x}\n\\title{${section.name}}\n").getOrElse(
         s"\\title{$title}\n\\author{$firstname $lastname}\n"
       )
 
@@ -155,10 +156,8 @@ object Latex {
     // I only use a subset of markdown; this could work for web mode as well
 
     // strip Secondary tags
-    // TODO: eventually there may be a couple of tags for typesetting
-    // we will need to render those here first
-
-    val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
+    // val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
+    val stripped = markdown
 
     // ~~~~ convert per-line symbols
 

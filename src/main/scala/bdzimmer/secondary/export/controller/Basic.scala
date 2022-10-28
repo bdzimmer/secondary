@@ -18,7 +18,7 @@ object Basic {
         localExportPath: String): Unit = {
 
       // get sections and ignore potential cover image
-      val (sections, _) = Book.sections(notes, tags, Some(renderTags))
+      val (sections, _) = Book.sections(notes, tags, Some(renderTags), true)
 
       // assume that the first section that comes back from sections
       // is the title page and toss it

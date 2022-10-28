@@ -193,7 +193,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       imCompQuality: Option[Float],
       localExportPath: String): Unit = {
 
-    val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags))
+    val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags), true)
     // title is name of first section
     val title = sections.headOption.map(_.name).getOrElse("empty")
     val titlePage = sections.headOption.map(_.copy(name="Title Page"))
