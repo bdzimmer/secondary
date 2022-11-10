@@ -21,7 +21,18 @@
  includeheadfoot
 }
 
-\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
+%% title format for front matter
+
+%% standard title:
+\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}
+%% anthology title
+%% this didn't work because we can't change the author before the \chapter
+%% \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}[\newline\large\textit{\theauthor}]
+
+%% special command for chapter titles with author name below in italics
+%% https://tex.stackexchange.com/questions/443367/how-to-add-a-subtitle-to-some-chapters
+\newcommand\ChapterAuthor[2]{\chapter*{#1\newline\large\textit{#2}}}
+
 \newpagestyle{mystyle}{
   \sethead[\thepage][\textbf{\theauthor}][]
           {}{\textbf{\thetitle}}{\thepage}}
@@ -50,9 +61,12 @@
 %s
 
 \mainmatter
+
 \pagestyle{mystyle}
 
-%% chapters goes here
+
+%% chapters go here
+
 %s
 
 

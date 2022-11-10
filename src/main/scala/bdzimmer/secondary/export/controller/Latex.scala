@@ -16,6 +16,10 @@ import bdzimmer.secondary.export.model.WorldItems.BookItem
 
 object Latex {
 
+//  val TitleFormatStandard = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}"
+//  val TitleFormatAnthology = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}[\\newline\\large\\textit{\\theauthor}]"
+
+  val Newline = "\\newline"
 
   def export(
       filename: String,
@@ -87,10 +91,15 @@ object Latex {
 
     val toc = if (config.toc) {"\\tableofcontents"} else {""}
 
+//    val titleFormat = firstSection.author match {
+//      case Some(_) => TitleFormatStandard
+//      case None =>  TitleFormatAnthology
+//    }
+
     // TODO: do something more clever with title page formatting?
     // add extra newlines to title page
     val titlepage = convert(firstSection.content).split("\n").map(line => {
-        line + raw"\newline"
+        line + Newline
     }).mkString("\n")
 
     val chapters = remainingSections.map(section => {
@@ -104,20 +113,33 @@ object Latex {
         converted
       }
 
-      val titleHeader = section.author.map(
-        x => s"\\author{$x}\n\\title{${section.name}}\n").getOrElse(
-        s"\\title{$title}\n\\author{$firstname $lastname}\n"
-      )
+      val chapter = section.author match {
+        case Some(x) => s"\\ChapterAuthor{${section.name}}{$x}\n"
+        case None => s"\\chapter*{${section.name}}\n"
+      }
 
-      val tocData = section.author.map(
-        x => s"\\tocdata{toc}{$x}\n"
-      ).getOrElse("")
+      val tocData = section.author match {
+        case Some(x) => s"\\tocdata{toc}{$x}\n"
+        case None => ""
+      }
+
+      val author = section.author match {
+        case Some(x) => s"\\author{$x}\n"
+        case None => s"\\author{$firstname $lastname}\n"
+      }
+
+      val titleHeader = section.author match {
+        case Some(_) => s"\\title{${section.name}}\n"
+        case None => s"\\title{$title}\n"
+      }
 
       (
+        // s"\\chapter*{${section.name}}\n" +
+        chapter +
         tocData +
-        s"\\chapter*{${section.name}}\n" +
         s"\\addcontentsline{toc}{chapter}{${section.name}}\n" +
         titleHeader +
+        author +
         convertedStyled
       )
     }).mkString("\n")
@@ -137,7 +159,9 @@ object Latex {
       title, firstname, lastname,
       titlepage,
       toc,
-      chapters)
+      // titleFormat,
+      chapters
+    )
 
     // compile with:
     //  pdflatex -interaction=nonstopmode filename.tex
