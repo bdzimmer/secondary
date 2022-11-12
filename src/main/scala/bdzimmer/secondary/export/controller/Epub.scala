@@ -92,6 +92,7 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
       uniqueIdentifier: String,
       title: String,
       bookAuthor: Option[(String, String)],
+      bookEditor: Option[String],
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String]
     ): String = {
@@ -151,6 +152,25 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
         .mkString("\n")
     }
 
+    val editor: String = bookEditor match {
+      case Some(x) => {
+        val editors = x.split(";\\s+")
+          .flatMap(authorNameSplit)
+          .sortBy(x => (x._2, x._1))
+
+        println("editor(s):")
+        editors.foreach(x => println(f"\t${x._1} | ${x._2}"))
+
+        editors
+          .map({ case (first, last) => creator(first, last, "edt") })
+          .mkString("\n")
+      }
+      case None=> {
+        println("no editor")
+        ""
+      }
+    }
+
 s"""<?xml version="1.0"?>
 <package version="2.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="$uniqueIdentifier">
 
@@ -159,6 +179,7 @@ s"""<?xml version="1.0"?>
     <dc:language>en</dc:language>
     <dc:identifier id="$uniqueIdentifier" opf:scheme="NotISBN">$uniqueIdentifier</dc:identifier>
     $author
+    $editor
     $cover
   </metadata>
 
@@ -233,6 +254,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
   def export(
       filename: String,
       book: BookItem,
+      bookEditor: Option[String],
       tags: Map[Int, ParsedTag],
       renderTags: RenderTags,
       unstyledSections: Set[String],
@@ -260,6 +282,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       book.uniqueIdentifier,
       title,
       Some((firstname, lastname)),
+      bookEditor,
       titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       localExportPath,
@@ -273,6 +296,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       uniqueIdentifier: String,
       title: String,
       bookAuthor: Option[(String, String)],
+      bookEditor: Option[String],
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String],
       imageDirname: String,
@@ -328,6 +352,7 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       uniqueIdentifier,
       title,
       bookAuthor,
+      bookEditor,
       sections,
       coverImageFilenameConverted)
 

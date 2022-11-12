@@ -177,7 +177,7 @@ class Driver {
               println("-------------------")
               println(config)
               Epub.export(
-                filename, book, tags, rt,
+                filename, book, config.editor, tags, rt,
                 config.unstyledSections, imCompQuality,
                 projConf.localExportPath)
               filename
