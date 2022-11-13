@@ -89,7 +89,7 @@ object Latex {
     // first section is title page
     val firstSection :: remainingSections = sections
 
-    val toc = if (config.toc) {"\\tableofcontents"} else {""}
+    val toc = if (config.toc) {"\\tableofcontents\n\\thispagestyle{empty}"} else {""}
 
 //    val titleFormat = firstSection.author match {
 //      case Some(_) => TitleFormatStandard
