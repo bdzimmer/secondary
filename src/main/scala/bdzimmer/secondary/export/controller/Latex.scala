@@ -371,7 +371,8 @@ object Latex {
 
   val CopyrightSymbol = raw"\\textcopyright\\"
   val PercentSign = raw"\\%"
-  val Ellipsis = raw" \\ldots\\ "
+  // val Ellipsis = raw" \\ldots\\ "
+  val Ellipsis = raw"\\ldots "
   val BlankLine = raw"\\vskip\\baselineskip"
   val Rule = raw"\\hfil\\rule{0.25\\textwidth}{0.4pt}\\hfil"
 
