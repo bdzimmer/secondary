@@ -106,6 +106,11 @@ body {
     margin: 0px 0px 0px 0px;
     text-indent: 40px;
   }
+  p.noindent {
+    margin: 0px 0px 0px 0px;
+    text-indent: 0px;
+  }
+
 """
 
 
