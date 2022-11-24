@@ -345,6 +345,8 @@ object Latex {
     res = MarkdownParse.MatcherNbsp.replaceAllIn(res, _ => BlankLine)
     res = MarkdownParse.MatcherHr.replaceAllIn(res, _ => Rule)
 
+    res = MarkdownParse.MatcherBr.replaceAllIn(res, _ => LineBreak)
+
     res
 
   }
@@ -372,6 +374,8 @@ object Latex {
   val Ellipsis = raw" \\ldots\\ "
   val BlankLine = raw"\\vskip\\baselineskip"
   val Rule = raw"\\hfil\\rule{0.25\\textwidth}{0.4pt}\\hfil"
+
+  val LineBreak = raw"\\newline"
 
 }
 
@@ -403,6 +407,8 @@ object MarkdownParse {
   val MatcherEllipsis: Regex = "\\.\\.\\.".r
   val MatcherNbsp: Regex = "^&nbsp;$".r
   val MatcherHr: Regex = "^---$".r
+
+  val MatcherBr: Regex = "<br \\/>".r
 
   val MatcherDqSingle: Regex = "\"".r
 
