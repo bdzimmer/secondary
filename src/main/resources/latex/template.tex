@@ -34,7 +34,11 @@
 \newcommand\ChapterAuthor[2]{\chapter*{#1\newline\large\textit{#2}}}
 
 \newpagestyle{mystyle}{
-  \sethead[\thepage][\textbf{\theauthor}][]
+%% original style: author and title
+%%  \sethead[\thepage][\textbf{\theauthor}][]
+%%          {}{\textbf{\thetitle}}{\thepage}}
+%% new style: title and chapter title - hardcoded for now
+  \sethead[\thepage][\textbf{Periapsis Christmas}][]
           {}{\textbf{\thetitle}}{\thepage}}
 \pagestyle{empty}
 
