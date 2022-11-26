@@ -11,10 +11,18 @@ import bdzimmer.util.StringUtils._
 
 object Book {
 
+  case class LatexOptions(
+    tocTitle: Option[String],
+    tocAuthor: Option[String],
+    chapterTitle: Option[String],
+    chapterAuthor: Option[String]
+  )
+
   case class SectionInfo(
     id: String,
     name: String,
     author: Option[String],
+    latexOptions: Option[LatexOptions],
     content: String
   )
 
@@ -100,21 +108,35 @@ object Book {
         }
       }).getOrElse(chunk)
 
-      // get author from a the first "Chapter" config in this section
-      val author: Option[String] = tags
+      // find all config tags
+      val configTags: List[Tags.Config] = tags
           .filter(x => x._1 >= startIdx && x._1 < endIdx)
           .values
           .collect({case x: Tags.Config => x}).toList
+
+      // get author from the first "Chapter" config in this section
+      val author: Option[String] = configTags
           .find(_.desc.startsWith("Chapter"))
           .flatMap(_.args.get("author"))
 
-      (chunk_t, author)
+      // get latex options form the first "Latex" config in this section
+      val latexOptions: Option[LatexOptions] = configTags
+          .find(_.desc.startsWith("Latex"))
+          .map(x => LatexOptions(
+            tocTitle = x.args.get("toctitle"),
+            tocAuthor = x.args.get("tocauthor"),
+            chapterTitle = x.args.get("chaptertitle"),
+            chapterAuthor = x.args.get("chapterauthor")
+            ))
+
+      (chunk_t, author, latexOptions)
     }})
 
-    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), (secContent, secAuthor)) => {
+    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), (secContent, secAuthor, secLatexOptions)) => {
       val secAuthorStr = secAuthor.getOrElse("(None)")
       println(s"${secTitle} - ${secAuthorStr}")
-      SectionInfo("section" + secNumber.toString, secTitle, secAuthor, secContent)
+      secLatexOptions.foreach(x => println(s"\tLatex options: ${x}"))
+      SectionInfo("section" + secNumber.toString, secTitle, secAuthor, secLatexOptions, secContent)
     }})
 
     // find all image tags

@@ -115,39 +115,58 @@ object Latex {
         converted
       }
 
-      val chapter = section.author match {
-        case Some(x) => s"\\ChapterAuthor{${section.name}}{$x}\n"
-        case None => s"\\chapter*{${section.name}}\n"
+      // prepare strings using LatexOptions
+      val chapterTitleStr: String = section.latexOptions.flatMap(_.chapterTitle).getOrElse(section.name)
+      val chapterAuthorOp: Option[String] = section.latexOptions.flatMap(_.chapterAuthor) match {
+        case Some(x) => Some(x)
+        case None => section.author
+      }
+      val tocTitleStr: String = section.latexOptions.flatMap(_.tocTitle).getOrElse(section.name)
+      val tocAuthorOp: Option[String] = section.latexOptions.flatMap(_.tocAuthor) match {
+        case Some(x) => Some(x)
+        case None => section.author
       }
 
-      val tocData = section.author match {
+      // title and author displayed in the chapter
+      val chapter = chapterAuthorOp match {
+        case Some(x) => s"\\ChapterAuthor{${chapterTitleStr}}{$x}\n"
+        case None => s"\\chapter*{${chapterTitleStr}}\n"
+      }
+
+      // title displayed in the TOC
+      val titleTOC = s"\\addcontentsline{toc}{chapter}{${tocTitleStr}}\n"
+
+      // author displayed in the TOC
+      val authorTOC = tocAuthorOp match {
         case Some(x) => s"\\tocdata{toc}{$x}\n"
         case None => ""
       }
 
-      val author = section.author match {
-        case Some(x) => s"\\author{$x}\n"
-        case None => s"\\author{$firstname $lastname}\n"
-      }
+      // whether the page headers display the chapter name or not
+      // is controlled by tocAuthorOp (latexOptions.tocAuthor / section.author)
 
-      val titleHeader = section.author match {
+      // title displayed in the header
+      val titleHeader = tocAuthorOp match {
         case Some(_) => s"\\title{${section.name}}\n"
         case None => s"\\title{$title}\n"
       }
 
+      // author displayed in the header
+      val authorHeader = tocAuthorOp match {
+        case Some(x) => s"\\author{$x}\n"
+        case None => s"\\author{$firstname $lastname}\n"
+      }
+
       (
-        // s"\\chapter*{${section.name}}\n" +
         chapter +
-        tocData +
-        s"\\addcontentsline{toc}{chapter}{${section.name}}\n" +
+        authorTOC +    // the order of these two seems important
+        titleTOC +
+        authorHeader +
         titleHeader +
-        author +
         convertedStyled
       )
-    }).mkString("\n")
 
-    // val templateUrl = getClass.getResource("/latex/template.tex")
-    // val template = FileUtils.readFileToString(new java.io.File(templateUrl.getPath))
+    }).mkString("\n")
 
     val inputStream = getClass.getResourceAsStream("/latex/template.tex")
     val template = IOUtils.toString(inputStream)
