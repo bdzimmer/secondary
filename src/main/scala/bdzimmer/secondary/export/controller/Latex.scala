@@ -181,7 +181,13 @@ object Latex {
 
     // strip Secondary tags
     // val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
-    val stripped = markdown
+    // val stripped = markdown
+
+    // do a multiline match to replace between paragraph breaks and add noindents
+    // this is not ideal but the easiest way to handle this for now as far as I can tell
+    // the matcher matches all surrounding newlines make it as specific as possible
+    val stripped = MarkdownParse.MatcherNbspMulti.replaceAllIn(
+        markdown, _ => "\n\n" + BlankLine + "\n\n" + NoIndent + " ")
 
     // ~~~~ convert per-line symbols
 
@@ -371,18 +377,27 @@ object Latex {
 
   val CopyrightSymbol = raw"\\textcopyright\\"
   val PercentSign = raw"\\%"
+
   // val Ellipsis = raw" \\ldots\\ "
   val Ellipsis = raw"\\ldots "
+  // val Ellipsis = raw"\\thinspace\\ldots\\thinspace "
+
   val BlankLine = raw"\\vskip\\baselineskip"
+
   val Rule = raw"\\hfil\\rule{0.25\\textwidth}{0.4pt}\\hfil"
 
   val LineBreak = raw"\\newline"
+
+  val NoIndent = raw"\\noindent"
 
 }
 
 
 
 object MarkdownParse {
+
+  // a very specific case for how section breaks are currently implemented
+  val MatcherNbspMulti: Regex = "\\n\\n&nbsp;\\n\\n".r
 
   val MatcherDq: Regex = "\"([^\"]+)\"".r
 
@@ -407,6 +422,7 @@ object MarkdownParse {
   val MatcherPercent: Regex = "%".r
   val MatcherEllipsis: Regex = "\\.\\.\\.".r
   val MatcherNbsp: Regex = "^&nbsp;$".r
+
   val MatcherHr: Regex = "^---$".r
 
   val MatcherBr: Regex = "<br \\/>".r
