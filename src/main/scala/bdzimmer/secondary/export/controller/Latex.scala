@@ -89,6 +89,8 @@ object Latex {
     // first section is title page
     val firstSection :: remainingSections = sections
 
+    // I have no idea why this wants a thispagestyle instead of pagestyle
+    // Seems like this won't work properly with multi-page TOCs but it works for now
     val toc = if (config.toc) {"\\tableofcontents\n\\thispagestyle{empty}"} else {""}
 
 //    val titleFormat = firstSection.author match {

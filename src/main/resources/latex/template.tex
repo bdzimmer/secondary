@@ -56,8 +56,18 @@
 \begin{document}
 
 \frontmatter
-\thispagestyle{empty}
-\pagenumbering{empty} %% no page numbers or headers in front matter
+\pagestyle{empty}
+
+%% this disables page numbers or headers in front matter,
+%% which isn't what we want
+%% we want the pages to be numbered,
+%% but the numbers shouldn't appear until the foreword
+%% \pagenumbering{empty}
+
+%% set arabic page numbering and prevent further resets
+%% of the numbering by disabling the command
+\pagenumbering{arabic}
+\renewcommand{\pagenumbering}[1]{}
 
 %% We don't need to maketitle since we do it manually below
 %% \maketitle
@@ -66,12 +76,11 @@
 %s
 
 %% table of contents (\tableofcontents) goes here
-%% needs to have \thispagestyle{empty} after it
-%% otherwise we get a "Missing number" error
+%% needs a \thispagestyle{empty} especially
+%% pagenumbering is disabled in \frontmatter
 %s
 
 \mainmatter
-
 \pagestyle{mystyle}
 
 
