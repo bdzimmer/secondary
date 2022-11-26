@@ -78,7 +78,10 @@ object Book {
       book: String,
       tags: Map[Int, Tags.ParsedTag],
       rtOption: Option[RenderTags],
-      markdown: Boolean): (List[SectionInfo], Option[Tags.Image]) = {
+      markdown: Boolean
+      ): (List[SectionInfo], Option[Tags.Image]) = {
+
+    val emptyParagraphMatcher = "<p>&nbsp;<\\/p>".r
 
     val (titles, chunks) = splitSections(book)
 
@@ -88,8 +91,11 @@ object Book {
         val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
         val chunk_t_t = rt.transformTagsOnly(chunk, tagsMod)
         if (markdown) {
-          Markdown.process(chunk_t_t, ebookMode = true)
+          // ebook mode
+          val res = Markdown.process(chunk_t_t, ebookMode = true)
+          emptyParagraphMatcher.replaceAllIn(res, "<p class=\"empty\">&nbsp;</p>")
         } else {
+          // print mode
           chunk_t_t
         }
       }).getOrElse(chunk)
