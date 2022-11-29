@@ -100,9 +100,8 @@ object Latex {
 
     // TODO: do something more clever with title page formatting?
     // add extra newlines to title page
-    val titlepage = convert(firstSection.content).split("\n").map(line => {
-        line + Newline
-    }).mkString("\n")
+    val titlepage = convert(firstSection.content)
+        // .split("\n").map(line => line + Newline).mkString("\n")
 
     val chapters = remainingSections.map(section => {
       // the first line of the section is the chapter title header
