@@ -113,7 +113,7 @@ body {
   noindent class */
   p:not(.empty) + p:not(.noindent) {
     margin: 0px 0px 0px 0px;
-    text-indent: 40px;
+    text-indent: 2em;
   }
 
   /* special classes for forcing indentation */
@@ -123,7 +123,7 @@ body {
   }
   p.indent {
     margin: 0px 0px 0px 0px;
-    text-indent: 40px;
+    text-indent: 2em;
   }
 """
 
