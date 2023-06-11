@@ -7,6 +7,7 @@
 \usepackage{listings}
 \usepackage[scaled=%s]{%s}
 \usepackage{enumitem}
+\usepackage{tocdata}
 
 \lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
 
@@ -17,37 +18,77 @@
  outer=%s,
  top=%s,
  bottom=%s,
- includeheadfoot
+ footskip=0.2in  %% hardcoded for now
+ %% includeheadfoot
 }
 
-\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
+%% title format for front matter
+
+%% standard title:
+\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}
+%% anthology title
+%% this didn't work because we can't change the author before the \chapter
+%% \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}[\newline\large\textit{\theauthor}]
+
+%% special command for chapter titles with author name below in italics
+%% https://tex.stackexchange.com/questions/443367/how-to-add-a-subtitle-to-some-chapters
+\newcommand\ChapterAuthor[2]{\chapter*{#1\newline\large\textit{#2}}}
+
 \newpagestyle{mystyle}{
-  \sethead[\thepage][\textbf{\theauthor}][]
+%% original style: author and title
+%%  \sethead[\thepage][\textbf{\theauthor}][]
+%%          {}{\textbf{\thetitle}}{\thepage}}
+%% new style: title and chapter title - hardcoded for now
+%% TODO: don't hard code the title!
+  \sethead[\thepage][\textbf{TODO BOOK TITLE TODO}][]
           {}{\textbf{\thetitle}}{\thepage}}
 \pagestyle{empty}
+
+%% aggressively penalize widows and orphans
+\widowpenalty=10000
+\clubpenalty=10000
 
 \raggedbottom
 \emergencystretch 3em
 
 \title{%s}
 \author{%s %s}
-%% \date{today} %% this seems to be the default
+%% \date{today}
 
 \begin{document}
 
 \frontmatter
-\thispagestyle{empty}
-\pagenumbering{empty} %% no page numbers or headers in front matter
+\pagestyle{empty}
 
+%% this disables page numbers or headers in front matter,
+%% which isn't what we want
+%% we want the pages to be numbered,
+%% but the numbers shouldn't appear until the foreword
+%% \pagenumbering{empty}
+
+%% set arabic page numbering and prevent further resets
+%% of the numbering by disabling the command
+\pagenumbering{arabic}
+\renewcommand{\pagenumbering}[1]{}
+
+%% We don't need to maketitle since we do it manually below
 %% \maketitle
 
+%% title page goes here
 %s
 
-%% \tableofcontents
+%% table of contents (\tableofcontents) goes here
+%% needs a \thispagestyle{empty} especially
+%% pagenumbering is disabled in \frontmatter
+%s
 
 \mainmatter
 \pagestyle{mystyle}
 
+
+%% chapters go here
+
 %s
+
 
 \end{document}

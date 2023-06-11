@@ -47,6 +47,24 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
 """
   }
 
+  def creator(firstname: String, lastname: String, role: String): String = {
+    // https://idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#Section2.2.2  (creator)
+    // https://idpf.org/epub/20/spec/OPF_2.0.1_draft.htm#Section2.2.6  (roles)
+    s"""<dc:creator opf:file-as="$lastname, $firstname" opf:role="$role">$firstname $lastname</dc:creator>"""
+  }
+
+  def authorNameSplit(authorname: String): Option[(String, String)] = {
+    val parts = authorname.split("\\s+").toList
+    parts match {
+      case fst :: Nil => Some(("", fst))
+      case fst :: rest => if (rest.size == 1) {
+        Some((fst, rest.head))
+      } else {
+        Some((fst + " " + rest.dropRight(1).mkString(" "), rest.last))
+      }
+      case _ => None
+    }
+  }
 
   def authorNameParts(authorname: String): (String, String) = {
     val (name, parts) = WorldItems.cleanName(authorname)
@@ -73,8 +91,8 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
   def formatContentOpf(
       uniqueIdentifier: String,
       title: String,
-      firstname: String,
-      lastname: String,
+      bookAuthor: Option[(String, String)],
+      bookEditor: Option[String],
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String]
     ): String = {
@@ -110,6 +128,49 @@ s"""<?xml version="1.0" encoding="UTF-8" ?>
       spineItems.mkString("\n") + "\n" +
       "  </spine>"
 
+    val secAuthors = sections
+      .flatMap(_.author)
+      .flatMap(authorNameSplit)
+      .distinct
+      .sortBy(x => (x._2, x._1))
+
+    val author: String = if (secAuthors.isEmpty) {
+      bookAuthor match {
+        case Some(x) => println(f"single author: ${x._1} | ${x._2}")
+        case None => println("no author defined!")
+      }
+
+      bookAuthor
+        .map({case (first, last) => creator(first, last, "aut")})
+        .getOrElse("")
+    } else {
+      println("multiple authors:")
+      secAuthors.foreach(x => println(f"\t${x._1} | ${x._2}"))
+
+      secAuthors
+        .map({case (first, last) => creator(first, last, "aut")})
+        .mkString("\n")
+    }
+
+    val editor: String = bookEditor match {
+      case Some(x) => {
+        val editors = x.split(";\\s+")
+          .flatMap(authorNameSplit)
+          .sortBy(x => (x._2, x._1))
+
+        println("editor(s):")
+        editors.foreach(x => println(f"\t${x._1} | ${x._2}"))
+
+        editors
+          .map({ case (first, last) => creator(first, last, "edt") })
+          .mkString("\n")
+      }
+      case None=> {
+        println("no editor")
+        ""
+      }
+    }
+
 s"""<?xml version="1.0"?>
 <package version="2.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="$uniqueIdentifier">
 
@@ -117,7 +178,8 @@ s"""<?xml version="1.0"?>
     <dc:title>$title</dc:title>
     <dc:language>en</dc:language>
     <dc:identifier id="$uniqueIdentifier" opf:scheme="NotISBN">$uniqueIdentifier</dc:identifier>
-    <dc:creator opf:file-as="$lastname, $firstname" opf:role="aut">$firstname $lastname</dc:creator>
+    $author
+    $editor
     $cover
   </metadata>
 
@@ -133,11 +195,12 @@ s"""<?xml version="1.0"?>
   def formatTocNcx(
     uniqueIdentifier: String,
     title: String,
-    firstname: String,
-    lastname: String,
+    bookAuthor: Option[(String, String)],
     sections: Seq[SectionInfo]): String = {
 
     // format contents of toc.ncx file
+
+    val (firstname, lastname) = bookAuthor.getOrElse(("", ""))
 
     val navmapItems = sections.zipWithIndex.map(x => {
       s"""    <navPoint class="chapter" id="${x._1.id}" playOrder="${x._2}">""" + "\n" +
@@ -172,9 +235,13 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     <text>$title</text>
   </docTitle>
 
+  <!-- The docAuthor is probably not necessary.
+
   <docAuthor>
     <text>$lastname, $firstname</text>
   </docAuthor>
+
+  -->
 
   $navmap
 
@@ -187,13 +254,14 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
   def export(
       filename: String,
       book: BookItem,
+      bookEditor: Option[String],
       tags: Map[Int, ParsedTag],
       renderTags: RenderTags,
       unstyledSections: Set[String],
       imCompQuality: Option[Float],
       localExportPath: String): Unit = {
 
-    val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags))
+    val (sections, coverImageTag) = Book.sections(book.notes, tags, Some(renderTags), true)
     // title is name of first section
     val title = sections.headOption.map(_.name).getOrElse("empty")
     val titlePage = sections.headOption.map(_.copy(name="Title Page"))
@@ -213,9 +281,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       filename,
       book.uniqueIdentifier,
       title,
-      firstname,
-      lastname,
-      // cover.toList ++ titlePage.toList ++ contentSections,
+      Some((firstname, lastname)),
+      bookEditor,
       titlePage.toList ++ contentSections,
       coverImageTag.map(x => RenderImages.itemImagePath(x.item)),
       localExportPath,
@@ -228,8 +295,8 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
       outputFilename: String,
       uniqueIdentifier: String,
       title: String,
-      firstname: String,
-      lastname: String,
+      bookAuthor: Option[(String, String)],
+      bookEditor: Option[String],
       sections: Seq[SectionInfo],
       coverImageFilename: Option[String],
       imageDirname: String,
@@ -284,16 +351,15 @@ including those that conform to the relaxed constraints of OPS 2.0 -->
     val contentOpf = formatContentOpf(
       uniqueIdentifier,
       title,
-      firstname,
-      lastname,
+      bookAuthor,
+      bookEditor,
       sections,
       coverImageFilenameConverted)
 
     val tocNcx = formatTocNcx(
       uniqueIdentifier,
       title,
-      firstname,
-      lastname,
+      bookAuthor,
       sections)
 
     val fout = new FileOutputStream(outputFilename)

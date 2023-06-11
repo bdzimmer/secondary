@@ -28,7 +28,7 @@ import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 object Driver {
 
-  val Version = "2021.06.29"
+  val Version = "2022.12.07"
   val Title: String = "Secondary - create worlds from text - v" + Version
   val DefaultCommand: String = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
@@ -177,7 +177,7 @@ class Driver {
               println("-------------------")
               println(config)
               Epub.export(
-                filename, book, tags, rt,
+                filename, book, config.editor, tags, rt,
                 config.unstyledSections, imCompQuality,
                 projConf.localExportPath)
               filename
@@ -191,7 +191,7 @@ class Driver {
               println("Book configuration:")
               println("-------------------")
               println(config)
-              Latex.export(filename, book, tags, config)
+              Latex.export(filename, book, tags, config, Some(rt))
               filename
             }).mapLeft(_ => "'" + itemId + "' not a book")
           }

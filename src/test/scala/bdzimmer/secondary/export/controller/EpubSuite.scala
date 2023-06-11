@@ -22,11 +22,11 @@ class EpubSuite extends FunSuite with TempDirectory {
        outputFilename,
        "0000",
        "Test Book",
-       "B",
-       "Z",
+       Some(("B", "Z")),
+       Some("C Z"),
        List(
-         Book.SectionInfo("0", "Title Page", "<body>Test Book<br>B Z</body>"),
-         Book.SectionInfo("1", "Chapter 1", "<body>This is the content of chapter 1.</body>")
+         Book.SectionInfo("0", "Title Page", None, None, "<body>Test Book<br>D Z</body>"),
+         Book.SectionInfo("1", "Chapter 1", None, None, "<body>This is the content of chapter 1.</body>")
        ),
        None,
        "",

@@ -4,14 +4,25 @@
 
 package bdzimmer.secondary.export.controller
 
+import bdzimmer.secondary.`export`.view.Markdown
 import bdzimmer.secondary.export.model.Tags
+import bdzimmer.util.StringUtils._
 
 
 object Book {
 
+  case class LatexOptions(
+    tocTitle: Option[String],
+    tocAuthor: Option[String],
+    chapterTitle: Option[String],
+    chapterAuthor: Option[String]
+  )
+
   case class SectionInfo(
     id: String,
     name: String,
+    author: Option[String],
+    latexOptions: Option[LatexOptions],
     content: String
   )
 
@@ -26,7 +37,9 @@ object Book {
     marginInner: String,
     marginOuter: String,
     marginTop: String,
-    marginBottom: String
+    marginBottom: String,
+    toc: Boolean,
+    editor: Option[String]
   ) {
     override def toString: String = {
       "fontSize:         " + fontSize + "\n" +
@@ -39,7 +52,9 @@ object Book {
       "marginInner:      " + marginInner + "\n" +
       "marginOuter:      " + marginOuter + "\n" +
       "marginTop:        " + marginTop + "\n" +
-      "marginBottom:     " + marginBottom + "\n"
+      "marginBottom:     " + marginBottom + "\n" +
+      "toc:              " + toc + "\n" +
+      "editor:           " + editor
     }
   }
 
@@ -56,7 +71,9 @@ object Book {
     marginInner = "0.75in",
     marginOuter = "0.5in",
     marginTop = "0.5in",
-    marginBottom = "0.5in"
+    marginBottom = "0.5in",
+    toc = false,
+    editor = None
   )
 
   // ~~~~ ~~~~ ~~~~ ~~~~
@@ -68,19 +85,58 @@ object Book {
   def sections(
       book: String,
       tags: Map[Int, Tags.ParsedTag],
-      rtOption: Option[RenderTags]): (List[SectionInfo], Option[Tags.Image]) = {
+      rtOption: Option[RenderTags],
+      markdown: Boolean
+      ): (List[SectionInfo], Option[Tags.Image]) = {
 
-    val (titles, chunks, chunkRanges) = splitSections(book)
+    val emptyParagraphMatcher = "<p>&nbsp;<\\/p>".r
 
-    val contents = chunks.map({case (startIdx, chunk) => {
-      rtOption.map(rt => {
+    val (titles, chunks) = splitSections(book)
+
+    val contents = chunks.map({case (startIdx, endIdx, chunk) => {
+
+      val chunk_t = rtOption.map(rt => {
         val tagsMod = tags.map(x => (x._1 - startIdx, x._2))
-        rt.transform(chunk, tagsMod)
+        val chunk_t_t = rt.transformTagsOnly(chunk, tagsMod)
+        if (markdown) {
+          // ebook mode
+          val res = Markdown.process(chunk_t_t, ebookMode = true)
+          emptyParagraphMatcher.replaceAllIn(res, "<p class=\"empty\">&nbsp;</p>")
+        } else {
+          // print mode
+          chunk_t_t
+        }
       }).getOrElse(chunk)
+
+      // find all config tags
+      val configTags: List[Tags.Config] = tags
+          .filter(x => x._1 >= startIdx && x._1 < endIdx)
+          .values
+          .collect({case x: Tags.Config => x}).toList
+
+      // get author from the first "Chapter" config in this section
+      val author: Option[String] = configTags
+          .find(_.desc.startsWith("Chapter"))
+          .flatMap(_.args.get("author"))
+
+      // get latex options form the first "Latex" config in this section
+      val latexOptions: Option[LatexOptions] = configTags
+          .find(_.desc.startsWith("Latex"))
+          .map(x => LatexOptions(
+            tocTitle = x.args.get("toctitle"),
+            tocAuthor = x.args.get("tocauthor"),
+            chapterTitle = x.args.get("chaptertitle"),
+            chapterAuthor = x.args.get("chapterauthor")
+            ))
+
+      (chunk_t, author, latexOptions)
     }})
 
-    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), secContent) => {
-      SectionInfo("section" + secNumber.toString, secTitle, secContent)
+    val sections = titles.zipWithIndex.zip(contents).map({case ((secTitle, secNumber), (secContent, secAuthor, secLatexOptions)) => {
+      val secAuthorStr = secAuthor.getOrElse("(None)")
+      println(s"${secTitle} - ${secAuthorStr}")
+      secLatexOptions.foreach(x => println(s"\tLatex options: ${x}"))
+      SectionInfo("section" + secNumber.toString, secTitle, secAuthor, secLatexOptions, secContent)
     }})
 
     // find all image tags
@@ -88,7 +144,7 @@ object Book {
 
     // first image tag in first section is cover image
     val image = for {
-      coverPageRange <- chunkRanges.headOption
+      coverPageRange <- chunks.headOption.map(x => (x._1, x._2))
       coverImageTag <- imageTags.find(x => x._1 >= coverPageRange._1 && x._1 < coverPageRange._2)
     } yield {
       coverImageTag._2
@@ -104,9 +160,8 @@ object Book {
   // Split the notes of a book into sections.
   // Returns:
   // - list of section titles
-  // - list of tuples of start position and section contents
-  // - list of tuples of section start and end position
-  def splitSections(book: String): (List[String], List[(Int, String)], List[(Int, Int)]) = {
+  // - list of tuples of start position, end position, and section contents
+  def splitSections(book: String): (List[String], List[(Int, Int, String)]) = {
 
     val matcher = "\\#+ (.*)(\\r\\n|\\r|\\n)".r
 
@@ -115,10 +170,10 @@ object Book {
     // use _._2 if we want to exclude the chapter headings from the contents
     val allPositions = matches.map(_._1) ++ List(book.length)
     val chunkRanges = allPositions.sliding(2).map(x => (x(0), x(1))).toList
-    val chunks = chunkRanges.map(x => (x._1, book.substring(x._1, x._2)))
+    val chunks = chunkRanges.map(x => (x._1, x._2, book.substring(x._1, x._2)))
     val titles = matches.map(_._3)
 
-    (titles, chunks, chunkRanges)
+    (titles, chunks)
   }
 
   // Get configuration from a book (the first config tag whose description begins with "Book")
@@ -145,7 +200,9 @@ object Book {
       marginInner  = args.getOrElse("margininner",  BookConfigDefault.marginInner),
       marginOuter  = args.getOrElse("marginouter",  BookConfigDefault.marginOuter),
       marginTop    = args.getOrElse("margintop",    BookConfigDefault.marginTop),
-      marginBottom = args.getOrElse("marginbottom", BookConfigDefault.marginBottom)
+      marginBottom = args.getOrElse("marginbottom", BookConfigDefault.marginBottom),
+      toc          = args.get("toc").map(_.toBooleanSafe).getOrElse(BookConfigDefault.toc),
+      editor       = args.get("editor")
     )
   }
 

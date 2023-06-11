@@ -2,7 +2,7 @@
 
 // Tests for duplicate word detection.
 
-package bdzimmer.secondary.export.controller
+package bdzimmer.secondary.`export`.controller
 
 import org.scalatest.FunSuite
 

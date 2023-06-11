@@ -102,9 +102,28 @@ body {
 
 
   val BookStyle = """
+  /* default paragraph style is not indented */
   p {
     margin: 0px 0px 0px 0px;
-    text-indent: 40px;
+    text-indent: 0px;
+  }
+
+  /* paragraphs after other (non-empty) paragraphs
+  are indented, as long as they are not the special
+  noindent class */
+  p:not(.empty) + p:not(.noindent) {
+    margin: 0px 0px 0px 0px;
+    text-indent: 2em;
+  }
+
+  /* special classes for forcing indentation */
+  p.noindent {
+    margin: 0px 0px 0px 0px;
+    text-indent: 0px;
+  }
+  p.indent {
+    margin: 0px 0px 0px 0px;
+    text-indent: 2em;
   }
 """
 

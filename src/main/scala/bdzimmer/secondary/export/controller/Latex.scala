@@ -16,17 +16,22 @@ import bdzimmer.secondary.export.model.WorldItems.BookItem
 
 object Latex {
 
+//  val TitleFormatStandard = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}"
+//  val TitleFormatAnthology = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}[\\newline\\large\\textit{\\theauthor}]"
+
+  val Newline = "\\newline"
 
   def export(
       filename: String,
       book: BookItem,
       tags: Map[Int, ParsedTag],
-      config: Book.BookConfig): Unit = {
+      config: Book.BookConfig,
+      rtOption: Option[RenderTags]): Unit = {
 
     // Note that function is currently pretty similar to the version in Epub.
-    // Most tags do HTML specific stuff, so we won't render them
+    // Optionally render tags, but don't convert markdown to HTML.
 
-    val (sections, _) = Book.sections(book.notes, tags, None)
+    val (sections, _) = Book.sections(book.notes, tags, rtOption, false)
     // title is name of first section
     val title = sections.headOption.map(_.name).getOrElse("empty")
     val titlePage = sections.headOption.map(_.copy(name="Title Page"))
@@ -84,11 +89,19 @@ object Latex {
     // first section is title page
     val firstSection :: remainingSections = sections
 
+    // I have no idea why this wants a thispagestyle instead of pagestyle
+    // Seems like this won't work properly with multi-page TOCs but it works for now
+    val toc = if (config.toc) {"\\tableofcontents\n\\thispagestyle{empty}"} else {""}
+
+//    val titleFormat = firstSection.author match {
+//      case Some(_) => TitleFormatStandard
+//      case None =>  TitleFormatAnthology
+//    }
+
     // TODO: do something more clever with title page formatting?
     // add extra newlines to title page
-    val titlepage = convert(firstSection.content).split("\n").map(line => {
-        line + raw"\newline"
-    }).mkString("\n")
+    val titlepage = convert(firstSection.content)
+        // .split("\n").map(line => line + Newline).mkString("\n")
 
     val chapters = remainingSections.map(section => {
       // the first line of the section is the chapter title header
@@ -100,11 +113,59 @@ object Latex {
       } else {
         converted
       }
-      s"\\chapter{${section.name}}\n$convertedStyled"
-    }).mkString("\n")
 
-    // val templateUrl = getClass.getResource("/latex/template.tex")
-    // val template = FileUtils.readFileToString(new java.io.File(templateUrl.getPath))
+      // prepare strings using LatexOptions
+      val chapterTitleStr: String = section.latexOptions.flatMap(_.chapterTitle).getOrElse(section.name)
+      val chapterAuthorOp: Option[String] = section.latexOptions.flatMap(_.chapterAuthor) match {
+        case Some(x) => Some(x)
+        case None => section.author
+      }
+      val tocTitleStr: String = section.latexOptions.flatMap(_.tocTitle).getOrElse(section.name)
+      val tocAuthorOp: Option[String] = section.latexOptions.flatMap(_.tocAuthor) match {
+        case Some(x) => Some(x)
+        case None => section.author
+      }
+
+      // title and author displayed in the chapter
+      val chapter = chapterAuthorOp match {
+        case Some(x) => s"\\ChapterAuthor{${chapterTitleStr}}{$x}\n"
+        case None => s"\\chapter*{${chapterTitleStr}}\n"
+      }
+
+      // title displayed in the TOC
+      val titleTOC = s"\\addcontentsline{toc}{chapter}{${tocTitleStr}}\n"
+
+      // author displayed in the TOC
+      val authorTOC = tocAuthorOp match {
+        case Some(x) => s"\\tocdata{toc}{$x}\n"
+        case None => ""
+      }
+
+      // whether the page headers display the chapter name or not
+      // is controlled by tocAuthorOp (latexOptions.tocAuthor / section.author)
+
+      // title displayed in the header
+      val titleHeader = tocAuthorOp match {
+        case Some(_) => s"\\title{${section.name}}\n"
+        case None => s"\\title{$title}\n"
+      }
+
+      // author displayed in the header
+      val authorHeader = tocAuthorOp match {
+        case Some(x) => s"\\author{$x}\n"
+        case None => s"\\author{$firstname $lastname}\n"
+      }
+
+      (
+        chapter +
+        authorTOC +    // the order of these two seems important
+        titleTOC +
+        authorHeader +
+        titleHeader +
+        convertedStyled
+      )
+
+    }).mkString("\n")
 
     val inputStream = getClass.getResourceAsStream("/latex/template.tex")
     val template = IOUtils.toString(inputStream)
@@ -115,7 +176,12 @@ object Latex {
       config.fixedFontScale, config.fixedFontFace,
       config.paperWidth, config.paperHeight,
       config.marginInner, config.marginOuter, config.marginTop, config.marginBottom,
-      title, firstname, lastname, titlepage, chapters)
+      title, firstname, lastname,
+      titlepage,
+      toc,
+      // titleFormat,
+      chapters
+    )
 
     // compile with:
     //  pdflatex -interaction=nonstopmode filename.tex
@@ -134,10 +200,14 @@ object Latex {
     // I only use a subset of markdown; this could work for web mode as well
 
     // strip Secondary tags
-    // TODO: eventually there may be a couple of tags for typesetting
-    // we will need to render those here first
+    // val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
+    // val stripped = markdown
 
-    val stripped = ExtractRawTags.matcher.replaceAllIn(markdown, _ => "")
+    // do a multiline match to replace between paragraph breaks and add noindents
+    // this is not ideal but the easiest way to handle this for now as far as I can tell
+    // the matcher matches all surrounding newlines make it as specific as possible
+    val stripped = MarkdownParse.MatcherNbspMulti.replaceAllIn(
+        markdown, _ => "\n\n" + BlankLine + "\n\n" + NoIndent + " ")
 
     // ~~~~ convert per-line symbols
 
@@ -301,6 +371,8 @@ object Latex {
     res = MarkdownParse.MatcherNbsp.replaceAllIn(res, _ => BlankLine)
     res = MarkdownParse.MatcherHr.replaceAllIn(res, _ => Rule)
 
+    res = MarkdownParse.MatcherBr.replaceAllIn(res, _ => LineBreak)
+
     res
 
   }
@@ -325,15 +397,27 @@ object Latex {
 
   val CopyrightSymbol = raw"\\textcopyright\\"
   val PercentSign = raw"\\%"
-  val Ellipsis = raw" \\ldots\\ "
+
+  // val Ellipsis = raw" \\ldots\\ "
+  val Ellipsis = raw"\\ldots "
+  // val Ellipsis = raw"\\thinspace\\ldots\\thinspace "
+
   val BlankLine = raw"\\vskip\\baselineskip"
+
   val Rule = raw"\\hfil\\rule{0.25\\textwidth}{0.4pt}\\hfil"
+
+  val LineBreak = raw"\\newline"
+
+  val NoIndent = raw"\\noindent"
 
 }
 
 
 
 object MarkdownParse {
+
+  // a very specific case for how section breaks are currently implemented
+  val MatcherNbspMulti: Regex = "\\n\\n&nbsp;\\n\\n".r
 
   val MatcherDq: Regex = "\"([^\"]+)\"".r
 
@@ -358,7 +442,10 @@ object MarkdownParse {
   val MatcherPercent: Regex = "%".r
   val MatcherEllipsis: Regex = "\\.\\.\\.".r
   val MatcherNbsp: Regex = "^&nbsp;$".r
+
   val MatcherHr: Regex = "^---$".r
+
+  val MatcherBr: Regex = "<br \\/>".r
 
   val MatcherDqSingle: Regex = "\"".r
 
