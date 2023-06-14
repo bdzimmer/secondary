@@ -28,7 +28,7 @@ import bdzimmer.orbits.{Editor, ConstVelFlightFn}
 
 object Driver {
 
-  val Version = "2022.12.07"
+  val Version = "2023.06.12"
   val Title: String = "Secondary - create worlds from text - v" + Version
   val DefaultCommand: String = DriverCommands.Interactive
   val ServerRefreshSeconds = 10
@@ -217,6 +217,19 @@ class Driver {
       new ConfigurationGUI(
           prop, ProjectConfig.requiredProperties, "Secondary - Project Configuration")
       println("You must restart Secondary for configuration changes to take effect.")
+    }
+    case DriverCommands.Content => {
+      println("default content dir: " + projConf.localContentPath)
+      if (projConf.contentDirs.nonEmpty) {
+        println("extra content dirs:")
+        projConf.contentDirs.foreach(pair => {
+          val (name, path) = pair
+          val path_file = new File(path)
+          println(
+            "\t" + name + "\t" +
+            path_file.getAbsolutePath + "\t" + (if (path_file.isDirectory) {"(exists)"} else {"(not found!)"}))
+        })
+      }
     }
     case DriverCommands.Duplicate => {
       val name = args.mkString(" ")
@@ -464,6 +477,7 @@ object DriverCommands {
   val Basic       = "basic"
   val Browse      = "browse"
   val Configure   = "configure"
+  val Content     = "content"
   val Duplicate   = "duplicate"
   val Edit        = "edit"
   val Editor      = "editor"
@@ -486,6 +500,7 @@ object DriverCommands {
     (Basic,       "export an item to basic HTML"),
     (Browse,      "browse exported project web site"),
     (Configure,   "edit project configuration"),
+    (Content,     "verify content directories"),
     (Duplicate,   "detect duplicate words"),
     (Edit,        "edit the source file for an item"),
     (Editor,      "pixel editor (alpha)"),

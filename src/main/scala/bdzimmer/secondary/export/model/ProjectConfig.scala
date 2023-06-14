@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Ben Zimmer. All rights reserved.
+// Copyright (c) 2023 Ben Zimmer. All rights reserved.
 
 // Project configuration.
 
@@ -9,6 +9,10 @@
 package bdzimmer.secondary.export.model
 
 import java.io.File
+import scala.util.Try
+import scala.collection.JavaConverters._
+
+import org.apache.commons.io.FileUtils
 
 import bdzimmer.util.PropertiesWrapper
 import bdzimmer.util.StringUtils._
@@ -25,7 +29,8 @@ class ProjectConfig(
     val relativeLinks: Boolean,
     val hiddenItems: String,
     val unifiedJumbotron: Boolean,
-    val search: Boolean) {
+    val search: Boolean,
+    val contentDirs: Map[String, String]) {
 
   val localExportPath      = projectDir / ProjectStructure.WebDir
   val localContentPath     = projectDir / ProjectStructure.ContentDir
@@ -63,10 +68,33 @@ object ProjectConfig {
     new PropertiesWrapper(propFilename)
   }
 
-  
+  private def getContentDirs(projectDir: String): Map[String, String] = {
+    val contentDirsFile = new File(projectDir / ProjectStructure.ContentDirsFile)
+    if (!contentDirsFile.isFile) {
+      Map()
+    } else {
+      val res = Try {
+        val lines = FileUtils.readLines(contentDirsFile, "UTF-8").asScala
+        lines.flatMap(x => {
+          Try {
+            val x_split = x.split(":")
+            (x_split(0), x_split(1))
+          }.toOption
+        }).toMap
+      }
+      if (res.isFailure) {
+        println(s"failed to read content dirs file: $contentDirsFile")
+      }
+      res.getOrElse(Map())
+    }
+  }
+
+
   def apply(projectDir: String): ProjectConfig = {
 
     val prop = getProperties(projectDir)
+
+    val contentDirs = getContentDirs(projectDir)
 
     val missing = requiredProperties.filter(x => {
       !prop.prop.keySet().contains(x.key)
@@ -91,6 +119,7 @@ object ProjectConfig {
         relativeLinks    = getProp(relativeLinks).toBooleanSafe,
         hiddenItems      = getProp(hiddenItems),
         unifiedJumbotron = getProp(unifiedJumbotron).toBooleanSafe,
-        search           = getProp(search).toBooleanSafe)
+        search           = getProp(search).toBooleanSafe,
+        contentDirs      = contentDirs)
   }
 }

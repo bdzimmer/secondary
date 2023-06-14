@@ -32,7 +32,11 @@ class RenderImages(
   val imagesLocation = location / RenderImages.ImagesDir
   new File(imagesLocation).mkdir
 
-  def exportAllImages(items: List[WorldItem], contentDir: String): FileOutputsMap = {
+  def exportAllImages(
+      items: List[WorldItem],
+      contentDir: String,
+      contentDirs: Map[String, String]
+    ): FileOutputsMap = {
 
     // export tileset / spritesheet and map images
 
@@ -48,11 +52,12 @@ class RenderImages(
 
     // In the case of ImageItems, the filename is already an image. It either
     // - exists in the contentDir (no prefix)
+    // - exists in one of the additional contentDirs ("content:" prefix)
     // - exists somewhere else on the computer ("file:" prefix)
     // - to be downloaded ("wikimedia: prefix)
 
     val imageFileOutputsRaw = (items.collect({case x: ImageFileItem => x})
-        map(x => prepareImageFileItemOutputs(x, contentDir)))
+        map(x => prepareImageFileItemOutputs(x, contentDir, contentDirs)))
 
     val imageFileOutputs = imageFileOutputsRaw.map(x => (x._1, x._3))
 
@@ -82,8 +87,13 @@ class RenderImages(
 
 
   // download or copy image files to the output location
-  def prepareImageFileItemOutputs(imageFileItem: ImageFileItem, contentDir: String): (String, Boolean, List[String]) = {
+  def prepareImageFileItemOutputs(
+        imageFileItem: ImageFileItem,
+        contentDir: String,
+        contentDirs: Map[String, String]
+    ): (String, Boolean, List[String]) = {
 
+    val prefixContent = "content:"
     val prefixFile = "file:"
     val prefixWikimedia = "wikimedia:"
 
@@ -104,7 +114,17 @@ class RenderImages(
 
       // local file - copy to output web image directory
 
-      val srcAbsFilename = if (imageFileItem.filename.startsWith(prefixFile)) {
+      val srcAbsFilename = if (imageFileItem.filename.startsWith(prefixContent)) {
+        val (name, path) = imageFileItem.filename.split(":") match {
+          case Array(_, name, path) => (name, path)
+          // TODO: handle failure
+        }
+        // TODO: handle failure
+        val contentDirPath = contentDirs(name)
+        val res = contentDirPath / path
+        println("image from extra content dir:", res)
+        res
+      } else if (imageFileItem.filename.startsWith(prefixFile)) {
         imageFileItem.filename.stripPrefix(prefixFile)
       } else {
         contentDir / imageFileItem.filename
@@ -452,4 +472,3 @@ object RenderImages {
 
 
 }
-

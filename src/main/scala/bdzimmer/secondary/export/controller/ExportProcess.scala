@@ -131,7 +131,7 @@ class ExportProcess(projConf: ProjectConfig)  {
 
           val (allPageOutputs, allImageOutputs) = ExportPipeline.export(
                itemsToExport, modifiedRefs, renderPages, renderImages,
-               projConf.localExportPath, projConf.localContentPath)
+               projConf.localExportPath, projConf.localContentPath, projConf.contentDirs)
 
           saveStatus(newMetaStatus, newRefStatus, newItemStatus)
         } else {
@@ -237,7 +237,7 @@ object ExportPipeline {
           projConf.license)
 
         performRenderPages(renderPages, world, projConf.localExportPath)
-        performRenderImages(renderImages, world, projConf.localContentPath)
+        performRenderImages(renderImages, world, projConf.localContentPath,  projConf.contentDirs)
 
       }
       case Fail(msg) => println(msg)
@@ -254,7 +254,9 @@ object ExportPipeline {
       renderPages: RenderPages,
       renderImages: RenderImages,
       localExportPath: String,
-      localContentPath: String): (List[String], FileOutputsMap) = {
+      localContentPath: String,
+      contentDirs: Map[String, String]
+      ): (List[String], FileOutputsMap) = {
 
     logList("page to export", pagesToExport.map(_.id))
 
@@ -272,7 +274,7 @@ object ExportPipeline {
     val imagesToExport = (refsToExport ++ imagePagesToExport).distinct
 
     val pageOutputs = performRenderPages(renderPages, pagesToExport, localExportPath)
-    val imageOutputs = performRenderImages(renderImages, imagesToExport, localContentPath)
+    val imageOutputs = performRenderImages(renderImages, imagesToExport, localContentPath, contentDirs)
 
     imageOutputs.foreach{case (k, v) => {
       logList("image created", v.map(k + " -> " + _))
@@ -329,13 +331,14 @@ object ExportPipeline {
   def performRenderImages(
       renderImages: RenderImages,
       imagesToExport: List[WorldItem],
-      localContentPath: String): FileOutputsMap = {
+      localContentPath: String,
+      contentDirs: Map[String, String]): FileOutputsMap = {
 
     val startTime = System.currentTimeMillis
 
     // TODO: move file IO here from ExportIamges
     val imageOutputs = if (imagesToExport.nonEmpty) {
-      renderImages.exportAllImages(imagesToExport, localContentPath)
+      renderImages.exportAllImages(imagesToExport, localContentPath, contentDirs)
     } else {
       RenderImages.emptyFileOutputsMap
     }

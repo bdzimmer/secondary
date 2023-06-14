@@ -14,8 +14,11 @@ object ProjectStructure {
   val ContentDir = "content"
   val WebDir = "web"
 
-  // configuration file
+  // configuration properties file
   val ConfigurationFile = "secondary.properties"
+
+  // additional content directories file
+  val ContentDirsFile = "content-dirs-config.txt"
 
   // status files
   val MetaStatusFile = "status_meta.txt"
