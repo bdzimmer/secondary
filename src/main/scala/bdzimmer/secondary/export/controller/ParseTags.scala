@@ -91,7 +91,12 @@ object ParseTags {
       case SecTags.Image => {
         stringToItem.get(tag.value).flatMap(item => item match {
           case imageItem: ImageItem => Some({
-            Image(imageItem, argBool("responsive", false), argBool("link"))
+            Image(
+              imageItem,
+              argBool("responsive", false),
+              argBool("link"),
+              args.get("bgcolor")
+            )
           })
           case _ => None
         }).getOrElse(ParseError(tag, s"image '${tag.value}' does not exist"))

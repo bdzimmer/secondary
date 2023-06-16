@@ -98,7 +98,8 @@ object Tags {
   case class Image(
     item: ImageItem,
     responsive: Boolean,
-    link: Boolean
+    link: Boolean,
+    bgColor: Option[String]
   ) extends ParsedTag
 
   case class FamilyTree(
@@ -340,4 +341,3 @@ object Tags {
   }
 
 }
-

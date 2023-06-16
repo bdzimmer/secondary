@@ -12,7 +12,8 @@ import scala.collection.immutable.Seq
 
 object Html {
 
-  val ImageMaxWidthDefault = 480
+  val ImageMaxWidthDefault: Int = 480
+  val ImageBgColorDefault: String = "#404040FF"
 
 
   def listGroup(items: Seq[String]): String = {
@@ -42,14 +43,20 @@ object Html {
   }
 
 
-  def image(file: String, responsive: Boolean = false, maxWidth: Int = ImageMaxWidthDefault): String = {
-    // TODO: build a better style string given more parameters
-    // TODO: or split into multiple functions
-    responsive match {
-      // case false => s"""<img src="$file" style="max-width:$maxWidth;height:auto"/>"""
-      // TODO: not sure if setting both max-width and max-height is doing what I think
-      case false => s"""<img src="$file" style="max-width:${maxWidth}px;max-height:${maxWidth}px;height:auto"/>"""
-      case true => s"""<img src="$file" class="img-responsive" />"""
+  def image(
+      file: String,
+      responsive: Boolean = false,
+      maxWidth: Int = ImageMaxWidthDefault,
+      bgColor: Option[String] = None
+      ): String = {
+
+    val bgColorStyle = bgColor.map(x => s"background-color:$x").getOrElse("")
+
+    if (!responsive) {
+      val nonResponsiveStyle = s"max-width:${maxWidth}px;max-height:${maxWidth}px;height:auto"
+      s"""<img src="$file" style="$nonResponsiveStyle;$bgColorStyle" />"""
+    } else {
+      s"""<img src="$file" class="img-responsive" style="$bgColorStyle" />"""
     }
   }
 

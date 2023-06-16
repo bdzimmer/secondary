@@ -122,7 +122,7 @@ class RenderImages(
         // TODO: handle failure
         val contentDirPath = contentDirs(name)
         val res = contentDirPath / path
-        println("image from extra content dir:", res)
+        println("image from extra content dir: " + res)
         res
       } else if (imageFileItem.filename.startsWith(prefixFile)) {
         imageFileItem.filename.stripPrefix(prefixFile)
@@ -424,15 +424,16 @@ object RenderImages {
       responsive: Boolean = true,
       maxWidth: Int = 480,
       showName: Boolean = true,
-      scale: Int = 4): String = {
+      scale: Int = 4,
+      bgColor: Option[String] = None): String = {
 
     val imageTag = item match {
       case x: MapItem => {
         val imageFile = pixelImagePathScale(x, 1)
         imageSprite(imageFile, 0, 0, 192, 192)
       }
-      case x: ImageFileItem => image(imagePath(x), responsive, maxWidth)
-      case x: TripItem => image(imagePath(x), responsive, maxWidth)
+      case x: ImageFileItem => image(imagePath(x), responsive, maxWidth, bgColor)
+      case x: TripItem => image(imagePath(x), responsive, maxWidth, bgColor)
       case _ => ""
     }
 
