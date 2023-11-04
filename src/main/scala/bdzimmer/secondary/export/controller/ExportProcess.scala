@@ -237,7 +237,7 @@ object ExportPipeline {
           projConf.license)
 
         performRenderPages(renderPages, world, projConf.localExportPath)
-        performRenderImages(renderImages, world, projConf.localContentPath,  projConf.contentDirs)
+        performRenderImages(renderImages, world, projConf.localContentPath, projConf.contentDirs)
 
       }
       case Fail(msg) => println(msg)
