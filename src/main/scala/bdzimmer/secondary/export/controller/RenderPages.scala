@@ -215,7 +215,7 @@ class RenderPages(
       description,
       navbar,
 
-      column(Column8, image(RenderImages.imagePath(imageItem), responsive = true)) +
+      column(Column8, image(RenderImages.imagePath(imageItem), responsive = true, bgColor = Some(ImageBgColorDefault))) +
         column(Column4, "") +
         column(Column12,
           hr +
@@ -389,7 +389,11 @@ object RenderPages {
 
 
   // panel that can be pulled right
-  def panel(contents: String, pullRight: Boolean = false, border: Boolean = true): String = {
+  def panel(
+      contents: String,
+      pullRight: Boolean = false,
+      border: Boolean = true
+      ): String = {
 
     val pullClass = if (pullRight) " pull-right" else ""
     val leftMargin = if (pullRight) "margin-left:32px;" else ""

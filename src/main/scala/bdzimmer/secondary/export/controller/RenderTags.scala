@@ -90,12 +90,30 @@ class RenderTags(
     case image: Tags.Image => {
       // TODO: improve this logic
       if (image.responsive) {
-        RenderPages.panel(RenderImages.imageLinkPage(image.item, true), false)
+        RenderPages.panel(
+          RenderImages.imageLinkPage(
+            image.item,
+            responsive = true,
+            bgColor = image.bgColor),
+          pullRight = false)
       } else {
         if (image.link) {
-          RenderPages.panel(RenderImages.imageLinkPage(image.item, false, 320), true)
+          RenderPages.panel(
+            RenderImages.imageLinkPage(
+              image.item,
+              responsive = false,
+              maxWidth = 320,
+              bgColor = image.bgColor),
+            pullRight = true)
         } else {
-          RenderPages.panel(RenderImages.imageLinkPage(image.item, false, 320, false), true)
+          RenderPages.panel(
+            RenderImages.imageLinkPage(
+              image.item,
+              responsive = false,
+              maxWidth = 320,
+              showName = false,
+              bgColor = image.bgColor),
+            pullRight = true)
         }
       }
     }

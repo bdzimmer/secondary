@@ -231,7 +231,9 @@ object ImageDownloader {
         val scaledBufferedImage = new BufferedImage(
             scaledImage.getWidth(null),
             scaledImage.getHeight(null),
-            BufferedImage.TYPE_INT_RGB)
+            // BufferedImage.TYPE_INT_RGB
+            img.getType
+        )
         scaledBufferedImage.getGraphics.drawImage(scaledImage, 0, 0, null)
         ImageIO.write(scaledBufferedImage, ext, new File(outputImage))
       } else {

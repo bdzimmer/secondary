@@ -16,7 +16,7 @@ object ImageGallery {
 <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog" data-dismiss="modal" style="height:90%;width:70%">
     <div class="modal-content" style="height:100%">              
-      <div class="modal-body" style="height:80%;background-color:#000000">
+      <div class="modal-body" style="height:80%;background-color:${Html.ImageBgColorDefault}">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
         <img src="" class="imagepreview img-responsive center-block" style="max-height:98%">
       </div> 
@@ -64,7 +64,7 @@ $(function() {
           size,
           ("""<div class="thumbnail">""" +
           s"""<a class="pop">""" +
-          s"""<img src="${imageSrc}" alt="${image.notes}" style="width:100%"/>""" +
+          s"""<img src="${imageSrc}" alt="${image.notes}" style="background-color:${Html.ImageBgColorDefault};width:100%"/>""" +
           caption +
           """</a>""" +
           """</div>""")
