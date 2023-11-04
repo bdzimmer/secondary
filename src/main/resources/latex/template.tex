@@ -1,24 +1,24 @@
-\documentclass[%s]{book}
+\documentclass[%s]{book}       %% ARG 0: font size
 
 \usepackage{titling}
 \usepackage[pagestyles]{titlesec}
 \usepackage[T1]{fontenc}
-\usepackage{%s}
+\usepackage{%s}                %% ARG 1: font face
 \usepackage{listings}
-\usepackage[scaled=%s]{%s}
-\usepackage{enumitem}
+\usepackage[scaled=%s]{%s}     %% ARG 2, 3: fixed-width font scale
+\usepackage{enumitem}          %%           fixed-width font face
 \usepackage{tocdata}
 
 \lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
 
 \usepackage{geometry}
 \geometry{
- papersize={%s,%s},
- inner=%s,
- outer=%s,
- top=%s,
- bottom=%s,
- footskip=0.2in  %% hardcoded for now
+ papersize={%s,%s},           %% ARG 4, 5: paper width, paper height
+ inner=%s,                    %% ARG 6: inner margin
+ outer=%s,                    %% ARG 7: outer margin
+ top=%s,                      %% ARG 8: top margin
+ bottom=%s,                   %% ARG 9: bottom margin
+ footskip=%s                  %% ARG 10: footskip
  %% includeheadfoot
 }
 
@@ -26,6 +26,7 @@
 
 %% standard title:
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}
+
 %% anthology title
 %% this didn't work because we can't change the author before the \chapter
 %% \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}[\newline\large\textit{\theauthor}]
@@ -35,13 +36,19 @@
 \newcommand\ChapterAuthor[2]{\chapter*{#1\newline\large\textit{#2}}}
 
 \newpagestyle{mystyle}{
+
 %% original style: author and title
 %%  \sethead[\thepage][\textbf{\theauthor}][]
 %%          {}{\textbf{\thetitle}}{\thepage}}
+
 %% new style: title and chapter title - hardcoded for now
 %% TODO: don't hard code the title!
-  \sethead[\thepage][\textbf{TODO BOOK TITLE TODO}][]
-          {}{\textbf{\thetitle}}{\thepage}}
+%%  \sethead[\thepage][\textbf{TODO BOOK TITLE TODO}][]
+%%           {}{\textbf{\thetitle}}{\thepage}
+
+%% ARG 11: title format
+%s
+}
 \pagestyle{empty}
 
 %% aggressively penalize widows and orphans
@@ -51,8 +58,8 @@
 \raggedbottom
 \emergencystretch 3em
 
-\title{%s}
-\author{%s %s}
+\title{%s}                %% ARG 12: title
+\author{%s %s}            %% ARG 13, 14: first name, last name
 %% \date{today}
 
 \begin{document}
@@ -75,11 +82,16 @@
 %% \maketitle
 
 %% title page goes here
+%% ARG 15: title page
+
 %s
 
 %% table of contents (\tableofcontents) goes here
 %% needs a \thispagestyle{empty} especially
 %% pagenumbering is disabled in \frontmatter
+
+%% ARG 16: table of contents
+
 %s
 
 \mainmatter
@@ -87,6 +99,7 @@
 
 
 %% chapters go here
+%% ARG 17: chapters
 
 %s
 

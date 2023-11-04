@@ -16,9 +16,6 @@ import bdzimmer.secondary.export.model.WorldItems.BookItem
 
 object Latex {
 
-//  val TitleFormatStandard = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}"
-//  val TitleFormatAnthology = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}[\\newline\\large\\textit{\\theauthor}]"
-
   val Newline = "\\newline"
 
   def export(
@@ -66,6 +63,8 @@ object Latex {
       config: Book.BookConfig
     ): Unit = {
 
+    // TODO: collapse firstname / lastname to author name tuple
+
     val content = formatContentLatex(
       title,
       firstname,
@@ -93,10 +92,15 @@ object Latex {
     // Seems like this won't work properly with multi-page TOCs but it works for now
     val toc = if (config.toc) {"\\tableofcontents\n\\thispagestyle{empty}"} else {""}
 
-//    val titleFormat = firstSection.author match {
-//      case Some(_) => TitleFormatStandard
-//      case None =>  TitleFormatAnthology
-//    }
+    val pageStyle = if (config.anthology) {
+      // book title on one page, chapter title on facing page
+      s"\\sethead[\\thepage][\\textbf{$title}][]\n           {}{\\textbf{\\thetitle}}{\\thepage}"
+    } else {
+      // author on one page, book title on facing page
+      // a good configuration for chapters that don't have titles
+      // TODO: different single author configuration for chapters with titles!
+      "\\sethead[\\thepage][\\textbf{\\theauthor}][]\n          {}{\\textbf{\\thetitle}}{\\thepage}}"
+    }
 
     // TODO: do something more clever with title page formatting?
     // add extra newlines to title page
@@ -104,7 +108,7 @@ object Latex {
         // .split("\n").map(line => line + Newline).mkString("\n")
 
     val chapters = remainingSections.map(section => {
-      // the first line of the section is the chapter title header
+      // the first line of the section is the chapter title heading
       val trimmed = section.content.split("\n").tail.mkString("\n")
       val converted = convert(trimmed)
       val convertedStyled = if (config.unstyledSections.contains(section.name)) {
@@ -114,7 +118,7 @@ object Latex {
         converted
       }
 
-      // prepare strings using LatexOptions
+      // prepare chapter title and TOC configuration using LatexOptions
       val chapterTitleStr: String = section.latexOptions.flatMap(_.chapterTitle).getOrElse(section.name)
       val chapterAuthorOp: Option[String] = section.latexOptions.flatMap(_.chapterAuthor) match {
         case Some(x) => Some(x)
@@ -128,12 +132,12 @@ object Latex {
 
       // title and author displayed in the chapter
       val chapter = chapterAuthorOp match {
-        case Some(x) => s"\\ChapterAuthor{${chapterTitleStr}}{$x}\n"
-        case None => s"\\chapter*{${chapterTitleStr}}\n"
+        case Some(x) => s"\\ChapterAuthor{$chapterTitleStr}{$x}\n"
+        case None => s"\\chapter*{$chapterTitleStr}\n"
       }
 
       // title displayed in the TOC
-      val titleTOC = s"\\addcontentsline{toc}{chapter}{${tocTitleStr}}\n"
+      val titleTOC = s"\\addcontentsline{toc}{chapter}{$tocTitleStr}\n"
 
       // author displayed in the TOC
       val authorTOC = tocAuthorOp match {
@@ -172,15 +176,17 @@ object Latex {
     inputStream.close()
 
     template.format(
-      config.fontSize, config.fontFace,
-      config.fixedFontScale, config.fixedFontFace,
-      config.paperWidth, config.paperHeight,
-      config.marginInner, config.marginOuter, config.marginTop, config.marginBottom,
-      title, firstname, lastname,
-      titlepage,
-      toc,
-      // titleFormat,
-      chapters
+      config.fontSize, config.fontFace,               // 0-1
+      config.fixedFontScale, config.fixedFontFace,    // 2-3
+      config.paperWidth, config.paperHeight,          // 4-5
+      config.marginInner, config.marginOuter,         // 6-7
+      config.marginTop, config.marginBottom,          // 8-9
+      config.footSkip,                                // 10
+      pageStyle,                                      // 11
+      title, firstname, lastname,                     // 12-14
+      titlepage,                                      // 15
+      toc,                                            // 16
+      chapters                                        // 17
     )
 
     // compile with:
