@@ -102,10 +102,27 @@ object Latex {
       "\\sethead[\\thepage][\\textbf{\\theauthor}][]\n          {}{\\textbf{\\thetitle}}{\\thepage}}"
     }
 
-    // TODO: do something more clever with title page formatting?
-    // add extra newlines to title page
-    val titlepage = convert(firstSection.content)
-        // .split("\n").map(line => line + Newline).mkString("\n")
+    // TODO: make this configurable
+    val titlePageSourceFormatted = (
+
+      // this will align the top to the top margin but can't go beyond zero
+      // s"\\vspace{0in}\n\n" +
+
+      // this aligns from the op of the page exactly
+      // s"\\vspace*{2in} \\vspace{-\\topskip} \\vspace{-0.75in}\n\n" +
+
+      // using vspace* automatically add in topskip as well as the margin!
+      // So we need to subtract it out
+      // for vspace*{0in} to align with the top margin
+      // s"\\vspace*{0in} \\vspace{-\\topskip} \n\n" +
+
+      // This matches with what the chapter title spacing is doing.
+      // So it's like the 50pt measurement is from topmargin + topskip.
+      s"\\vspace*{50pt} \\vspace{\\topskip}\n\n" +
+      firstSection.content
+    )
+
+    val titlepage = convert(titlePageSourceFormatted)
 
     val chapters = remainingSections.map(section => {
       // the first line of the section is the chapter title heading
