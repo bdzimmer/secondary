@@ -102,24 +102,64 @@ object Latex {
       "\\sethead[\\thepage][\\textbf{\\theauthor}][]\n          {}{\\textbf{\\thetitle}}{\\thepage}}"
     }
 
+
     // TODO: make this configurable
-    val titlePageSourceFormatted = (
+    val useChapterAuthor = false
 
-      // this will align the top to the top margin but can't go beyond zero
-      // s"\\vspace{0in}\n\n" +
-
-      // this aligns from the op of the page exactly
-      // s"\\vspace*{2in} \\vspace{-\\topskip} \\vspace{-0.75in}\n\n" +
-
-      // using vspace* automatically add in topskip as well as the margin!
-      // So we need to subtract it out
-      // for vspace*{0in} to align with the top margin
-      // s"\\vspace*{0in} \\vspace{-\\topskip} \n\n" +
-
-      // This matches with what the chapter title spacing is doing.
-      // So it's like the 50pt measurement is from topmargin + topskip.
-      s"\\vspace*{50pt} \\vspace{\\topskip}\n\n" +
+    val firstSectionContent = if (useChapterAuthor) {
       firstSection.content
+    } else {
+      // replace title with formatted title + author name
+      // I couldn't figure out how to do this with conditionals due to the nesting
+      val withoutTitle = firstSection.content.split("\n").tail.mkString("\n")
+      val subtitle = if (config.anthology) {
+        "Edited by " + config.editor.getOrElse("")
+      } else {
+        firstname + " " + lastname
+      }
+
+      // derp derp derp
+      // val customTitle = (
+      //   s"{\\huge\\bfseries\\noindent{$title\\newline\\newline\\large\\textit{$subtitle}}}"
+      // )
+
+      val customTitle = s"\\ChapterAuthor{$title}{$subtitle}"
+
+      customTitle + "\n\n" + withoutTitle
+
+    }
+
+
+    val titlePageSourceFormatted: String = (
+
+      // was originally trying to figure out how to add vspace here
+
+//      // this will align the top to the top margin but can't go beyond zero
+//      // s"\\vspace{0in}\n\n" +
+//
+//      // this aligns from the op of the page exactly
+//      // s"\\vspace*{2in} \\vspace{-\\topskip} \\vspace{-0.75in}\n\n" +
+//
+//      // using vspace* automatically add in topskip as well as the margin!
+//      // So we need to subtract it out
+//      // for vspace*{0in} to align with the top margin
+//      // s"\\vspace*{0in} \\vspace{-\\topskip} \n\n" +
+
+      // Initially I thought this was correct, like the 50pt measurement
+      // is from topmargin + topskip.
+      // Loking closer, it's close but not quite. Dangit...
+
+      // s"\\vspace*{50pt} \\vspace{\\topskip}\n\n" + firstSectionContent
+
+      // Did some investigation where I set margins to zero in titlespacing like this:
+      //  \titlespacing*{\chapter}{0pt}{0pt}{0pt}
+      // Possibly easier to see what's going on by enabling rigidchapters on titlesec
+      // Seems like by default some vertical space is being inserted before the start
+      // of the body text, I don't know where this is coming from.
+      // Realized though, I can get the same behavior with ChapterAuthor. See above.
+
+      firstSectionContent
+
     )
 
     val titlepage = convert(titlePageSourceFormatted)
