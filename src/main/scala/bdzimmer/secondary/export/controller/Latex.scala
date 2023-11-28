@@ -94,12 +94,15 @@ object Latex {
 
     val pageStyle = if (config.anthology) {
       // book title on one page, chapter title on facing page
-      s"\\sethead[\\thepage][\\textbf{$title}][]\n           {}{\\textbf{\\thetitle}}{\\thepage}"
+      // s"\\sethead[\\thepage][\\textbf{$title}][]\n           {}{\\textbf{\\thetitle}}{\\thepage}"
+      s"\\sethead[\\thepage][\\scshape{$title}][]\n           {}{\\scshape{\\thetitle}}{\\thepage}"
+
     } else {
       // author on one page, book title on facing page
       // a good configuration for chapters that don't have titles
       // TODO: different single author configuration for chapters with titles!
       "\\sethead[\\thepage][\\textbf{\\theauthor}][]\n          {}{\\textbf{\\thetitle}}{\\thepage}}"
+      "\\sethead[\\thepage][\\scshape{\\theauthor}][]\n          {}{\\scshape{\\thetitle}}{\\thepage}}"
     }
 
 
@@ -189,16 +192,16 @@ object Latex {
 
       // title and author displayed in the chapter
       val chapter = chapterAuthorOp match {
-        case Some(x) => s"\\ChapterAuthor{$chapterTitleStr}{$x}\n"
-        case None => s"\\chapter*{$chapterTitleStr}\n"
+        case Some(x) => s"\\ChapterAuthor{$chapterTitleStr}{$x}  % chapter title with author name\n"
+        case None => s"\\chapter*{$chapterTitleStr}\n  % chapter title with no author name\n"
       }
 
       // title displayed in the TOC
-      val titleTOC = s"\\addcontentsline{toc}{chapter}{$tocTitleStr}\n"
+      val titleTOC = s"\\addcontentsline{toc}{chapter}{$tocTitleStr}  % title in TOC\n"
 
       // author displayed in the TOC
       val authorTOC = tocAuthorOp match {
-        case Some(x) => s"\\tocdata{toc}{$x}\n"
+        case Some(x) => s"\\tocdata{toc}{\\normalsize{$x}}  % author name in TOC\n"
         case None => ""
       }
 
@@ -207,14 +210,14 @@ object Latex {
 
       // title displayed in the header
       val titleHeader = tocAuthorOp match {
-        case Some(_) => s"\\title{${section.name}}\n"
+        case Some(_) => s"\\title{${section.name}}  % title in header\n"
         case None => s"\\title{$title}\n"
       }
 
       // author displayed in the header
       val authorHeader = tocAuthorOp match {
-        case Some(x) => s"\\author{$x}\n"
-        case None => s"\\author{$firstname $lastname}\n"
+        case Some(x) => s"\\author{$x}  % author in header\n"
+        case None => s"\\author{$firstname $lastname}  % author in header\n"
       }
 
       (
