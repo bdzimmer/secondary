@@ -16,9 +16,6 @@ import bdzimmer.secondary.export.model.WorldItems.BookItem
 
 object Latex {
 
-//  val TitleFormatStandard = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}"
-//  val TitleFormatAnthology = "\\titleformat{\\chapter}[display]{\\normalfont\\bfseries}{}{0pt}{\\huge}[\\newline\\large\\textit{\\theauthor}]"
-
   val Newline = "\\newline"
 
   def export(
@@ -66,6 +63,8 @@ object Latex {
       config: Book.BookConfig
     ): Unit = {
 
+    // TODO: collapse firstname / lastname to author name tuple
+
     val content = formatContentLatex(
       title,
       firstname,
@@ -93,18 +92,83 @@ object Latex {
     // Seems like this won't work properly with multi-page TOCs but it works for now
     val toc = if (config.toc) {"\\tableofcontents\n\\thispagestyle{empty}"} else {""}
 
-//    val titleFormat = firstSection.author match {
-//      case Some(_) => TitleFormatStandard
-//      case None =>  TitleFormatAnthology
-//    }
+    val pageStyle = if (config.anthology) {
+      // book title on one page, chapter title on facing page
+      // s"\\sethead[\\thepage][\\textbf{$title}][]\n           {}{\\textbf{\\thetitle}}{\\thepage}"
+      s"\\sethead[\\thepage][\\scshape{$title}][]\n           {}{\\scshape{\\thetitle}}{\\thepage}"
 
-    // TODO: do something more clever with title page formatting?
-    // add extra newlines to title page
-    val titlepage = convert(firstSection.content)
-        // .split("\n").map(line => line + Newline).mkString("\n")
+    } else {
+      // author on one page, book title on facing page
+      // a good configuration for chapters that don't have titles
+      // TODO: different single author configuration for chapters with titles!
+      "\\sethead[\\thepage][\\textbf{\\theauthor}][]\n          {}{\\textbf{\\thetitle}}{\\thepage}}"
+      "\\sethead[\\thepage][\\scshape{\\theauthor}][]\n          {}{\\scshape{\\thetitle}}{\\thepage}}"
+    }
+
+
+    // TODO: make this configurable
+    val useChapterAuthor = false
+
+    val firstSectionContent = if (useChapterAuthor) {
+      firstSection.content
+    } else {
+      // replace title with formatted title + author name
+      // I couldn't figure out how to do this with conditionals due to the nesting
+      val withoutTitle = firstSection.content.split("\n").tail.mkString("\n")
+      val subtitle = if (config.anthology) {
+        "Edited by " + config.editor.getOrElse("")
+      } else {
+        firstname + " " + lastname
+      }
+
+      // derp derp derp
+      // val customTitle = (
+      //   s"{\\huge\\bfseries\\noindent{$title\\newline\\newline\\large\\textit{$subtitle}}}"
+      // )
+
+      val customTitle = s"\\ChapterAuthor{$title}{$subtitle}"
+
+      customTitle + "\n\n" + withoutTitle
+
+    }
+
+
+    val titlePageSourceFormatted: String = (
+
+      // was originally trying to figure out how to add vspace here
+
+//      // this will align the top to the top margin but can't go beyond zero
+//      // s"\\vspace{0in}\n\n" +
+//
+//      // this aligns from the op of the page exactly
+//      // s"\\vspace*{2in} \\vspace{-\\topskip} \\vspace{-0.75in}\n\n" +
+//
+//      // using vspace* automatically add in topskip as well as the margin!
+//      // So we need to subtract it out
+//      // for vspace*{0in} to align with the top margin
+//      // s"\\vspace*{0in} \\vspace{-\\topskip} \n\n" +
+
+      // Initially I thought this was correct, like the 50pt measurement
+      // is from topmargin + topskip.
+      // Loking closer, it's close but not quite. Dangit...
+
+      // s"\\vspace*{50pt} \\vspace{\\topskip}\n\n" + firstSectionContent
+
+      // Did some investigation where I set margins to zero in titlespacing like this:
+      //  \titlespacing*{\chapter}{0pt}{0pt}{0pt}
+      // Possibly easier to see what's going on by enabling rigidchapters on titlesec
+      // Seems like by default some vertical space is being inserted before the start
+      // of the body text, I don't know where this is coming from.
+      // Realized though, I can get the same behavior with ChapterAuthor. See above.
+
+      firstSectionContent
+
+    )
+
+    val titlepage = convert(titlePageSourceFormatted)
 
     val chapters = remainingSections.map(section => {
-      // the first line of the section is the chapter title header
+      // the first line of the section is the chapter title heading
       val trimmed = section.content.split("\n").tail.mkString("\n")
       val converted = convert(trimmed)
       val convertedStyled = if (config.unstyledSections.contains(section.name)) {
@@ -114,7 +178,7 @@ object Latex {
         converted
       }
 
-      // prepare strings using LatexOptions
+      // prepare chapter title and TOC configuration using LatexOptions
       val chapterTitleStr: String = section.latexOptions.flatMap(_.chapterTitle).getOrElse(section.name)
       val chapterAuthorOp: Option[String] = section.latexOptions.flatMap(_.chapterAuthor) match {
         case Some(x) => Some(x)
@@ -128,16 +192,16 @@ object Latex {
 
       // title and author displayed in the chapter
       val chapter = chapterAuthorOp match {
-        case Some(x) => s"\\ChapterAuthor{${chapterTitleStr}}{$x}\n"
-        case None => s"\\chapter*{${chapterTitleStr}}\n"
+        case Some(x) => s"\\ChapterAuthor{$chapterTitleStr}{$x}  % chapter title with author name\n"
+        case None => s"\\chapter*{$chapterTitleStr}\n  % chapter title with no author name\n"
       }
 
       // title displayed in the TOC
-      val titleTOC = s"\\addcontentsline{toc}{chapter}{${tocTitleStr}}\n"
+      val titleTOC = s"\\addcontentsline{toc}{chapter}{$tocTitleStr}  % title in TOC\n"
 
       // author displayed in the TOC
       val authorTOC = tocAuthorOp match {
-        case Some(x) => s"\\tocdata{toc}{$x}\n"
+        case Some(x) => s"\\tocdata{toc}{\\normalsize{$x}}  % author name in TOC\n"
         case None => ""
       }
 
@@ -146,14 +210,14 @@ object Latex {
 
       // title displayed in the header
       val titleHeader = tocAuthorOp match {
-        case Some(_) => s"\\title{${section.name}}\n"
+        case Some(_) => s"\\title{${section.name}}  % title in header\n"
         case None => s"\\title{$title}\n"
       }
 
       // author displayed in the header
       val authorHeader = tocAuthorOp match {
-        case Some(x) => s"\\author{$x}\n"
-        case None => s"\\author{$firstname $lastname}\n"
+        case Some(x) => s"\\author{$x}  % author in header\n"
+        case None => s"\\author{$firstname $lastname}  % author in header\n"
       }
 
       (
@@ -172,15 +236,17 @@ object Latex {
     inputStream.close()
 
     template.format(
-      config.fontSize, config.fontFace,
-      config.fixedFontScale, config.fixedFontFace,
-      config.paperWidth, config.paperHeight,
-      config.marginInner, config.marginOuter, config.marginTop, config.marginBottom,
-      title, firstname, lastname,
-      titlepage,
-      toc,
-      // titleFormat,
-      chapters
+      config.fontSize, config.fontFace,               // 0-1
+      config.fixedFontScale, config.fixedFontFace,    // 2-3
+      config.paperWidth, config.paperHeight,          // 4-5
+      config.marginInner, config.marginOuter,         // 6-7
+      config.marginTop, config.marginBottom,          // 8-9
+      config.footSkip,                                // 10
+      pageStyle,                                      // 11
+      title, firstname, lastname,                     // 12-14
+      titlepage,                                      // 15
+      toc,                                            // 16
+      chapters                                        // 17
     )
 
     // compile with:

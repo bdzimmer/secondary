@@ -11,7 +11,8 @@ class FontsSuite extends FunSuite {
 
   test("fonts convert") {
     val good = (Fonts.convert(Styles.FontDescription))
-    assert(good._1.length > 0 && good._2.length == 3)
+    // assert(good._1.length > 0 && good._2.length == 3)
+    assert(good._1.length > 0 && good._2.length == 4)
 
     val bad = (Fonts.convert("Crapola:400,400italic,700,700italic"))
     assert(bad._1.length == 0 && bad._2.length == 0)

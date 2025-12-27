@@ -38,8 +38,10 @@ object Book {
     marginOuter: String,
     marginTop: String,
     marginBottom: String,
+    footSkip: String,
     toc: Boolean,
-    editor: Option[String]
+    editor: Option[String],
+    anthology: Boolean
   ) {
     override def toString: String = {
       "fontSize:         " + fontSize + "\n" +
@@ -53,8 +55,10 @@ object Book {
       "marginOuter:      " + marginOuter + "\n" +
       "marginTop:        " + marginTop + "\n" +
       "marginBottom:     " + marginBottom + "\n" +
+      "footSkip:         " + footSkip + "\n" +
       "toc:              " + toc + "\n" +
-      "editor:           " + editor
+      "editor:           " + editor + "\n" +
+      "anthology:        " + anthology
     }
   }
 
@@ -72,8 +76,10 @@ object Book {
     marginOuter = "0.5in",
     marginTop = "0.5in",
     marginBottom = "0.5in",
+    footSkip = "0.2in",
     toc = false,
-    editor = None
+    editor = None,
+    anthology = false
   )
 
   // ~~~~ ~~~~ ~~~~ ~~~~
@@ -201,8 +207,10 @@ object Book {
       marginOuter  = args.getOrElse("marginouter",  BookConfigDefault.marginOuter),
       marginTop    = args.getOrElse("margintop",    BookConfigDefault.marginTop),
       marginBottom = args.getOrElse("marginbottom", BookConfigDefault.marginBottom),
+      footSkip     = args.getOrElse("footskip",     BookConfigDefault.footSkip),
       toc          = args.get("toc").map(_.toBooleanSafe).getOrElse(BookConfigDefault.toc),
-      editor       = args.get("editor")
+      editor       = args.get("editor"),
+      anthology    = args.get("anthology").map(_.toBooleanSafe).getOrElse(BookConfigDefault.anthology)
     )
   }
 

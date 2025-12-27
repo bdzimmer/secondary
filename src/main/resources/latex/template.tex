@@ -1,47 +1,76 @@
-\documentclass[%s]{book}
+\documentclass[%s]{book}       %% ARG 0: font size
 
 \usepackage{titling}
+%% consider whether to enable rigidchapters on titlesec here
+%% I believe that allows a consistent amount of space
+%% between the top of the title and body text no matter how many
+%% lines of title / subtitle / author there are
+%% rigidchapters also allows the vertical spacing between
+%% the TOC title and first entry to match the chapters
 \usepackage[pagestyles]{titlesec}
 \usepackage[T1]{fontenc}
-\usepackage{%s}
+\usepackage{%s}                %% ARG 1: font face
 \usepackage{listings}
-\usepackage[scaled=%s]{%s}
-\usepackage{enumitem}
+\usepackage[scaled=%s]{%s}     %% ARG 2, 3: fixed-width font scale
+\usepackage{enumitem}          %%           fixed-width font face
 \usepackage{tocdata}
+%% THIS HAS TO GO AFTER TOCDATA!!!
+\usepackage{titletoc}
+
+%% turn this on to show margins
+%% \usepackage[showframe]{geometry}
+
+%% this is new, makes empty pages truly empty with no header
+\usepackage{emptypage}
 
 \lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
 
 \usepackage{geometry}
 \geometry{
- papersize={%s,%s},
- inner=%s,
- outer=%s,
- top=%s,
- bottom=%s,
- footskip=0.2in  %% hardcoded for now
+ papersize={%s,%s},           %% ARG 4, 5: paper width, paper height
+ inner=%s,                    %% ARG 6: inner margin
+ outer=%s,                    %% ARG 7: outer margin
+ top=%s,                      %% ARG 8: top margin
+ bottom=%s,                   %% ARG 9: bottom margin
+ footskip=%s                  %% ARG 10: footskip
  %% includeheadfoot
 }
 
-%% title format for front matter
+%% custom table of contents formatting
 
-%% standard title:
+\titlecontents{chapter}
+    [0em]                        %% left
+    %% put stuff like bold style here in abovecode
+    {\hangindent=1em}            %% abovecode
+    {\thecontentslabel.\enspace} %% numbered-entry-format
+    {}                           %% numberless-entry-format
+    {\hfill\contentspage}        %% filler-page-format
+    [\bigskip]                   %% below-code
+
+
+%% title formatting for chapters
+
+%% standard title for:
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}
-%% anthology title
-%% this didn't work because we can't change the author before the \chapter
-%% \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\huge}[\newline\large\textit{\theauthor}]
+%% \titlespacing*{\chapter}{0pt}{50pt}{40pt}   %% default titlespacing from titlesec documentation
 
 %% special command for chapter titles with author name below in italics
 %% https://tex.stackexchange.com/questions/443367/how-to-add-a-subtitle-to-some-chapters
 \newcommand\ChapterAuthor[2]{\chapter*{#1\newline\large\textit{#2}}}
 
 \newpagestyle{mystyle}{
+
 %% original style: author and title
 %%  \sethead[\thepage][\textbf{\theauthor}][]
 %%          {}{\textbf{\thetitle}}{\thepage}}
+
 %% new style: title and chapter title - hardcoded for now
-%% TODO: don't hard code the title!
-  \sethead[\thepage][\textbf{TODO BOOK TITLE TODO}][]
-          {}{\textbf{\thetitle}}{\thepage}}
+%%  \sethead[\thepage][\textbf{TODO BOOK TITLE TODO}][]
+%%           {}{\textbf{\thetitle}}{\thepage}
+
+%% ARG 11: title format
+%s
+}
 \pagestyle{empty}
 
 %% aggressively penalize widows and orphans
@@ -51,8 +80,8 @@
 \raggedbottom
 \emergencystretch 3em
 
-\title{%s}
-\author{%s %s}
+\title{%s}                %% ARG 12: title
+\author{%s %s}            %% ARG 13, 14: first name, last name
 %% \date{today}
 
 \begin{document}
@@ -66,20 +95,35 @@
 %% but the numbers shouldn't appear until the foreword
 %% \pagenumbering{empty}
 
+%% blank page before title page
+\ \thispagestyle{empty} \clearpage
+\ \thispagestyle{empty} \clearpage
+
 %% set arabic page numbering and prevent further resets
 %% of the numbering by disabling the command
+%% we do this here so the blank page(s) before the
+%% title page are not numbered
 \pagenumbering{arabic}
 \renewcommand{\pagenumbering}[1]{}
 
 %% We don't need to maketitle since we do it manually below
 %% \maketitle
 
+%% title page shouldn't show the page number
+%% so this needs to be added into it: "\thispagestyle{empty}"
+%% it doesn't work to do this here first I guess
+
 %% title page goes here
+%% ARG 15: title page
+
 %s
 
 %% table of contents (\tableofcontents) goes here
 %% needs a \thispagestyle{empty} especially
 %% pagenumbering is disabled in \frontmatter
+
+%% ARG 16: table of contents
+
 %s
 
 \mainmatter
@@ -87,6 +131,7 @@
 
 
 %% chapters go here
+%% ARG 17: chapters
 
 %s
 
